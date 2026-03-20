@@ -13,16 +13,18 @@ export function VisitsSection({ visits }: VisitsSectionProps) {
         {visits.map((visit, i) => (
           <div
             key={visit.id}
-            className="gold-border rounded-lg bg-card overflow-hidden hover:gold-glow transition-shadow duration-300 scroll-reveal"
-            style={{ animationDelay: `${i * 80}ms` }}
+            className="gold-border rounded-lg bg-card overflow-hidden card-lift visit-slide-in"
+            style={{ animationDelay: `${i * 120}ms` }}
           >
             <div className="flex flex-col sm:flex-row">
-              <div className="sm:w-48 h-48 sm:h-auto bg-muted flex items-center justify-center text-gold shrink-0">
+              <div className="sm:w-48 h-48 sm:h-auto bg-muted flex items-center justify-center text-primary shrink-0 relative overflow-hidden group">
                 {visit.imageUrl ? (
-                  <img src={visit.imageUrl} alt={visit.name} className="h-full w-full object-cover" />
+                  <img src={visit.imageUrl} alt={visit.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 ) : (
                   <User className="h-16 w-16 opacity-40" />
                 )}
+                {/* Subtle shimmer overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               </div>
               <div className="p-6 flex-1">
                 <h3 className="text-xl font-bold font-serif mb-1">{visit.name}</h3>
