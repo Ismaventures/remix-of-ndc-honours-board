@@ -1,14 +1,25 @@
-import { Globe, Calendar, User } from 'lucide-react';
+import { ArrowLeft, Globe, Calendar, User } from 'lucide-react';
 import { DistinguishedVisit } from '@/data/mockData';
 
 interface VisitsSectionProps {
   visits: DistinguishedVisit[];
+  onBack?: () => void;
 }
 
-export function VisitsSection({ visits }: VisitsSectionProps) {
+export function VisitsSection({ visits, onBack }: VisitsSectionProps) {
   return (
     <div className="scroll-reveal">
-      <h2 className="text-2xl font-bold gold-text mb-6">Distinguished Visits & Honours</h2>
+      <div className="flex items-center gap-4 mb-6">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="p-2 rounded gold-border text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all active:scale-95"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+        )}
+        <h2 className="text-2xl font-bold font-serif gold-text">Distinguished Visits & Honours</h2>
+      </div>
       <div className="space-y-6">
         {visits.map((visit, i) => (
           <div
@@ -23,7 +34,6 @@ export function VisitsSection({ visits }: VisitsSectionProps) {
                 ) : (
                   <User className="h-16 w-16 opacity-40" />
                 )}
-                {/* Subtle shimmer overlay */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               </div>
               <div className="p-6 flex-1">

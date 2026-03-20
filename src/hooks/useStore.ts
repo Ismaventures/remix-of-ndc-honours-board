@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Personnel, DistinguishedVisit, initialPersonnel, initialVisits } from '@/data/mockData';
+import { Personnel, DistinguishedVisit, Commandant, initialPersonnel, initialVisits, initialCommandants } from '@/data/mockData';
 
 function loadFromStorage<T>(key: string, fallback: T): T {
   try {
@@ -30,6 +30,30 @@ export function usePersonnelStore() {
   }, []);
 
   return { personnel, addPersonnel, updatePersonnel, deletePersonnel };
+}
+
+export function useCommandantsStore() {
+  const [commandants, setCommandants] = useState<Commandant[]>(() =>
+    loadFromStorage('ndc_commandants', initialCommandants)
+  );
+
+  useEffect(() => {
+    localStorage.setItem('ndc_commandants', JSON.stringify(commandants));
+  }, [commandants]);
+
+  const addCommandant = useCallback((c: Omit<Commandant, 'id'>) => {
+    setCommandants(prev => [...prev, { ...c, id: `c-${Date.now()}` }]);
+  }, []);
+
+  const updateCommandant = useCallback((id: string, data: Partial<Commandant>) => {
+    setCommandants(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
+  }, []);
+
+  const deleteCommandant = useCallback((id: string) => {
+    setCommandants(prev => prev.filter(c => c.id !== id));
+  }, []);
+
+  return { commandants, addCommandant, updateCommandant, deleteCommandant };
 }
 
 export function useVisitsStore() {
