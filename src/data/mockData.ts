@@ -11,6 +11,18 @@ export interface Personnel {
   periodEnd: number;
   imageUrl?: string;
   citation: string;
+  seniorityOrder: number;
+}
+
+export interface Commandant {
+  id: string;
+  name: string;
+  title: string;
+  tenureStart: number;
+  tenureEnd: number | null;
+  imageUrl?: string;
+  description: string;
+  isCurrent: boolean;
 }
 
 export interface DistinguishedVisit {
@@ -23,10 +35,11 @@ export interface DistinguishedVisit {
   description: string;
 }
 
-const RANKS = [
-  'General', 'Lieutenant General', 'Major General', 'Brigadier General',
-  'Admiral', 'Vice Admiral', 'Rear Admiral',
-  'Air Marshal', 'Air Vice Marshal', 'Air Commodore',
+const RANKS_BY_SENIORITY = [
+  'General', 'Admiral', 'Air Chief Marshal',
+  'Lieutenant General', 'Vice Admiral', 'Air Marshal',
+  'Major General', 'Rear Admiral', 'Air Vice Marshal',
+  'Brigadier General', 'Commodore', 'Air Commodore',
   'Colonel', 'Captain (Navy)', 'Group Captain',
 ];
 
@@ -65,19 +78,80 @@ function generatePersonnel(): Personnel[] {
     const cat = categories[i % 4];
     const service = cat === 'Allied' ? 'Foreign' as Service : services[i % 3];
     const startYear = 1992 + Math.floor(i / 3);
+    const rankIndex = Math.min(i % RANKS_BY_SENIORITY.length, RANKS_BY_SENIORITY.length - 1);
     records.push({
       id: `p-${i + 1}`,
       name,
-      rank: RANKS[i % RANKS.length],
+      rank: RANKS_BY_SENIORITY[rankIndex],
       category: cat,
       service,
       periodStart: startYear,
       periodEnd: startYear + 2,
       citation: CITATIONS[i % CITATIONS.length],
+      seniorityOrder: rankIndex + 1,
     });
   });
 
   return records;
+}
+
+function generateCommandants(): Commandant[] {
+  return [
+    {
+      id: 'c-1',
+      name: 'Rear Admiral A.A. Ahmad',
+      title: 'Commandant, National Defence College Nigeria',
+      tenureStart: 2023,
+      tenureEnd: null,
+      isCurrent: true,
+      description: 'Providing strategic leadership and direction for the premier institution of higher defence and strategic studies in Nigeria, fostering excellence in national security education and inter-service cooperation.',
+    },
+    {
+      id: 'c-2',
+      name: 'AVM E.O. Abubakar',
+      title: 'Commandant',
+      tenureStart: 2020,
+      tenureEnd: 2023,
+      isCurrent: false,
+      description: 'Oversaw modernization of curriculum and strengthened international partnerships with allied defence institutions.',
+    },
+    {
+      id: 'c-3',
+      name: 'Rear Admiral M.A. Osondu',
+      title: 'Commandant',
+      tenureStart: 2017,
+      tenureEnd: 2020,
+      isCurrent: false,
+      description: 'Led the digital transformation of academic programmes and expanded research capabilities of the college.',
+    },
+    {
+      id: 'c-4',
+      name: 'Maj Gen. T.A. Lagbaja',
+      title: 'Commandant',
+      tenureStart: 2014,
+      tenureEnd: 2017,
+      isCurrent: false,
+      description: 'Championed inter-agency cooperation and deepened the college\'s engagement with regional security frameworks.',
+    },
+    {
+      id: 'c-5',
+      name: 'AVM C.O. Egbuchunam',
+      title: 'Commandant',
+      tenureStart: 2011,
+      tenureEnd: 2014,
+      isCurrent: false,
+      description: 'Strengthened the college\'s academic foundation and established new strategic studies programmes.',
+    },
+    {
+      id: 'c-6',
+      name: 'Rear Admiral S.I. Akhigbe',
+      title: 'Commandant',
+      tenureStart: 2008,
+      tenureEnd: 2011,
+      isCurrent: false,
+      description: 'Initiated infrastructure development and broadened the scope of defence education at the college.',
+    },
+  ];
 }
 
 function generateVisits(): DistinguishedVisit[] {
@@ -91,4 +165,5 @@ function generateVisits(): DistinguishedVisit[] {
 }
 
 export const initialPersonnel = generatePersonnel();
+export const initialCommandants = generateCommandants();
 export const initialVisits = generateVisits();

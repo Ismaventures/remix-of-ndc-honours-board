@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Shield, Star } from 'lucide-react';
+import { Commandant } from '@/data/mockData';
 import ndcCrest from '/images/ndc-crest.png';
 
-export function CommandantHero() {
+interface CommandantHeroProps {
+  commandant?: Commandant;
+}
+
+export function CommandantHero({ commandant }: CommandantHeroProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -10,11 +15,16 @@ export function CommandantHero() {
     return () => clearTimeout(timer);
   }, []);
 
+  const name = commandant?.name ?? 'Rear Admiral A.A. Ahmad';
+  const titleText = commandant?.title ?? 'Commandant, National Defence College Nigeria';
+  const description = commandant?.description ??
+    'Providing strategic leadership and direction for the premier institution of higher defence and strategic studies in Nigeria, fostering excellence in national security education and inter-service cooperation.';
+
   return (
     <section className="relative overflow-hidden rounded-lg gold-border gold-glow bg-card mb-8">
       {/* Subtle radar sweep */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-military-green/8 via-transparent to-primary/5" />
+        <div className="absolute inset-0 bg-gradient-to-br from-secondary/8 via-transparent to-primary/5" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-primary/5 animate-radar-pulse" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-primary/3 animate-radar-pulse" style={{ animationDelay: '1.5s' }} />
       </div>
@@ -28,10 +38,14 @@ export function CommandantHero() {
         >
           <div className="relative">
             <div className="w-44 h-56 md:w-52 md:h-64 rounded bg-muted gold-border-strong flex items-center justify-center overflow-hidden animate-float">
-              <div className="flex flex-col items-center gap-3 text-primary/40">
-                <Shield className="h-16 w-16" />
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Official Portrait</span>
-              </div>
+              {commandant?.imageUrl ? (
+                <img src={commandant.imageUrl} alt={name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="flex flex-col items-center gap-3 text-primary/40">
+                  <Shield className="h-16 w-16" />
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Official Portrait</span>
+                </div>
+              )}
             </div>
             {/* Gold corner accents */}
             <div className="absolute -top-1 -left-1 w-6 h-6 border-t-2 border-l-2 border-primary/60 rounded-tl" />
@@ -56,7 +70,7 @@ export function CommandantHero() {
           </div>
 
           <h2 className="text-3xl md:text-4xl font-bold font-serif mb-1 leading-tight">
-            Rear Admiral A.A. Ahmad
+            {name}
           </h2>
 
           {/* Animated gold underline */}
@@ -69,7 +83,7 @@ export function CommandantHero() {
           </div>
 
           <p className="text-base gold-text font-medium mb-2">
-            Commandant, National Defence College Nigeria
+            {titleText}
           </p>
 
           <p
@@ -77,9 +91,7 @@ export function CommandantHero() {
               visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
           >
-            Providing strategic leadership and direction for the premier institution 
-            of higher defence and strategic studies in Nigeria, fostering excellence 
-            in national security education and inter-service cooperation.
+            {description}
           </p>
 
           <div
