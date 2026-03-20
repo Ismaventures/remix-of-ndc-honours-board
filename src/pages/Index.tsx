@@ -4,6 +4,8 @@ import { AppSidebar, SectionKey } from '@/components/AppSidebar';
 import { PersonnelTable } from '@/components/PersonnelTable';
 import { VisitsSection } from '@/components/VisitsSection';
 import { AdminPanel } from '@/components/AdminPanel';
+import { CommandantHero } from '@/components/CommandantHero';
+import { AutoRotationDisplay } from '@/components/AutoRotationDisplay';
 import { usePersonnelStore, useVisitsStore } from '@/hooks/useStore';
 
 const SECTION_TITLES: Record<SectionKey, string> = {
@@ -26,6 +28,8 @@ const Index = () => {
   const [section, setSection] = useState<SectionKey>('fwc');
   const { personnel, addPersonnel, updatePersonnel, deletePersonnel } = usePersonnelStore();
   const { visits, addVisit, updateVisit, deleteVisit } = useVisitsStore();
+
+  const showHero = section !== 'admin';
 
   const renderContent = () => {
     if (section === 'visits') {
@@ -57,11 +61,19 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background animate-bg-sweep bg-gradient-to-br from-background via-background to-secondary/10">
       <AppHeader />
       <div className="flex flex-1 overflow-hidden">
         <AppSidebar active={section} onNavigate={setSection} />
         <main className="flex-1 overflow-y-auto p-8">
+          {/* Auto-rotation button */}
+          <div className="flex justify-end mb-4">
+            <AutoRotationDisplay personnel={personnel} visits={visits} />
+          </div>
+
+          {/* Commandant Hero — shown on all sections except admin */}
+          {showHero && <CommandantHero />}
+
           {renderContent()}
         </main>
       </div>
