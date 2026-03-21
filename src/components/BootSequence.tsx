@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAudioStore } from '@/hooks/useAudioStore';
 import { playAudioTrack } from '@/components/AudioManager';
 import { useCommandantsStore } from '@/hooks/useStore';
+import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
 import ndcCrest from '/images/ndc-crest.png';
 
 export function BootSequence({ onComplete }: { onComplete?: () => void }) {
@@ -11,6 +12,7 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
   const { commandants } = useCommandantsStore();
   
   const currentCommandant = commandants.find(c => c.isCurrent);
+  const currentCommandantImageUrl = useResolvedMediaUrl(currentCommandant?.imageUrl);
   const [typedLine1, setTypedLine1] = useState('');
   const [typedLine2, setTypedLine2] = useState('');
   const [typedLine3, setTypedLine3] = useState('');
@@ -70,7 +72,7 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
     return () => {
       clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
     };
-  }, [onComplete]);
+  }, [assignments.preloader, onComplete]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -141,7 +143,11 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
                  <div className={`transition-all duration-1000 delay-300 ease-out flex flex-col items-center shrink-0 ${step >= 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
                   <div className="relative p-1 rounded-full border border-primary/30 bg-primary/5 shadow-[0_0_30px_rgba(200,169,81,0.15)] flex-shrink-0">
                     <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-2 border-primary relative z-10 bg-slate-900">
-                      <img src={currentCommandant.imageUrl} alt={currentCommandant.name} className="w-full h-full object-cover object-top grayscale hover:grayscale-0 transition-all duration-700 hover:scale-105" />
+                      {currentCommandantImageUrl ? (
+                        <img src={currentCommandantImageUrl} alt={currentCommandant.name} className="w-full h-full object-cover object-top grayscale hover:grayscale-0 transition-all duration-700 hover:scale-105" />
+                      ) : (
+                        <div className="w-full h-full bg-slate-900" />
+                      )}
                       </div>
                       
                       {/* Holographic scanning circle elements */}
@@ -151,8 +157,8 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
                   
                     <div className="mt-3 md:mt-4 text-center bg-slate-950/80 py-2 px-3 md:px-4 rounded-lg border border-primary/20 backdrop-blur max-w-[280px]">
                       <p className="text-[10px] text-muted-foreground tracking-widest uppercase mb-1">Authorizing Command</p>
-                      <p className="text-xs md:text-sm font-bold text-primary tracking-wide uppercase drop-shadow-[0_0_5px_theme('colors.primary.DEFAULT')]">{currentCommandant.rank} {currentCommandant.name}</p>
-                      <p className="text-[9px] md:text-[10px] text-primary/70 mt-1 uppercase tracking-wide truncate">{currentCommandant.qualifications}</p>
+                      <p className="text-xs md:text-sm font-bold text-primary tracking-wide uppercase drop-shadow-[0_0_5px_theme('colors.primary.DEFAULT')]">{currentCommandant.name}</p>
+                      <p className="text-[9px] md:text-[10px] text-primary/70 mt-1 uppercase tracking-wide truncate">{currentCommandant.title}</p>
                   </div>
                </div>
            )}

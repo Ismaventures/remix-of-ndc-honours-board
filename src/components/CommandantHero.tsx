@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Shield, Star } from 'lucide-react';
 import { Commandant } from '@/data/mockData';
 import ndcCrest from '/images/ndc-crest.png';
+import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
 
 interface CommandantHeroProps {
   commandant?: Commandant;
@@ -22,6 +23,7 @@ export function CommandantHero({ commandant, compactDescription = true }: Comman
   const description = commandant?.description ??
     'Providing strategic leadership and direction for the premier institution of higher defence and strategic studies in Nigeria, fostering excellence in national security education and inter-service cooperation.';
   const isCurrent = commandant?.isCurrent ?? true;
+  const commandantImageUrl = useResolvedMediaUrl(commandant?.imageUrl);
 
   return (
     <section className={`relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] ${isCompact ? 'mb-0' : 'mb-8'} transform transition-all hover:scale-[1.01] hover:shadow-[0_0_80px_-15px_rgba(255,215,0,0.2)] duration-500 group`}>
@@ -56,8 +58,8 @@ export function CommandantHero({ commandant, compactDescription = true }: Comman
             <div className="absolute -inset-1 rounded-lg border border-primary/30 -rotate-1 transition-transform group-hover:rotate-0 duration-500" />
             
             <div className={`relative rounded-md bg-muted gold-border-strong flex items-center justify-center overflow-hidden z-10 shadow-2xl ${isCompact ? 'w-40 h-52 md:w-48 md:h-64' : 'w-48 h-60 md:w-56 md:h-72'}`}>
-              {commandant?.imageUrl ? (
-                <img src={commandant.imageUrl} alt={name} className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
+              {commandantImageUrl ? (
+                <img src={commandantImageUrl} alt={name} className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
               ) : (
                 <div className="flex flex-col items-center gap-3 text-primary/40">
                   <Shield className="h-16 w-16" />

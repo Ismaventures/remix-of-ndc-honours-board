@@ -1,9 +1,20 @@
 import { useRef, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Shield } from 'lucide-react';
 import { Commandant } from '@/data/mockData';
+import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
 
 interface PastCommandantsProps {
   commandants: Commandant[];
+}
+
+function CommandantAvatar({ src, alt }: { src?: string; alt: string }) {
+  const resolvedSrc = useResolvedMediaUrl(src);
+
+  if (!resolvedSrc) {
+    return <Shield className="h-6 w-6 text-primary/40" />;
+  }
+
+  return <img src={resolvedSrc} alt={alt} className="w-full h-full rounded object-cover" />;
 }
 
 export function PastCommandants({ commandants }: PastCommandantsProps) {
@@ -70,11 +81,7 @@ export function PastCommandants({ commandants }: PastCommandantsProps) {
           >
             <div className="flex items-start gap-4 mb-3">
               <div className="w-14 h-14 rounded bg-muted gold-border flex items-center justify-center shrink-0">
-                {cmd.imageUrl ? (
-                  <img src={cmd.imageUrl} alt={cmd.name} className="w-full h-full rounded object-cover" />
-                ) : (
-                  <Shield className="h-6 w-6 text-primary/40" />
-                )}
+                <CommandantAvatar src={cmd.imageUrl} alt={cmd.name} />
               </div>
               <div className="min-w-0">
                 <h3 className="text-sm font-bold font-serif leading-snug">{cmd.name}</h3>

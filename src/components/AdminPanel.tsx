@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, Pencil, Trash2, X, ArrowLeft } from 'lucide-react';
 import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/data/mockData';
 import { AdvancedAudioAdmin } from './AdvancedAudioAdmin';
+import { saveMediaFile } from '@/lib/persistentMedia';
 
 interface AdminPanelProps {
   personnel: Personnel[];
@@ -333,8 +334,8 @@ function PersonnelForm({ initial, onSave, onCancel }: {
     }
 
     try {
-      const dataUrl = await fileToDataUrl(file);
-      update('imageUrl', dataUrl);
+      const mediaRef = await saveMediaFile(file);
+      update('imageUrl', mediaRef);
     } catch {
       setUploadError('Could not process the selected file.');
     }
