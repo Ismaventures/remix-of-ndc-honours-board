@@ -274,6 +274,33 @@
   .boot-screen {
     animation: boot-fade 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards 2s;
   }
+
+  .commandant-hero-current {
+    box-shadow: inset 0 0 0 1px hsl(var(--gold) / 0.18), 0 0 60px -14px hsl(var(--gold) / 0.22);
+  }
+
+  .command-sweep-light {
+    background: linear-gradient(105deg, transparent 42%, rgba(255, 224, 140, 0.09) 50%, transparent 58%);
+    transform: translateX(-130%);
+    animation: command-sweep-light 5.5s ease-in-out infinite;
+  }
+
+  .animate-command-topline {
+    animation: command-topline 2.8s ease-in-out infinite;
+  }
+
+  .commandant-portrait-frame {
+    box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.22), inset 0 0 0 1px rgba(255, 215, 0, 0.12);
+    animation: command-portrait-breathe 4.2s ease-in-out infinite;
+  }
+
+  .commander-honor-text {
+    animation: commander-honor-text 4s ease-in-out infinite;
+  }
+
+  .animate-command-underline {
+    animation: command-underline 2.6s ease-in-out infinite;
+  }
   
   @keyframes boot-fade {
     0% { opacity: 1; transform: scale(1); filter: blur(0px); }
@@ -287,6 +314,66 @@
   @keyframes fill-bar {
     0% { width: 0%; }
     100% { width: 100%; }
+  }
+
+  @keyframes command-sweep-light {
+    0% {
+      transform: translateX(-130%);
+      opacity: 0;
+    }
+    18% {
+      opacity: 0.7;
+    }
+    38% {
+      transform: translateX(130%);
+      opacity: 0.16;
+    }
+    100% {
+      transform: translateX(130%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes command-topline {
+    0%, 100% {
+      opacity: 0.2;
+      transform: scaleX(0.86);
+    }
+    50% {
+      opacity: 0.95;
+      transform: scaleX(1);
+    }
+  }
+
+  @keyframes command-portrait-breathe {
+    0%, 100% {
+      box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.22), inset 0 0 0 1px rgba(255, 215, 0, 0.12), 0 10px 24px rgba(0, 0, 0, 0.25);
+    }
+    50% {
+      box-shadow: 0 0 0 1px rgba(255, 228, 150, 0.38), inset 0 0 0 1px rgba(255, 228, 150, 0.2), 0 16px 30px rgba(0, 0, 0, 0.32);
+    }
+  }
+
+  @keyframes commander-honor-text {
+    0%, 100% {
+      opacity: 0.68;
+      letter-spacing: 0.23em;
+    }
+    50% {
+      opacity: 1;
+      letter-spacing: 0.25em;
+    }
+  }
+
+  @keyframes command-underline {
+    0%, 100% {
+      opacity: 0.35;
+      transform: scaleX(0.9);
+    }
+    50% {
+      opacity: 1;
+      transform: scaleX(1.03);
+    }
   }
 }
 

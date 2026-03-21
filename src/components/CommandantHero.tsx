@@ -26,9 +26,15 @@ export function CommandantHero({ commandant, compactDescription = true }: Comman
   const commandantImageUrl = useResolvedMediaUrl(commandant?.imageUrl);
 
   return (
-    <section className={`relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] ${isCompact ? 'mb-0' : 'mb-8'} transform transition-all hover:scale-[1.01] hover:shadow-[0_0_80px_-15px_rgba(255,215,0,0.2)] duration-500 group`}>
+    <section className={`relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] ${isCurrent ? 'commandant-hero-current' : ''} ${isCompact ? 'mb-0' : 'mb-8'} transform transition-all hover:scale-[1.01] hover:shadow-[0_0_80px_-15px_rgba(255,215,0,0.2)] duration-500 group`}>
       {/* Subtle radar sweep & premium glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {isCurrent && (
+          <>
+            <div className="absolute inset-0 command-sweep-light" />
+            <div className="absolute top-0 left-0 h-[2px] w-full bg-gradient-to-r from-transparent via-primary to-transparent animate-command-topline" />
+          </>
+        )}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-50" />
         <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-50" />
         
@@ -57,7 +63,7 @@ export function CommandantHero({ commandant, compactDescription = true }: Comman
             <div className="absolute -inset-1 rounded-lg border border-primary/30 rotate-1 transition-transform group-hover:rotate-0 duration-500" />
             <div className="absolute -inset-1 rounded-lg border border-primary/30 -rotate-1 transition-transform group-hover:rotate-0 duration-500" />
             
-            <div className={`relative rounded-md bg-muted gold-border-strong flex items-center justify-center overflow-hidden z-10 shadow-2xl ${isCompact ? 'w-40 h-52 md:w-48 md:h-64' : 'w-48 h-60 md:w-56 md:h-72'}`}>
+            <div className={`relative rounded-md bg-muted gold-border-strong flex items-center justify-center overflow-hidden z-10 shadow-2xl ${isCurrent ? 'commandant-portrait-frame' : ''} ${isCompact ? 'w-40 h-52 md:w-48 md:h-64' : 'w-48 h-60 md:w-56 md:h-72'}`}>
               {commandantImageUrl ? (
                 <img src={commandantImageUrl} alt={name} className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
               ) : (
@@ -90,6 +96,12 @@ export function CommandantHero({ commandant, compactDescription = true }: Comman
             <Star className="h-3.5 w-3.5 text-primary animate-pulse-slow fill-primary/30" />
           </div>
 
+          {isCurrent && (
+            <p className="text-[10px] uppercase tracking-[0.24em] text-primary/70 mb-3 commander-honor-text">
+              Leadership • Integrity • Duty
+            </p>
+          )}
+
           <h2 className={`${isCompact ? 'text-3xl md:text-4xl' : 'text-4xl md:text-5xl'} font-bold font-serif mb-2 leading-tight bg-gradient-to-r from-white via-primary to-white bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(255,215,0,0.2)]`}>
             {name}
           </h2>
@@ -101,6 +113,8 @@ export function CommandantHero({ commandant, compactDescription = true }: Comman
               }`}
             />
           </div>
+
+          {isCurrent && <div className="h-[3px] w-32 mb-4 mx-auto md:mx-0 rounded-full bg-gradient-to-r from-primary/0 via-primary/80 to-primary/0 animate-command-underline" />}
 
           <p className={`${isCompact ? 'text-base md:text-lg mb-3' : 'text-lg md:text-xl mb-4'} gold-text font-medium tracking-wide uppercase text-primary/90`}>
             {titleText}
