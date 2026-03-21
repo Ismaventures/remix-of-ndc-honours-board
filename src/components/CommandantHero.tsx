@@ -5,10 +5,12 @@ import ndcCrest from '/images/ndc-crest.png';
 
 interface CommandantHeroProps {
   commandant?: Commandant;
+  compactDescription?: boolean;
 }
 
-export function CommandantHero({ commandant }: CommandantHeroProps) {
+export function CommandantHero({ commandant, compactDescription = true }: CommandantHeroProps) {
   const [visible, setVisible] = useState(false);
+  const isCompact = compactDescription;
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 100);
@@ -19,27 +21,43 @@ export function CommandantHero({ commandant }: CommandantHeroProps) {
   const titleText = commandant?.title ?? 'Commandant, National Defence College Nigeria';
   const description = commandant?.description ??
     'Providing strategic leadership and direction for the premier institution of higher defence and strategic studies in Nigeria, fostering excellence in national security education and inter-service cooperation.';
+  const isCurrent = commandant?.isCurrent ?? true;
 
   return (
-    <section className="relative overflow-hidden rounded-lg gold-border gold-glow bg-card mb-8">
-      {/* Subtle radar sweep */}
+    <section className={`relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] ${isCompact ? 'mb-0' : 'mb-8'} transform transition-all hover:scale-[1.01] hover:shadow-[0_0_80px_-15px_rgba(255,215,0,0.2)] duration-500 group`}>
+      {/* Subtle radar sweep & premium glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-secondary/8 via-transparent to-primary/5" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-50" />
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-50" />
+        
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,215,0,0.08)_0%,transparent_70%)]" />
+        
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-primary/5 animate-radar-pulse" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-primary/3 animate-radar-pulse" style={{ animationDelay: '1.5s' }} />
+        
+        {/* Decorative corner lines */}
+        <div className="absolute top-4 left-4 w-12 h-12 border-t border-l border-primary/30 rounded-tl-lg" />
+        <div className="absolute top-4 right-4 w-12 h-12 border-t border-r border-primary/30 rounded-tr-lg" />
+        <div className="absolute bottom-4 left-4 w-12 h-12 border-b border-l border-primary/30 rounded-bl-lg" />
+        <div className="absolute bottom-4 right-4 w-12 h-12 border-b border-r border-primary/30 rounded-br-lg" />
       </div>
 
-      <div className="relative flex flex-col md:flex-row items-center gap-8 p-8 md:p-12">
+      <div className={`relative flex flex-col md:flex-row items-center ${isCompact ? 'gap-6 md:gap-8 p-6 md:p-10' : 'gap-10 p-8 md:p-14'}`}>
         {/* Portrait side */}
         <div
-          className={`shrink-0 transition-all duration-1000 ease-out ${
+          className={`shrink-0 transition-all duration-1000 ease-out flex flex-col items-center group-hover:transform group-hover:translate-y-[-5px] ${
             visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
           }`}
         >
           <div className="relative">
-            <div className="w-44 h-56 md:w-52 md:h-64 rounded bg-muted gold-border-strong flex items-center justify-center overflow-hidden animate-float">
+            {/* Outer animated border ring */}
+            <div className="absolute -inset-2 rounded-lg border border-primary/20 bg-primary/5 blur-[2px] " />
+            <div className="absolute -inset-1 rounded-lg border border-primary/30 rotate-1 transition-transform group-hover:rotate-0 duration-500" />
+            <div className="absolute -inset-1 rounded-lg border border-primary/30 -rotate-1 transition-transform group-hover:rotate-0 duration-500" />
+            
+            <div className={`relative rounded-md bg-muted gold-border-strong flex items-center justify-center overflow-hidden z-10 shadow-2xl ${isCompact ? 'w-40 h-52 md:w-48 md:h-64' : 'w-48 h-60 md:w-56 md:h-72'}`}>
               {commandant?.imageUrl ? (
-                <img src={commandant.imageUrl} alt={name} className="w-full h-full object-cover" />
+                <img src={commandant.imageUrl} alt={name} className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
               ) : (
                 <div className="flex flex-col items-center gap-3 text-primary/40">
                   <Shield className="h-16 w-16" />
@@ -47,11 +65,12 @@ export function CommandantHero({ commandant }: CommandantHeroProps) {
                 </div>
               )}
             </div>
-            {/* Gold corner accents */}
-            <div className="absolute -top-1 -left-1 w-6 h-6 border-t-2 border-l-2 border-primary/60 rounded-tl" />
-            <div className="absolute -top-1 -right-1 w-6 h-6 border-t-2 border-r-2 border-primary/60 rounded-tr" />
-            <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-2 border-l-2 border-primary/60 rounded-bl" />
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-2 border-r-2 border-primary/60 rounded-br" />
+            
+            {/* Gold corner accents (closer in) */}
+            <div className="absolute -top-1.5 -left-1.5 w-6 h-6 border-t-2 border-l-2 border-primary z-20 rounded-tl" />
+            <div className="absolute -top-1.5 -right-1.5 w-6 h-6 border-t-2 border-r-2 border-primary z-20 rounded-tr" />
+            <div className="absolute -bottom-1.5 -left-1.5 w-6 h-6 border-b-2 border-l-2 border-primary z-20 rounded-bl" />
+            <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 border-b-2 border-r-2 border-primary z-20 rounded-br" />
           </div>
         </div>
 
@@ -61,47 +80,52 @@ export function CommandantHero({ commandant }: CommandantHeroProps) {
             visible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
           }`}
         >
-          <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
-            <Star className="h-3.5 w-3.5 text-primary animate-pulse-slow" />
-            <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-medium">
-              Current Commandant
+          <div className="inline-flex items-center justify-center md:justify-start gap-3 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 mb-4 backdrop-blur shadow-[0_0_15px_rgba(255,215,0,0.1)]">
+            <Star className="h-3.5 w-3.5 text-primary animate-pulse-slow fill-primary/30" />
+            <span className="text-[10px] uppercase tracking-[0.25em] text-primary/90 font-semibold">
+              {isCurrent ? 'Current Commandant' : 'Past Commandant'}
             </span>
-            <Star className="h-3.5 w-3.5 text-primary animate-pulse-slow" />
+            <Star className="h-3.5 w-3.5 text-primary animate-pulse-slow fill-primary/30" />
           </div>
 
-          <h2 className="text-3xl md:text-4xl font-bold font-serif mb-1 leading-tight">
+          <h2 className={`${isCompact ? 'text-3xl md:text-4xl' : 'text-4xl md:text-5xl'} font-bold font-serif mb-2 leading-tight bg-gradient-to-r from-white via-primary to-white bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(255,215,0,0.2)]`}>
             {name}
           </h2>
 
-          {/* Animated gold underline */}
-          <div className="relative h-0.5 w-full max-w-xs mx-auto md:mx-0 mb-4 overflow-hidden">
+          <div className="relative h-px w-full max-w-sm mx-auto md:mx-0 mb-5 overflow-hidden bg-primary/10 mt-2">
             <div
-              className={`absolute inset-y-0 left-0 bg-gradient-to-r from-transparent via-primary to-transparent transition-all duration-1500 ease-out delay-700 ${
+              className={`absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-yellow-200 to-transparent transition-all duration-1500 ease-out delay-700 ${
                 visible ? 'w-full' : 'w-0'
               }`}
             />
           </div>
 
-          <p className="text-base gold-text font-medium mb-2">
+          <p className={`${isCompact ? 'text-base md:text-lg mb-3' : 'text-lg md:text-xl mb-4'} gold-text font-medium tracking-wide uppercase text-primary/90`}>
             {titleText}
           </p>
 
           <p
-            className={`text-sm text-muted-foreground leading-relaxed max-w-lg transition-all duration-1000 ease-out delay-500 ${
+            className={`${isCompact ? 'text-sm md:text-[15px]' : 'text-sm md:text-base'} text-slate-300 leading-relaxed max-w-2xl transition-all duration-1000 ease-out delay-500 font-light ${
               visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
+            style={compactDescription ? {
+              display: '-webkit-box',
+              WebkitBoxOrient: 'vertical',
+              WebkitLineClamp: 4,
+              overflow: 'hidden',
+            } : undefined}
           >
             {description}
           </p>
 
           <div
-            className={`flex items-center gap-4 mt-5 justify-center md:justify-start transition-all duration-1000 ease-out delay-700 ${
+            className={`flex items-center ${isCompact ? 'gap-4 mt-6 p-3' : 'gap-5 mt-8 p-4'} justify-center md:justify-start transition-all duration-1000 ease-out delay-700 rounded-lg bg-black/20 border border-white/5 inline-flex ${
               visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
           >
-            <img src={ndcCrest} alt="NDC Crest" className="h-10 w-10 object-contain opacity-60" />
-            <div className="h-8 w-px bg-primary/20" />
-            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            <img src={ndcCrest} alt="NDC Crest" className={`${isCompact ? 'h-10 w-10' : 'h-12 w-12'} object-contain opacity-80 drop-shadow-[0_0_8px_rgba(255,215,0,0.3)]`} />
+            <div className={`${isCompact ? 'h-8' : 'h-10'} w-px bg-primary/30`} />
+            <span className="text-[11px] uppercase tracking-[0.25em] text-primary/70 font-semibold drop-shadow-sm">
               Intellect · Courage · Patriotism
             </span>
           </div>

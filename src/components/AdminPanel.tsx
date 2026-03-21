@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Pencil, Trash2, X, ArrowLeft } from 'lucide-react';
 import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/data/mockData';
+import { AdvancedAudioAdmin } from './AdvancedAudioAdmin';
 
 interface AdminPanelProps {
   personnel: Personnel[];
@@ -15,20 +16,39 @@ interface AdminPanelProps {
   onAddCommandant: (c: Omit<Commandant, 'id'>) => void;
   onUpdateCommandant: (id: string, data: Partial<Commandant>) => void;
   onDeleteCommandant: (id: string) => void;
+  audioSettings?: { audioUrl: string | null };
+  onUpdateAudioSettings?: (url: string | null) => void;
   onBack: () => void;
 }
 
 const CATEGORIES: Category[] = ['FWC', 'FDC', 'Directing Staff', 'Allied'];
 const SERVICES: Service[] = ['Army', 'Navy', 'Air Force', 'Civilian', 'Foreign'];
+const MAX_MEDIA_SIZE_MB = 8;
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+      } else {
+        reject(new Error('Failed to read file'));
+      }
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
 
 export function AdminPanel({
   personnel, visits, commandants,
   onAddPersonnel, onUpdatePersonnel, onDeletePersonnel,
   onAddVisit, onUpdateVisit, onDeleteVisit,
   onAddCommandant, onUpdateCommandant, onDeleteCommandant,
+  audioSettings, onUpdateAudioSettings,
   onBack,
 }: AdminPanelProps) {
-  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants'>('personnel');
+  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'audio'>('personnel');
   const [editingP, setEditingP] = useState<Personnel | null>(null);
   const [editingV, setEditingV] = useState<DistinguishedVisit | null>(null);
   const [editingC, setEditingC] = useState<Commandant | null>(null);
@@ -39,169 +59,240 @@ export function AdminPanel({
   const tabBtn = (key: typeof tab, label: string) => (
     <button
       onClick={() => setTab(key)}
-      className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-        tab === key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+        tab === key
+          ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-100'
+          : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95'
       }`}
     >
       {label}
     </button>
   );
 
+  const EmptyState = ({ message, onAdd }: { message: string, onAdd: () => void }) => (
+    <div className="flex flex-col items-center justify-center p-12 gold-border border-dashed rounded-xl bg-card/30 text-center view-enter">
+      <div className="w-16 h-16 rounded-full bg-muted/60 flex items-center justify-center mb-4">
+        <Plus className="h-8 w-8 text-primary/50" />
+      </div>
+      <p className="text-muted-foreground mb-4">{message}</p>
+      <button onClick={onAdd} className="px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:bg-primary/90 transition-colors">
+        Add First Record
+      </button>
+    </div>
+  );
+
   return (
-    <div className="scroll-reveal">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={onBack}
-          className="p-2 rounded gold-border text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all active:scale-95"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <h2 className="text-2xl font-bold font-serif gold-text">Admin Panel</h2>
+    <div className="page-enter-slide">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onBack}
+            className="p-2 rounded-full border border-primary/20 bg-card hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all active:scale-95 shadow-sm"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div>
+            <h2 className="text-2xl font-bold font-serif gold-text leading-tight">Admin Console</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">Manage records and system options</p>
+          </div>
+        </div>
+        <div className="flex gap-2 p-1 bg-card/60 backdrop-blur-sm rounded-full border border-primary/15">
+          {tabBtn('personnel', 'Personnel')}
+          {tabBtn('visits', 'Visits')}
+          {tabBtn('commandants', 'Commandants')}
+          {tabBtn('audio', 'Audio Settings')}
+        </div>
       </div>
 
-      <div className="flex gap-2 mb-6">
-        {tabBtn('personnel', 'Personnel')}
-        {tabBtn('visits', 'Visits')}
-        {tabBtn('commandants', 'Commandants')}
+      <div className="relative">
+        {tab === 'personnel' && (
+          <div className="view-enter">
+            {!showFormP && (
+              <div className="flex justify-end mb-4">
+                <button onClick={() => { setEditingP(null); setShowFormP(true); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
+                  <Plus className="h-4 w-4" /> Add Personnel
+                </button>
+              </div>
+            )}
+            
+            {showFormP ? (
+              <PersonnelForm
+                initial={editingP}
+                onSave={(data) => {
+                  if (editingP) onUpdatePersonnel(editingP.id, data);
+                  else onAddPersonnel(data as Omit<Personnel, 'id'>);
+                  setShowFormP(false); setEditingP(null);
+                }}
+                onCancel={() => { setShowFormP(false); setEditingP(null); }}
+              />
+            ) : personnel.length === 0 ? (
+              <EmptyState message="No personnel records found." onAdd={() => setShowFormP(true)} />
+            ) : (
+              <div className="surface-panel overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/40 text-primary text-xs uppercase tracking-wider border-b border-primary/10">
+                        <th className="px-4 py-4 text-left font-semibold">Name</th>
+                        <th className="px-4 py-4 text-left font-semibold">Category</th>
+                        <th className="px-4 py-4 text-left font-semibold">Rank</th>
+                        <th className="px-4 py-4 text-center font-semibold text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-primary/5">
+                      {personnel.slice(0, 20).map(p => (
+                        <tr key={p.id} className="hover:bg-muted/30 transition-colors group">
+                          <td className="px-4 py-3 font-medium text-foreground">{p.name}</td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
+                              {p.category}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{p.rank}</td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => { setEditingP(p); setShowFormP(true); }} className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"><Pencil className="h-4 w-4" /></button>
+                              <button onClick={() => onDeletePersonnel(p.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'visits' && (
+          <div className="view-enter">
+            {!showFormV && (
+              <div className="flex justify-end mb-4">
+                <button onClick={() => { setEditingV(null); setShowFormV(true); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
+                  <Plus className="h-4 w-4" /> Add Visit
+                </button>
+              </div>
+            )}
+            
+            {showFormV ? (
+              <VisitForm
+                initial={editingV}
+                onSave={(data) => {
+                  if (editingV) onUpdateVisit(editingV.id, data);
+                  else onAddVisit(data as Omit<DistinguishedVisit, 'id'>);
+                  setShowFormV(false); setEditingV(null);
+                }}
+                onCancel={() => { setShowFormV(false); setEditingV(null); }}
+              />
+            ) : visits.length === 0 ? (
+              <EmptyState message="No distinguished visits recorded." onAdd={() => setShowFormV(true)} />
+            ) : (
+              <div className="surface-panel overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/40 text-primary text-xs uppercase tracking-wider border-b border-primary/10">
+                        <th className="px-4 py-4 text-left font-semibold">Name</th>
+                        <th className="px-4 py-4 text-left font-semibold">Country</th>
+                        <th className="px-4 py-4 text-left font-semibold">Date</th>
+                        <th className="px-4 py-4 text-center font-semibold text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-primary/5">
+                      {visits.map(v => (
+                        <tr key={v.id} className="hover:bg-muted/30 transition-colors group">
+                          <td className="px-4 py-3 font-medium text-foreground">{v.name}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{v.country}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{v.date}</td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => { setEditingV(v); setShowFormV(true); }} className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"><Pencil className="h-4 w-4" /></button>
+                              <button onClick={() => onDeleteVisit(v.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'commandants' && (
+          <div className="view-enter">
+            {!showFormC && (
+              <div className="flex justify-end mb-4">
+                <button onClick={() => { setEditingC(null); setShowFormC(true); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
+                  <Plus className="h-4 w-4" /> Add Commandant
+                </button>
+              </div>
+            )}
+            
+            {showFormC ? (
+              <CommandantForm
+                initial={editingC}
+                onSave={(data) => {
+                  if (editingC) onUpdateCommandant(editingC.id, data);
+                  else onAddCommandant(data as Omit<Commandant, 'id'>);
+                  setShowFormC(false); setEditingC(null);
+                }}
+                onCancel={() => { setShowFormC(false); setEditingC(null); }}
+              />
+            ) : commandants.length === 0 ? (
+              <EmptyState message="No commandants on record." onAdd={() => setShowFormC(true)} />
+            ) : (
+              <div className="surface-panel overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/40 text-primary text-xs uppercase tracking-wider border-b border-primary/10">
+                        <th className="px-4 py-4 text-left font-semibold">Name</th>
+                        <th className="px-4 py-4 text-left font-semibold">Tenure</th>
+                        <th className="px-4 py-4 text-left font-semibold">Status</th>
+                        <th className="px-4 py-4 text-center font-semibold text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-primary/5">
+                      {commandants.map(c => (
+                        <tr key={c.id} className="hover:bg-muted/30 transition-colors group">
+                          <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{c.tenureStart} – {c.tenureEnd ?? 'Present'}</td>
+                          <td className="px-4 py-3">
+                            {c.isCurrent ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold bg-primary/20 text-primary border border-primary/30">
+                                Current
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-medium bg-muted text-muted-foreground border border-muted-foreground/20">
+                                Past
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => { setEditingC(c); setShowFormC(true); }} className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"><Pencil className="h-4 w-4" /></button>
+                              <button onClick={() => onDeleteCommandant(c.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'audio' && (
+          <div className="view-enter">
+            <AdvancedAudioAdmin />
+          </div>
+        )}
       </div>
-
-      {tab === 'personnel' && (
-        <div>
-          <button onClick={() => { setEditingP(null); setShowFormP(true); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:bg-primary/90 transition-colors active:scale-[0.97] mb-4">
-            <Plus className="h-4 w-4" /> Add Personnel
-          </button>
-          {showFormP && (
-            <PersonnelForm
-              initial={editingP}
-              onSave={(data) => {
-                if (editingP) onUpdatePersonnel(editingP.id, data);
-                else onAddPersonnel(data as Omit<Personnel, 'id'>);
-                setShowFormP(false); setEditingP(null);
-              }}
-              onCancel={() => { setShowFormP(false); setEditingP(null); }}
-            />
-          )}
-          <div className="gold-border rounded overflow-hidden mt-2">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-muted/60 text-primary text-xs uppercase tracking-wider">
-                  <th className="px-4 py-3 text-left">Name</th>
-                  <th className="px-4 py-3 text-left">Category</th>
-                  <th className="px-4 py-3 text-left">Rank</th>
-                  <th className="px-4 py-3 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {personnel.slice(0, 20).map(p => (
-                  <tr key={p.id} className="border-t border-primary/10 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">{p.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{p.category}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{p.rank}</td>
-                    <td className="px-4 py-3 text-center flex justify-center gap-2">
-                      <button onClick={() => { setEditingP(p); setShowFormP(true); }} className="p-1 text-muted-foreground hover:text-primary transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => onDeletePersonnel(p.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {tab === 'visits' && (
-        <div>
-          <button onClick={() => { setEditingV(null); setShowFormV(true); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:bg-primary/90 transition-colors active:scale-[0.97] mb-4">
-            <Plus className="h-4 w-4" /> Add Visit
-          </button>
-          {showFormV && (
-            <VisitForm
-              initial={editingV}
-              onSave={(data) => {
-                if (editingV) onUpdateVisit(editingV.id, data);
-                else onAddVisit(data as Omit<DistinguishedVisit, 'id'>);
-                setShowFormV(false); setEditingV(null);
-              }}
-              onCancel={() => { setShowFormV(false); setEditingV(null); }}
-            />
-          )}
-          <div className="gold-border rounded overflow-hidden mt-2">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-muted/60 text-primary text-xs uppercase tracking-wider">
-                  <th className="px-4 py-3 text-left">Name</th>
-                  <th className="px-4 py-3 text-left">Country</th>
-                  <th className="px-4 py-3 text-left">Date</th>
-                  <th className="px-4 py-3 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visits.map(v => (
-                  <tr key={v.id} className="border-t border-primary/10 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">{v.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{v.country}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{v.date}</td>
-                    <td className="px-4 py-3 text-center flex justify-center gap-2">
-                      <button onClick={() => { setEditingV(v); setShowFormV(true); }} className="p-1 text-muted-foreground hover:text-primary transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => onDeleteVisit(v.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {tab === 'commandants' && (
-        <div>
-          <button onClick={() => { setEditingC(null); setShowFormC(true); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:bg-primary/90 transition-colors active:scale-[0.97] mb-4">
-            <Plus className="h-4 w-4" /> Add Commandant
-          </button>
-          {showFormC && (
-            <CommandantForm
-              initial={editingC}
-              onSave={(data) => {
-                if (editingC) onUpdateCommandant(editingC.id, data);
-                else onAddCommandant(data as Omit<Commandant, 'id'>);
-                setShowFormC(false); setEditingC(null);
-              }}
-              onCancel={() => { setShowFormC(false); setEditingC(null); }}
-            />
-          )}
-          <div className="gold-border rounded overflow-hidden mt-2">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-muted/60 text-primary text-xs uppercase tracking-wider">
-                  <th className="px-4 py-3 text-left">Name</th>
-                  <th className="px-4 py-3 text-left">Tenure</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {commandants.map(c => (
-                  <tr key={c.id} className="border-t border-primary/10 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">{c.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{c.tenureStart}–{c.tenureEnd ?? 'Present'}</td>
-                    <td className="px-4 py-3">
-                      {c.isCurrent ? (
-                        <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">Current</span>
-                      ) : (
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Past</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center flex justify-center gap-2">
-                      <button onClick={() => { setEditingC(c); setShowFormC(true); }} className="p-1 text-muted-foreground hover:text-primary transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => onDeleteCommandant(c.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -213,6 +304,7 @@ function PersonnelForm({ initial, onSave, onCancel }: {
   onSave: (data: Partial<Personnel>) => void;
   onCancel: () => void;
 }) {
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: initial?.name || '',
     rank: initial?.rank || '',
@@ -226,31 +318,97 @@ function PersonnelForm({ initial, onSave, onCancel }: {
   });
   const update = (key: string, value: string | number) => setForm(prev => ({ ...prev, [key]: value }));
 
+  const onUploadImage = async (file: File | null) => {
+    if (!file) return;
+    setUploadError(null);
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please upload an image or animated image file.');
+      return;
+    }
+
+    if (file.size > MAX_MEDIA_SIZE_MB * 1024 * 1024) {
+      setUploadError(`File is too large. Maximum size is ${MAX_MEDIA_SIZE_MB}MB.`);
+      return;
+    }
+
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      update('imageUrl', dataUrl);
+    } catch {
+      setUploadError('Could not process the selected file.');
+    }
+  };
+
   return (
-    <div className="gold-border rounded p-4 bg-card mb-4 scroll-reveal">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-semibold gold-text">{initial ? 'Edit' : 'Add'} Personnel</h4>
-        <button onClick={onCancel} className="p-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+    <div className="surface-panel p-5 mb-6 view-enter relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h4 className="text-base font-semibold gold-text">{initial ? 'Edit' : 'Add'} Personnel</h4>
+          <p className="text-xs text-muted-foreground mt-1">Enter the details for this personnel record.</p>
+        </div>
+        <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input placeholder="Rank" value={form.rank} onChange={e => update('rank', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <select value={form.category} onChange={e => update('category', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40">
-          {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select value={form.service} onChange={e => update('service', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40">
-          {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <input type="number" placeholder="Period Start" value={form.periodStart} onChange={e => update('periodStart', parseInt(e.target.value))} className="bg-muted rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input type="number" placeholder="Period End" value={form.periodEnd} onChange={e => update('periodEnd', parseInt(e.target.value))} className="bg-muted rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input type="number" placeholder="Seniority Order (1=highest)" value={form.seniorityOrder} onChange={e => update('seniorityOrder', parseInt(e.target.value))} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 sm:col-span-2 resize-none" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Full Name</label>
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Rank / Title</label>
+          <input placeholder="Rank" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Category</label>
+          <select value={form.category} onChange={e => update('category', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30">
+            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Service Branch</label>
+          <select value={form.service} onChange={e => update('service', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30">
+            {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Period Start (Year)</label>
+          <input type="number" placeholder="Period Start" value={form.periodStart} onChange={e => update('periodStart', parseInt(e.target.value))} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Period End (Year)</label>
+          <input type="number" placeholder="Period End" value={form.periodEnd} onChange={e => update('periodEnd', parseInt(e.target.value))} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Seniority Order</label>
+          <input type="number" placeholder="Order (1=highest)" value={form.seniorityOrder} onChange={e => update('seniorityOrder', parseInt(e.target.value))} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <div className="flex items-center gap-2">
+            <label className="px-3 py-1.5 text-xs rounded border border-primary/25 bg-card hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
+              Upload Image / GIF
+              <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
+            </label>
+            {form.imageUrl && (
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-primary/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+                Clear
+              </button>
+            )}
+          </div>
+          {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
+          <p className="text-[10px] text-muted-foreground">Stored locally in this browser for testing.</p>
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Citation / Bio</label>
+          <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+        </div>
       </div>
-      <div className="flex justify-end gap-2 mt-4">
-        <button onClick={onCancel} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-        <button onClick={() => onSave(form)} className="px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:bg-primary/90 transition-colors active:scale-[0.97]">
-          {initial ? 'Update' : 'Create'}
+      <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
+        <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
+        <button onClick={() => onSave(form)} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+          {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
     </div>
@@ -262,6 +420,7 @@ function VisitForm({ initial, onSave, onCancel }: {
   onSave: (data: Partial<DistinguishedVisit>) => void;
   onCancel: () => void;
 }) {
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: initial?.name || '',
     title: initial?.title || '',
@@ -272,24 +431,81 @@ function VisitForm({ initial, onSave, onCancel }: {
   });
   const update = (key: string, value: string) => setForm(prev => ({ ...prev, [key]: value }));
 
+  const onUploadImage = async (file: File | null) => {
+    if (!file) return;
+    setUploadError(null);
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please upload an image or animated image file.');
+      return;
+    }
+
+    if (file.size > MAX_MEDIA_SIZE_MB * 1024 * 1024) {
+      setUploadError(`File is too large. Maximum size is ${MAX_MEDIA_SIZE_MB}MB.`);
+      return;
+    }
+
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      update('imageUrl', dataUrl);
+    } catch {
+      setUploadError('Could not process the selected file.');
+    }
+  };
+
   return (
-    <div className="gold-border rounded p-4 bg-card mb-4 scroll-reveal">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-semibold gold-text">{initial ? 'Edit' : 'Add'} Visit</h4>
-        <button onClick={onCancel} className="p-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+    <div className="surface-panel p-5 mb-6 view-enter relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h4 className="text-base font-semibold gold-text">{initial ? 'Edit' : 'Add'} Visit</h4>
+          <p className="text-xs text-muted-foreground mt-1">Enter the details for this distinguished visit.</p>
+        </div>
+        <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input placeholder="Title/Position" value={form.title} onChange={e => update('title', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input placeholder="Country" value={form.country} onChange={e => update('country', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input type="date" value={form.date} onChange={e => update('date', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 sm:col-span-2" />
-        <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 sm:col-span-2 resize-none" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Visitor Name</label>
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Title / Position</label>
+          <input placeholder="Title/Position" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Country</label>
+          <input placeholder="Country" value={form.country} onChange={e => update('country', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Date of Visit</label>
+          <input type="date" value={form.date} onChange={e => update('date', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <div className="flex items-center gap-2">
+            <label className="px-3 py-1.5 text-xs rounded border border-primary/25 bg-card hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
+              Upload Image / GIF
+              <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
+            </label>
+            {form.imageUrl && (
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-primary/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+                Clear
+              </button>
+            )}
+          </div>
+          {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
+          <p className="text-[10px] text-muted-foreground">Stored locally in this browser for testing.</p>
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Visit Description / Context</label>
+          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+        </div>
       </div>
-      <div className="flex justify-end gap-2 mt-4">
-        <button onClick={onCancel} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-        <button onClick={() => onSave(form)} className="px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:bg-primary/90 transition-colors active:scale-[0.97]">
-          {initial ? 'Update' : 'Create'}
+      <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
+        <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
+        <button onClick={() => onSave(form)} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+          {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
     </div>
@@ -301,6 +517,7 @@ function CommandantForm({ initial, onSave, onCancel }: {
   onSave: (data: Partial<Commandant>) => void;
   onCancel: () => void;
 }) {
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: initial?.name || '',
     title: initial?.title || 'Commandant',
@@ -312,28 +529,91 @@ function CommandantForm({ initial, onSave, onCancel }: {
   });
   const update = (key: string, value: string | number | boolean) => setForm(prev => ({ ...prev, [key]: value }));
 
+  const onUploadImage = async (file: File | null) => {
+    if (!file) return;
+    setUploadError(null);
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please upload an image or animated image file.');
+      return;
+    }
+
+    if (file.size > MAX_MEDIA_SIZE_MB * 1024 * 1024) {
+      setUploadError(`File is too large. Maximum size is ${MAX_MEDIA_SIZE_MB}MB.`);
+      return;
+    }
+
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      update('imageUrl', dataUrl);
+    } catch {
+      setUploadError('Could not process the selected file.');
+    }
+  };
+
   return (
-    <div className="gold-border rounded p-4 bg-card mb-4 scroll-reveal">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-semibold gold-text">{initial ? 'Edit' : 'Add'} Commandant</h4>
-        <button onClick={onCancel} className="p-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+    <div className="surface-panel p-5 mb-6 view-enter relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h4 className="text-base font-semibold gold-text">{initial ? 'Edit' : 'Add'} Commandant</h4>
+          <p className="text-xs text-muted-foreground mt-1">Manage commandant records and tenure details.</p>
+        </div>
+        <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input type="number" placeholder="Tenure Start" value={form.tenureStart} onChange={e => update('tenureStart', parseInt(e.target.value))} className="bg-muted rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input type="number" placeholder="Tenure End (blank if current)" value={form.tenureEnd} onChange={e => update('tenureEnd', e.target.value ? parseInt(e.target.value) : '')} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40" />
-        <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 sm:col-span-2" />
-        <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="bg-muted rounded px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 sm:col-span-2 resize-none" />
-        <label className="flex items-center gap-2 text-sm text-foreground sm:col-span-2">
-          <input type="checkbox" checked={form.isCurrent} onChange={e => update('isCurrent', e.target.checked)} className="rounded" />
-          Current Commandant
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Commandant Name</label>
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Title</label>
+          <input placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tenure Start</label>
+          <input type="number" placeholder="Tenure Start" value={form.tenureStart} onChange={e => update('tenureStart', parseInt(e.target.value))} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5 flex flex-col">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tenure End</label>
+          <input type="number" disabled={form.isCurrent} placeholder={form.isCurrent ? 'Present' : 'Tenure End'} value={form.isCurrent ? '' : form.tenureEnd} onChange={e => update('tenureEnd', e.target.value ? parseInt(e.target.value) : '')} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 disabled:opacity-50 disabled:cursor-not-allowed" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <div className="flex items-center gap-2">
+            <label className="px-3 py-1.5 text-xs rounded border border-primary/25 bg-card hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
+              Upload Image / GIF
+              <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
+            </label>
+            {form.imageUrl && (
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-primary/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+                Clear
+              </button>
+            )}
+          </div>
+          {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
+          <p className="text-[10px] text-muted-foreground">Stored locally in this browser for testing.</p>
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Biography / Description</label>
+          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+        </div>
+        <label className="flex items-center gap-3 text-sm text-foreground sm:col-span-2 p-3 rounded-md bg-primary/5 border border-primary/10 cursor-pointer hover:bg-primary/10 transition-colors">
+          <div className={`w-5 h-5 rounded border ${form.isCurrent ? 'bg-primary border-primary text-primary-foreground' : 'border-primary/30 bg-background'} flex items-center justify-center transition-colors`}>
+            {form.isCurrent && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-3.5 h-3.5"><polyline points="20 6 9 17 4 12" /></svg>}
+          </div>
+          <input type="checkbox" checked={form.isCurrent} onChange={e => update('isCurrent', e.target.checked)} className="sr-only" />
+          <div>
+            <p className="font-medium text-primary">Current Commandant</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Check this if the commandant is currently serving.</p>
+          </div>
         </label>
       </div>
-      <div className="flex justify-end gap-2 mt-4">
-        <button onClick={onCancel} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-        <button onClick={() => onSave({ ...form, tenureEnd: form.tenureEnd === '' ? null : form.tenureEnd as number })} className="px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:bg-primary/90 transition-colors active:scale-[0.97]">
-          {initial ? 'Update' : 'Create'}
+      <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
+        <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
+        <button onClick={() => onSave({ ...form, tenureEnd: form.tenureEnd === '' ? null : form.tenureEnd as number })} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+          {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
     </div>

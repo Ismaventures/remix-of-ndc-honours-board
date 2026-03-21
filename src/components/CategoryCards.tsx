@@ -1,8 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Shield, Award, Users, Globe, Star, Settings } from 'lucide-react';
-import { Category } from '@/data/mockData';
+import { useEffect, useState } from "react";
+import { Shield, Award, Users, Globe, Star, Settings } from "lucide-react";
+import { Category } from "@/data/mockData";
+import ndcCrest from "/images/ndc-crest.png";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
-export type ViewKey = 'home' | 'fwc' | 'fdc' | 'directing' | 'allied' | 'visits' | 'admin';
+export type ViewKey = "home" | "fwc" | "fdc" | "directing" | "allied" | "visits" | "admin";
 
 interface CategoryCardsProps {
   onSelect: (key: ViewKey) => void;
@@ -16,46 +24,46 @@ const CARDS: {
   accentClass: string;
 }[] = [
   {
-    key: 'fwc',
-    label: 'Distinguished Fellows (FWC)',
-    subtitle: 'Fellows of the War College',
+    key: "fwc",
+    label: "Distinguished Fellows (FWC)",
+    subtitle: "Fellows of the War College",
     icon: Shield,
-    accentClass: 'from-primary/15 to-transparent',
+    accentClass: "from-primary/20 to-transparent",
   },
   {
-    key: 'fdc',
-    label: 'Distinguished Fellows (FDC)',
-    subtitle: 'Fellows of the Defence College',
+    key: "fdc",
+    label: "Distinguished Fellows (FDC)",
+    subtitle: "Fellows of the Defence College",
     icon: Award,
-    accentClass: 'from-secondary/20 to-transparent',
+    accentClass: "from-secondary/20 to-transparent",
   },
   {
-    key: 'directing',
-    label: 'Directing Staff',
-    subtitle: 'Chronicle of Excellence',
+    key: "directing",
+    label: "Directing Staff",
+    subtitle: "Chronicle of Excellence",
     icon: Users,
-    accentClass: 'from-primary/10 to-secondary/10',
+    accentClass: "from-primary/15 to-secondary/15",
   },
   {
-    key: 'allied',
-    label: 'Allied Officers',
-    subtitle: 'International Partnerships',
+    key: "allied",
+    label: "Allied Officers",
+    subtitle: "International Partnerships",
     icon: Globe,
-    accentClass: 'from-secondary/15 to-transparent',
+    accentClass: "from-secondary/20 to-transparent",
   },
   {
-    key: 'visits',
-    label: 'Distinguished Visits',
-    subtitle: 'Honours & Ceremonies',
+    key: "visits",
+    label: "Distinguished Visits",
+    subtitle: "Honours & Ceremonies",
     icon: Star,
-    accentClass: 'from-primary/12 to-secondary/8',
+    accentClass: "from-primary/12 to-secondary/8",
   },
   {
-    key: 'admin',
-    label: 'Admin Panel',
-    subtitle: 'Manage Records',
+    key: "admin",
+    label: "Admin Panel",
+    subtitle: "Manage Records",
     icon: Settings,
-    accentClass: 'from-muted/40 to-transparent',
+    accentClass: "from-muted/40 to-transparent",
   },
 ];
 
@@ -69,47 +77,71 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
 
   return (
     <section className="mb-10">
-      <div className="mb-5">
-        <h2 className="text-xl font-bold font-serif gold-text">Command Directory</h2>
-        <p className="text-xs text-muted-foreground mt-1 tracking-wide">Select a category to explore</p>
+      <div className="mb-6 flex flex-col items-center">
+        <h2 className="text-3xl font-bold font-serif gold-text tracking-wider uppercase text-center mt-8">Command Directory</h2>
+        <div className="h-1 w-24 bg-primary mt-2 mb-2 rounded-full" />
+        <p className="text-sm text-muted-foreground tracking-widest uppercase text-center">Select a category to view hierarchy</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {CARDS.map((card, i) => {
-          const Icon = card.icon;
-          return (
-            <button
-              key={card.key}
-              onClick={() => onSelect(card.key)}
-              className="relative overflow-hidden gold-border rounded-lg bg-card p-6 text-left group active:scale-[0.97] card-lift"
-              style={{
-                opacity: mounted ? 1 : 0,
-                transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-                transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${0.1 + i * 0.08}s`,
-              }}
-            >
-              {/* Background gradient */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${card.accentClass} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+      <div className={`transition-all duration-1000 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full max-w-5xl mx-auto"
+        >
+          <CarouselContent className="-ml-2 md:-ml-4">
+            {CARDS.map((card, i) => {
+              const Icon = card.icon;
+              return (
+                <CarouselItem key={card.key} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                  <div className="p-1 h-full">
+                    <button
+                      onClick={() => onSelect(card.key)}
+                      className="relative w-full h-[280px] overflow-hidden premium-card-border shimmer-effect rounded-xl bg-card text-left group transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_40px_rgba(200,169,81,0.2)] flex flex-col justify-end"
+                    >
+                      <div className={`absolute inset-0 bg-gradient-to-br ${card.accentClass} opacity-80 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay`} />
+                      
+                      {/* NDC Logo Background Watermark */}
+                      <div className="absolute right-[-20%] top-[-10%] w-64 h-64 opacity-[0.03] group-hover:opacity-10 transition-all duration-700 pointer-events-none transform group-hover:scale-110 group-hover:rotate-3">
+                        <img src={ndcCrest} alt="" className="w-full h-full object-contain filter grayscale invert" />
+                      </div>
 
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded bg-muted/60 flex items-center justify-center gold-border">
-                    <Icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold font-serif leading-snug">{card.label}</h3>
-                    <p className="text-[10px] text-muted-foreground tracking-wide">{card.subtitle}</p>
-                  </div>
-                </div>
+                      <div className="absolute top-4 right-4 text-primary/10 group-hover:text-primary/20 transition-colors duration-500">
+                        <Icon className="w-32 h-32" />
+                      </div>
 
-                {/* Gold line that expands on hover */}
-                <div className="h-px w-full bg-primary/10 overflow-hidden">
-                  <div className="h-full bg-primary w-0 group-hover:w-full transition-all duration-700 ease-out" />
-                </div>
-              </div>
-            </button>
-          );
-        })}
+                      <div className="relative p-6 z-10 w-full bg-gradient-to-t from-background via-background/95 to-transparent pt-12">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-14 h-14 rounded-full bg-navy gold-border flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-lg p-2 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-primary/10 animate-pulse-slow"></div>
+                            <img src={ndcCrest} alt="NDC Crest" className="w-full h-full object-contain relative z-10 drop-shadow-md" />
+                          </div>
+                          <div className="w-10 h-10 rounded-full bg-muted/40 border border-primary/20 flex items-center justify-center shrink-0 shadow-inner">
+                            <Icon className="h-5 w-5 text-primary" />
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold font-serif leading-snug text-foreground mb-1 group-hover:text-primary transition-colors drop-shadow-sm">{card.label}</h3>
+                          <p className="text-xs text-muted-foreground tracking-widest uppercase">{card.subtitle}</p>
+                        </div>
+
+                        <div className="h-0.5 w-full bg-primary/20 mt-4 overflow-hidden rounded-full">
+                          <div className="h-full bg-primary w-0 group-hover:w-full transition-all duration-700 ease-out" />
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </CarouselItem>
+              );
+            })}
+          </CarouselContent>
+          <div className="hidden md:flex justify-center mt-6 gap-4 relative w-full h-8">
+            <CarouselPrevious className="static translate-y-0 gold-border bg-background hover:bg-muted text-primary border-2" />
+            <CarouselNext className="static translate-y-0 gold-border bg-background hover:bg-muted text-primary border-2" />
+          </div>
+        </Carousel>
       </div>
     </section>
   );

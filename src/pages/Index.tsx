@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppHeader } from '@/components/AppHeader';
 import { CommandantHero } from '@/components/CommandantHero';
 import { PastCommandants } from '@/components/PastCommandants';
@@ -7,6 +7,8 @@ import { OrganogramView } from '@/components/OrganogramView';
 import { VisitsSection } from '@/components/VisitsSection';
 import { AdminPanel } from '@/components/AdminPanel';
 import { AutoRotationDisplay } from '@/components/AutoRotationDisplay';
+import { BootSequence } from '@/components/BootSequence';
+import { AudioManager } from '@/components/AudioManager';
 import { usePersonnelStore, useVisitsStore, useCommandantsStore } from '@/hooks/useStore';
 import { Category } from '@/data/mockData';
 
@@ -25,12 +27,16 @@ const SECTION_CATEGORIES: Record<string, Category> = {
 };
 
 const Index = () => {
+  const [isBooting, setIsBooting] = useState(true);
+
   const [view, setView] = useState<ViewKey>('home');
   const { personnel, addPersonnel, updatePersonnel, deletePersonnel } = usePersonnelStore();
   const { visits, addVisit, updateVisit, deleteVisit } = useVisitsStore();
   const { commandants, addCommandant, updateCommandant, deleteCommandant } = useCommandantsStore();
 
   const currentCommandant = commandants.find(c => c.isCurrent);
+  const activeCategory = SECTION_CATEGORIES[view] ?? null;
+  const activeView = view === 'visits' ? 'visits' : view === 'home' ? 'home' : view === 'admin' ? 'admin' : 'category';
 
   const renderContent = () => {
     if (view === 'home') {
@@ -88,19 +94,23 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background animate-bg-sweep bg-gradient-to-br from-background via-background to-secondary/10">
-      <AppHeader onHomeClick={() => setView('home')} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          {/* Auto-rotation button */}
-          <div className="flex justify-end mb-4">
-            <AutoRotationDisplay personnel={personnel} visits={visits} />
-          </div>
+    <>
+      <AudioManager />
+      {isBooting && <BootSequence onComplete={() => setIsBooting(false)} />}
+      <div className={`min-h-screen flex flex-col bg-background animate-bg-sweep bg-gradient-to-br from-background via-background to-secondary/10 transition-opacity duration-1000 ${isBooting ? 'opacity-0' : 'opacity-100'}`}>
+        <AppHeader onHomeClick={() => setView('home')} />
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-6xl mx-auto px-6 py-8">
+            {/* Auto-rotation button */}
+            <div className="flex justify-end mb-4">
+              <AutoRotationDisplay personnel={personnel} visits={visits} commandants={commandants} activeCategory={activeCategory} activeView={activeView} />
+            </div>
 
-          {renderContent()}
-        </div>
-      </main>
-    </div>
+            {renderContent()}
+          </div>
+        </main>
+      </div>
+    </>
   );
 };
 

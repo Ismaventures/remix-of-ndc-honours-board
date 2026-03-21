@@ -1,11 +1,56 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Personnel, DistinguishedVisit, Commandant, initialPersonnel, initialVisits, initialCommandants } from '@/data/mockData';
 
+const COMMANDANTS_DATA_VERSION = '2026-03-21-commandants-v3';
+const LEGACY_COMMANDANTS = new Set([
+  'Rear Admiral A.A. Ahmad',
+  'AVM E.O. Abubakar',
+  'Rear Admiral M.A. Osondu',
+  'Maj Gen. T.A. Lagbaja',
+  'AVM C.O. Egbuchunam',
+  'Rear Admiral S.I. Akhigbe',
+]);
+
 function loadFromStorage<T>(key: string, fallback: T): T {
   try {
     const stored = localStorage.getItem(key);
     return stored ? JSON.parse(stored) : fallback;
   } catch { return fallback; }
+}
+
+function isLegacyCommandantsData(data: unknown): boolean {
+  if (!Array.isArray(data)) return true;
+  if (data.length < 15) return true;
+
+  return data.some(item => {
+    if (!item || typeof item !== 'object') return true;
+    const name = (item as { name?: unknown }).name;
+    return typeof name === 'string' && LEGACY_COMMANDANTS.has(name);
+  });
+}
+
+function loadCommandantsFromStorage(): Commandant[] {
+  try {
+    const storedVersion = localStorage.getItem('ndc_commandants_version');
+    const storedCommandants = localStorage.getItem('ndc_commandants');
+
+    if (storedVersion !== COMMANDANTS_DATA_VERSION || !storedCommandants) {
+      localStorage.setItem('ndc_commandants_version', COMMANDANTS_DATA_VERSION);
+      localStorage.setItem('ndc_commandants', JSON.stringify(initialCommandants));
+      return initialCommandants;
+    }
+
+    const parsed = JSON.parse(storedCommandants) as unknown;
+    if (isLegacyCommandantsData(parsed)) {
+      localStorage.setItem('ndc_commandants_version', COMMANDANTS_DATA_VERSION);
+      localStorage.setItem('ndc_commandants', JSON.stringify(initialCommandants));
+      return initialCommandants;
+    }
+
+    return parsed as Commandant[];
+  } catch {
+    return initialCommandants;
+  }
 }
 
 export function usePersonnelStore() {
@@ -34,11 +79,12 @@ export function usePersonnelStore() {
 
 export function useCommandantsStore() {
   const [commandants, setCommandants] = useState<Commandant[]>(() =>
-    loadFromStorage('ndc_commandants', initialCommandants)
+    loadCommandantsFromStorage()
   );
 
   useEffect(() => {
     localStorage.setItem('ndc_commandants', JSON.stringify(commandants));
+    localStorage.setItem('ndc_commandants_version', COMMANDANTS_DATA_VERSION);
   }, [commandants]);
 
   const addCommandant = useCallback((c: Omit<Commandant, 'id'>) => {
@@ -78,4 +124,29 @@ export function useVisitsStore() {
   }, []);
 
   return { visits, addVisit, updateVisit, deleteVisit };
+}
+
+
+export interface AudioSettings {
+  audioUrl: string | null;
+}
+
+const defaultAudioSettings: AudioSettings = {
+  audioUrl: null, // "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+};
+
+export function useAudioSettingsStore() {
+  const [settings, setSettings] = useState<AudioSettings>(() =>
+    loadFromStorage("ndc_audio_settings", defaultAudioSettings)
+  );
+
+  useEffect(() => {
+    localStorage.setItem("ndc_audio_settings", JSON.stringify(settings));
+  }, [settings]);
+
+  const updateAudioUrl = useCallback((url: string | null) => {
+    setSettings({ audioUrl: url });
+  }, []);
+
+  return { settings, updateAudioUrl };
 }

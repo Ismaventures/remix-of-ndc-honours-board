@@ -1,7 +1,8 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Search, ArrowLeft, User, ChevronDown, LayoutGrid, List } from 'lucide-react';
-import { Personnel, Category } from '@/data/mockData';
-import { ProfileModal } from './ProfileModal';
+import { useState, useMemo, useEffect } from "react";
+import { ArrowLeft, ZoomIn, ZoomOut, Maximize } from "lucide-react";
+import { Personnel, Category } from "@/data/mockData";
+import { ProfileModal } from "./ProfileModal";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 interface OrganogramViewProps {
   data: Personnel[];
@@ -10,17 +11,43 @@ interface OrganogramViewProps {
   onBack: () => void;
 }
 
-interface RankGroup {
-  rank: string;
-  seniority: number;
-  members: Personnel[];
+// Group into a tree based on seniority.
+// For a military command structure visualization, Top node = most senior.
+function buildTree(personnel: Personnel[]) {
+  if (!personnel.length) return null;
+  const sorted = [...personnel].sort((a, b) => a.seniorityOrder - b.seniorityOrder);
+  
+  const root = { ...sorted[0], children: [] as any[] };
+  let currentLevel = [root];
+  let nextLevel: any[] = [];
+  
+  let i = 1;
+  const maxChildren = 3;
+  
+  while (i < sorted.length) {
+    for (const parent of currentLevel) {
+      const take = Math.min(maxChildren, sorted.length - i);
+      for (let j = 0; j < take; j++) {
+        const child = { ...sorted[i], children: [] };
+        parent.children.push(child);
+        nextLevel.push(child);
+        i++;
+      }
+      if (i >= sorted.length) break;
+    }
+    if (nextLevel.length > 0) {
+      currentLevel = nextLevel;
+      nextLevel = [];
+    } else {
+      break;
+    }
+  }
+  
+  return root;
 }
 
 export function OrganogramView({ data, title, category, onBack }: OrganogramViewProps) {
-  const [search, setSearch] = useState('');
-  const [serviceFilter, setServiceFilter] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'hierarchy' | 'gallery'>('hierarchy');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -29,195 +56,177 @@ export function OrganogramView({ data, title, category, onBack }: OrganogramView
   }, []);
 
   const filtered = useMemo(() => {
-    let result = data.filter(p => p.category === category);
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.rank.toLowerCase().includes(q) ||
-        p.service.toLowerCase().includes(q)
-      );
-    }
-    if (serviceFilter) {
-      result = result.filter(p => p.service === serviceFilter);
-    }
-    return result.sort((a, b) => a.seniorityOrder - b.seniorityOrder);
-  }, [data, category, search, serviceFilter]);
+    return data.filter(p => p.category === category);
+  }, [data, category]);
 
-  const rankGroups = useMemo(() => {
-    const groups: Record<string, RankGroup> = {};
-    filtered.forEach(p => {
-      if (!groups[p.rank]) {
-        groups[p.rank] = { rank: p.rank, seniority: p.seniorityOrder, members: [] };
-      }
-      groups[p.rank].members.push(p);
-    });
-    return Object.values(groups).sort((a, b) => a.seniority - b.seniority);
-  }, [filtered]);
+  const treeData = useMemo(() => buildTree(filtered), [filtered]);
 
-  const services = [...new Set(data.filter(p => p.category === category).map(p => p.service))];
-  const selectedPerson = selectedId ? data.find(p => p.id === selectedId) : null;
+  const selectedPerson = useMemo(
+    () => filtered.find((p) => p.id === selectedId) || null,
+    [filtered, selectedId]
+  );
+
+  const renderNode = (node: any, level: number = 0) => {
+    if (!node) return null;
+    
+    return (
+      <li key={node.id} className="organogram-li relative">
+        <div 
+          onClick={() => setSelectedId(node.id)}
+          className={`organogram-node group relative inline-flex flex-col items-center bg-card gold-border p-4 rounded-lg w-48 shadow-lg cursor-pointer card-lift mx-[10px] mb-8 organogram-fade-in`}
+          style={{ animationDelay: `${level * 0.2}s` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
+          <div className="w-20 h-20 rounded-full overflow-hidden gold-border mb-3 z-10 bg-navy relative">
+            {node.imageUrl ? (
+              <img src={node.imageUrl} alt={node.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-primary font-bold text-xl">{node.name.charAt(0)}</div>
+            )}
+          </div>
+          <div className="text-center z-10 w-full relative">
+            <h4 className="text-sm font-bold font-serif leading-tight text-foreground">{node.name}</h4>
+            <div className="text-[11px] text-primary mt-1 font-semibold tracking-wider uppercase">{node.rank}</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">{node.period}</div>
+          </div>
+        </div>
+        {node.children && node.children.length > 0 && (
+          <ul className="organogram-ul flex justify-center mt-6 relative">
+            {node.children.map((child: any) => renderNode(child, level + 1))}
+          </ul>
+        )}
+      </li>
+    );
+  };
 
   return (
-    <div
-      style={{
-        opacity: mounted ? 1 : 0,
-        transform: mounted ? 'translateY(0)' : 'translateY(16px)',
-        transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-      }}
-    >
-      {/* Header with back button */}
+    <div className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={onBack}
-          className="p-2 rounded gold-border text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all active:scale-95"
+          className="p-2 rounded-full hover:bg-muted/50 transition-colors gold-border bg-background"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4 text-primary" />
         </button>
-        <div className="flex-1">
+        <div>
           <h2 className="text-2xl font-bold font-serif gold-text">{title}</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{filtered.length} personnel records</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setViewMode('hierarchy')}
-            className={`p-2 rounded transition-colors ${viewMode === 'hierarchy' ? 'bg-muted text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            <ChevronDown className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setViewMode('gallery')}
-            className={`p-2 rounded transition-colors ${viewMode === 'gallery' ? 'bg-muted text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </button>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1 min-h-[16px]">
+            Command Hierarchy View
+          </p>
         </div>
       </div>
 
-      {/* Search & Filters */}
-      <div className="flex gap-3 mb-6 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search by name, rank, or service..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-muted rounded text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
-          />
-        </div>
-        <select
-          value={serviceFilter}
-          onChange={e => setServiceFilter(e.target.value)}
-          className="bg-muted text-sm text-foreground rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/40"
-        >
-          <option value="">All Services</option>
-          {services.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-      </div>
-
-      {viewMode === 'hierarchy' ? (
-        /* ORGANOGRAM / HIERARCHY VIEW */
-        <div className="space-y-6">
-          {rankGroups.map((group, gi) => (
-            <div
-              key={group.rank}
-              className="scroll-reveal"
-              style={{ animationDelay: `${gi * 100}ms` }}
-            >
-              {/* Rank tier label */}
-              <div className="flex items-center gap-3 mb-3">
-                <div className="h-px flex-1 bg-primary/15" />
-                <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold px-3 py-1 gold-border rounded-full bg-card">
-                  {group.rank}
-                </span>
-                <div className="h-px flex-1 bg-primary/15" />
-              </div>
-
-              {/* Vertical connector from rank label */}
-              {group.members.length > 0 && (
-                <div className="flex justify-center mb-2">
-                  <div className="w-px h-4 bg-primary/20" />
-                </div>
-              )}
-
-              {/* Personnel nodes */}
-              <div className="flex flex-wrap justify-center gap-3">
-                {group.members.map((person, pi) => (
-                  <button
-                    key={person.id}
-                    onClick={() => setSelectedId(person.id)}
-                    className="w-48 gold-border rounded-lg bg-card p-4 text-left group card-lift active:scale-[0.97] row-reveal"
-                    style={{ animationDelay: `${gi * 100 + pi * 50}ms` }}
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-full bg-muted gold-border flex items-center justify-center shrink-0 overflow-hidden">
-                        {person.imageUrl ? (
-                          <img src={person.imageUrl} alt={person.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <User className="h-4 w-4 text-primary/40" />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold leading-snug truncate">{person.name}</p>
-                        <p className="text-[10px] text-muted-foreground">{person.service}</p>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-primary/70">
-                      {person.periodStart}–{person.periodEnd}
-                    </p>
+      <div className="bg-navy-deep gold-border shadow-[inset_0_0_40px_rgba(0,0,0,0.5)] rounded-xl p-2 md:p-8 min-h-[600px] flex flex-col relative overflow-hidden">
+        {treeData ? (
+          <TransformWrapper
+            initialScale={1}
+            minScale={0.3}
+            maxScale={3}
+            centerOnInit
+            wheel={{ step: 0.1 }}
+          >
+            {({ zoomIn, zoomOut, resetTransform }: any) => (
+              <>
+                <div className="absolute top-4 right-4 z-20 flex gap-2">
+                  <button onClick={() => zoomIn()} className="p-2 bg-navy gold-border rounded hover:bg-muted transition-colors">
+                    <ZoomIn className="w-4 h-4 text-primary" />
                   </button>
-                ))}
-              </div>
-
-              {/* Connector line to next rank group */}
-              {gi < rankGroups.length - 1 && (
-                <div className="flex justify-center mt-3">
-                  <div className="w-px h-6 bg-primary/15" />
+                  <button onClick={() => zoomOut()} className="p-2 bg-navy gold-border rounded hover:bg-muted transition-colors">
+                    <ZoomOut className="w-4 h-4 text-primary" />
+                  </button>
+                  <button onClick={() => resetTransform()} className="p-2 bg-navy gold-border rounded hover:bg-muted transition-colors">
+                    <Maximize className="w-4 h-4 text-primary" />
+                  </button>
                 </div>
-              )}
+                <TransformComponent wrapperClass="w-full h-full min-h-[600px] !cursor-grab active:!cursor-grabbing">
+                  <div className="organogram-container flex justify-center items-start pt-10 min-w-max pb-32 px-20">
+                    <ul className="organogram-ul m-0 p-0 flex justify-center">
+                      {renderNode(treeData)}
+                    </ul>
+                  </div>
+                </TransformComponent>
+              </>
+            )}
+          </TransformWrapper>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center p-12">
+            <div className="w-16 h-16 rounded-full gold-border flex items-center justify-center bg-muted/20 mb-4 animate-pulse-slow">
+              <span className="text-primary text-2xl">?</span>
             </div>
-          ))}
+            <h3 className="text-lg font-bold font-serif text-muted-foreground">No personnel records found</h3>
+          </div>
+        )}
+      </div>
 
-          {rankGroups.length === 0 && (
-            <p className="text-center text-muted-foreground py-12">No records found.</p>
-          )}
-        </div>
-      ) : (
-        /* GALLERY VIEW */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map((p, i) => (
-            <button
-              key={p.id}
-              onClick={() => setSelectedId(p.id)}
-              className="gold-border rounded-lg p-4 bg-card text-left group active:scale-[0.97] card-lift scroll-reveal"
-              style={{ animationDelay: `${i * 40}ms` }}
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="h-12 w-12 rounded-full bg-muted gold-border flex items-center justify-center text-primary overflow-hidden shrink-0">
-                  {p.imageUrl ? (
-                    <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="h-5 w-5 opacity-40" />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm truncate">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">{p.rank}</p>
-                </div>
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{p.service}</span>
-                <span>{p.periodStart}–{p.periodEnd}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+      {selectedPerson && <ProfileModal
+        person={selectedPerson}
+        onClose={() => setSelectedId(null)}
+      />}
+      
+      <style>{`
+        .organogram-ul {
+          padding-top: 30px; 
+          position: relative;
+          transition: all 0.5s;
+        }
 
-      {selectedPerson && (
-        <ProfileModal person={selectedPerson} onClose={() => setSelectedId(null)} />
-      )}
+        .organogram-li {
+          float: left; text-align: center;
+          list-style-type: none;
+          position: relative;
+          padding: 30px 10px 0 10px;
+          transition: all 0.5s;
+        }
+
+        .organogram-li::before, .organogram-li::after{
+          content: "";
+          position: absolute; top: 0; right: 50%;
+          border-top: 1px solid hsl(var(--primary));
+          width: 50%; height: 30px;
+        }
+        .organogram-li::after{
+          right: auto; left: 50%;
+          border-left: 1px solid hsl(var(--primary));
+        }
+
+        .organogram-li:only-child::after, .organogram-li:only-child::before {
+          display: none;
+        }
+
+        .organogram-li:only-child{ padding-top: 0;}
+
+        .organogram-li:first-child::before, .organogram-li:last-child::after{
+          border: 0 none;
+        }
+        .organogram-li:last-child::before{
+          border-right: 1px solid hsl(var(--primary));
+          border-radius: 0 4px 0 0;
+        }
+        .organogram-li:first-child::after{
+          border-radius: 4px 0 0 0;
+        }
+
+        .organogram-ul::before{
+          content: "";
+          position: absolute; top: 0; left: 50%;
+          border-left: 1px solid hsl(var(--primary));
+          width: 0; height: 30px;
+          transform: translateX(-50%);
+        }
+
+        .organogram-fade-in {
+          animation: fade-down-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        
+        @keyframes fade-down-in {
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
