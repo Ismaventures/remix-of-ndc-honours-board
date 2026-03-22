@@ -24,6 +24,7 @@ interface AdminPanelProps {
   audioSettings?: { audioUrl: string | null };
   onUpdateAudioSettings?: (url: string | null) => void;
   onBack: () => void;
+  onSignOut?: () => void;
 }
 
 const CATEGORIES: Category[] = ['FWC', 'FDC', 'Directing Staff', 'Allied'];
@@ -33,7 +34,7 @@ const THEME_OPTIONS: Array<{ mode: ThemeMode; label: string; description: string
   {
     mode: 'outdoor-tactical-light',
     label: 'Outdoor 1 - Tactical Light',
-    description: 'High visibility white and navy blue display with crisp black text for maximum sunlight readability.',
+    description: 'White-first NDC palette with deep navy foundations and gold accents for clean outdoor readability.',
   },
   {
     mode: 'outdoor-high-contrast-command',
@@ -85,6 +86,7 @@ export function AdminPanel({
   themeMode, onThemeModeChange, onResetThemeMode,
   audioSettings, onUpdateAudioSettings,
   onBack,
+  onSignOut,
 }: AdminPanelProps) {
   const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'audio'>('personnel');
   const [editingP, setEditingP] = useState<Personnel | null>(null);
@@ -134,12 +136,22 @@ export function AdminPanel({
             <p className="text-sm text-muted-foreground mt-0.5">Manage records and system options</p>
           </div>
         </div>
-        <div className="flex gap-2 p-1 bg-card/60 backdrop-blur-sm rounded-full border border-primary/15">
+        <div className="flex items-center gap-3">
+          {onSignOut && (
+            <button
+              onClick={onSignOut}
+              className="px-3 py-2 rounded-full text-xs font-semibold tracking-wider uppercase border border-primary/30 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all"
+            >
+              Sign Out
+            </button>
+          )}
+          <div className="flex gap-2 p-1 bg-card/60 backdrop-blur-sm rounded-full border border-primary/15">
           {tabBtn('personnel', 'Personnel')}
           {tabBtn('visits', 'Visits')}
           {tabBtn('commandants', 'Commandants')}
           {tabBtn('theme', 'Theme')}
           {tabBtn('audio', 'Audio Settings')}
+          </div>
         </div>
       </div>
 

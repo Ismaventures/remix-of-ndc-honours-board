@@ -9,13 +9,17 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 export const customAudioThemeEvent = new EventTarget();
 
 export function AudioManager() {
-  const { masterVolume, isMuted, toggleMute, setMasterVolume } = useAudioStore();
+  const { masterVolume, isMuted, toggleMute, setMasterVolume, loadTracks } = useAudioStore();
   
   const audio1Ref = useRef<HTMLAudioElement>(null);
   const audio2Ref = useRef<HTMLAudioElement>(null);
   const activeRef = useRef<1 | 2>(1); // keeps track of which audio element is playing the current track
   
   const [currentId, setCurrentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    void loadTracks();
+  }, [loadTracks]);
 
   useEffect(() => {
     const handleCommand = async (e: Event) => {

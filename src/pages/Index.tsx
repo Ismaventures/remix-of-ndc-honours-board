@@ -6,12 +6,14 @@ import { CategoryCards, ViewKey } from '@/components/CategoryCards';
 import { OrganogramView } from '@/components/OrganogramView';
 import { VisitsSection } from '@/components/VisitsSection';
 import { AdminPanel } from '@/components/AdminPanel';
+import { AdminLogin } from '@/components/AdminLogin';
 import { AutoRotationDisplay } from '@/components/AutoRotationDisplay';
 import { BootSequence } from '@/components/BootSequence';
 import { AudioManager } from '@/components/AudioManager';
 import { usePersonnelStore, useVisitsStore, useCommandantsStore } from '@/hooks/useStore';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { Category } from '@/types/domain';
+import { supabase } from '@/lib/supabaseClient';
 
 const SECTION_TITLES: Record<string, string> = {
   fwc: 'Distinguished Fellows of the War College (FWC)',
@@ -29,6 +31,8 @@ const SECTION_CATEGORIES: Record<string, Category> = {
 
 const Index = () => {
   const [isBooting, setIsBooting] = useState(true);
+  const [adminAuthenticated, setAdminAuthenticated] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
 
   const [view, setView] = useState<ViewKey>('home');
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
@@ -39,6 +43,31 @@ const Index = () => {
   const currentCommandant = commandants.find(c => c.isCurrent);
   const activeCategory = SECTION_CATEGORIES[view] ?? null;
   const activeView = view === 'visits' ? 'visits' : view === 'home' ? 'home' : view === 'admin' ? 'admin' : 'category';
+
+  useEffect(() => {
+    let mounted = true;
+
+    const initSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted) return;
+      setAdminAuthenticated(Boolean(data.session));
+      setAuthReady(true);
+    };
+
+    void initSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAdminAuthenticated(Boolean(session));
+      setAuthReady(true);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const renderContent = () => {
     if (view === 'home') {
@@ -60,6 +89,14 @@ const Index = () => {
     }
 
     if (view === 'admin') {
+      if (!authReady) {
+        return <div className="text-sm text-muted-foreground">Checking admin session...</div>;
+      }
+
+      if (!adminAuthenticated) {
+        return <AdminLogin onSuccess={() => setAdminAuthenticated(true)} />;
+      }
+
       return (
         <AdminPanel
           personnel={personnel}
@@ -77,6 +114,10 @@ const Index = () => {
           themeMode={themeMode}
           onThemeModeChange={setThemeMode}
           onResetThemeMode={resetThemeMode}
+          onSignOut={() => {
+            void supabase.auth.signOut();
+            setAdminAuthenticated(false);
+          }}
           onBack={() => setView('home')}
         />
       );

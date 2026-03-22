@@ -5,7 +5,7 @@ import { Upload, Trash2, Edit2, Play, Pause, Save, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 export function AdvancedAudioAdmin() {
-  const { tracks, assignments, addTrack, deleteTrack, renameTrack, setAssignment } = useAudioStore();
+  const { tracks, assignments, addTrack, deleteTrack, renameTrack, setAssignment, loadTracks } = useAudioStore();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -14,6 +14,12 @@ export function AdvancedAudioAdmin() {
   
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadTracks();
+  }, [loadTracks]);
 
   // Load physical URLs for previewing tracks locally
   useEffect(() => {
@@ -37,9 +43,19 @@ export function AdvancedAudioAdmin() {
       alert("Only .mp3 and .wav files are supported.");
       return;
     }
-    
-    await addTrack(file, file.name.split('.')[0]);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+
+    try {
+      setIsUploading(true);
+      setUploadStatus('Audio is being uploaded...');
+      await addTrack(file, file.name.split('.')[0]);
+      setUploadStatus('Upload completed');
+    } catch {
+      setUploadStatus('Upload failed');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setTimeout(() => setUploadStatus(null), 3000);
+    }
   };
 
   const handlePlayPreview = (id: string, url: string) => {
@@ -98,11 +114,17 @@ export function AdvancedAudioAdmin() {
         <div className="space-y-4">
           <h4 className="text-md font-semibold text-primary/80 uppercase tracking-widest border-b border-primary/20 pb-2">Audio Storage</h4>
           <div className="flex items-center gap-4">
-            <Button onClick={() => fileInputRef.current?.click()} className="bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/50 transition-all flex items-center gap-2">
-              <Upload className="w-4 h-4" /> Upload Local Audio
+            <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/50 transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+              <Upload className="w-4 h-4" /> Upload Audio
             </Button>
             <input type="file" accept=".mp3,.wav" className="hidden" ref={fileInputRef} onChange={handleUpload} />
           </div>
+
+          {uploadStatus && (
+            <p className={`text-xs ${uploadStatus === 'Upload completed' ? 'text-green-500' : uploadStatus === 'Upload failed' ? 'text-destructive' : 'text-primary/90'}`}>
+              {uploadStatus}
+            </p>
+          )}
 
           <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
             {tracks.length === 0 ? (

@@ -36,10 +36,11 @@ Scope:
 ## 3. Target Theme Modes (Required by Prompt)
 
 ### Outdoor Mode 1: Tactical Light
-- background: #E6E2D3
-- textPrimary: #1F3D2B
-- accent: #556B2F
-- visual goal: anti-glare field readability in sunlight
+- background: #FFFFFF
+- textPrimary: #0B1F3A
+- accent: #C9A646
+- supporting accents: restrained #1F6B3A and #8B0000 for identity-only highlights
+- visual goal: bright-screen readability with NDC core identity on white surfaces
 
 ### Outdoor Mode 2: High Contrast Command
 - background: #000000
