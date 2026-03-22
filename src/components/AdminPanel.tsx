@@ -139,6 +139,49 @@ const TRANSITION_USAGE_GUIDES: Record<AutoDisplayTransitionType, { bestFor: stri
   },
 };
 
+const FEATURE_GUIDE_SECTIONS: Array<{ id: string; title: string; body: string }> = [
+  {
+    id: 'home-overview',
+    title: 'Home Overview',
+    body: 'The home page presents the current commandant, archive highlights, and quick category entry cards. Use this area as the public-facing gateway to all records.',
+  },
+  {
+    id: 'category-browsing',
+    title: 'Category Browsing (FWC, FDC, Directing Staff, Allied, Visits)',
+    body: 'Each category page focuses on one stream of records. Select a category to narrow attention and reduce clutter while presenting rank, period, and profile information clearly.',
+  },
+  {
+    id: 'auto-rotation',
+    title: 'Auto Rotation Display',
+    body: 'Auto Rotation is the slideshow mode for unattended screens. It uses transition settings from the Admin Panel and can run globally or by category context.',
+  },
+  {
+    id: 'boot-sequence',
+    title: 'Boot Sequence Experience',
+    body: 'Boot settings control startup pacing, archive transition speed, and the onboarding flow before users reach live content. Keep values balanced for readability and prestige.',
+  },
+  {
+    id: 'theme-system',
+    title: 'Theme System',
+    body: 'Themes define the full visual language: colors, contrast, and style mood. Use Preview mindset in Admin, then Apply & Save so all authorized devices render consistently.',
+  },
+  {
+    id: 'audio-system',
+    title: 'Audio System',
+    body: 'Audio settings assign tracks to global and context-specific experiences. This is useful for ceremonies, exhibitions, and controlled ambience during auto displays.',
+  },
+  {
+    id: 'admin-records',
+    title: 'Records Management (Personnel, Visits, Commandants)',
+    body: 'Admin forms are used to add, edit, and delete archive records. Keep naming, rank, dates, and citations accurate because these directly shape public trust and archival value.',
+  },
+  {
+    id: 'save-apply-model',
+    title: 'Save & Apply Model',
+    body: 'Draft values can be changed safely first. Use Apply & Save to publish final settings to persistent storage so the same behavior remains after refresh or on another device.',
+  },
+];
+
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -173,7 +216,7 @@ export function AdminPanel({
   onBack,
   onSignOut,
 }: AdminPanelProps) {
-  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio'>('personnel');
+  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'guide'>('personnel');
   const [editingP, setEditingP] = useState<Personnel | null>(null);
   const [editingV, setEditingV] = useState<DistinguishedVisit | null>(null);
   const [editingC, setEditingC] = useState<Commandant | null>(null);
@@ -453,6 +496,7 @@ export function AdminPanel({
             {tabBtn('theme', 'Theme')}
             {tabBtn('transitions', 'Transitions')}
             {tabBtn('audio', 'Audio Settings')}
+            {tabBtn('guide', 'Helper Guide')}
           </div>
         </div>
       </div>
@@ -643,6 +687,66 @@ export function AdminPanel({
         {tab === 'audio' && (
           <div className="view-enter">
             <AdvancedAudioAdmin />
+          </div>
+        )}
+
+        {tab === 'guide' && (
+          <div className="view-enter">
+            <div className="surface-panel p-5 md:p-6 space-y-6">
+              <div>
+                <h4 className="text-base font-semibold gold-text">Admin Helper Guide</h4>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Use this guide to understand what every major feature does, how it works, and how to configure it safely.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {FEATURE_GUIDE_SECTIONS.map(section => (
+                  <div key={section.id} className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                    <p className="text-sm font-semibold text-foreground">{section.title}</p>
+                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{section.body}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                <h5 className="text-sm font-semibold text-foreground">Transitions: Logical Operating Guide</h5>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Step 1: Open Transition Library to enable only transitions you want available.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Step 2: Arrange Global Sequence Order for fallback behavior across views.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Step 3: Configure Per-Category Sequence if a category needs its own multi-transition cycle.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Step 4: Configure Per-Category Applied Transition for single-choice behavior that overrides sequence in that category.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Step 5: Open Individual Transition Times to tune visual speed by effect.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Step 6: Use centered Preview before publishing changes.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Step 7: Use Apply & Save Transitions to persist settings for future sessions and other devices for the same admin account.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                <h5 className="text-sm font-semibold text-foreground">Transition Types: Detailed Guide</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                  {TRANSITION_TYPES.map(item => (
+                    <div key={`helper-${item.id}`} className="rounded-md border border-primary/10 p-3 bg-background/40">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-foreground">{item.label}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">Best for: {TRANSITION_USAGE_GUIDES[item.id].bestFor}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">How to use: {TRANSITION_USAGE_GUIDES[item.id].tip}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

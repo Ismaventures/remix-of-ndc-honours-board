@@ -6,7 +6,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ onHomeClick }: AppHeaderProps) {
   return (
-    <header className="min-h-16 sm:min-h-20 flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-2 gold-border border-t-0 border-x-0 bg-navy-deep overflow-x-hidden">
+    <header className="min-h-16 sm:min-h-20 flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-2 gold-border border-t-0 border-x-0 bg-navy-deep overflow-x-hidden">
       <button
         onClick={onHomeClick}
         className="flex items-center gap-2 sm:gap-4 hover:opacity-80 transition-opacity active:scale-[0.98] min-w-0"
@@ -21,6 +21,7 @@ export function AppHeader({ onHomeClick }: AppHeaderProps) {
           </p>
         </div>
       </button>
+      <div className="shrink-0" />
     </header>
   );
 }
