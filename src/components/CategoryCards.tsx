@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Shield, Award, Users, Globe, Star, Settings } from "lucide-react";
-import { Category } from "@/data/mockData";
+import { Category } from "@/types/domain";
 import ndcCrest from "/images/ndc-crest.png";
 import {
   Carousel,

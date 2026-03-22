@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Shield } from 'lucide-react';
-import { Commandant } from '@/data/mockData';
+import { Commandant } from '@/types/domain';
 import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
 
 interface PastCommandantsProps {

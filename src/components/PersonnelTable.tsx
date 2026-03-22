@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Search, ChevronLeft, ChevronRight, LayoutGrid, List, Eye, User } from 'lucide-react';
-import { Personnel, Category } from '@/data/mockData';
+import { Personnel, Category } from '@/types/domain';
 import { ProfileModal } from './ProfileModal';
 
 interface PersonnelTableProps {

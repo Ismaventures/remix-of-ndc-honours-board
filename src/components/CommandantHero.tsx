@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Shield, Star } from 'lucide-react';
-import { Commandant } from '@/data/mockData';
+import { Commandant } from '@/types/domain';
 import ndcCrest from '/images/ndc-crest.png';
 import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
 
@@ -18,11 +18,11 @@ export function CommandantHero({ commandant, compactDescription = true }: Comman
     return () => clearTimeout(timer);
   }, []);
 
-  const name = commandant?.name ?? 'Rear Admiral A.A. Ahmad';
-  const titleText = commandant?.title ?? 'Commandant, National Defence College Nigeria';
+  const name = commandant?.name ?? 'No commandant record available';
+  const titleText = commandant?.title ?? 'Commandant record pending database data';
   const description = commandant?.description ??
-    'Providing strategic leadership and direction for the premier institution of higher defence and strategic studies in Nigeria, fostering excellence in national security education and inter-service cooperation.';
-  const isCurrent = commandant?.isCurrent ?? true;
+    'No commandant biography is currently available from the database.';
+  const isCurrent = commandant?.isCurrent ?? false;
   const commandantImageUrl = useResolvedMediaUrl(commandant?.imageUrl);
 
   return (
@@ -96,13 +96,7 @@ export function CommandantHero({ commandant, compactDescription = true }: Comman
             <Star className="h-3.5 w-3.5 text-primary animate-pulse-slow fill-primary/30" />
           </div>
 
-          {isCurrent && (
-            <p className="text-[10px] uppercase tracking-[0.24em] text-primary/70 mb-3 commander-honor-text">
-              Leadership • Integrity • Duty
-            </p>
-          )}
-
-          <h2 className={`${isCompact ? 'text-3xl md:text-4xl' : 'text-4xl md:text-5xl'} font-bold font-serif mb-2 leading-tight bg-gradient-to-r from-white via-primary to-white bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(255,215,0,0.2)]`}>
+          <h2 className={`${isCompact ? 'text-3xl md:text-4xl' : 'text-4xl md:text-5xl'} font-bold font-serif mb-2 leading-tight bg-gradient-to-r from-foreground via-primary/90 to-foreground/80 bg-clip-text text-transparent drop-shadow-sm`}>
             {name}
           </h2>
 
@@ -121,7 +115,7 @@ export function CommandantHero({ commandant, compactDescription = true }: Comman
           </p>
 
           <p
-            className={`${isCompact ? 'text-sm md:text-[15px]' : 'text-sm md:text-base'} text-slate-300 leading-relaxed max-w-2xl transition-all duration-1000 ease-out delay-500 font-light ${
+            className={`${isCompact ? 'text-sm md:text-[15px]' : 'text-sm md:text-base'} text-muted-foreground leading-relaxed max-w-2xl transition-all duration-1000 ease-out delay-500 font-medium ${
               visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
             style={compactDescription ? {
@@ -141,7 +135,7 @@ export function CommandantHero({ commandant, compactDescription = true }: Comman
           >
             <img src={ndcCrest} alt="NDC Crest" className={`${isCompact ? 'h-10 w-10' : 'h-12 w-12'} object-contain opacity-80 drop-shadow-[0_0_8px_rgba(255,215,0,0.3)]`} />
             <div className={`${isCompact ? 'h-8' : 'h-10'} w-px bg-primary/30`} />
-            <span className="text-[11px] uppercase tracking-[0.25em] text-primary/70 font-semibold drop-shadow-sm">
+            <span className="text-[11px] uppercase tracking-[0.25em] text-white/80 font-semibold drop-shadow-sm">
               Intellect · Courage · Patriotism
             </span>
           </div>

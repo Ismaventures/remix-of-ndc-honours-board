@@ -13,11 +13,11 @@ export function AppHeader({ onHomeClick }: AppHeaderProps) {
       >
         <img src={ndcCrest} alt="NDC Crest" className="h-14 w-14 object-contain" />
         <div className="flex flex-col">
-          <h1 className="text-lg font-bold tracking-wide gold-text leading-tight">
+          <h1 className="text-lg font-bold tracking-wide text-white leading-tight">
             National Defence College Nigeria
           </h1>
-          <p className="text-xs text-muted-foreground tracking-widest uppercase">
-            Roll of Honour & Leadership Chronicle
+          <p className="text-xs text-white/70 tracking-widest uppercase">
+            Intellect · Courage · Patriotism
           </p>
         </div>
       </button>

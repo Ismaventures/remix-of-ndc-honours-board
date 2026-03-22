@@ -1,5 +1,5 @@
 import { ArrowLeft, Globe, Calendar, User } from 'lucide-react';
-import { DistinguishedVisit } from '@/data/mockData';
+import { DistinguishedVisit } from '@/types/domain';
 
 interface VisitsSectionProps {
   visits: DistinguishedVisit[];

@@ -10,7 +10,8 @@ import { AutoRotationDisplay } from '@/components/AutoRotationDisplay';
 import { BootSequence } from '@/components/BootSequence';
 import { AudioManager } from '@/components/AudioManager';
 import { usePersonnelStore, useVisitsStore, useCommandantsStore } from '@/hooks/useStore';
-import { Category } from '@/data/mockData';
+import { useThemeMode } from '@/hooks/useThemeMode';
+import { Category } from '@/types/domain';
 
 const SECTION_TITLES: Record<string, string> = {
   fwc: 'Distinguished Fellows of the War College (FWC)',
@@ -30,6 +31,7 @@ const Index = () => {
   const [isBooting, setIsBooting] = useState(true);
 
   const [view, setView] = useState<ViewKey>('home');
+  const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
   const { personnel, addPersonnel, updatePersonnel, deletePersonnel } = usePersonnelStore();
   const { visits, addVisit, updateVisit, deleteVisit } = useVisitsStore();
   const { commandants, addCommandant, updateCommandant, deleteCommandant } = useCommandantsStore();
@@ -72,6 +74,9 @@ const Index = () => {
           onAddCommandant={addCommandant}
           onUpdateCommandant={updateCommandant}
           onDeleteCommandant={deleteCommandant}
+          themeMode={themeMode}
+          onThemeModeChange={setThemeMode}
+          onResetThemeMode={resetThemeMode}
           onBack={() => setView('home')}
         />
       );

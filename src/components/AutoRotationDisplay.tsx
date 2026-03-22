@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Monitor, SkipForward } from 'lucide-react';
-import { Category, Personnel, DistinguishedVisit, Commandant } from '@/data/mockData';
+import { Category, Personnel, DistinguishedVisit, Commandant } from '@/types/domain';
 import { CommandantHero } from './CommandantHero';
 import { useAudioStore } from '@/hooks/useAudioStore';
 import { playAudioTrack } from '@/components/AudioManager';
@@ -308,14 +308,14 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
         </button>
 
         <div
-          className={`${slide.type === 'commandant' ? 'max-w-3xl lg:max-w-4xl' : 'max-w-4xl'} w-full transition-all duration-600 ease-out ${getTransitionClasses()}`}
+          className={`${slide.type === 'commandant' ? 'max-w-3xl lg:max-w-4xl' : 'max-w-5xl xl:max-w-6xl'} w-full transition-all duration-600 ease-out ${getTransitionClasses()}`}
         >
           {slide.type === 'commandant' && (
             <CommandantHero commandant={slide.commandant} compactDescription />
           )}
 
           {slide.type === 'personnel' && (
-            <div className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-8 md:p-12 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] group transform transition-all hover:scale-[1.02] duration-500">
+            <div className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-8 md:p-12 lg:p-14 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] group transform transition-all hover:scale-[1.02] duration-500">
               {/* Background styling layers */}
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,215,0,0.08)_0%,transparent_60%)]" />
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
@@ -345,22 +345,21 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
                     </p>
                   </div>
                   
-                  <h2 className="text-4xl md:text-5xl font-bold font-serif mb-3 tracking-wide drop-shadow-md bg-gradient-to-r from-white via-primary/90 to-white bg-clip-text text-transparent">
-                    {slide.person.name}
+                  <h2 className="mb-3 tracking-wide drop-shadow-md bg-gradient-to-r from-foreground via-primary/90 to-foreground/80 bg-clip-text text-transparent leading-tight">
+                    <span className="text-2xl md:text-3xl font-semibold font-serif align-middle mr-2">{slide.person.rank}</span>
+                    <span className="text-4xl md:text-5xl font-bold font-serif align-middle">{slide.person.name}</span>
                   </h2>
                   
                   <div className="h-px w-24 bg-gradient-to-r from-primary/80 to-transparent mx-auto md:mx-0 mb-4" />
                   
-                  <p className="text-lg md:text-xl text-primary font-medium mb-2 uppercase tracking-wider">{slide.person.rank}</p>
-                  
-                  <div className="flex items-center justify-center md:justify-start gap-3 mb-6 text-sm text-slate-300">
-                    <span className="bg-white/5 px-2 py-0.5 rounded border border-white/10">{slide.person.service}</span>
+                  <div className="flex items-center justify-center md:justify-start gap-3 mb-6 text-sm text-foreground/80">
+                    <span className="bg-foreground/5 px-2 py-0.5 rounded border border-foreground/10">{slide.person.service}</span>
                     <span className="text-primary/40">•</span>
                     <span className="font-mono tracking-wider text-primary/70">{slide.person.periodStart}–{slide.person.periodEnd}</span>
                   </div>
-                  
+
                   <div className="relative pl-4 border-l-2 border-primary/30 py-1">
-                    <p className="text-base text-slate-300 italic leading-relaxed font-light">
+                    <p className="text-base text-muted-foreground italic leading-relaxed font-light">
                       "{slide.person.citation}"
                     </p>
                   </div>
@@ -370,7 +369,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
           )}
 
           {slide.type === 'visit' && (
-            <div className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-10 md:p-14 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] text-center group transform transition-all hover:scale-[1.02] duration-500">
+            <div className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-10 md:p-14 lg:p-16 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] text-center group transform transition-all hover:scale-[1.02] duration-500">
               {/* Background ambient lighting */}
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,215,0,0.06)_0%,transparent_70%)]" />
               <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[120%] h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
@@ -392,19 +391,19 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
                   )}
                 </div>
                 
-                <h2 className="text-4xl md:text-5xl font-bold font-serif mb-3 tracking-wide bg-gradient-to-b from-white to-white/70 bg-clip-text text-transparent drop-shadow-sm">
+                <h2 className="text-4xl md:text-5xl font-bold font-serif mb-3 tracking-wide bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent drop-shadow-sm">
                   {slide.visit.name}
                 </h2>
                 
-                <p className="text-xl text-primary font-medium mb-4 tracking-wide">{slide.visit.title}</p>
+                <p className="text-sm md:text-base text-primary/90 font-semibold mb-4 tracking-[0.14em] uppercase">{slide.visit.title}</p>
                 
                 <div className="flex items-center justify-center gap-4 mb-8">
-                  <span className="px-3 py-1 rounded bg-white/5 border border-white/10 text-slate-300 text-sm">{slide.visit.country}</span>
+                  <span className="px-3 py-1 rounded bg-foreground/5 border border-foreground/10 text-foreground/80 text-sm">{slide.visit.country}</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
                   <span className="text-primary/70 font-mono text-sm tracking-wider">{slide.visit.date}</span>
                 </div>
-                
-                <p className="text-base text-slate-300 leading-relaxed max-w-2xl mx-auto font-light border-t border-primary/20 pt-6">
+
+                <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto font-light border-t border-primary/20 pt-6">
                   {slide.visit.description}
                 </p>
               </div>

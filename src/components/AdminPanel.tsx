@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Plus, Pencil, Trash2, X, ArrowLeft } from 'lucide-react';
-import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/data/mockData';
+import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/types/domain';
 import { AdvancedAudioAdmin } from './AdvancedAudioAdmin';
 import { saveMediaFile } from '@/lib/persistentMedia';
+import { ThemeMode } from '@/hooks/useThemeMode';
 
 interface AdminPanelProps {
   personnel: Personnel[];
@@ -17,6 +18,9 @@ interface AdminPanelProps {
   onAddCommandant: (c: Omit<Commandant, 'id'>) => void;
   onUpdateCommandant: (id: string, data: Partial<Commandant>) => void;
   onDeleteCommandant: (id: string) => void;
+  themeMode: ThemeMode;
+  onThemeModeChange: (mode: ThemeMode) => void;
+  onResetThemeMode: () => void;
   audioSettings?: { audioUrl: string | null };
   onUpdateAudioSettings?: (url: string | null) => void;
   onBack: () => void;
@@ -25,6 +29,38 @@ interface AdminPanelProps {
 const CATEGORIES: Category[] = ['FWC', 'FDC', 'Directing Staff', 'Allied'];
 const SERVICES: Service[] = ['Army', 'Navy', 'Air Force', 'Civilian', 'Foreign'];
 const MAX_MEDIA_SIZE_MB = 8;
+const THEME_OPTIONS: Array<{ mode: ThemeMode; label: string; description: string }> = [
+  {
+    mode: 'outdoor-tactical-light',
+    label: 'Outdoor 1 - Tactical Light',
+    description: 'High visibility white and navy blue display with crisp black text for maximum sunlight readability.',
+  },
+  {
+    mode: 'outdoor-high-contrast-command',
+    label: 'Outdoor 2 - High Contrast Command',
+    description: 'Maximum visibility with command-grade contrast and signal accents.',
+  },
+  {
+    mode: 'outdoor-tri-service',
+    label: 'Outdoor 3 - Tri-Service Colors',
+    description: 'Bright red, navy, and light blue combination for vivid presence.',
+  },
+  {
+    mode: 'indoor-defence-classic',
+    label: 'Indoor 1 - Defence Classic',
+    description: 'Formal navy and gold style aligned to institutional identity.',
+  },
+  {
+    mode: 'indoor-modern-command-ui',
+    label: 'Indoor 2 - Modern Command UI',
+    description: 'Modern charcoal and cyan interface for operations dashboards.',
+  },
+  {
+    mode: 'indoor-tri-service',
+    label: 'Indoor 3 - Tri-Service Colors',
+    description: 'Rich dark navy with striking red and light blue accents.',
+  },
+];
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -46,10 +82,11 @@ export function AdminPanel({
   onAddPersonnel, onUpdatePersonnel, onDeletePersonnel,
   onAddVisit, onUpdateVisit, onDeleteVisit,
   onAddCommandant, onUpdateCommandant, onDeleteCommandant,
+  themeMode, onThemeModeChange, onResetThemeMode,
   audioSettings, onUpdateAudioSettings,
   onBack,
 }: AdminPanelProps) {
-  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'audio'>('personnel');
+  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'audio'>('personnel');
   const [editingP, setEditingP] = useState<Personnel | null>(null);
   const [editingV, setEditingV] = useState<DistinguishedVisit | null>(null);
   const [editingC, setEditingC] = useState<Commandant | null>(null);
@@ -101,6 +138,7 @@ export function AdminPanel({
           {tabBtn('personnel', 'Personnel')}
           {tabBtn('visits', 'Visits')}
           {tabBtn('commandants', 'Commandants')}
+          {tabBtn('theme', 'Theme')}
           {tabBtn('audio', 'Audio Settings')}
         </div>
       </div>
@@ -291,6 +329,51 @@ export function AdminPanel({
         {tab === 'audio' && (
           <div className="view-enter">
             <AdvancedAudioAdmin />
+          </div>
+        )}
+
+        {tab === 'theme' && (
+          <div className="view-enter">
+            <div className="surface-panel p-5 md:p-6">
+              <div className="mb-5">
+                <h4 className="text-base font-semibold gold-text">Display Theme Control</h4>
+                <p className="text-xs text-muted-foreground mt-1">
+                  The selected theme is saved and reused whenever the application starts until an admin changes it.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {THEME_OPTIONS.map(option => {
+                  const isActive = themeMode === option.mode;
+                  return (
+                    <button
+                      key={option.mode}
+                      onClick={() => onThemeModeChange(option.mode)}
+                      className={`text-left rounded-lg border p-4 transition-all ${
+                        isActive
+                          ? 'border-primary/60 bg-primary/10 shadow-md shadow-primary/10'
+                          : 'border-primary/15 bg-card/50 hover:border-primary/35 hover:bg-muted/30'
+                      }`}
+                    >
+                      <p className="text-sm font-semibold text-foreground">{option.label}</p>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{option.description}</p>
+                      <p className={`mt-3 text-[10px] uppercase tracking-wider font-semibold ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+                        {isActive ? 'Active Mode' : 'Click to Activate'}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <button
+                  onClick={onResetThemeMode}
+                  className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
+                >
+                  Reset to Default (Indoor 1)
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -164,7 +164,7 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
            )}
 
            {/* Console / Terminal output */}
-            <div className={`w-full md:w-[420px] text-left font-mono text-xs md:text-sm text-gray-300 space-y-2 md:space-y-3 ${currentCommandant ? 'md:border-l md:border-primary/20 md:pl-8' : ''} py-2 min-h-[90px]`}>
+            <div className={`w-full md:w-[420px] text-left font-mono text-xs md:text-sm text-muted-foreground space-y-2 md:space-y-3 ${currentCommandant ? 'md:border-l md:border-primary/20 md:pl-8' : ''} py-2 min-h-[90px]`}>
               <div className="text-[10px] md:text-xs text-primary/85 uppercase tracking-[0.14em] pb-1 border-b border-primary/20">Command Console - {statusLabel}</div>
               <div className="flex items-center">
                 <span className="mr-2 text-primary/70">[01]</span>

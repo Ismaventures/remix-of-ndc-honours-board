@@ -23,11 +23,11 @@ export function AppSidebar({ active, onNavigate }: AppSidebarProps) {
   useEffect(() => { setMounted(true); }, []);
 
   return (
-    <aside className="w-72 shrink-0 bg-navy-deep border-r border-primary/15 flex flex-col">
-      <div className="px-4 py-5 border-b border-primary/15">
+    <aside className="w-72 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col">
+      <div className="px-4 py-5 border-b border-sidebar-border">
         <div className="flex items-center gap-2">
-          <LayoutGrid className="h-4 w-4 text-primary" />
-          <span className="text-xs font-semibold tracking-widest uppercase text-primary">
+          <LayoutGrid className="h-4 w-4 text-sidebar-primary" />
+          <span className="text-xs font-semibold tracking-widest uppercase text-sidebar-primary">
             Command Directory
           </span>
         </div>
@@ -48,8 +48,8 @@ export function AppSidebar({ active, onNavigate }: AppSidebarProps) {
               className={cn(
                 'w-full flex items-center gap-3 px-4 py-3 text-left text-sm sidebar-hover',
                 isActive
-                  ? 'bg-muted text-primary border-l-2 border-primary'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground border-l-2 border-transparent'
+                  ? 'bg-sidebar-accent text-sidebar-accent-foreground border-l-2 border-sidebar-primary'
+                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground border-l-2 border-transparent'
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -58,7 +58,7 @@ export function AppSidebar({ active, onNavigate }: AppSidebarProps) {
           );
         })}
       </nav>
-      <div className="px-4 py-4 border-t border-primary/15 text-[10px] text-muted-foreground tracking-wide uppercase">
+      <div className="px-4 py-4 border-t border-sidebar-border text-[10px] text-sidebar-foreground/50 tracking-wide uppercase">
         Intellect · Courage · Patriotism
       </div>
     </aside>
