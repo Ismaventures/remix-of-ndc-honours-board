@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { loadUiSetting, saveUiSetting } from '@/lib/uiSettingsStorage';
+import { hasDeviceOverrides, readAutoDisplayOverride } from '@/lib/deviceOverrideSettings';
 
 export type AutoDisplayTransitionType =
   | 'fade-zoom'
@@ -214,6 +215,11 @@ function sanitizeSettings(input: Partial<AutoDisplaySettings> | null | undefined
 
 function loadSettings(): AutoDisplaySettings {
   try {
+    const override = readAutoDisplayOverride();
+    if (override) {
+      return sanitizeSettings(override);
+    }
+
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_AUTO_DISPLAY_SETTINGS;
     return sanitizeSettings(JSON.parse(raw) as Partial<AutoDisplaySettings>);
@@ -229,6 +235,7 @@ export function useAutoDisplaySettings() {
     let mounted = true;
 
     const syncFromSupabase = async () => {
+      if (hasDeviceOverrides()) return;
       const remote = await loadUiSetting<Partial<AutoDisplaySettings>>(SUPABASE_SETTING_KEY);
       if (!mounted || !remote) return;
       const merged = sanitizeSettings(remote);
@@ -246,7 +253,7 @@ export function useAutoDisplaySettings() {
   const write = (next: AutoDisplaySettings, syncRemote = true) => {
     setSettingsState(next);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    if (syncRemote) {
+    if (syncRemote && !hasDeviceOverrides()) {
       void saveUiSetting(SUPABASE_SETTING_KEY, next);
     }
   };

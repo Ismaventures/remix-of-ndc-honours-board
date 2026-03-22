@@ -78,7 +78,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
   return (
     <section className="mb-8 sm:mb-10">
       <div className="mb-6 flex flex-col items-center">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-serif gold-text tracking-wider uppercase text-center mt-6 sm:mt-8">Command Directory</h2>
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-serif gold-text tracking-wider uppercase text-center mt-6 sm:mt-8">Chronicles of Staff</h2>
         <div className="h-1 w-24 bg-primary mt-2 mb-2 rounded-full" />
         <p className="text-xs sm:text-sm text-muted-foreground tracking-widest uppercase text-center">Select a category to view hierarchy</p>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { loadUiSetting, saveUiSetting } from '@/lib/uiSettingsStorage';
+import { hasDeviceOverrides, readThemeOverride } from '@/lib/deviceOverrideSettings';
 
 export type ThemeMode =
   | 'outdoor-tactical-light'
@@ -232,6 +233,11 @@ function applyThemeMode(mode: ThemeMode) {
 
 function loadThemeModeFromStorage(): ThemeMode {
   try {
+    const override = readThemeOverride();
+    if (override && override in THEME_TOKENS) {
+      return override;
+    }
+
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return DEFAULT_THEME_MODE;
     if (stored in THEME_TOKENS) return stored as ThemeMode;
@@ -248,6 +254,7 @@ export function useThemeMode() {
     let mounted = true;
 
     const syncFromSupabase = async () => {
+      if (hasDeviceOverrides()) return;
       const remote = await loadUiSetting<ThemeMode>(SUPABASE_SETTING_KEY);
       if (!mounted || !remote) return;
       if (!(remote in THEME_TOKENS)) return;
@@ -265,7 +272,9 @@ export function useThemeMode() {
   useEffect(() => {
     applyThemeMode(themeMode);
     localStorage.setItem(STORAGE_KEY, themeMode);
-    void saveUiSetting(SUPABASE_SETTING_KEY, themeMode);
+    if (!hasDeviceOverrides()) {
+      void saveUiSetting(SUPABASE_SETTING_KEY, themeMode);
+    }
   }, [themeMode]);
 
   const modeOptions = useMemo(() => {

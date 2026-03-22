@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { AppHeader } from '@/components/AppHeader';
 import { CommandantHero } from '@/components/CommandantHero';
 import { PastCommandants } from '@/components/PastCommandants';
@@ -15,6 +15,7 @@ import { useThemeMode } from '@/hooks/useThemeMode';
 import { useBootSequenceSettings } from '@/hooks/useBootSequenceSettings';
 import { useAutoDisplaySettings } from '@/hooks/useAutoDisplaySettings';
 import { DeviceControlCommandType, DeviceControlView, useDeviceControl } from '@/hooks/useDeviceControl';
+import { clearDeviceOverrides, saveDeviceOverrides } from '@/lib/deviceOverrideSettings';
 import { Category } from '@/types/domain';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -32,12 +33,24 @@ const SECTION_CATEGORIES: Record<string, Category> = {
   allied: 'Allied',
 };
 
+const SUPER_ADMIN_EMAILS = (import.meta.env.VITE_SUPER_ADMIN_EMAILS || import.meta.env.VITE_QUICK_ADMIN_EMAIL || '')
+  .split(',')
+  .map(item => item.trim().toLowerCase())
+  .filter(Boolean);
+
+type GlobalSiteAction = 'close-site' | 'open-site';
+
 const Index = () => {
   const [isBooting, setIsBooting] = useState(true);
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
+  const [adminEmail, setAdminEmail] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [autoDisplayActive, setAutoDisplayActive] = useState(false);
   const [forcedAutoDisplay, setForcedAutoDisplay] = useState<{ enabled: boolean; nonce: number }>({ enabled: false, nonce: 0 });
+  const [siteClosed, setSiteClosed] = useState(false);
+  const [siteClosedReason, setSiteClosedReason] = useState('Temporarily closed by super admin.');
+  const [deviceClosed, setDeviceClosed] = useState(false);
+  const globalCommandRef = useRef<number | null>(null);
 
   const [view, setView] = useState<ViewKey>('home');
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
@@ -59,6 +72,25 @@ const Index = () => {
   const currentCommandant = commandants.find(c => c.isCurrent);
   const activeCategory = SECTION_CATEGORIES[view] ?? null;
   const activeView = view === 'visits' ? 'visits' : view === 'home' ? 'home' : view === 'admin' ? 'admin' : 'category';
+  const isSuperAdmin = useMemo(() => {
+    if (!adminEmail) return false;
+    return SUPER_ADMIN_EMAILS.includes(adminEmail.toLowerCase());
+  }, [adminEmail]);
+  const showLockScreen = deviceClosed || (siteClosed && !isSuperAdmin);
+
+  const applyGlobalSiteAction = (action: GlobalSiteAction, payload: Record<string, unknown>) => {
+    if (action === 'close-site') {
+      const reason = typeof payload.reason === 'string' && payload.reason.trim().length > 0
+        ? payload.reason
+        : 'Temporarily closed by super admin.';
+      setSiteClosedReason(reason);
+      setSiteClosed(true);
+      setForcedAutoDisplay(prev => ({ enabled: false, nonce: prev.nonce + 1 }));
+      return;
+    }
+
+    setSiteClosed(false);
+  };
 
   const mapCommandViewToAppView = (value: unknown): ViewKey | null => {
     if (value === 'home') return 'home';
@@ -83,6 +115,56 @@ const Index = () => {
     if (commandType === 'set-auto-display') {
       const enabled = Boolean(payload.enabled);
       setForcedAutoDisplay(prev => ({ enabled, nonce: prev.nonce + 1 }));
+      return;
+    }
+
+    if (commandType === 'apply-device-profile') {
+      const themeMode = typeof payload.themeMode === 'string' ? payload.themeMode : null;
+      const bootSequenceSettings = payload.bootSequenceSettings;
+      const autoDisplaySettingsPayload = payload.autoDisplaySettings;
+
+      saveDeviceOverrides({
+        themeMode: themeMode ?? undefined,
+        bootSequenceSettings:
+          bootSequenceSettings && typeof bootSequenceSettings === 'object'
+            ? (bootSequenceSettings as Record<string, unknown>)
+            : undefined,
+        autoDisplaySettings:
+          autoDisplaySettingsPayload && typeof autoDisplaySettingsPayload === 'object'
+            ? (autoDisplaySettingsPayload as Record<string, unknown>)
+            : undefined,
+      });
+
+      if (themeMode) {
+        setThemeMode(themeMode as Parameters<typeof setThemeMode>[0]);
+      }
+      if (bootSequenceSettings && typeof bootSequenceSettings === 'object') {
+        setBootSequenceSettings(bootSequenceSettings as Parameters<typeof setBootSequenceSettings>[0]);
+      }
+      if (autoDisplaySettingsPayload && typeof autoDisplaySettingsPayload === 'object') {
+        importAutoDisplaySettings(autoDisplaySettingsPayload as Parameters<typeof importAutoDisplaySettings>[0]);
+      }
+      return;
+    }
+
+    if (commandType === 'clear-device-profile') {
+      clearDeviceOverrides();
+      window.location.reload();
+      return;
+    }
+
+    if (commandType === 'close-app') {
+      const reason = typeof payload.reason === 'string' && payload.reason.trim().length > 0
+        ? payload.reason
+        : 'This screen was remotely closed by super admin.';
+      setSiteClosedReason(reason);
+      setDeviceClosed(true);
+      setForcedAutoDisplay(prev => ({ enabled: false, nonce: prev.nonce + 1 }));
+      return;
+    }
+
+    if (commandType === 'reopen-app') {
+      setDeviceClosed(false);
     }
   };
 
@@ -99,6 +181,7 @@ const Index = () => {
       const { data } = await supabase.auth.getSession();
       if (!mounted) return;
       setAdminAuthenticated(Boolean(data.session));
+      setAdminEmail(data.session?.user?.email ?? null);
       setAuthReady(true);
     };
 
@@ -108,12 +191,44 @@ const Index = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setAdminAuthenticated(Boolean(session));
+      setAdminEmail(session?.user?.email ?? null);
       setAuthReady(true);
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const pollGlobalControl = async () => {
+      const { data } = await supabase
+        .from('global_site_control')
+        .select('id,action,payload')
+        .order('id', { ascending: false })
+        .limit(1);
+
+      if (!mounted || !data || data.length === 0) return;
+
+      const command = data[0] as { id: number; action: GlobalSiteAction; payload: Record<string, unknown> };
+      if (globalCommandRef.current === command.id) return;
+
+      globalCommandRef.current = command.id;
+      applyGlobalSiteAction(command.action, command.payload ?? {});
+    };
+
+    void pollGlobalControl();
+
+    const interval = setInterval(() => {
+      void pollGlobalControl();
+    }, 2000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
     };
   }, []);
 
@@ -175,6 +290,7 @@ const Index = () => {
           onResetAutoDisplaySettings={resetAutoDisplaySettings}
           devices={devices}
           currentDeviceId={deviceId}
+          isSuperAdmin={isSuperAdmin}
           onRefreshDevices={() => {
             void refreshDevices();
           }}
@@ -184,9 +300,54 @@ const Index = () => {
           onSendDeviceAutoDisplay={async (deviceIds, enabled) => {
             return sendCommandToDevices(deviceIds, 'set-auto-display', { enabled });
           }}
+          onSendDeviceCloseApp={async (deviceIds, reason) => {
+            return sendCommandToDevices(deviceIds, 'close-app', { reason });
+          }}
+          onSendDeviceReopenApp={async (deviceIds) => {
+            return sendCommandToDevices(deviceIds, 'reopen-app', {});
+          }}
+          onSendDeviceApplyProfile={async (deviceIds, payload) => {
+            return sendCommandToDevices(deviceIds, 'apply-device-profile', payload as unknown as Record<string, unknown>);
+          }}
+          onSendDeviceClearProfile={async (deviceIds) => {
+            return sendCommandToDevices(deviceIds, 'clear-device-profile', {});
+          }}
+          onSendGlobalSiteClose={async (reason) => {
+            if (!isSuperAdmin) return false;
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+            if (!session?.user) return false;
+            const { error } = await supabase.from('global_site_control').insert({
+              action: 'close-site',
+              payload: { reason },
+              issued_by: session.user.id,
+            });
+            if (!error) {
+              applyGlobalSiteAction('close-site', { reason });
+            }
+            return !error;
+          }}
+          onSendGlobalSiteOpen={async () => {
+            if (!isSuperAdmin) return false;
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+            if (!session?.user) return false;
+            const { error } = await supabase.from('global_site_control').insert({
+              action: 'open-site',
+              payload: {},
+              issued_by: session.user.id,
+            });
+            if (!error) {
+              applyGlobalSiteAction('open-site', {});
+            }
+            return !error;
+          }}
           onSignOut={() => {
             void supabase.auth.signOut();
             setAdminAuthenticated(false);
+            setAdminEmail(null);
           }}
           onBack={() => setView('home')}
         />
@@ -217,6 +378,15 @@ const Index = () => {
           settings={bootSequenceSettings}
           onComplete={() => setIsBooting(false)}
         />
+      )}
+      {showLockScreen && (
+        <div className="fixed inset-0 z-[120] bg-black/95 backdrop-blur flex items-center justify-center p-6">
+          <div className="max-w-xl w-full rounded-xl border border-destructive/40 bg-card/95 p-6 md:p-8 text-center space-y-3">
+            <h2 className="text-xl md:text-2xl font-bold font-serif text-destructive">Site Temporarily Closed</h2>
+            <p className="text-sm text-muted-foreground">{siteClosedReason}</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">Please contact an administrator for access restoration.</p>
+          </div>
+        </div>
       )}
       <div className={`min-h-screen flex flex-col bg-background animate-bg-sweep bg-gradient-to-br from-background via-background to-secondary/10 transition-opacity duration-1000 ${isBooting ? 'opacity-0' : 'opacity-100'}`}>
         <AppHeader onHomeClick={() => setView('home')} />

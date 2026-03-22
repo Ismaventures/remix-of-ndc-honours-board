@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { loadUiSetting, saveUiSetting } from '@/lib/uiSettingsStorage';
+import { hasDeviceOverrides, readBootOverride } from '@/lib/deviceOverrideSettings';
 
 export interface BootSequenceSettings {
   totalDurationMs: number;
@@ -28,6 +29,11 @@ function sanitizeSettings(input: Partial<BootSequenceSettings> | null | undefine
 
 function loadSettings(): BootSequenceSettings {
   try {
+    const override = readBootOverride();
+    if (override) {
+      return sanitizeSettings(override);
+    }
+
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_BOOT_SEQUENCE_SETTINGS;
     const parsed = JSON.parse(raw) as Partial<BootSequenceSettings>;
@@ -44,6 +50,7 @@ export function useBootSequenceSettings() {
     let mounted = true;
 
     const syncFromSupabase = async () => {
+      if (hasDeviceOverrides()) return;
       const remote = await loadUiSetting<Partial<BootSequenceSettings>>(SUPABASE_SETTING_KEY);
       if (!mounted || !remote) return;
       const merged = sanitizeSettings(remote);
@@ -62,7 +69,9 @@ export function useBootSequenceSettings() {
     setSettingsState(prev => {
       const merged = sanitizeSettings({ ...prev, ...next });
       localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-      void saveUiSetting(SUPABASE_SETTING_KEY, merged);
+      if (!hasDeviceOverrides()) {
+        void saveUiSetting(SUPABASE_SETTING_KEY, merged);
+      }
       return merged;
     });
   };
@@ -70,7 +79,9 @@ export function useBootSequenceSettings() {
   const resetSettings = () => {
     setSettingsState(DEFAULT_BOOT_SEQUENCE_SETTINGS);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_BOOT_SEQUENCE_SETTINGS));
-    void saveUiSetting(SUPABASE_SETTING_KEY, DEFAULT_BOOT_SEQUENCE_SETTINGS);
+    if (!hasDeviceOverrides()) {
+      void saveUiSetting(SUPABASE_SETTING_KEY, DEFAULT_BOOT_SEQUENCE_SETTINGS);
+    }
   };
 
   const state = useMemo(

@@ -83,6 +83,21 @@ CREATE TABLE IF NOT EXISTS device_control_commands (
   executed_at timestamptz
 );
 
+-- Table: super_admins (who can issue global site control commands)
+CREATE TABLE IF NOT EXISTS super_admins (
+  user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Table: global_site_control (global close/open commands for all visitors)
+CREATE TABLE IF NOT EXISTS global_site_control (
+  id bigserial PRIMARY KEY,
+  action text NOT NULL CHECK (action IN ('close-site', 'open-site')),
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  issued_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
 -- Row Level Security
 ALTER TABLE commandants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE personnel ENABLE ROW LEVEL SECURITY;
@@ -92,6 +107,8 @@ ALTER TABLE audio_assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ui_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE device_clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE device_control_commands ENABLE ROW LEVEL SECURITY;
+ALTER TABLE super_admins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE global_site_control ENABLE ROW LEVEL SECURITY;
 
 -- Public read policies
 DROP POLICY IF EXISTS commandants_public_read ON commandants;
@@ -125,6 +142,14 @@ FOR SELECT USING (auth.uid() = user_id);
 DROP POLICY IF EXISTS device_control_commands_own_read ON device_control_commands;
 CREATE POLICY device_control_commands_own_read ON device_control_commands
 FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS super_admins_own_read ON super_admins;
+CREATE POLICY super_admins_own_read ON super_admins
+FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS global_site_control_public_read ON global_site_control;
+CREATE POLICY global_site_control_public_read ON global_site_control
+FOR SELECT USING (true);
 
 -- Authenticated write policies
 DROP POLICY IF EXISTS commandants_auth_write ON commandants;
@@ -174,6 +199,18 @@ CREATE POLICY device_control_commands_own_write ON device_control_commands
 FOR ALL
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS global_site_control_super_admin_insert ON global_site_control;
+CREATE POLICY global_site_control_super_admin_insert ON global_site_control
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1
+    FROM super_admins
+    WHERE super_admins.user_id = auth.uid()
+  )
+  AND issued_by = auth.uid()
+);
 
 -- Storage bucket: ndc-audio
 INSERT INTO storage.buckets (id, name, public)

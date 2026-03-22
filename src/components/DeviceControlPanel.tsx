@@ -1,12 +1,29 @@
 import { useMemo, useState } from 'react';
 import { DeviceClient, DeviceControlView } from '@/hooks/useDeviceControl';
+import { ThemeMode } from '@/hooks/useThemeMode';
+import { BootSequenceSettings } from '@/hooks/useBootSequenceSettings';
+import { AutoDisplaySettings } from '@/hooks/useAutoDisplaySettings';
 
 interface DeviceControlPanelProps {
   devices: DeviceClient[];
   currentDeviceId: string;
+  isSuperAdmin: boolean;
+  currentThemeMode: ThemeMode;
+  currentBootSettings: BootSequenceSettings;
+  currentAutoDisplaySettings: AutoDisplaySettings;
   onRefresh: () => void;
   onSendView: (deviceIds: string[], view: DeviceControlView) => Promise<boolean>;
   onSendAutoDisplay: (deviceIds: string[], enabled: boolean) => Promise<boolean>;
+  onSendCloseApp: (deviceIds: string[], reason: string) => Promise<boolean>;
+  onSendReopenApp: (deviceIds: string[]) => Promise<boolean>;
+  onSendApplyProfile: (deviceIds: string[], payload: {
+    themeMode: ThemeMode;
+    bootSequenceSettings: BootSequenceSettings;
+    autoDisplaySettings: AutoDisplaySettings;
+  }) => Promise<boolean>;
+  onSendClearProfile: (deviceIds: string[]) => Promise<boolean>;
+  onSendGlobalClose: (reason: string) => Promise<boolean>;
+  onSendGlobalOpen: () => Promise<boolean>;
 }
 
 const VIEW_OPTIONS: Array<{ id: DeviceControlView; label: string }> = [
@@ -19,9 +36,26 @@ const VIEW_OPTIONS: Array<{ id: DeviceControlView; label: string }> = [
   { id: 'admin', label: 'Admin' },
 ];
 
-export function DeviceControlPanel({ devices, currentDeviceId, onRefresh, onSendView, onSendAutoDisplay }: DeviceControlPanelProps) {
+export function DeviceControlPanel({
+  devices,
+  currentDeviceId,
+  isSuperAdmin,
+  currentThemeMode,
+  currentBootSettings,
+  currentAutoDisplaySettings,
+  onRefresh,
+  onSendView,
+  onSendAutoDisplay,
+  onSendCloseApp,
+  onSendReopenApp,
+  onSendApplyProfile,
+  onSendClearProfile,
+  onSendGlobalClose,
+  onSendGlobalOpen,
+}: DeviceControlPanelProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [shutdownReason, setShutdownReason] = useState('Temporarily closed by super admin.');
 
   const selectedCount = selectedIds.length;
 
@@ -61,6 +95,52 @@ export function DeviceControlPanel({ devices, currentDeviceId, onRefresh, onSend
     if (selectedIds.length === 0) return;
     setBusy(true);
     await onSendAutoDisplay(selectedIds, enabled);
+    setBusy(false);
+  };
+
+  const applyCurrentProfile = async () => {
+    if (selectedIds.length === 0) return;
+    setBusy(true);
+    await onSendApplyProfile(selectedIds, {
+      themeMode: currentThemeMode,
+      bootSequenceSettings: currentBootSettings,
+      autoDisplaySettings: currentAutoDisplaySettings,
+    });
+    setBusy(false);
+  };
+
+  const clearProfile = async () => {
+    if (selectedIds.length === 0) return;
+    setBusy(true);
+    await onSendClearProfile(selectedIds);
+    setBusy(false);
+  };
+
+  const closeSelectedApps = async () => {
+    if (selectedIds.length === 0) return;
+    setBusy(true);
+    await onSendCloseApp(selectedIds, shutdownReason.trim() || 'Temporarily closed by super admin.');
+    setBusy(false);
+  };
+
+  const reopenSelectedApps = async () => {
+    if (selectedIds.length === 0) return;
+    setBusy(true);
+    await onSendReopenApp(selectedIds);
+    setBusy(false);
+  };
+
+  const closeEntireSite = async () => {
+    if (!isSuperAdmin) return;
+    setBusy(true);
+    await onSendGlobalClose(shutdownReason.trim() || 'Temporarily closed by super admin.');
+    setBusy(false);
+  };
+
+  const reopenEntireSite = async () => {
+    if (!isSuperAdmin) return;
+    setBusy(true);
+    await onSendGlobalOpen();
     setBusy(false);
   };
 
@@ -119,6 +199,76 @@ export function DeviceControlPanel({ devices, currentDeviceId, onRefresh, onSend
           </button>
         </div>
       </div>
+
+      <div className="rounded-lg border border-primary/15 bg-card/60 p-3 space-y-3">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">Per-Device Profile</p>
+        <p className="text-[11px] text-muted-foreground">Apply this admin device's current Theme, Boot, and Auto Display settings to selected targets as local overrides.</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => void applyCurrentProfile()}
+            disabled={busy || selectedCount === 0}
+            className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            Apply Current Settings As Profile
+          </button>
+          <button
+            onClick={() => void clearProfile()}
+            disabled={busy || selectedCount === 0}
+            className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            Clear Device Profile
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-primary/15 bg-card/60 p-3 space-y-3">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">Remote App Power</p>
+        <input
+          value={shutdownReason}
+          onChange={e => setShutdownReason(e.target.value)}
+          placeholder="Reason shown on closed screens"
+          className="w-full px-3 py-2 rounded border border-primary/20 bg-background/80 text-xs text-foreground"
+        />
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => void closeSelectedApps()}
+            disabled={busy || selectedCount === 0}
+            className="px-3 py-1.5 rounded border border-destructive/35 text-[11px] uppercase tracking-wider text-destructive hover:bg-destructive/10 disabled:opacity-50"
+          >
+            Close Selected App Screens
+          </button>
+          <button
+            onClick={() => void reopenSelectedApps()}
+            disabled={busy || selectedCount === 0}
+            className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            Reopen Selected App Screens
+          </button>
+        </div>
+      </div>
+
+      {isSuperAdmin && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-3">
+          <p className="text-xs uppercase tracking-wider text-destructive">Super Admin Global Control</p>
+          <p className="text-[11px] text-muted-foreground">These commands affect all visitors, including non-logged users currently on the site.</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => void closeEntireSite()}
+              disabled={busy}
+              className="px-3 py-1.5 rounded border border-destructive/40 text-[11px] uppercase tracking-wider text-destructive hover:bg-destructive/10 disabled:opacity-50"
+            >
+              Close Entire Site
+            </button>
+            <button
+              onClick={() => void reopenEntireSite()}
+              disabled={busy}
+              className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50"
+            >
+              Reopen Entire Site
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-lg border border-primary/15 bg-card/60 overflow-hidden">
         <div className="overflow-x-auto">

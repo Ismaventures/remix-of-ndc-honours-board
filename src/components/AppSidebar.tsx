@@ -28,7 +28,7 @@ export function AppSidebar({ active, onNavigate }: AppSidebarProps) {
         <div className="flex items-center gap-2">
           <LayoutGrid className="h-4 w-4 text-sidebar-primary" />
           <span className="text-xs font-semibold tracking-widest uppercase text-sidebar-primary">
-            Command Directory
+            Chronicles of Staff
           </span>
         </div>
       </div>

@@ -46,9 +46,20 @@ interface AdminPanelProps {
   onResetAutoDisplaySettings: () => void;
   devices: DeviceClient[];
   currentDeviceId: string;
+  isSuperAdmin: boolean;
   onRefreshDevices: () => void;
   onSendDeviceView: (deviceIds: string[], view: DeviceControlView) => Promise<boolean>;
   onSendDeviceAutoDisplay: (deviceIds: string[], enabled: boolean) => Promise<boolean>;
+  onSendDeviceCloseApp: (deviceIds: string[], reason: string) => Promise<boolean>;
+  onSendDeviceReopenApp: (deviceIds: string[]) => Promise<boolean>;
+  onSendDeviceApplyProfile: (deviceIds: string[], payload: {
+    themeMode: ThemeMode;
+    bootSequenceSettings: BootSequenceSettings;
+    autoDisplaySettings: AutoDisplaySettings;
+  }) => Promise<boolean>;
+  onSendDeviceClearProfile: (deviceIds: string[]) => Promise<boolean>;
+  onSendGlobalSiteClose: (reason: string) => Promise<boolean>;
+  onSendGlobalSiteOpen: () => Promise<boolean>;
   audioSettings?: { audioUrl: string | null };
   onUpdateAudioSettings?: (url: string | null) => void;
   onBack: () => void;
@@ -265,9 +276,16 @@ export function AdminPanel({
   onResetAutoDisplaySettings,
   devices,
   currentDeviceId,
+  isSuperAdmin,
   onRefreshDevices,
   onSendDeviceView,
   onSendDeviceAutoDisplay,
+  onSendDeviceCloseApp,
+  onSendDeviceReopenApp,
+  onSendDeviceApplyProfile,
+  onSendDeviceClearProfile,
+  onSendGlobalSiteClose,
+  onSendGlobalSiteOpen,
   audioSettings, onUpdateAudioSettings,
   onBack,
   onSignOut,
@@ -788,9 +806,19 @@ export function AdminPanel({
             <DeviceControlPanel
               devices={devices}
               currentDeviceId={currentDeviceId}
+              isSuperAdmin={isSuperAdmin}
+              currentThemeMode={themeMode}
+              currentBootSettings={bootSequenceSettings}
+              currentAutoDisplaySettings={autoDisplaySettings}
               onRefresh={onRefreshDevices}
               onSendView={onSendDeviceView}
               onSendAutoDisplay={onSendDeviceAutoDisplay}
+              onSendCloseApp={onSendDeviceCloseApp}
+              onSendReopenApp={onSendDeviceReopenApp}
+              onSendApplyProfile={onSendDeviceApplyProfile}
+              onSendClearProfile={onSendDeviceClearProfile}
+              onSendGlobalClose={onSendGlobalSiteClose}
+              onSendGlobalOpen={onSendGlobalSiteOpen}
             />
           </div>
         )}

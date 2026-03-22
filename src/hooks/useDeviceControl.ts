@@ -4,7 +4,13 @@ import { getDefaultDeviceLabel, getOrCreateDeviceId } from '@/lib/deviceIdentity
 
 export type DeviceControlView = 'home' | 'fwc' | 'fdc' | 'directing' | 'allied' | 'visits' | 'admin';
 
-export type DeviceControlCommandType = 'set-view' | 'set-auto-display';
+export type DeviceControlCommandType =
+  | 'set-view'
+  | 'set-auto-display'
+  | 'apply-device-profile'
+  | 'clear-device-profile'
+  | 'close-app'
+  | 'reopen-app';
 
 export interface DeviceClient {
   device_id: string;

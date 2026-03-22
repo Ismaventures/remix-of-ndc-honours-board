@@ -44,9 +44,8 @@ const resolveDisplayContext = (
 export function AutoRotationDisplay({ personnel, visits, commandants, activeCategory = null, activeView = 'home', settings, forcedControl, onActiveChange }: AutoRotationDisplayProps) {
   const [isActive, setIsActive] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [fadeState, setFadeState] = useState<'in' | 'out' | 'pre-in'>('in');
+  const [fadeState, setFadeState] = useState<'in' | 'out'>('in');
   const [transitionType, setTransitionType] = useState<AutoDisplayTransitionType>('fade-zoom');
-  const [transitionStep, setTransitionStep] = useState(0);
   const [showNavControls, setShowNavControls] = useState(true);
   const [showInteractionHint, setShowInteractionHint] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<Personnel | null>(null);
@@ -59,6 +58,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
   const interactionHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const isTransitioningRef = useRef(false);
+  const transitionStepRef = useRef(0);
 
   const setDisplayActive = useCallback((nextActive: boolean) => {
     setIsActive(nextActive);
@@ -70,7 +70,8 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
   const contextTiming = effectiveSettings.byContext[displayContext] ?? effectiveSettings.global;
   const appliedTransition = effectiveSettings.appliedTransitionByContext?.[displayContext] ?? null;
   const contextSequence = effectiveSettings.transitionSequenceByContext?.[displayContext] ?? [];
-  const sequence = appliedTransition
+  const useAppliedTransitionOnly = Boolean(appliedTransition) && displayContext !== 'commandants';
+  const sequence = useAppliedTransitionOnly
     ? [appliedTransition]
     : contextSequence.length > 0
       ? contextSequence
@@ -127,8 +128,9 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
     if (slides.length <= 1 || isTransitioningRef.current) return;
     isTransitioningRef.current = true;
 
-    const nextTransition = sequence[transitionStep % sequence.length] ?? 'fade-zoom';
+    const nextTransition = sequence[transitionStepRef.current % sequence.length] ?? 'fade-zoom';
     const durationMs = getTransitionDurationMs(nextTransition);
+    const outDurationMs = Math.max(140, Math.round(durationMs * 0.42));
     setTransitionType(nextTransition);
     setFadeState('out');
 
@@ -136,15 +138,14 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
 
     transitionTimerRef.current = setTimeout(() => {
       setCurrentIndex(nextIndex);
-      setFadeState('pre-in');
 
       setTimeout(() => {
         setFadeState('in');
-        setTransitionStep(prev => prev + 1);
+        transitionStepRef.current += 1;
         isTransitioningRef.current = false;
-      }, 50);
-    }, durationMs);
-  }, [getTransitionDurationMs, sequence, slides.length, transitionStep]);
+      }, 22);
+    }, outDurationMs);
+  }, [getTransitionDurationMs, sequence, slides.length]);
 
   const advance = useCallback(() => {
     transitionTo((currentIndex + 1) % slides.length);
@@ -175,14 +176,18 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
 
     if (forcedControl.enabled) {
       setTransitionType(sequence[0] ?? 'fade-zoom');
-      setTransitionStep(0);
+      transitionStepRef.current = 0;
       setCurrentIndex(0);
       setDisplayActive(true);
       return;
     }
 
     setDisplayActive(false);
-  }, [forcedControl?.nonce]);
+  }, [forcedControl?.nonce, sequence, setDisplayActive]);
+
+  useEffect(() => {
+    transitionStepRef.current = 0;
+  }, [displayContext, sequence]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -274,7 +279,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
       <button
         onClick={() => {
           setTransitionType(sequence[0] ?? 'fade-zoom');
-          setTransitionStep(0);
+          transitionStepRef.current = 0;
           setCurrentIndex(0);
           setDisplayActive(true);
         }}
