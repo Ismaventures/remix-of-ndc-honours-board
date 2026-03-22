@@ -139,46 +139,89 @@ const TRANSITION_USAGE_GUIDES: Record<AutoDisplayTransitionType, { bestFor: stri
   },
 };
 
-const FEATURE_GUIDE_SECTIONS: Array<{ id: string; title: string; body: string }> = [
+type GuideTargetTab = 'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio';
+type GuideTargetPanel = 'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'actions';
+
+const FEATURE_GUIDE_SECTIONS: Array<{
+  id: string;
+  title: string;
+  whatIs: string;
+  whenToUse: string;
+  actions: Array<{ label: string; tab: GuideTargetTab; panel?: GuideTargetPanel }>;
+}> = [
   {
     id: 'home-overview',
     title: 'Home Overview',
-    body: 'This is the main page people see first. It shows key highlights and gives quick buttons to open each section.',
+    whatIs: 'This is the first page users see. It is the main entry into all content.',
+    whenToUse: 'Use this when you want a fast summary and quick access to all sections.',
+    actions: [
+      { label: 'Open Transition Defaults', tab: 'transitions', panel: 'globalTiming' },
+    ],
   },
   {
     id: 'category-browsing',
     title: 'Category Browsing (FWC, FDC, Directing Staff, Allied, Visits)',
-    body: 'Each category page shows one type of record at a time. It helps users focus and find information faster.',
+    whatIs: 'Each category page shows one group of records only.',
+    whenToUse: 'Use this when you want users to focus on one category without distractions.',
+    actions: [
+      { label: 'Open Category Transition', tab: 'transitions', panel: 'categoryApplied' },
+    ],
   },
   {
     id: 'auto-rotation',
     title: 'Auto Rotation Display',
-    body: 'Auto Rotation is slideshow mode. It changes profiles or records automatically without clicking next.',
+    whatIs: 'Auto Rotation is slideshow mode. Items change by themselves.',
+    whenToUse: 'Use this for TV screens, events, waiting rooms, and unattended displays.',
+    actions: [
+      { label: 'Open Rotation Settings', tab: 'transitions', panel: 'categoryApplied' },
+    ],
   },
   {
     id: 'boot-sequence',
     title: 'Boot Sequence Experience',
-    body: 'Boot settings control what users see when the app starts. You can make startup faster or slower and adjust the style.',
+    whatIs: 'Boot Sequence controls what users see while the app is opening.',
+    whenToUse: 'Use this when startup feels too slow, too fast, or visually too busy.',
+    actions: [
+      { label: 'Open Boot Settings', tab: 'transitions', panel: 'boot' },
+    ],
   },
   {
     id: 'theme-system',
     title: 'Theme System',
-    body: 'Theme changes the app look and colors. Pick the style you like, then save it so it stays the same.',
+    whatIs: 'Theme controls app colors and visual style.',
+    whenToUse: 'Use this when text is hard to read or when you want a different look.',
+    actions: [
+      { label: 'Open Theme Settings', tab: 'theme' },
+    ],
   },
   {
     id: 'audio-system',
     title: 'Audio System',
-    body: 'Audio settings choose which music or sound plays in each part of the app.',
+    whatIs: 'Audio settings choose what sound plays and where it plays.',
+    whenToUse: 'Use this when you want category-specific music or event ambience.',
+    actions: [
+      { label: 'Open Audio Settings', tab: 'audio' },
+    ],
   },
   {
     id: 'admin-records',
     title: 'Records Management (Personnel, Visits, Commandants)',
-    body: 'This is where you add, edit, or remove records like personnel, visits, and commandants.',
+    whatIs: 'This is where you add, edit, and delete all records.',
+    whenToUse: 'Use this whenever data changes, new records come in, or corrections are needed.',
+    actions: [
+      { label: 'Open Personnel', tab: 'personnel' },
+      { label: 'Open Visits', tab: 'visits' },
+      { label: 'Open Commandants', tab: 'commandants' },
+    ],
   },
   {
     id: 'save-apply-model',
     title: 'Save & Apply Model',
-    body: 'You can test changes first. When ready, click Apply & Save so the setting becomes final and stays for later.',
+    whatIs: 'This lets you test first, then lock in final settings with Apply and Save.',
+    whenToUse: 'Use this every time you finish testing so your changes remain after refresh or login.',
+    actions: [
+      { label: 'Open Save Section', tab: 'transitions', panel: 'actions' },
+    ],
   },
 ];
 
@@ -233,6 +276,8 @@ export function AdminPanel({
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewContextLabel, setPreviewContextLabel] = useState('Global');
   const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'actions'>('boot');
+  const [guideFlowActive, setGuideFlowActive] = useState(false);
+  const [guideNextSectionId, setGuideNextSectionId] = useState<string | null>(null);
 
   useEffect(() => {
     setThemeDraft(themeMode);
@@ -440,10 +485,25 @@ export function AdminPanel({
     setPreviewModalOpen(true);
   };
 
-  const openGuideLink = (targetTab: 'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio', transitionPanel?: 'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'actions') => {
+  useEffect(() => {
+    if (tab !== 'guide' || !guideNextSectionId) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`guide-card-${guideNextSectionId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [tab, guideNextSectionId]);
+
+  const openGuideLink = (targetTab: GuideTargetTab, transitionPanel?: GuideTargetPanel, nextSectionId?: string) => {
     setTab(targetTab);
     if (transitionPanel) {
       setActiveTransitionPanel(transitionPanel);
+    }
+    if (nextSectionId) {
+      setGuideFlowActive(true);
+      setGuideNextSectionId(nextSectionId);
     }
   };
 
@@ -509,6 +569,18 @@ export function AdminPanel({
       </div>
 
       <div className="relative">
+        {guideFlowActive && tab !== 'guide' && (
+          <div className="mb-4 rounded-lg border border-primary/20 bg-primary/10 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <p className="text-xs text-foreground">You are testing settings. Return to Helper Guide to continue from the next step.</p>
+            <button
+              onClick={() => setTab('guide')}
+              className="px-3 py-1.5 rounded border border-primary/30 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/15"
+            >
+              Back To Helper Guide (Continue)
+            </button>
+          </div>
+        )}
+
         {tab === 'personnel' && (
           <div className="view-enter">
             {!showFormP && (
@@ -705,36 +777,60 @@ export function AdminPanel({
                 <p className="text-xs text-muted-foreground mt-1">
                   Simple guide: read what a feature does, then use the "Try This Now" button to test it immediately.
                 </p>
+                {guideFlowActive && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => {
+                        setGuideFlowActive(false);
+                        setGuideNextSectionId(null);
+                      }}
+                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                    >
+                      Finish Guide Session
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                {FEATURE_GUIDE_SECTIONS.map(section => (
-                  <div key={section.id} className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                {FEATURE_GUIDE_SECTIONS.map((section, sectionIndex) => {
+                  const nextSectionId = FEATURE_GUIDE_SECTIONS[sectionIndex + 1]?.id ?? null;
+                  const isNextTarget = guideNextSectionId === section.id;
+
+                  return (
+                  <div
+                    id={`guide-card-${section.id}`}
+                    key={section.id}
+                    className={`rounded-lg border bg-card/60 p-4 transition-all ${isNextTarget ? 'border-primary/60 ring-1 ring-primary/40 shadow-md shadow-primary/20' : 'border-primary/15'}`}
+                  >
                     <p className="text-sm font-semibold text-foreground">{section.title}</p>
-                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{section.body}</p>
+                    {isNextTarget && (
+                      <p className="text-[11px] uppercase tracking-wider text-primary mt-1">Next Step</p>
+                    )}
+                    <div className="mt-2">
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">What it is</p>
+                      <p className="text-xs text-foreground mt-1 leading-relaxed">{section.whatIs}</p>
+                    </div>
                     <div className="mt-3">
-                      {section.id === 'theme-system' && (
-                        <button onClick={() => openGuideLink('theme')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Try This Now</button>
-                      )}
-                      {section.id === 'audio-system' && (
-                        <button onClick={() => openGuideLink('audio')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Try This Now</button>
-                      )}
-                      {section.id === 'admin-records' && (
-                        <div className="flex flex-wrap gap-2">
-                          <button onClick={() => openGuideLink('personnel')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Personnel</button>
-                          <button onClick={() => openGuideLink('visits')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Visits</button>
-                          <button onClick={() => openGuideLink('commandants')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Commandants</button>
-                        </div>
-                      )}
-                      {section.id === 'boot-sequence' && (
-                        <button onClick={() => openGuideLink('transitions', 'boot')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Boot Settings</button>
-                      )}
-                      {section.id === 'auto-rotation' && (
-                        <button onClick={() => openGuideLink('transitions', 'categoryApplied')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Rotation Transitions</button>
-                      )}
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">When to use</p>
+                      <p className="text-xs text-foreground mt-1 leading-relaxed">{section.whenToUse}</p>
+                    </div>
+                    <div className="mt-3">
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Try it now</p>
+                      <div className="flex flex-wrap gap-2">
+                        {section.actions.map(action => (
+                          <button
+                            key={`${section.id}-${action.label}`}
+                            onClick={() => openGuideLink(action.tab, action.panel, nextSectionId ?? section.id)}
+                            className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                          >
+                            {action.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
 
               <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
