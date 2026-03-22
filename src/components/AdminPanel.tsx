@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Pencil, Trash2, X, ArrowLeft } from 'lucide-react';
 import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/types/domain';
 import { AdvancedAudioAdmin } from './AdvancedAudioAdmin';
@@ -11,6 +11,7 @@ import {
   AutoDisplaySettings,
   AutoDisplayTiming,
   AutoDisplayTransitionType,
+  DEFAULT_AUTO_DISPLAY_SETTINGS,
   TRANSITION_TYPES,
 } from '@/hooks/useAutoDisplaySettings';
 
@@ -126,22 +127,51 @@ export function AdminPanel({
   const [showFormC, setShowFormC] = useState(false);
   const [sequenceContext, setSequenceContext] = useState<AutoDisplayContextKey>('commandants');
   const [settingsImportStatus, setSettingsImportStatus] = useState<string | null>(null);
+  const [themeDraft, setThemeDraft] = useState<ThemeMode>(themeMode);
+  const [bootDraft, setBootDraft] = useState<BootSequenceSettings>(bootSequenceSettings);
+  const [autoDisplayDraft, setAutoDisplayDraft] = useState<AutoDisplaySettings>(autoDisplaySettings);
+  const [previewTransition, setPreviewTransition] = useState<AutoDisplayTransitionType>('fade-zoom');
+  const [previewNonce, setPreviewNonce] = useState(0);
+
+  useEffect(() => {
+    setThemeDraft(themeMode);
+  }, [themeMode]);
+
+  useEffect(() => {
+    setBootDraft(bootSequenceSettings);
+  }, [bootSequenceSettings]);
+
+  useEffect(() => {
+    setAutoDisplayDraft(autoDisplaySettings);
+  }, [autoDisplaySettings]);
+
+  const isThemeDirty = themeDraft !== themeMode;
+  const isBootDirty =
+    bootDraft.totalDurationMs !== bootSequenceSettings.totalDurationMs ||
+    bootDraft.archiveTransitionMs !== bootSequenceSettings.archiveTransitionMs;
+  const isAutoDisplayDirty = JSON.stringify(autoDisplayDraft) !== JSON.stringify(autoDisplaySettings);
 
   const toggleTransitionInSequence = (transition: AutoDisplayTransitionType, enabled: boolean) => {
-    const current = autoDisplaySettings.transitionSequence;
+    const current = autoDisplayDraft.transitionSequence;
     if (enabled) {
       if (current.includes(transition)) return;
-      onAutoDisplayTransitionSequenceChange([...current, transition]);
+      setAutoDisplayDraft(prev => ({
+        ...prev,
+        transitionSequence: [...current, transition],
+      }));
       return;
     }
 
     const next = current.filter(item => item !== transition);
     if (next.length === 0) return;
-    onAutoDisplayTransitionSequenceChange(next);
+    setAutoDisplayDraft(prev => ({
+      ...prev,
+      transitionSequence: next,
+    }));
   };
 
   const moveTransitionInSequence = (transition: AutoDisplayTransitionType, direction: -1 | 1) => {
-    const current = [...autoDisplaySettings.transitionSequence];
+    const current = [...autoDisplayDraft.transitionSequence];
     const index = current.findIndex(item => item === transition);
     if (index < 0) return;
     const target = index + direction;
@@ -150,24 +180,39 @@ export function AdminPanel({
     const temp = current[index];
     current[index] = current[target];
     current[target] = temp;
-    onAutoDisplayTransitionSequenceChange(current);
+    setAutoDisplayDraft(prev => ({
+      ...prev,
+      transitionSequence: current,
+    }));
   };
 
   const toggleTransitionInContextSequence = (context: AutoDisplayContextKey, transition: AutoDisplayTransitionType, enabled: boolean) => {
-    const current = autoDisplaySettings.transitionSequenceByContext[context] ?? autoDisplaySettings.transitionSequence;
+    const current = autoDisplayDraft.transitionSequenceByContext[context] ?? autoDisplayDraft.transitionSequence;
     if (enabled) {
       if (current.includes(transition)) return;
-      onAutoDisplayContextTransitionSequenceChange(context, [...current, transition]);
+      setAutoDisplayDraft(prev => ({
+        ...prev,
+        transitionSequenceByContext: {
+          ...prev.transitionSequenceByContext,
+          [context]: [...current, transition],
+        },
+      }));
       return;
     }
 
     const next = current.filter(item => item !== transition);
     if (next.length === 0) return;
-    onAutoDisplayContextTransitionSequenceChange(context, next);
+    setAutoDisplayDraft(prev => ({
+      ...prev,
+      transitionSequenceByContext: {
+        ...prev.transitionSequenceByContext,
+        [context]: next,
+      },
+    }));
   };
 
   const moveTransitionInContextSequence = (context: AutoDisplayContextKey, transition: AutoDisplayTransitionType, direction: -1 | 1) => {
-    const current = [...(autoDisplaySettings.transitionSequenceByContext[context] ?? autoDisplaySettings.transitionSequence)];
+    const current = [...(autoDisplayDraft.transitionSequenceByContext[context] ?? autoDisplayDraft.transitionSequence)];
     const index = current.findIndex(item => item === transition);
     if (index < 0) return;
     const target = index + direction;
@@ -175,7 +220,13 @@ export function AdminPanel({
     const temp = current[index];
     current[index] = current[target];
     current[target] = temp;
-    onAutoDisplayContextTransitionSequenceChange(context, current);
+    setAutoDisplayDraft(prev => ({
+      ...prev,
+      transitionSequenceByContext: {
+        ...prev.transitionSequenceByContext,
+        [context]: current,
+      },
+    }));
   };
 
   const exportSettingsBundle = () => {
@@ -206,18 +257,78 @@ export function AdminPanel({
       };
 
       if (parsed.bootSequenceSettings) {
-        onBootSequenceSettingsChange(parsed.bootSequenceSettings);
+        setBootDraft(prev => ({ ...prev, ...parsed.bootSequenceSettings }));
       }
 
       if (parsed.autoDisplaySettings) {
-        onImportAutoDisplaySettings(parsed.autoDisplaySettings);
+        setAutoDisplayDraft(prev => ({
+          ...prev,
+          ...parsed.autoDisplaySettings,
+          global: {
+            ...prev.global,
+            ...parsed.autoDisplaySettings.global,
+          },
+          byContext: {
+            ...prev.byContext,
+            ...parsed.autoDisplaySettings.byContext,
+          },
+          transitionDurationByTypeMs: {
+            ...prev.transitionDurationByTypeMs,
+            ...parsed.autoDisplaySettings.transitionDurationByTypeMs,
+          },
+          transitionSequenceByContext: {
+            ...prev.transitionSequenceByContext,
+            ...parsed.autoDisplaySettings.transitionSequenceByContext,
+          },
+        }));
       }
 
-      setSettingsImportStatus('Settings imported successfully.');
+      setSettingsImportStatus('Settings imported into preview. Click Apply & Save to publish.');
       setTimeout(() => setSettingsImportStatus(null), 2500);
     } catch {
       setSettingsImportStatus('Could not import settings. Please use a valid JSON export file.');
       setTimeout(() => setSettingsImportStatus(null), 3500);
+    }
+  };
+
+  const applyThemeSettings = () => {
+    onThemeModeChange(themeDraft);
+  };
+
+  const applyBootAndTransitionsSettings = () => {
+    onBootSequenceSettingsChange(bootDraft);
+    onImportAutoDisplaySettings(autoDisplayDraft);
+  };
+
+  const getPreviewTransitionClasses = (transition: AutoDisplayTransitionType) => {
+    switch (transition) {
+      case 'slide-up':
+        return 'animate-[preview-slide-up_900ms_ease-out_forwards]';
+      case 'slide-left':
+        return 'animate-[preview-slide-left_900ms_ease-out_forwards]';
+      case 'slide-right':
+        return 'animate-[preview-slide-right_900ms_ease-out_forwards]';
+      case 'slide-down':
+        return 'animate-[preview-slide-down_900ms_ease-out_forwards]';
+      case 'zoom-out':
+        return 'animate-[preview-zoom-out_900ms_ease-out_forwards]';
+      case 'flip-x':
+        return 'animate-[preview-flip-x_900ms_ease-out_forwards]';
+      case 'flip-y':
+        return 'animate-[preview-flip-y_900ms_ease-out_forwards]';
+      case 'rotate-in':
+        return 'animate-[preview-rotate-in_900ms_ease-out_forwards]';
+      case 'blur-in':
+        return 'animate-[preview-blur-in_900ms_ease-out_forwards]';
+      case 'skew-lift':
+        return 'animate-[preview-skew-lift_900ms_ease-out_forwards]';
+      case 'scale-rise':
+        return 'animate-[preview-scale-rise_900ms_ease-out_forwards]';
+      case 'ndc-scatter':
+        return 'animate-[preview-ndc-scatter_900ms_ease-out_forwards]';
+      case 'fade-zoom':
+      default:
+        return 'animate-[preview-fade-zoom_900ms_ease-out_forwards]';
     }
   };
 
@@ -482,11 +593,11 @@ export function AdminPanel({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {THEME_OPTIONS.map(option => {
-                  const isActive = themeMode === option.mode;
+                  const isActive = themeDraft === option.mode;
                   return (
                     <button
                       key={option.mode}
-                      onClick={() => onThemeModeChange(option.mode)}
+                      onClick={() => setThemeDraft(option.mode)}
                       className={`text-left rounded-lg border p-4 transition-all ${
                         isActive
                           ? 'border-primary/60 bg-primary/10 shadow-md shadow-primary/10'
@@ -505,10 +616,17 @@ export function AdminPanel({
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <button
-                  onClick={onResetThemeMode}
+                  onClick={() => setThemeDraft('indoor-defence-classic')}
                   className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
                 >
-                  Reset to Default (Indoor 1)
+                  Reset Draft to Default (Indoor 1)
+                </button>
+                <button
+                  onClick={applyThemeSettings}
+                  disabled={!isThemeDirty}
+                  className="px-4 py-2 rounded-md text-sm font-medium border border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Apply & Save Theme
                 </button>
               </div>
             </div>
@@ -535,15 +653,15 @@ export function AdminPanel({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Archive Transition</label>
-                      <span className="text-xs text-foreground">{bootSequenceSettings.archiveTransitionMs} ms</span>
+                      <span className="text-xs text-foreground">{bootDraft.archiveTransitionMs} ms</span>
                     </div>
                     <input
                       type="range"
                       min={250}
                       max={2000}
                       step={50}
-                      value={bootSequenceSettings.archiveTransitionMs}
-                      onChange={e => onBootSequenceSettingsChange({ archiveTransitionMs: Number(e.target.value) })}
+                      value={bootDraft.archiveTransitionMs}
+                      onChange={e => setBootDraft(prev => ({ ...prev, archiveTransitionMs: Number(e.target.value) }))}
                       className="w-full"
                     />
                   </div>
@@ -551,15 +669,15 @@ export function AdminPanel({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Total Boot Duration</label>
-                      <span className="text-xs text-foreground">{bootSequenceSettings.totalDurationMs} ms</span>
+                      <span className="text-xs text-foreground">{bootDraft.totalDurationMs} ms</span>
                     </div>
                     <input
                       type="range"
                       min={7000}
                       max={24000}
                       step={500}
-                      value={bootSequenceSettings.totalDurationMs}
-                      onChange={e => onBootSequenceSettingsChange({ totalDurationMs: Number(e.target.value) })}
+                      value={bootDraft.totalDurationMs}
+                      onChange={e => setBootDraft(prev => ({ ...prev, totalDurationMs: Number(e.target.value) }))}
                       className="w-full"
                     />
                   </div>
@@ -567,10 +685,10 @@ export function AdminPanel({
 
                 <div className="mt-5 flex flex-wrap gap-2">
                   <button
-                    onClick={onResetBootSequenceSettings}
+                    onClick={() => setBootDraft({ totalDurationMs: 11000, archiveTransitionMs: 600 })}
                     className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
                   >
-                    Reset Boot Timing Defaults
+                    Reset Boot Draft Defaults
                   </button>
                 </div>
               </div>
@@ -585,15 +703,15 @@ export function AdminPanel({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Global Slide Time</label>
-                      <span className="text-xs text-foreground">{autoDisplaySettings.global.slideDurationMs} ms</span>
+                      <span className="text-xs text-foreground">{autoDisplayDraft.global.slideDurationMs} ms</span>
                     </div>
                     <input
                       type="range"
                       min={3000}
                       max={30000}
                       step={250}
-                      value={autoDisplaySettings.global.slideDurationMs}
-                      onChange={e => onAutoDisplayGlobalTimingChange({ slideDurationMs: Number(e.target.value) })}
+                      value={autoDisplayDraft.global.slideDurationMs}
+                      onChange={e => setAutoDisplayDraft(prev => ({ ...prev, global: { ...prev.global, slideDurationMs: Number(e.target.value) } }))}
                       className="w-full"
                     />
                   </div>
@@ -601,15 +719,15 @@ export function AdminPanel({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Global Transition Time</label>
-                      <span className="text-xs text-foreground">{autoDisplaySettings.global.transitionDurationMs} ms</span>
+                      <span className="text-xs text-foreground">{autoDisplayDraft.global.transitionDurationMs} ms</span>
                     </div>
                     <input
                       type="range"
                       min={250}
                       max={2600}
                       step={50}
-                      value={autoDisplaySettings.global.transitionDurationMs}
-                      onChange={e => onAutoDisplayGlobalTimingChange({ transitionDurationMs: Number(e.target.value) })}
+                      value={autoDisplayDraft.global.transitionDurationMs}
+                      onChange={e => setAutoDisplayDraft(prev => ({ ...prev, global: { ...prev.global, transitionDurationMs: Number(e.target.value) } }))}
                       className="w-full"
                     />
                   </div>
@@ -625,15 +743,24 @@ export function AdminPanel({
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
                             <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Slide Time</label>
-                            <span className="text-[11px] text-foreground">{autoDisplaySettings.byContext[context.key].slideDurationMs} ms</span>
+                            <span className="text-[11px] text-foreground">{autoDisplayDraft.byContext[context.key].slideDurationMs} ms</span>
                           </div>
                           <input
                             type="range"
                             min={3000}
                             max={30000}
                             step={250}
-                            value={autoDisplaySettings.byContext[context.key].slideDurationMs}
-                            onChange={e => onAutoDisplayContextTimingChange(context.key, { slideDurationMs: Number(e.target.value) })}
+                            value={autoDisplayDraft.byContext[context.key].slideDurationMs}
+                            onChange={e => setAutoDisplayDraft(prev => ({
+                              ...prev,
+                              byContext: {
+                                ...prev.byContext,
+                                [context.key]: {
+                                  ...prev.byContext[context.key],
+                                  slideDurationMs: Number(e.target.value),
+                                },
+                              },
+                            }))}
                             className="w-full"
                           />
                         </div>
@@ -641,15 +768,24 @@ export function AdminPanel({
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
                             <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Transition Base Time</label>
-                            <span className="text-[11px] text-foreground">{autoDisplaySettings.byContext[context.key].transitionDurationMs} ms</span>
+                            <span className="text-[11px] text-foreground">{autoDisplayDraft.byContext[context.key].transitionDurationMs} ms</span>
                           </div>
                           <input
                             type="range"
                             min={250}
                             max={2600}
                             step={50}
-                            value={autoDisplaySettings.byContext[context.key].transitionDurationMs}
-                            onChange={e => onAutoDisplayContextTimingChange(context.key, { transitionDurationMs: Number(e.target.value) })}
+                            value={autoDisplayDraft.byContext[context.key].transitionDurationMs}
+                            onChange={e => setAutoDisplayDraft(prev => ({
+                              ...prev,
+                              byContext: {
+                                ...prev.byContext,
+                                [context.key]: {
+                                  ...prev.byContext[context.key],
+                                  transitionDurationMs: Number(e.target.value),
+                                },
+                              },
+                            }))}
                             className="w-full"
                           />
                         </div>
@@ -663,7 +799,7 @@ export function AdminPanel({
                     <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Transition Library (Enable / Disable)</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {TRANSITION_TYPES.map(transition => {
-                        const enabled = autoDisplaySettings.transitionSequence.includes(transition.id);
+                        const enabled = autoDisplayDraft.transitionSequence.includes(transition.id);
                         return (
                           <label key={transition.id} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
                             <span className="text-foreground">{transition.label}</span>
@@ -682,7 +818,7 @@ export function AdminPanel({
                   <div className="rounded-lg border border-primary/15 bg-card/60 p-3">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Sequence Order</p>
                     <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                      {autoDisplaySettings.transitionSequence.map((transition, index) => {
+                      {autoDisplayDraft.transitionSequence.map((transition, index) => {
                         const label = TRANSITION_TYPES.find(item => item.id === transition)?.label ?? transition;
                         return (
                           <div key={`${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
@@ -729,7 +865,7 @@ export function AdminPanel({
                       <p className="text-[11px] text-muted-foreground mb-2">Enable transitions for selected category</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {TRANSITION_TYPES.map(transition => {
-                          const activeSequence = autoDisplaySettings.transitionSequenceByContext[sequenceContext] ?? autoDisplaySettings.transitionSequence;
+                          const activeSequence = autoDisplayDraft.transitionSequenceByContext[sequenceContext] ?? autoDisplayDraft.transitionSequence;
                           const enabled = activeSequence.includes(transition.id);
                           return (
                             <label key={`${sequenceContext}-${transition.id}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
@@ -748,7 +884,7 @@ export function AdminPanel({
                     <div>
                       <p className="text-[11px] text-muted-foreground mb-2">Order used for selected category</p>
                       <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                        {(autoDisplaySettings.transitionSequenceByContext[sequenceContext] ?? autoDisplaySettings.transitionSequence).map((transition, index) => {
+                        {(autoDisplayDraft.transitionSequenceByContext[sequenceContext] ?? autoDisplayDraft.transitionSequence).map((transition, index) => {
                           const label = TRANSITION_TYPES.find(item => item.id === transition)?.label ?? transition;
                           return (
                             <div key={`${sequenceContext}-${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
@@ -784,20 +920,49 @@ export function AdminPanel({
                       <div key={transition.id} className="space-y-1.5 rounded border border-primary/10 p-2">
                         <div className="flex items-center justify-between">
                           <label className="text-[11px] text-foreground">{transition.label}</label>
-                          <span className="text-[11px] text-muted-foreground">{autoDisplaySettings.transitionDurationByTypeMs[transition.id]} ms</span>
+                          <span className="text-[11px] text-muted-foreground">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span>
                         </div>
                         <input
                           type="range"
                           min={250}
                           max={3000}
                           step={50}
-                          value={autoDisplaySettings.transitionDurationByTypeMs[transition.id]}
-                          onChange={e => onAutoDisplayTransitionDurationChange(transition.id, Number(e.target.value))}
+                          value={autoDisplayDraft.transitionDurationByTypeMs[transition.id]}
+                          onChange={e => setAutoDisplayDraft(prev => ({
+                            ...prev,
+                            transitionDurationByTypeMs: {
+                              ...prev.transitionDurationByTypeMs,
+                              [transition.id]: Number(e.target.value),
+                            },
+                          }))}
                           className="w-full"
                         />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreviewTransition(transition.id);
+                            setPreviewNonce(prev => prev + 1);
+                          }}
+                          className="w-full mt-1 px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                        >
+                          Preview
+                        </button>
                       </div>
                     ))}
                   </div>
+                </div>
+
+                <div className="mt-6 rounded-lg border border-primary/15 bg-card/60 p-3">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">Transition Preview</p>
+                  <div className="h-28 rounded-lg border border-primary/20 bg-slate-950/70 overflow-hidden relative flex items-center justify-center">
+                    <div
+                      key={`${previewTransition}-${previewNonce}`}
+                      className={`px-6 py-3 rounded-md border border-primary/35 bg-primary/15 text-primary font-semibold tracking-wider ${getPreviewTransitionClasses(previewTransition)}`}
+                    >
+                      {TRANSITION_TYPES.find(item => item.id === previewTransition)?.label ?? previewTransition}
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-2">Use Preview to test animation before you apply and save.</p>
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-2">
@@ -820,10 +985,20 @@ export function AdminPanel({
                     />
                   </label>
                   <button
-                    onClick={onResetAutoDisplaySettings}
+                    onClick={() => {
+                      setBootDraft({ totalDurationMs: 11000, archiveTransitionMs: 600 });
+                      setAutoDisplayDraft(DEFAULT_AUTO_DISPLAY_SETTINGS);
+                    }}
                     className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
                   >
                     Reset Auto Display Defaults
+                  </button>
+                  <button
+                    onClick={applyBootAndTransitionsSettings}
+                    disabled={!isBootDirty && !isAutoDisplayDirty}
+                    className="px-4 py-2 rounded-md text-sm font-medium border border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Apply & Save Transitions
                   </button>
                 </div>
                 {settingsImportStatus && (
@@ -833,6 +1008,22 @@ export function AdminPanel({
             </div>
           </div>
         )}
+
+        <style>{`
+          @keyframes preview-fade-zoom { from { opacity: 0; transform: scale(0.92);} to { opacity: 1; transform: scale(1);} }
+          @keyframes preview-slide-up { from { opacity: 0; transform: translateY(18px);} to { opacity: 1; transform: translateY(0);} }
+          @keyframes preview-slide-left { from { opacity: 0; transform: translateX(-18px);} to { opacity: 1; transform: translateX(0);} }
+          @keyframes preview-slide-right { from { opacity: 0; transform: translateX(18px);} to { opacity: 1; transform: translateX(0);} }
+          @keyframes preview-slide-down { from { opacity: 0; transform: translateY(-18px);} to { opacity: 1; transform: translateY(0);} }
+          @keyframes preview-zoom-out { from { opacity: 0; transform: scale(1.08);} to { opacity: 1; transform: scale(1);} }
+          @keyframes preview-flip-x { from { opacity: 0; transform: perspective(800px) rotateX(14deg);} to { opacity: 1; transform: perspective(800px) rotateX(0deg);} }
+          @keyframes preview-flip-y { from { opacity: 0; transform: perspective(800px) rotateY(14deg);} to { opacity: 1; transform: perspective(800px) rotateY(0deg);} }
+          @keyframes preview-rotate-in { from { opacity: 0; transform: rotate(3deg) scale(0.95);} to { opacity: 1; transform: rotate(0deg) scale(1);} }
+          @keyframes preview-blur-in { from { opacity: 0; filter: blur(8px); transform: scale(1.02);} to { opacity: 1; filter: blur(0); transform: scale(1);} }
+          @keyframes preview-skew-lift { from { opacity: 0; transform: skewY(2deg) translateY(10px);} to { opacity: 1; transform: skewY(0deg) translateY(0);} }
+          @keyframes preview-scale-rise { from { opacity: 0; transform: scale(0.9) translateY(8px);} to { opacity: 1; transform: scale(1) translateY(0);} }
+          @keyframes preview-ndc-scatter { from { opacity: 0; transform: scale(0.6) rotate(-8deg); filter: blur(5px);} to { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0);} }
+        `}</style>
       </div>
     </div>
   );

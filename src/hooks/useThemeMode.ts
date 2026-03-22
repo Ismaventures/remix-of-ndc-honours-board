@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { loadUiSetting, saveUiSetting } from '@/lib/uiSettingsStorage';
 
 export type ThemeMode =
   | 'outdoor-tactical-light'
@@ -11,6 +12,7 @@ export type ThemeMode =
 type ThemeTokenMap = Record<string, string>;
 
 const STORAGE_KEY = 'ndc-theme-mode';
+const SUPABASE_SETTING_KEY = 'theme_mode';
 export const DEFAULT_THEME_MODE: ThemeMode = 'indoor-defence-classic';
 
 export const THEME_MODE_LABELS: Record<ThemeMode, string> = {
@@ -243,8 +245,27 @@ export function useThemeMode() {
   const [themeMode, setThemeMode] = useState<ThemeMode>(loadThemeModeFromStorage);
 
   useEffect(() => {
+    let mounted = true;
+
+    const syncFromSupabase = async () => {
+      const remote = await loadUiSetting<ThemeMode>(SUPABASE_SETTING_KEY);
+      if (!mounted || !remote) return;
+      if (!(remote in THEME_TOKENS)) return;
+      setThemeMode(remote);
+      localStorage.setItem(STORAGE_KEY, remote);
+    };
+
+    void syncFromSupabase();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     applyThemeMode(themeMode);
     localStorage.setItem(STORAGE_KEY, themeMode);
+    void saveUiSetting(SUPABASE_SETTING_KEY, themeMode);
   }, [themeMode]);
 
   const modeOptions = useMemo(() => {
