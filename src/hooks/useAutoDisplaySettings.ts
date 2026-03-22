@@ -34,6 +34,7 @@ export interface AutoDisplaySettings {
   byContext: Record<AutoDisplayContextKey, AutoDisplayTiming>;
   transitionSequence: AutoDisplayTransitionType[];
   transitionSequenceByContext: Record<AutoDisplayContextKey, AutoDisplayTransitionType[]>;
+  appliedTransitionByContext: Record<AutoDisplayContextKey, AutoDisplayTransitionType | null>;
   transitionDurationByTypeMs: Record<AutoDisplayTransitionType, number>;
 }
 
@@ -118,6 +119,14 @@ export const DEFAULT_AUTO_DISPLAY_SETTINGS: AutoDisplaySettings = {
       'flip-x', 'flip-y', 'rotate-in', 'blur-in', 'skew-lift', 'scale-rise',
     ],
   },
+  appliedTransitionByContext: {
+    commandants: null,
+    visits: null,
+    FWC: null,
+    FDC: null,
+    'Directing Staff': null,
+    Allied: null,
+  },
   transitionDurationByTypeMs: {
     'fade-zoom': 450,
     'slide-up': 520,
@@ -179,6 +188,12 @@ function sanitizeSettings(input: Partial<AutoDisplaySettings> | null | undefined
     return acc;
   }, {} as Record<AutoDisplayContextKey, AutoDisplayTransitionType[]>);
 
+  const appliedTransitionByContext = AUTO_DISPLAY_CONTEXTS.reduce<Record<AutoDisplayContextKey, AutoDisplayTransitionType | null>>((acc, context) => {
+    const raw = input?.appliedTransitionByContext?.[context.key];
+    acc[context.key] = isTransitionType(raw) ? raw : null;
+    return acc;
+  }, {} as Record<AutoDisplayContextKey, AutoDisplayTransitionType | null>);
+
   const transitionDurationByTypeMs = TRANSITION_TYPES.reduce<Record<AutoDisplayTransitionType, number>>((acc, transition) => {
     const raw = Number(input?.transitionDurationByTypeMs?.[transition.id]);
     acc[transition.id] = Number.isFinite(raw)
@@ -192,6 +207,7 @@ function sanitizeSettings(input: Partial<AutoDisplaySettings> | null | undefined
     byContext,
     transitionSequence,
     transitionSequenceByContext,
+    appliedTransitionByContext,
     transitionDurationByTypeMs,
   };
 }

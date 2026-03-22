@@ -914,6 +914,59 @@ export function AdminPanel({
                 </div>
 
                 <div className="mt-6 rounded-lg border border-primary/15 bg-card/60 p-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Per-Category Applied Transition</p>
+                    <select
+                      value={sequenceContext}
+                      onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)}
+                      className="bg-background border border-primary/20 rounded-md px-2 py-1 text-xs text-foreground"
+                    >
+                      {AUTO_DISPLAY_CONTEXTS.map(context => (
+                        <option key={`apply-${context.key}`} value={context.key}>{context.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mb-3">
+                    Choose one transition to lock for this category, or select "Use Sequence" to keep rotating through the category sequence.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Applied Transition</label>
+                      <select
+                        value={autoDisplayDraft.appliedTransitionByContext[sequenceContext] ?? 'sequence'}
+                        onChange={e => {
+                          const value = e.target.value;
+                          setAutoDisplayDraft(prev => ({
+                            ...prev,
+                            appliedTransitionByContext: {
+                              ...prev.appliedTransitionByContext,
+                              [sequenceContext]: value === 'sequence' ? null : value as AutoDisplayTransitionType,
+                            },
+                          }));
+                        }}
+                        className="w-full bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground"
+                      >
+                        <option value="sequence">Use Sequence</option>
+                        {TRANSITION_TYPES.map(transition => (
+                          <option key={`applied-${transition.id}`} value={transition.id}>{transition.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const selected = autoDisplayDraft.appliedTransitionByContext[sequenceContext] ?? 'fade-zoom';
+                        setPreviewTransition(selected);
+                        setPreviewNonce(prev => prev + 1);
+                      }}
+                      className="px-3 py-2 rounded border border-primary/25 text-xs uppercase tracking-wider text-primary hover:bg-primary/10"
+                    >
+                      Preview Selected
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-lg border border-primary/15 bg-card/60 p-3">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Individual Transition Times</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {TRANSITION_TYPES.map(transition => (

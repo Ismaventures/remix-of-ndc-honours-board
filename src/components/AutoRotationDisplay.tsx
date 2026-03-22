@@ -61,12 +61,15 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
   const effectiveSettings = settings ?? DEFAULT_AUTO_DISPLAY_SETTINGS;
   const displayContext = resolveDisplayContext(activeCategory, activeView);
   const contextTiming = effectiveSettings.byContext[displayContext] ?? effectiveSettings.global;
+  const appliedTransition = effectiveSettings.appliedTransitionByContext?.[displayContext] ?? null;
   const contextSequence = effectiveSettings.transitionSequenceByContext?.[displayContext] ?? [];
-  const sequence = contextSequence.length > 0
-    ? contextSequence
-    : effectiveSettings.transitionSequence.length > 0
-      ? effectiveSettings.transitionSequence
-    : DEFAULT_AUTO_DISPLAY_SETTINGS.transitionSequence;
+  const sequence = appliedTransition
+    ? [appliedTransition]
+    : contextSequence.length > 0
+      ? contextSequence
+      : effectiveSettings.transitionSequence.length > 0
+        ? effectiveSettings.transitionSequence
+        : DEFAULT_AUTO_DISPLAY_SETTINGS.transitionSequence;
 
   const getTransitionDurationMs = useCallback(
     (transition: AutoDisplayTransitionType) => {
