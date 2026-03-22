@@ -4,6 +4,15 @@ import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/
 import { AdvancedAudioAdmin } from './AdvancedAudioAdmin';
 import { saveMediaFile } from '@/lib/persistentMedia';
 import { ThemeMode } from '@/hooks/useThemeMode';
+import { BootSequenceSettings } from '@/hooks/useBootSequenceSettings';
+import {
+  AUTO_DISPLAY_CONTEXTS,
+  AutoDisplayContextKey,
+  AutoDisplaySettings,
+  AutoDisplayTiming,
+  AutoDisplayTransitionType,
+  TRANSITION_TYPES,
+} from '@/hooks/useAutoDisplaySettings';
 
 interface AdminPanelProps {
   personnel: Personnel[];
@@ -21,6 +30,17 @@ interface AdminPanelProps {
   themeMode: ThemeMode;
   onThemeModeChange: (mode: ThemeMode) => void;
   onResetThemeMode: () => void;
+  bootSequenceSettings: BootSequenceSettings;
+  onBootSequenceSettingsChange: (settings: Partial<BootSequenceSettings>) => void;
+  onResetBootSequenceSettings: () => void;
+  autoDisplaySettings: AutoDisplaySettings;
+  onAutoDisplayGlobalTimingChange: (timing: Partial<AutoDisplayTiming>) => void;
+  onAutoDisplayContextTimingChange: (context: AutoDisplayContextKey, timing: Partial<AutoDisplayTiming>) => void;
+  onAutoDisplayTransitionDurationChange: (transition: AutoDisplayTransitionType, durationMs: number) => void;
+  onAutoDisplayTransitionSequenceChange: (sequence: AutoDisplayTransitionType[]) => void;
+  onAutoDisplayContextTransitionSequenceChange: (context: AutoDisplayContextKey, sequence: AutoDisplayTransitionType[]) => void;
+  onImportAutoDisplaySettings: (settings: Partial<AutoDisplaySettings>) => void;
+  onResetAutoDisplaySettings: () => void;
   audioSettings?: { audioUrl: string | null };
   onUpdateAudioSettings?: (url: string | null) => void;
   onBack: () => void;
@@ -84,6 +104,15 @@ export function AdminPanel({
   onAddVisit, onUpdateVisit, onDeleteVisit,
   onAddCommandant, onUpdateCommandant, onDeleteCommandant,
   themeMode, onThemeModeChange, onResetThemeMode,
+  bootSequenceSettings, onBootSequenceSettingsChange, onResetBootSequenceSettings,
+  autoDisplaySettings,
+  onAutoDisplayGlobalTimingChange,
+  onAutoDisplayContextTimingChange,
+  onAutoDisplayTransitionDurationChange,
+  onAutoDisplayTransitionSequenceChange,
+  onAutoDisplayContextTransitionSequenceChange,
+  onImportAutoDisplaySettings,
+  onResetAutoDisplaySettings,
   audioSettings, onUpdateAudioSettings,
   onBack,
   onSignOut,
@@ -95,6 +124,102 @@ export function AdminPanel({
   const [showFormP, setShowFormP] = useState(false);
   const [showFormV, setShowFormV] = useState(false);
   const [showFormC, setShowFormC] = useState(false);
+  const [sequenceContext, setSequenceContext] = useState<AutoDisplayContextKey>('commandants');
+  const [settingsImportStatus, setSettingsImportStatus] = useState<string | null>(null);
+
+  const toggleTransitionInSequence = (transition: AutoDisplayTransitionType, enabled: boolean) => {
+    const current = autoDisplaySettings.transitionSequence;
+    if (enabled) {
+      if (current.includes(transition)) return;
+      onAutoDisplayTransitionSequenceChange([...current, transition]);
+      return;
+    }
+
+    const next = current.filter(item => item !== transition);
+    if (next.length === 0) return;
+    onAutoDisplayTransitionSequenceChange(next);
+  };
+
+  const moveTransitionInSequence = (transition: AutoDisplayTransitionType, direction: -1 | 1) => {
+    const current = [...autoDisplaySettings.transitionSequence];
+    const index = current.findIndex(item => item === transition);
+    if (index < 0) return;
+    const target = index + direction;
+    if (target < 0 || target >= current.length) return;
+
+    const temp = current[index];
+    current[index] = current[target];
+    current[target] = temp;
+    onAutoDisplayTransitionSequenceChange(current);
+  };
+
+  const toggleTransitionInContextSequence = (context: AutoDisplayContextKey, transition: AutoDisplayTransitionType, enabled: boolean) => {
+    const current = autoDisplaySettings.transitionSequenceByContext[context] ?? autoDisplaySettings.transitionSequence;
+    if (enabled) {
+      if (current.includes(transition)) return;
+      onAutoDisplayContextTransitionSequenceChange(context, [...current, transition]);
+      return;
+    }
+
+    const next = current.filter(item => item !== transition);
+    if (next.length === 0) return;
+    onAutoDisplayContextTransitionSequenceChange(context, next);
+  };
+
+  const moveTransitionInContextSequence = (context: AutoDisplayContextKey, transition: AutoDisplayTransitionType, direction: -1 | 1) => {
+    const current = [...(autoDisplaySettings.transitionSequenceByContext[context] ?? autoDisplaySettings.transitionSequence)];
+    const index = current.findIndex(item => item === transition);
+    if (index < 0) return;
+    const target = index + direction;
+    if (target < 0 || target >= current.length) return;
+    const temp = current[index];
+    current[index] = current[target];
+    current[target] = temp;
+    onAutoDisplayContextTransitionSequenceChange(context, current);
+  };
+
+  const exportSettingsBundle = () => {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      bootSequenceSettings,
+      autoDisplaySettings,
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'ndc-ui-settings.json';
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importSettingsBundle = async (file: File | null) => {
+    if (!file) return;
+
+    try {
+      const raw = await file.text();
+      const parsed = JSON.parse(raw) as {
+        bootSequenceSettings?: Partial<BootSequenceSettings>;
+        autoDisplaySettings?: Partial<AutoDisplaySettings>;
+      };
+
+      if (parsed.bootSequenceSettings) {
+        onBootSequenceSettingsChange(parsed.bootSequenceSettings);
+      }
+
+      if (parsed.autoDisplaySettings) {
+        onImportAutoDisplaySettings(parsed.autoDisplaySettings);
+      }
+
+      setSettingsImportStatus('Settings imported successfully.');
+      setTimeout(() => setSettingsImportStatus(null), 2500);
+    } catch {
+      setSettingsImportStatus('Could not import settings. Please use a valid JSON export file.');
+      setTimeout(() => setSettingsImportStatus(null), 3500);
+    }
+  };
 
   const tabBtn = (key: typeof tab, label: string) => (
     <button
@@ -384,6 +509,312 @@ export function AdminPanel({
                 >
                   Reset to Default (Indoor 1)
                 </button>
+              </div>
+
+              <div className="mt-8 border-t border-primary/10 pt-6">
+                <h4 className="text-base font-semibold gold-text">Boot Sequence Timing</h4>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tune how fast archive portraits transition and how long the full initialization lasts.
+                </p>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Archive Transition</label>
+                      <span className="text-xs text-foreground">{bootSequenceSettings.archiveTransitionMs} ms</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={250}
+                      max={2000}
+                      step={50}
+                      value={bootSequenceSettings.archiveTransitionMs}
+                      onChange={e => onBootSequenceSettingsChange({ archiveTransitionMs: Number(e.target.value) })}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Total Boot Duration</label>
+                      <span className="text-xs text-foreground">{bootSequenceSettings.totalDurationMs} ms</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={7000}
+                      max={24000}
+                      step={500}
+                      value={bootSequenceSettings.totalDurationMs}
+                      onChange={e => onBootSequenceSettingsChange({ totalDurationMs: Number(e.target.value) })}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <button
+                    onClick={onResetBootSequenceSettings}
+                    className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
+                  >
+                    Reset Boot Timing Defaults
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-8 border-t border-primary/10 pt-6">
+                <h4 className="text-base font-semibold gold-text">Auto Display Transition Control</h4>
+                <p className="text-xs text-muted-foreground mt-1">
+                  All timing and sequence settings are saved locally and remain unchanged after closing and reopening the app until an admin updates them.
+                </p>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Global Slide Time</label>
+                      <span className="text-xs text-foreground">{autoDisplaySettings.global.slideDurationMs} ms</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={3000}
+                      max={30000}
+                      step={250}
+                      value={autoDisplaySettings.global.slideDurationMs}
+                      onChange={e => onAutoDisplayGlobalTimingChange({ slideDurationMs: Number(e.target.value) })}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Global Transition Time</label>
+                      <span className="text-xs text-foreground">{autoDisplaySettings.global.transitionDurationMs} ms</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={250}
+                      max={2600}
+                      step={50}
+                      value={autoDisplaySettings.global.transitionDurationMs}
+                      onChange={e => onAutoDisplayGlobalTimingChange({ transitionDurationMs: Number(e.target.value) })}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Category-Specific Timing</p>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {AUTO_DISPLAY_CONTEXTS.map(context => (
+                      <div key={context.key} className="rounded-lg border border-primary/15 bg-card/60 p-3 space-y-3">
+                        <p className="text-sm font-semibold text-foreground">{context.label}</p>
+
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Slide Time</label>
+                            <span className="text-[11px] text-foreground">{autoDisplaySettings.byContext[context.key].slideDurationMs} ms</span>
+                          </div>
+                          <input
+                            type="range"
+                            min={3000}
+                            max={30000}
+                            step={250}
+                            value={autoDisplaySettings.byContext[context.key].slideDurationMs}
+                            onChange={e => onAutoDisplayContextTimingChange(context.key, { slideDurationMs: Number(e.target.value) })}
+                            className="w-full"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Transition Base Time</label>
+                            <span className="text-[11px] text-foreground">{autoDisplaySettings.byContext[context.key].transitionDurationMs} ms</span>
+                          </div>
+                          <input
+                            type="range"
+                            min={250}
+                            max={2600}
+                            step={50}
+                            value={autoDisplaySettings.byContext[context.key].transitionDurationMs}
+                            onChange={e => onAutoDisplayContextTimingChange(context.key, { transitionDurationMs: Number(e.target.value) })}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-3">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Transition Library (Enable / Disable)</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {TRANSITION_TYPES.map(transition => {
+                        const enabled = autoDisplaySettings.transitionSequence.includes(transition.id);
+                        return (
+                          <label key={transition.id} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
+                            <span className="text-foreground">{transition.label}</span>
+                            <input
+                              type="checkbox"
+                              checked={enabled}
+                              onChange={e => toggleTransitionInSequence(transition.id, e.target.checked)}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-3">At least one transition must stay enabled.</p>
+                  </div>
+
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-3">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Sequence Order</p>
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {autoDisplaySettings.transitionSequence.map((transition, index) => {
+                        const label = TRANSITION_TYPES.find(item => item.id === transition)?.label ?? transition;
+                        return (
+                          <div key={`${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
+                            <span className="text-foreground">{index + 1}. {label}</span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => moveTransitionInSequence(transition, -1)}
+                                className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40"
+                              >
+                                Up
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => moveTransitionInSequence(transition, 1)}
+                                className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40"
+                              >
+                                Down
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-lg border border-primary/15 bg-card/60 p-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Per-Category Sequence Order</p>
+                    <select
+                      value={sequenceContext}
+                      onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)}
+                      className="bg-background border border-primary/20 rounded-md px-2 py-1 text-xs text-foreground"
+                    >
+                      {AUTO_DISPLAY_CONTEXTS.map(context => (
+                        <option key={context.key} value={context.key}>{context.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[11px] text-muted-foreground mb-2">Enable transitions for selected category</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {TRANSITION_TYPES.map(transition => {
+                          const activeSequence = autoDisplaySettings.transitionSequenceByContext[sequenceContext] ?? autoDisplaySettings.transitionSequence;
+                          const enabled = activeSequence.includes(transition.id);
+                          return (
+                            <label key={`${sequenceContext}-${transition.id}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
+                              <span className="text-foreground">{transition.label}</span>
+                              <input
+                                type="checkbox"
+                                checked={enabled}
+                                onChange={e => toggleTransitionInContextSequence(sequenceContext, transition.id, e.target.checked)}
+                              />
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] text-muted-foreground mb-2">Order used for selected category</p>
+                      <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                        {(autoDisplaySettings.transitionSequenceByContext[sequenceContext] ?? autoDisplaySettings.transitionSequence).map((transition, index) => {
+                          const label = TRANSITION_TYPES.find(item => item.id === transition)?.label ?? transition;
+                          return (
+                            <div key={`${sequenceContext}-${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
+                              <span className="text-foreground">{index + 1}. {label}</span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => moveTransitionInContextSequence(sequenceContext, transition, -1)}
+                                  className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40"
+                                >
+                                  Up
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => moveTransitionInContextSequence(sequenceContext, transition, 1)}
+                                  className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40"
+                                >
+                                  Down
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-lg border border-primary/15 bg-card/60 p-3">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Individual Transition Times</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {TRANSITION_TYPES.map(transition => (
+                      <div key={transition.id} className="space-y-1.5 rounded border border-primary/10 p-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[11px] text-foreground">{transition.label}</label>
+                          <span className="text-[11px] text-muted-foreground">{autoDisplaySettings.transitionDurationByTypeMs[transition.id]} ms</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={250}
+                          max={3000}
+                          step={50}
+                          value={autoDisplaySettings.transitionDurationByTypeMs[transition.id]}
+                          onChange={e => onAutoDisplayTransitionDurationChange(transition.id, Number(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <button
+                    onClick={exportSettingsBundle}
+                    className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
+                  >
+                    Export UI Settings
+                  </button>
+                  <label className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors cursor-pointer">
+                    Import UI Settings
+                    <input
+                      type="file"
+                      accept="application/json,.json"
+                      className="hidden"
+                      onChange={e => {
+                        void importSettingsBundle(e.target.files?.[0] ?? null);
+                        e.currentTarget.value = '';
+                      }}
+                    />
+                  </label>
+                  <button
+                    onClick={onResetAutoDisplaySettings}
+                    className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
+                  >
+                    Reset Auto Display Defaults
+                  </button>
+                </div>
+                {settingsImportStatus && (
+                  <p className="text-xs text-primary mt-3">{settingsImportStatus}</p>
+                )}
               </div>
             </div>
           </div>

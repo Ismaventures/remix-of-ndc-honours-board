@@ -2,24 +2,40 @@ import React, { useState, useEffect } from 'react';
 import { useAudioStore } from '@/hooks/useAudioStore';
 import { playAudioTrack } from '@/components/AudioManager';
 import { useCommandantsStore } from '@/hooks/useStore';
-import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
+import { resolveMediaRefToObjectUrl } from '@/lib/persistentMedia';
+import { BootSequenceSettings, DEFAULT_BOOT_SEQUENCE_SETTINGS } from '@/hooks/useBootSequenceSettings';
 import ndcCrest from '/images/ndc-crest.png';
 
-export function BootSequence({ onComplete }: { onComplete?: () => void }) {
+type BootPortrait = {
+  id: string;
+  name: string;
+  rankOrTitle: string;
+  imageUrl: string | null;
+  isCurrent: boolean;
+  tenureLabel: string;
+};
+
+export function BootSequence({ settings, onComplete }: { settings?: BootSequenceSettings; onComplete?: () => void }) {
   const [step, setStep] = useState(0);
   const [utcNow, setUtcNow] = useState(() => new Date());
   const assignments = useAudioStore(s => s.assignments);
   const { commandants } = useCommandantsStore();
   
   const currentCommandant = commandants.find(c => c.isCurrent);
-  const currentCommandantImageUrl = useResolvedMediaUrl(currentCommandant?.imageUrl);
   const [typedLine1, setTypedLine1] = useState('');
   const [typedLine2, setTypedLine2] = useState('');
   const [typedLine3, setTypedLine3] = useState('');
+  const [bootPortraits, setBootPortraits] = useState<BootPortrait[]>([]);
+  const [activePortraitIndex, setActivePortraitIndex] = useState(0);
+  const [portraitVisible, setPortraitVisible] = useState(true);
 
   const line1Txt = 'Initializing Secure Environment...';
   const line2Txt = 'Verifying System Integrity...';
   const line3Txt = 'Loading Honour Archives...';
+
+  const bootSettings = settings ?? DEFAULT_BOOT_SEQUENCE_SETTINGS;
+  const timeScale = Math.max(0.65, bootSettings.totalDurationMs / DEFAULT_BOOT_SEQUENCE_SETTINGS.totalDurationMs);
+  const scaledDelay = (baseMs: number, min = 120) => Math.max(min, Math.round(baseMs * timeScale));
 
   const progress = Math.min(100, Math.round((Math.min(step, 7) / 7) * 100));
   const statusLabel =
@@ -28,6 +44,18 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
     step < 6 ? 'Syncing Archives' :
     step < 7 ? 'Final Checks' :
     'Mission Ready';
+
+  const currentPortrait = bootPortraits[activePortraitIndex] ?? null;
+
+  const initials = currentPortrait?.name
+    ? currentPortrait.name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(part => part[0])
+        .join('')
+        .toUpperCase()
+    : 'NDC';
 
   const utcLabel = utcNow.toLocaleTimeString('en-GB', {
     hour12: false,
@@ -42,8 +70,8 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
       playAudioTrack(assignments.preloader, true);
     }
     
-    const t1 = setTimeout(() => setStep(1), 1000);
-    const t2 = setTimeout(() => setStep(2), 2000);
+    const t1 = setTimeout(() => setStep(1), scaledDelay(1000));
+    const t2 = setTimeout(() => setStep(2), scaledDelay(2000));
     
     const t3 = setTimeout(() => {
       setStep(3);
@@ -60,19 +88,119 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
                if (onComplete) {
                    setTimeout(() => {
                      setStep(8);
-                     setTimeout(onComplete, 1000);
-                   }, 2000);
+                     setTimeout(onComplete, scaledDelay(1000));
+                   }, scaledDelay(2000));
                }
-             }, 1500);
+             }, scaledDelay(1500));
           });
         });
       });
-    }, 3000);
+    }, scaledDelay(3000));
 
     return () => {
       clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
     };
-  }, [assignments.preloader, onComplete]);
+  }, [assignments.preloader, onComplete, timeScale]);
+
+  useEffect(() => {
+    let mounted = true;
+    const transientUrls: string[] = [];
+
+    const prepareBootPortraits = async () => {
+      const unique = new Map<string, BootPortrait>();
+
+      const byRecentTenure = [...commandants].sort((a, b) => {
+        if (a.isCurrent && !b.isCurrent) return -1;
+        if (!a.isCurrent && b.isCurrent) return 1;
+        return (b.tenureStart ?? 0) - (a.tenureStart ?? 0);
+      });
+
+      for (const cmd of byRecentTenure) {
+        let resolvedImage: string | null = null;
+        if (cmd.imageUrl) {
+          const resolved = await resolveMediaRefToObjectUrl(cmd.imageUrl);
+          resolvedImage = resolved;
+          if (resolvedImage?.startsWith('blob:')) {
+            transientUrls.push(resolvedImage);
+          }
+        }
+
+        const tenureLabel = `${cmd.tenureStart}${cmd.tenureEnd ? ` - ${cmd.tenureEnd}` : ' - Present'}`;
+
+        unique.set(cmd.id, {
+          id: cmd.id,
+          name: cmd.name,
+          rankOrTitle: cmd.title,
+          imageUrl: resolvedImage,
+          isCurrent: cmd.isCurrent,
+          tenureLabel,
+        });
+      }
+
+      if (!mounted) return;
+
+      const items = Array.from(unique.values());
+      setBootPortraits(items);
+
+      const currentIdx = items.findIndex(item => item.isCurrent);
+      setActivePortraitIndex(currentIdx >= 0 ? currentIdx : 0);
+    };
+
+    void prepareBootPortraits();
+
+    return () => {
+      mounted = false;
+      transientUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [commandants]);
+
+  useEffect(() => {
+    if (bootPortraits.length <= 1) return;
+
+    const currentIdx = bootPortraits.findIndex(item => item.isCurrent);
+    const pastIndices = bootPortraits
+      .map((item, idx) => ({ item, idx }))
+      .filter(({ item }) => !item.isCurrent)
+      .map(({ idx }) => idx);
+    const rotationIndices = pastIndices.length > 0 ? pastIndices : bootPortraits.map((_, idx) => idx);
+
+    if (step >= 7) {
+      if (currentIdx >= 0) {
+        setPortraitVisible(false);
+        const settleTimer = setTimeout(() => {
+          setActivePortraitIndex(currentIdx);
+          setPortraitVisible(true);
+        }, 170);
+        return () => clearTimeout(settleTimer);
+      }
+      return;
+    }
+
+    if (step < 2 || rotationIndices.length === 0) return;
+
+    const archiveBase = Math.max(250, bootSettings.archiveTransitionMs);
+    const intervalMs = step < 5
+      ? Math.round(archiveBase * 0.85)
+      : step < 6
+        ? Math.round(archiveBase * 1.1)
+        : Math.round(archiveBase * 1.35);
+    const fadeOutMs = Math.max(90, Math.min(240, Math.round(archiveBase * 0.24)));
+
+    const timer = setInterval(() => {
+      setPortraitVisible(false);
+      setTimeout(() => {
+        setActivePortraitIndex(prev => {
+          const prevIndexInPast = rotationIndices.findIndex(idx => idx === prev);
+          if (prevIndexInPast < 0) return rotationIndices[0];
+          const nextPastIndex = (prevIndexInPast + 1) % rotationIndices.length;
+          return rotationIndices[nextPastIndex];
+        });
+        setPortraitVisible(true);
+      }, fadeOutMs);
+    }, intervalMs);
+
+    return () => clearInterval(timer);
+  }, [step, bootPortraits, bootSettings.archiveTransitionMs]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -85,15 +213,17 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
   const typeText = (text: string, setter: React.Dispatch<React.SetStateAction<string>>, onFinish: () => void) => {
     let current = '';
     let i = 0;
+    const letterMs = Math.max(20, Math.min(120, Math.round(40 * timeScale)));
+    const settleMs = scaledDelay(400, 180);
     const interval = setInterval(() => {
       current += text[i];
       setter(current);
       i++;
       if (i === text.length) {
         clearInterval(interval);
-        setTimeout(onFinish, 400); 
+        setTimeout(onFinish, settleMs);
       }
-    }, 40); 
+    }, letterMs);
   };
 
   return (
@@ -111,9 +241,9 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
       <div className={`absolute left-0 w-full h-[2px] bg-primary/60 shadow-[0_0_20px_rgba(200,169,81,0.8)] transition-transform ease-linear z-0 ${step >= 1 ? 'translate-y-full' : '-translate-y-full'}`} style={{ top: 0, transitionDuration: '3000ms' }} />
 
       <div className={`absolute top-3 left-3 right-3 md:top-5 md:left-6 md:right-6 z-20 transition-all duration-700 ${step >= 1 ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="flex items-center justify-between gap-3 text-[10px] md:text-xs font-mono uppercase tracking-[0.18em] bg-slate-900/60 border border-primary/25 px-3 py-2 rounded-md backdrop-blur-sm text-primary/85">
+        <div className="flex items-center justify-between gap-3 text-[10px] md:text-xs font-mono uppercase tracking-[0.18em] bg-slate-900/72 border border-white/20 px-3 py-2 rounded-md backdrop-blur-sm text-white/90">
           <span>Classification: Restricted</span>
-          <span className="hidden md:inline">Operation: Sentinel Archive</span>
+          <span className="hidden md:inline text-[#d4af37]">Operation: Sentinel Archive</span>
           <span>UTC: {utcLabel}</span>
         </div>
       </div>
@@ -130,7 +260,7 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
             <div className="absolute bottom-0 left-0 h-[2px] bg-primary transition-all ease-in-out shadow-[0_0_10px_theme('colors.primary.DEFAULT')]" style={{ width: step >= 1 ? '100%' : '0%', transitionDuration: '1200ms' }} />
           </h1>
           
-          <h2 className={`mt-2 md:mt-3 text-sm md:text-lg text-primary tracking-[0.08em] md:tracking-[0.12em] uppercase font-sans font-light transition-all duration-1000 ease-in-out ${step >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+          <h2 className={`mt-2 md:mt-3 text-sm md:text-lg text-[#d4af37] tracking-[0.08em] md:tracking-[0.12em] uppercase font-sans font-light transition-all duration-1000 ease-in-out ${step >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
             System Initialization
           </h2>
         </div>
@@ -138,63 +268,103 @@ export function BootSequence({ onComplete }: { onComplete?: () => void }) {
         {/* Dynamic Center Row: Commandant Portrait + Terminal */}
         <div className="w-full flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 max-w-4xl">
            
-           {/* Current Commandant Authorizing */}
-           {currentCommandant && (
+           {/* Boot Portrait Sequence: past commandants in motion, then current commandant lock-in */}
+           {(currentCommandant || currentPortrait) && (
                  <div className={`transition-all duration-1000 delay-300 ease-out flex flex-col items-center shrink-0 ${step >= 3 ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-                  <div className="relative p-1 rounded-full border border-primary/30 bg-primary/5 shadow-[0_0_30px_rgba(200,169,81,0.15)] flex-shrink-0">
+                  <div className="relative p-1 rounded-full border border-white/25 bg-white/5 shadow-[0_0_30px_rgba(200,169,81,0.15)] flex-shrink-0">
                     <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-2 border-primary relative z-10 bg-slate-900">
-                      {currentCommandantImageUrl ? (
-                        <img src={currentCommandantImageUrl} alt={currentCommandant.name} className="w-full h-full object-cover object-top grayscale hover:grayscale-0 transition-all duration-700 hover:scale-105" />
+                      {currentPortrait?.imageUrl ? (
+                        <img
+                          src={currentPortrait.imageUrl}
+                          alt={currentPortrait.name}
+                          className={`w-full h-full object-cover object-top transition-all duration-500 ${portraitVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${currentPortrait?.isCurrent && step >= 7 ? 'grayscale-0' : 'grayscale'}`}
+                        />
                       ) : (
-                        <div className="w-full h-full bg-slate-900" />
+                        <div className={`w-full h-full bg-slate-900 flex items-center justify-center transition-all duration-500 ${portraitVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+                          <div className="flex flex-col items-center gap-2 text-white/70">
+                            <img src={ndcCrest} alt="NDC Crest" className="w-10 h-10 md:w-12 md:h-12 object-contain grayscale opacity-80" />
+                            <span className="text-xs md:text-sm font-bold tracking-wider">{initials}</span>
+                          </div>
+                        </div>
                       )}
                       </div>
                       
                       {/* Holographic scanning circle elements */}
-                      <div className="absolute inset-0 rounded-full border-[1px] border-primary border-dashed animate-[spin_10s_linear_infinite] opacity-50" />
-                      <div className="absolute -inset-4 rounded-full border-[1px] border-primary border-dotted animate-[spin_15s_linear_infinite_reverse] opacity-30" />
+                      <div className="absolute inset-0 rounded-full border-[1px] border-[#d4af37] border-dashed animate-[spin_10s_linear_infinite] opacity-50" />
+                      <div className="absolute -inset-4 rounded-full border-[1px] border-[#d4af37] border-dotted animate-[spin_15s_linear_infinite_reverse] opacity-30" />
                   </div>
                   
-                    <div className="mt-3 md:mt-4 text-center bg-slate-950/80 py-2 px-3 md:px-4 rounded-lg border border-primary/20 backdrop-blur max-w-[280px]">
-                      <p className="text-[10px] text-muted-foreground tracking-widest uppercase mb-1">Authorizing Command</p>
-                      <p className="text-xs md:text-sm font-bold text-primary tracking-wide uppercase drop-shadow-[0_0_5px_theme('colors.primary.DEFAULT')]">{currentCommandant.name}</p>
-                      <p className="text-[9px] md:text-[10px] text-primary/70 mt-1 uppercase tracking-wide truncate">{currentCommandant.title}</p>
+                    <div className="mt-3 md:mt-4 text-center bg-slate-950/82 py-2 px-3 md:px-4 rounded-lg border border-white/15 backdrop-blur max-w-[280px]">
+                      <p className="text-[10px] text-white/65 tracking-widest uppercase mb-1">
+                        {step >= 7 ? 'Authorizing Command' : 'Archive Commandant Sequence'}
+                      </p>
+                      <p className="text-xs md:text-sm font-bold text-white tracking-wide uppercase drop-shadow-[0_0_5px_rgba(212,175,55,0.45)]">
+                        {currentPortrait?.name ?? currentCommandant.name}
+                      </p>
+                      <p className="text-[9px] md:text-[10px] text-[#d4af37] mt-1 uppercase tracking-wide truncate">
+                        {currentPortrait?.rankOrTitle ?? currentCommandant.title}
+                      </p>
+                      <p className="text-[9px] md:text-[10px] text-white/72 mt-0.5 uppercase tracking-wide">
+                        {currentPortrait?.tenureLabel ?? `${currentCommandant.tenureStart}${currentCommandant.tenureEnd ? ` - ${currentCommandant.tenureEnd}` : ' - Present'}`}
+                      </p>
                   </div>
                </div>
            )}
 
-           {/* Console / Terminal output */}
-            <div className={`w-full md:w-[420px] text-left font-mono text-xs md:text-sm text-muted-foreground space-y-2 md:space-y-3 ${currentCommandant ? 'md:border-l md:border-primary/20 md:pl-8' : ''} py-2 min-h-[90px]`}>
-              <div className="text-[10px] md:text-xs text-primary/85 uppercase tracking-[0.14em] pb-1 border-b border-primary/20">Command Console - {statusLabel}</div>
-              <div className="flex items-center">
-                <span className="mr-2 text-primary/70">[01]</span>
-                 <span>{typedLine1}</span>
-                 {(step === 3) && <span className="animate-pulse w-3 h-5 bg-primary ml-2 flex-shrink-0 shadow-[0_0_5px_theme('colors.primary.DEFAULT')]" />}
-              </div>
-              <div className="flex items-center">
-                <span className="mr-2 text-primary/70">[02]</span>
-                 <span>{typedLine2}</span>
-                 {(step === 4) && <span className="animate-pulse w-3 h-5 bg-primary ml-2 flex-shrink-0 shadow-[0_0_5px_theme('colors.primary.DEFAULT')]" />}
-              </div>
-              <div className="flex items-center">
-                <span className="mr-2 text-primary/70">[03]</span>
-                 <span>{typedLine3}</span>
-                 {(step === 5) && <span className="animate-pulse w-3 h-5 bg-primary ml-2 flex-shrink-0 shadow-[0_0_5px_theme('colors.primary.DEFAULT')]" />}
-              </div>
+           {/* Sequence / Console panel */}
+            <div className={`w-full md:w-[420px] text-left font-mono text-xs md:text-sm text-white/82 ${currentCommandant ? 'md:border-l md:border-white/18 md:pl-8' : ''} py-2 min-h-[90px]`}>
+              {step < 7 ? (
+                <div className="space-y-4 md:space-y-5">
+                  <div className="text-[10px] md:text-xs text-[#d4af37] uppercase tracking-[0.16em] pb-1 border-b border-white/20">
+                    Commandants Archive Sequence
+                  </div>
+
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    {bootPortraits.slice(0, 14).map((item, idx) => (
+                      <span
+                        key={item.id}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${idx === activePortraitIndex ? 'w-6 bg-[#d4af37]' : 'w-1.5 bg-white/25'}`}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="h-px bg-gradient-to-r from-[#d4af37]/0 via-[#d4af37]/75 to-[#d4af37]/0 animate-pulse-slow" />
+
+                  <div className="text-[10px] uppercase tracking-[0.16em] text-white/78">
+                    {statusLabel}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2 md:space-y-3">
+                  <div className="text-[10px] md:text-xs text-[#d4af37] uppercase tracking-[0.14em] pb-1 border-b border-white/20">Command Console - {statusLabel}</div>
+                  <div className="flex items-center">
+                    <span className="mr-2 text-[#d4af37]/80">[01]</span>
+                    <span>{typedLine1}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-2 text-[#d4af37]/80">[02]</span>
+                    <span>{typedLine2}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-2 text-[#d4af37]/80">[03]</span>
+                    <span>{typedLine3}</span>
+                  </div>
+                </div>
+              )}
            </div>
 
         </div>
 
         {/* STATUS READY */}
         <div className="w-full max-w-3xl min-h-[66px] md:min-h-[72px] flex flex-col items-center justify-center shrink-0 gap-2">
-          <div className="w-full h-2 bg-slate-800/80 border border-primary/20 rounded overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-primary/55 via-primary to-primary/55 transition-all duration-700" style={{ width: `${progress}%` }} />
+          <div className="w-full h-2 bg-slate-800/80 border border-white/20 rounded overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-[#d4af37]/60 via-[#d4af37] to-[#d4af37]/60 transition-all duration-700" style={{ width: `${progress}%` }} />
           </div>
-          <div className="flex items-center justify-between w-full text-[10px] md:text-xs font-mono uppercase tracking-[0.14em] text-primary/80">
+          <div className="flex items-center justify-between w-full text-[10px] md:text-xs font-mono uppercase tracking-[0.14em] text-white/82">
             <span>Progress {progress}%</span>
             <span>{statusLabel}</span>
           </div>
-          <div className={`text-lg md:text-xl font-mono text-primary font-bold tracking-[0.15em] md:tracking-[0.25em] transition-all duration-700 ease-out origin-center drop-shadow-[0_0_10px_theme('colors.primary.DEFAULT')] ${step >= 7 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+          <div className={`text-lg md:text-xl font-mono text-[#d4af37] font-bold tracking-[0.15em] md:tracking-[0.25em] transition-all duration-700 ease-out origin-center drop-shadow-[0_0_10px_rgba(212,175,55,0.6)] ${step >= 7 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
             STATUS: READY
           </div>
         </div>

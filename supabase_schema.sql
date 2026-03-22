@@ -51,12 +51,23 @@ CREATE TABLE IF NOT EXISTS audio_assignments (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Table: ui_settings (per-auth-user persisted UI preferences)
+CREATE TABLE IF NOT EXISTS ui_settings (
+  id bigserial PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  setting_key text NOT NULL,
+  setting_value jsonb NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(user_id, setting_key)
+);
+
 -- Row Level Security
 ALTER TABLE commandants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE personnel ENABLE ROW LEVEL SECURITY;
 ALTER TABLE visits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audio_tracks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audio_assignments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ui_settings ENABLE ROW LEVEL SECURITY;
 
 -- Public read policies
 DROP POLICY IF EXISTS commandants_public_read ON commandants;
@@ -78,6 +89,10 @@ FOR SELECT USING (true);
 DROP POLICY IF EXISTS audio_assignments_public_read ON audio_assignments;
 CREATE POLICY audio_assignments_public_read ON audio_assignments
 FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS ui_settings_own_read ON ui_settings;
+CREATE POLICY ui_settings_own_read ON ui_settings
+FOR SELECT USING (auth.uid() = user_id);
 
 -- Authenticated write policies
 DROP POLICY IF EXISTS commandants_auth_write ON commandants;
@@ -109,6 +124,12 @@ CREATE POLICY audio_assignments_auth_write ON audio_assignments
 FOR ALL
 USING (auth.role() = 'authenticated')
 WITH CHECK (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS ui_settings_own_write ON ui_settings;
+CREATE POLICY ui_settings_own_write ON ui_settings
+FOR ALL
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
 
 -- Storage bucket: ndc-audio
 INSERT INTO storage.buckets (id, name, public)

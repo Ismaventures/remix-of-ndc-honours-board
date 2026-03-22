@@ -12,6 +12,8 @@ import { BootSequence } from '@/components/BootSequence';
 import { AudioManager } from '@/components/AudioManager';
 import { usePersonnelStore, useVisitsStore, useCommandantsStore } from '@/hooks/useStore';
 import { useThemeMode } from '@/hooks/useThemeMode';
+import { useBootSequenceSettings } from '@/hooks/useBootSequenceSettings';
+import { useAutoDisplaySettings } from '@/hooks/useAutoDisplaySettings';
 import { Category } from '@/types/domain';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -36,6 +38,17 @@ const Index = () => {
 
   const [view, setView] = useState<ViewKey>('home');
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
+  const { settings: bootSequenceSettings, setSettings: setBootSequenceSettings, resetSettings: resetBootSequenceSettings } = useBootSequenceSettings();
+  const {
+    settings: autoDisplaySettings,
+    setGlobalTiming: setAutoDisplayGlobalTiming,
+    setContextTiming: setAutoDisplayContextTiming,
+    setTransitionDuration: setAutoDisplayTransitionDuration,
+    setTransitionSequence: setAutoDisplayTransitionSequence,
+    setContextTransitionSequence: setAutoDisplayContextTransitionSequence,
+    importSettings: importAutoDisplaySettings,
+    resetSettings: resetAutoDisplaySettings,
+  } = useAutoDisplaySettings();
   const { personnel, addPersonnel, updatePersonnel, deletePersonnel } = usePersonnelStore();
   const { visits, addVisit, updateVisit, deleteVisit } = useVisitsStore();
   const { commandants, addCommandant, updateCommandant, deleteCommandant } = useCommandantsStore();
@@ -114,6 +127,17 @@ const Index = () => {
           themeMode={themeMode}
           onThemeModeChange={setThemeMode}
           onResetThemeMode={resetThemeMode}
+          bootSequenceSettings={bootSequenceSettings}
+          onBootSequenceSettingsChange={setBootSequenceSettings}
+          onResetBootSequenceSettings={resetBootSequenceSettings}
+          autoDisplaySettings={autoDisplaySettings}
+          onAutoDisplayGlobalTimingChange={setAutoDisplayGlobalTiming}
+          onAutoDisplayContextTimingChange={setAutoDisplayContextTiming}
+          onAutoDisplayTransitionDurationChange={setAutoDisplayTransitionDuration}
+          onAutoDisplayTransitionSequenceChange={setAutoDisplayTransitionSequence}
+          onAutoDisplayContextTransitionSequenceChange={setAutoDisplayContextTransitionSequence}
+          onImportAutoDisplaySettings={importAutoDisplaySettings}
+          onResetAutoDisplaySettings={resetAutoDisplaySettings}
           onSignOut={() => {
             void supabase.auth.signOut();
             setAdminAuthenticated(false);
@@ -142,14 +166,26 @@ const Index = () => {
   return (
     <>
       <AudioManager />
-      {isBooting && <BootSequence onComplete={() => setIsBooting(false)} />}
+      {isBooting && (
+        <BootSequence
+          settings={bootSequenceSettings}
+          onComplete={() => setIsBooting(false)}
+        />
+      )}
       <div className={`min-h-screen flex flex-col bg-background animate-bg-sweep bg-gradient-to-br from-background via-background to-secondary/10 transition-opacity duration-1000 ${isBooting ? 'opacity-0' : 'opacity-100'}`}>
         <AppHeader onHomeClick={() => setView('home')} />
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="max-w-[1800px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
             {/* Auto-rotation button */}
             <div className="flex justify-end mb-3 sm:mb-4">
-              <AutoRotationDisplay personnel={personnel} visits={visits} commandants={commandants} activeCategory={activeCategory} activeView={activeView} />
+              <AutoRotationDisplay
+                personnel={personnel}
+                visits={visits}
+                commandants={commandants}
+                activeCategory={activeCategory}
+                activeView={activeView}
+                settings={autoDisplaySettings}
+              />
             </div>
 
             {renderContent()}

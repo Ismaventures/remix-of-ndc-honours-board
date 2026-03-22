@@ -5,6 +5,12 @@ import { CommandantHero } from './CommandantHero';
 import { ProfileModal } from './ProfileModal';
 import { useAudioStore } from '@/hooks/useAudioStore';
 import { playAudioTrack } from '@/components/AudioManager';
+import {
+  AutoDisplayContextKey,
+  AutoDisplaySettings,
+  AutoDisplayTransitionType,
+  DEFAULT_AUTO_DISPLAY_SETTINGS,
+} from '@/hooks/useAutoDisplaySettings';
 
 interface AutoRotationDisplayProps {
   personnel: Personnel[];
@@ -12,6 +18,7 @@ interface AutoRotationDisplayProps {
   commandants: Commandant[];
   activeCategory?: Category | null;
   activeView?: 'home' | 'visits' | 'admin' | 'category';
+  settings?: AutoDisplaySettings;
 }
 
 type Slide =
@@ -19,11 +26,24 @@ type Slide =
   | { type: 'personnel'; person: Personnel }
   | { type: 'visit'; visit: DistinguishedVisit };
 
-export function AutoRotationDisplay({ personnel, visits, commandants, activeCategory = null, activeView = 'home' }: AutoRotationDisplayProps) {
+const resolveDisplayContext = (
+  activeCategory: Category | null,
+  activeView: 'home' | 'visits' | 'admin' | 'category'
+): AutoDisplayContextKey => {
+  if (activeView === 'visits') return 'visits';
+  if (activeCategory === 'FWC') return 'FWC';
+  if (activeCategory === 'FDC') return 'FDC';
+  if (activeCategory === 'Directing Staff') return 'Directing Staff';
+  if (activeCategory === 'Allied') return 'Allied';
+  return 'commandants';
+};
+
+export function AutoRotationDisplay({ personnel, visits, commandants, activeCategory = null, activeView = 'home', settings }: AutoRotationDisplayProps) {
   const [isActive, setIsActive] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fadeState, setFadeState] = useState<'in' | 'out' | 'pre-in'>('in');
-  const [transitionType, setTransitionType] = useState<number>(0);
+  const [transitionType, setTransitionType] = useState<AutoDisplayTransitionType>('fade-zoom');
+  const [transitionStep, setTransitionStep] = useState(0);
   const [showNavControls, setShowNavControls] = useState(true);
   const [showInteractionHint, setShowInteractionHint] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<Personnel | null>(null);
@@ -36,6 +56,25 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
   const interactionHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const isTransitioningRef = useRef(false);
+
+  const effectiveSettings = settings ?? DEFAULT_AUTO_DISPLAY_SETTINGS;
+  const displayContext = resolveDisplayContext(activeCategory, activeView);
+  const contextTiming = effectiveSettings.byContext[displayContext] ?? effectiveSettings.global;
+  const contextSequence = effectiveSettings.transitionSequenceByContext?.[displayContext] ?? [];
+  const sequence = contextSequence.length > 0
+    ? contextSequence
+    : effectiveSettings.transitionSequence.length > 0
+      ? effectiveSettings.transitionSequence
+    : DEFAULT_AUTO_DISPLAY_SETTINGS.transitionSequence;
+
+  const getTransitionDurationMs = useCallback(
+    (transition: AutoDisplayTransitionType) => {
+      const perType = effectiveSettings.transitionDurationByTypeMs[transition] ?? effectiveSettings.global.transitionDurationMs;
+      const blended = Math.round((contextTiming.transitionDurationMs + perType) / 2);
+      return Math.max(250, Math.min(3200, blended));
+    },
+    [contextTiming.transitionDurationMs, effectiveSettings]
+  );
 
   const slides: Slide[] = useMemo(() => {
     if (activeCategory) {
@@ -76,26 +115,25 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
   const transitionTo = useCallback((nextIndex: number) => {
     if (slides.length <= 1 || isTransitioningRef.current) return;
     isTransitioningRef.current = true;
-    
-    // Pick a new random transition type from 6 different professional styles
-    const newTransition = Math.floor(Math.random() * 6);
-    setTransitionType(newTransition);
+
+    const nextTransition = sequence[transitionStep % sequence.length] ?? 'fade-zoom';
+    const durationMs = getTransitionDurationMs(nextTransition);
+    setTransitionType(nextTransition);
     setFadeState('out');
 
     if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
-    
-    // First timeout: wait for the outgoing animation, swap slide content, and switch to a pre-entry state
+
     transitionTimerRef.current = setTimeout(() => {
       setCurrentIndex(nextIndex);
       setFadeState('pre-in');
-      
-      // Second timeout: rapid flash to trigger the incoming animation
+
       setTimeout(() => {
         setFadeState('in');
+        setTransitionStep(prev => prev + 1);
         isTransitioningRef.current = false;
       }, 50);
-    }, 450);
-  }, [slides.length]);
+    }, durationMs);
+  }, [getTransitionDurationMs, sequence, slides.length, transitionStep]);
 
   const advance = useCallback(() => {
     transitionTo((currentIndex + 1) % slides.length);
@@ -117,9 +155,9 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
 
   useEffect(() => {
     if (!isActive) return;
-    const interval = setInterval(advance, 8000);
+    const interval = setInterval(advance, contextTiming.slideDurationMs);
     return () => clearInterval(interval);
-  }, [isActive, advance]);
+  }, [isActive, advance, contextTiming.slideDurationMs]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -210,7 +248,8 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
     return (
       <button
         onClick={() => {
-          setTransitionType(Math.floor(Math.random() * 4));
+          setTransitionType(sequence[0] ?? 'fade-zoom');
+          setTransitionStep(0);
           setCurrentIndex(0);
           setIsActive(true);
         }}
@@ -232,21 +271,39 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
 
   const getTransitionClasses = () => {
     switch (transitionType) {
-      case 1: // Slide Up
+      case 'slide-up':
         return fadeState === 'in' ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-16 blur-[4px]';
-      case 2: // Slide Left
+      case 'slide-left':
         return fadeState === 'in' ? 'opacity-100 translate-x-0 blur-0' : 'opacity-0 -translate-x-16 blur-[4px]';
-      case 3: // Slide Right
+      case 'slide-right':
         return fadeState === 'in' ? 'opacity-100 translate-x-0 blur-0' : 'opacity-0 translate-x-16 blur-[4px]';
-      case 4: // Zoom Out (Recede)
+      case 'zoom-out':
         return fadeState === 'in' ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-[1.05] blur-[4px]';
-      case 5: // Slide Down
+      case 'slide-down':
         return fadeState === 'in' ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 -translate-y-16 blur-[4px]';
-      case 0: // Zoom Default
+      case 'flip-x':
+        return fadeState === 'in'
+          ? 'opacity-100 [transform:perspective(1200px)_rotateX(0deg)_scale(1)]'
+          : 'opacity-0 [transform:perspective(1200px)_rotateX(12deg)_scale(0.98)]';
+      case 'flip-y':
+        return fadeState === 'in'
+          ? 'opacity-100 [transform:perspective(1200px)_rotateY(0deg)_scale(1)]'
+          : 'opacity-0 [transform:perspective(1200px)_rotateY(12deg)_scale(0.98)]';
+      case 'rotate-in':
+        return fadeState === 'in' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-2 scale-[0.97]';
+      case 'blur-in':
+        return fadeState === 'in' ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-[8px] scale-[1.01]';
+      case 'skew-lift':
+        return fadeState === 'in' ? 'opacity-100 skew-y-0 translate-y-0' : 'opacity-0 skew-y-1 translate-y-8';
+      case 'scale-rise':
+        return fadeState === 'in' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-[0.92] translate-y-6';
+      case 'fade-zoom':
       default:
         return fadeState === 'in' ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-[0.95] blur-[4px]';
     }
   };
+
+  const currentTransitionDuration = getTransitionDurationMs(transitionType);
 
   return (
     <div
@@ -312,7 +369,8 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
         </button>
 
         <div
-          className={`${slide.type === 'commandant' ? 'max-w-3xl lg:max-w-4xl xl:max-w-5xl' : 'max-w-5xl xl:max-w-6xl 2xl:max-w-7xl'} w-full transition-all duration-600 ease-out ${getTransitionClasses()}`}
+          className={`${slide.type === 'commandant' ? 'max-w-3xl lg:max-w-4xl xl:max-w-5xl' : 'max-w-5xl xl:max-w-6xl 2xl:max-w-7xl'} w-full transition-all ease-out ${getTransitionClasses()}`}
+          style={{ transitionDuration: `${currentTransitionDuration}ms` }}
         >
           {slide.type === 'commandant' && (
             <button
