@@ -143,42 +143,42 @@ const FEATURE_GUIDE_SECTIONS: Array<{ id: string; title: string; body: string }>
   {
     id: 'home-overview',
     title: 'Home Overview',
-    body: 'The home page presents the current commandant, archive highlights, and quick category entry cards. Use this area as the public-facing gateway to all records.',
+    body: 'This is the main page people see first. It shows key highlights and gives quick buttons to open each section.',
   },
   {
     id: 'category-browsing',
     title: 'Category Browsing (FWC, FDC, Directing Staff, Allied, Visits)',
-    body: 'Each category page focuses on one stream of records. Select a category to narrow attention and reduce clutter while presenting rank, period, and profile information clearly.',
+    body: 'Each category page shows one type of record at a time. It helps users focus and find information faster.',
   },
   {
     id: 'auto-rotation',
     title: 'Auto Rotation Display',
-    body: 'Auto Rotation is the slideshow mode for unattended screens. It uses transition settings from the Admin Panel and can run globally or by category context.',
+    body: 'Auto Rotation is slideshow mode. It changes profiles or records automatically without clicking next.',
   },
   {
     id: 'boot-sequence',
     title: 'Boot Sequence Experience',
-    body: 'Boot settings control startup pacing, archive transition speed, and the onboarding flow before users reach live content. Keep values balanced for readability and prestige.',
+    body: 'Boot settings control what users see when the app starts. You can make startup faster or slower and adjust the style.',
   },
   {
     id: 'theme-system',
     title: 'Theme System',
-    body: 'Themes define the full visual language: colors, contrast, and style mood. Use Preview mindset in Admin, then Apply & Save so all authorized devices render consistently.',
+    body: 'Theme changes the app look and colors. Pick the style you like, then save it so it stays the same.',
   },
   {
     id: 'audio-system',
     title: 'Audio System',
-    body: 'Audio settings assign tracks to global and context-specific experiences. This is useful for ceremonies, exhibitions, and controlled ambience during auto displays.',
+    body: 'Audio settings choose which music or sound plays in each part of the app.',
   },
   {
     id: 'admin-records',
     title: 'Records Management (Personnel, Visits, Commandants)',
-    body: 'Admin forms are used to add, edit, and delete archive records. Keep naming, rank, dates, and citations accurate because these directly shape public trust and archival value.',
+    body: 'This is where you add, edit, or remove records like personnel, visits, and commandants.',
   },
   {
     id: 'save-apply-model',
     title: 'Save & Apply Model',
-    body: 'Draft values can be changed safely first. Use Apply & Save to publish final settings to persistent storage so the same behavior remains after refresh or on another device.',
+    body: 'You can test changes first. When ready, click Apply & Save so the setting becomes final and stays for later.',
   },
 ];
 
@@ -440,6 +440,13 @@ export function AdminPanel({
     setPreviewModalOpen(true);
   };
 
+  const openGuideLink = (targetTab: 'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio', transitionPanel?: 'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'actions') => {
+    setTab(targetTab);
+    if (transitionPanel) {
+      setActiveTransitionPanel(transitionPanel);
+    }
+  };
+
   const tabBtn = (key: typeof tab, label: string) => (
     <button
       onClick={() => setTab(key)}
@@ -696,7 +703,7 @@ export function AdminPanel({
               <div>
                 <h4 className="text-base font-semibold gold-text">Admin Helper Guide</h4>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Use this guide to understand what every major feature does, how it works, and how to configure it safely.
+                  Simple guide: read what a feature does, then use the "Try This Now" button to test it immediately.
                 </p>
               </div>
 
@@ -705,6 +712,27 @@ export function AdminPanel({
                   <div key={section.id} className="rounded-lg border border-primary/15 bg-card/60 p-4">
                     <p className="text-sm font-semibold text-foreground">{section.title}</p>
                     <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{section.body}</p>
+                    <div className="mt-3">
+                      {section.id === 'theme-system' && (
+                        <button onClick={() => openGuideLink('theme')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Try This Now</button>
+                      )}
+                      {section.id === 'audio-system' && (
+                        <button onClick={() => openGuideLink('audio')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Try This Now</button>
+                      )}
+                      {section.id === 'admin-records' && (
+                        <div className="flex flex-wrap gap-2">
+                          <button onClick={() => openGuideLink('personnel')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Personnel</button>
+                          <button onClick={() => openGuideLink('visits')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Visits</button>
+                          <button onClick={() => openGuideLink('commandants')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Commandants</button>
+                        </div>
+                      )}
+                      {section.id === 'boot-sequence' && (
+                        <button onClick={() => openGuideLink('transitions', 'boot')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Boot Settings</button>
+                      )}
+                      {section.id === 'auto-rotation' && (
+                        <button onClick={() => openGuideLink('transitions', 'categoryApplied')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Rotation Transitions</button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -712,26 +740,31 @@ export function AdminPanel({
               <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
                 <h5 className="text-sm font-semibold text-foreground">Transitions: Logical Operating Guide</h5>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Step 1: Open Transition Library to enable only transitions you want available.
+                  Step 1: Turn ON the transition styles you want in Transition Library.
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Step 2: Arrange Global Sequence Order for fallback behavior across views.
+                  Step 2: Set the order in Global Sequence (this is your default order).
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Step 3: Configure Per-Category Sequence if a category needs its own multi-transition cycle.
+                  Step 3: If one category needs its own order, edit Per-Category Sequence.
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Step 4: Configure Per-Category Applied Transition for single-choice behavior that overrides sequence in that category.
+                  Step 4: If you want one fixed transition for a category, set Per-Category Applied Transition.
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Step 5: Open Individual Transition Times to tune visual speed by effect.
+                  Step 5: Adjust speed in Individual Transition Times.
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Step 6: Use centered Preview before publishing changes.
+                  Step 6: Click Preview to test from the center popup.
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Step 7: Use Apply & Save Transitions to persist settings for future sessions and other devices for the same admin account.
+                  Step 7: Click Apply & Save Transitions to keep changes permanently.
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button onClick={() => openGuideLink('transitions', 'library')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Transition Library</button>
+                  <button onClick={() => openGuideLink('transitions', 'categoryApplied')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Category Transition</button>
+                  <button onClick={() => openGuideLink('transitions', 'actions')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Save Section</button>
+                </div>
               </div>
 
               <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
