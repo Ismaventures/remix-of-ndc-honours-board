@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { Plus, Pencil, Trash2, X, ArrowLeft } from 'lucide-react';
 import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/types/domain';
 import { AdvancedAudioAdmin } from './AdvancedAudioAdmin';
+import { DeviceControlPanel } from './DeviceControlPanel';
 import { saveMediaFile } from '@/lib/persistentMedia';
 import { ThemeMode } from '@/hooks/useThemeMode';
 import { BootSequenceSettings } from '@/hooks/useBootSequenceSettings';
+import { DeviceClient, DeviceControlView } from '@/hooks/useDeviceControl';
 import {
   AUTO_DISPLAY_CONTEXTS,
   AutoDisplayContextKey,
@@ -42,6 +44,11 @@ interface AdminPanelProps {
   onAutoDisplayContextTransitionSequenceChange: (context: AutoDisplayContextKey, sequence: AutoDisplayTransitionType[]) => void;
   onImportAutoDisplaySettings: (settings: Partial<AutoDisplaySettings>) => void;
   onResetAutoDisplaySettings: () => void;
+  devices: DeviceClient[];
+  currentDeviceId: string;
+  onRefreshDevices: () => void;
+  onSendDeviceView: (deviceIds: string[], view: DeviceControlView) => Promise<boolean>;
+  onSendDeviceAutoDisplay: (deviceIds: string[], enabled: boolean) => Promise<boolean>;
   audioSettings?: { audioUrl: string | null };
   onUpdateAudioSettings?: (url: string | null) => void;
   onBack: () => void;
@@ -139,7 +146,7 @@ const TRANSITION_USAGE_GUIDES: Record<AutoDisplayTransitionType, { bestFor: stri
   },
 };
 
-type GuideTargetTab = 'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio';
+type GuideTargetTab = 'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices';
 type GuideTargetPanel = 'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'actions';
 
 const FEATURE_GUIDE_SECTIONS: Array<{
@@ -174,6 +181,7 @@ const FEATURE_GUIDE_SECTIONS: Array<{
     whenToUse: 'Use this for TV screens, events, waiting rooms, and unattended displays.',
     actions: [
       { label: 'Open Rotation Settings', tab: 'transitions', panel: 'categoryApplied' },
+      { label: 'Open Multi-Device Control', tab: 'devices' },
     ],
   },
   {
@@ -255,11 +263,16 @@ export function AdminPanel({
   onAutoDisplayContextTransitionSequenceChange,
   onImportAutoDisplaySettings,
   onResetAutoDisplaySettings,
+  devices,
+  currentDeviceId,
+  onRefreshDevices,
+  onSendDeviceView,
+  onSendDeviceAutoDisplay,
   audioSettings, onUpdateAudioSettings,
   onBack,
   onSignOut,
 }: AdminPanelProps) {
-  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'guide'>('personnel');
+  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices' | 'guide'>('personnel');
   const [editingP, setEditingP] = useState<Personnel | null>(null);
   const [editingV, setEditingV] = useState<DistinguishedVisit | null>(null);
   const [editingC, setEditingC] = useState<Commandant | null>(null);
@@ -563,6 +576,7 @@ export function AdminPanel({
             {tabBtn('theme', 'Theme')}
             {tabBtn('transitions', 'Transitions')}
             {tabBtn('audio', 'Audio Settings')}
+            {tabBtn('devices', 'Devices')}
             {tabBtn('guide', 'Helper Guide')}
           </div>
         </div>
@@ -766,6 +780,18 @@ export function AdminPanel({
         {tab === 'audio' && (
           <div className="view-enter">
             <AdvancedAudioAdmin />
+          </div>
+        )}
+
+        {tab === 'devices' && (
+          <div className="view-enter">
+            <DeviceControlPanel
+              devices={devices}
+              currentDeviceId={currentDeviceId}
+              onRefresh={onRefreshDevices}
+              onSendView={onSendDeviceView}
+              onSendAutoDisplay={onSendDeviceAutoDisplay}
+            />
           </div>
         )}
 

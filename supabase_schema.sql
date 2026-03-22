@@ -61,6 +61,28 @@ CREATE TABLE IF NOT EXISTS ui_settings (
   UNIQUE(user_id, setting_key)
 );
 
+-- Table: device_clients (online devices for remote admin control)
+CREATE TABLE IF NOT EXISTS device_clients (
+  device_id text PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  device_label text NOT NULL,
+  current_view text NOT NULL DEFAULT 'home',
+  auto_display_enabled boolean NOT NULL DEFAULT false,
+  last_seen timestamptz NOT NULL DEFAULT now()
+);
+
+-- Table: device_control_commands (queued remote commands for target devices)
+CREATE TABLE IF NOT EXISTS device_control_commands (
+  id bigserial PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  target_device_id text NOT NULL REFERENCES device_clients(device_id) ON DELETE CASCADE,
+  command_type text NOT NULL,
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  status text NOT NULL DEFAULT 'pending',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  executed_at timestamptz
+);
+
 -- Row Level Security
 ALTER TABLE commandants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE personnel ENABLE ROW LEVEL SECURITY;
@@ -68,6 +90,8 @@ ALTER TABLE visits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audio_tracks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audio_assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ui_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE device_clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE device_control_commands ENABLE ROW LEVEL SECURITY;
 
 -- Public read policies
 DROP POLICY IF EXISTS commandants_public_read ON commandants;
@@ -92,6 +116,14 @@ FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS ui_settings_own_read ON ui_settings;
 CREATE POLICY ui_settings_own_read ON ui_settings
+FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS device_clients_own_read ON device_clients;
+CREATE POLICY device_clients_own_read ON device_clients
+FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS device_control_commands_own_read ON device_control_commands;
+CREATE POLICY device_control_commands_own_read ON device_control_commands
 FOR SELECT USING (auth.uid() = user_id);
 
 -- Authenticated write policies
@@ -127,6 +159,18 @@ WITH CHECK (auth.role() = 'authenticated');
 
 DROP POLICY IF EXISTS ui_settings_own_write ON ui_settings;
 CREATE POLICY ui_settings_own_write ON ui_settings
+FOR ALL
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS device_clients_own_write ON device_clients;
+CREATE POLICY device_clients_own_write ON device_clients
+FOR ALL
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS device_control_commands_own_write ON device_control_commands;
+CREATE POLICY device_control_commands_own_write ON device_control_commands
 FOR ALL
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);

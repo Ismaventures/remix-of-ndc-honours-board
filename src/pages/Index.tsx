@@ -14,6 +14,7 @@ import { usePersonnelStore, useVisitsStore, useCommandantsStore } from '@/hooks/
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { useBootSequenceSettings } from '@/hooks/useBootSequenceSettings';
 import { useAutoDisplaySettings } from '@/hooks/useAutoDisplaySettings';
+import { DeviceControlCommandType, DeviceControlView, useDeviceControl } from '@/hooks/useDeviceControl';
 import { Category } from '@/types/domain';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -35,6 +36,8 @@ const Index = () => {
   const [isBooting, setIsBooting] = useState(true);
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [autoDisplayActive, setAutoDisplayActive] = useState(false);
+  const [forcedAutoDisplay, setForcedAutoDisplay] = useState<{ enabled: boolean; nonce: number }>({ enabled: false, nonce: 0 });
 
   const [view, setView] = useState<ViewKey>('home');
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
@@ -56,6 +59,38 @@ const Index = () => {
   const currentCommandant = commandants.find(c => c.isCurrent);
   const activeCategory = SECTION_CATEGORIES[view] ?? null;
   const activeView = view === 'visits' ? 'visits' : view === 'home' ? 'home' : view === 'admin' ? 'admin' : 'category';
+
+  const mapCommandViewToAppView = (value: unknown): ViewKey | null => {
+    if (value === 'home') return 'home';
+    if (value === 'fwc') return 'fwc';
+    if (value === 'fdc') return 'fdc';
+    if (value === 'directing') return 'directing';
+    if (value === 'allied') return 'allied';
+    if (value === 'visits') return 'visits';
+    if (value === 'admin') return 'admin';
+    return null;
+  };
+
+  const handleDeviceCommand = (commandType: DeviceControlCommandType, payload: Record<string, unknown>) => {
+    if (commandType === 'set-view') {
+      const nextView = mapCommandViewToAppView(payload.view);
+      if (nextView) {
+        setView(nextView);
+      }
+      return;
+    }
+
+    if (commandType === 'set-auto-display') {
+      const enabled = Boolean(payload.enabled);
+      setForcedAutoDisplay(prev => ({ enabled, nonce: prev.nonce + 1 }));
+    }
+  };
+
+  const { devices, deviceId, refreshDevices, sendCommandToDevices } = useDeviceControl({
+    currentView: view,
+    autoDisplayEnabled: autoDisplayActive,
+    onCommand: handleDeviceCommand,
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -138,6 +173,17 @@ const Index = () => {
           onAutoDisplayContextTransitionSequenceChange={setAutoDisplayContextTransitionSequence}
           onImportAutoDisplaySettings={importAutoDisplaySettings}
           onResetAutoDisplaySettings={resetAutoDisplaySettings}
+          devices={devices}
+          currentDeviceId={deviceId}
+          onRefreshDevices={() => {
+            void refreshDevices();
+          }}
+          onSendDeviceView={async (deviceIds, targetView) => {
+            return sendCommandToDevices(deviceIds, 'set-view', { view: targetView as DeviceControlView });
+          }}
+          onSendDeviceAutoDisplay={async (deviceIds, enabled) => {
+            return sendCommandToDevices(deviceIds, 'set-auto-display', { enabled });
+          }}
           onSignOut={() => {
             void supabase.auth.signOut();
             setAdminAuthenticated(false);
@@ -185,6 +231,8 @@ const Index = () => {
                 activeCategory={activeCategory}
                 activeView={activeView}
                 settings={autoDisplaySettings}
+                forcedControl={forcedAutoDisplay}
+                onActiveChange={setAutoDisplayActive}
               />
             </div>
 

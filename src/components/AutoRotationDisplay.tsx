@@ -20,6 +20,8 @@ interface AutoRotationDisplayProps {
   activeCategory?: Category | null;
   activeView?: 'home' | 'visits' | 'admin' | 'category';
   settings?: AutoDisplaySettings;
+  forcedControl?: { enabled: boolean; nonce: number };
+  onActiveChange?: (active: boolean) => void;
 }
 
 type Slide =
@@ -39,7 +41,7 @@ const resolveDisplayContext = (
   return 'commandants';
 };
 
-export function AutoRotationDisplay({ personnel, visits, commandants, activeCategory = null, activeView = 'home', settings }: AutoRotationDisplayProps) {
+export function AutoRotationDisplay({ personnel, visits, commandants, activeCategory = null, activeView = 'home', settings, forcedControl, onActiveChange }: AutoRotationDisplayProps) {
   const [isActive, setIsActive] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fadeState, setFadeState] = useState<'in' | 'out' | 'pre-in'>('in');
@@ -57,6 +59,11 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
   const interactionHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const isTransitioningRef = useRef(false);
+
+  const setDisplayActive = useCallback((nextActive: boolean) => {
+    setIsActive(nextActive);
+    onActiveChange?.(nextActive);
+  }, [onActiveChange]);
 
   const effectiveSettings = settings ?? DEFAULT_AUTO_DISPLAY_SETTINGS;
   const displayContext = resolveDisplayContext(activeCategory, activeView);
@@ -164,6 +171,20 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
   }, [isActive, advance, contextTiming.slideDurationMs]);
 
   useEffect(() => {
+    if (!forcedControl) return;
+
+    if (forcedControl.enabled) {
+      setTransitionType(sequence[0] ?? 'fade-zoom');
+      setTransitionStep(0);
+      setCurrentIndex(0);
+      setDisplayActive(true);
+      return;
+    }
+
+    setDisplayActive(false);
+  }, [forcedControl?.nonce]);
+
+  useEffect(() => {
     if (!isActive) return;
     revealControls();
   }, [isActive, revealControls, currentIndex]);
@@ -255,7 +276,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
           setTransitionType(sequence[0] ?? 'fade-zoom');
           setTransitionStep(0);
           setCurrentIndex(0);
-          setIsActive(true);
+          setDisplayActive(true);
         }}
         className="flex items-center gap-2 px-4 py-2 gold-border rounded text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all duration-200 active:scale-[0.97]"
       >
@@ -346,7 +367,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
               <SkipForward className="h-4 w-4" />
             </button>
             <button
-              onClick={() => setIsActive(false)}
+              onClick={() => setDisplayActive(false)}
               className="px-3 py-1.5 rounded text-xs bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
               Exit
