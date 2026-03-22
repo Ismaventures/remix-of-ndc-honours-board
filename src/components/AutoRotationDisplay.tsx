@@ -11,6 +11,7 @@ import {
   AutoDisplayTransitionType,
   DEFAULT_AUTO_DISPLAY_SETTINGS,
 } from '@/hooks/useAutoDisplaySettings';
+import { NdcScatteredTransition } from './NdcScatteredTransition';
 
 interface AutoRotationDisplayProps {
   personnel: Personnel[];
@@ -297,6 +298,8 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
         return fadeState === 'in' ? 'opacity-100 skew-y-0 translate-y-0' : 'opacity-0 skew-y-1 translate-y-8';
       case 'scale-rise':
         return fadeState === 'in' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-[0.92] translate-y-6';
+      case 'ndc-scatter':
+        return fadeState === 'in' ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-[0.90] blur-[10px]';
       case 'fade-zoom':
       default:
         return fadeState === 'in' ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-[0.95] blur-[4px]';
@@ -317,6 +320,11 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
       }}
       tabIndex={0}
     >
+      {/* Cinematic Transition Overlay */}
+      {transitionType === 'ndc-scatter' && fadeState === 'out' && (
+        <NdcScatteredTransition durationMs={currentTransitionDuration} />
+      )}
+
       {/* Controls bar */}
       <div className="flex items-center justify-between px-6 py-3 bg-card/80 backdrop-blur border-b border-primary/15">
         <span className="text-xs uppercase tracking-widest text-primary font-medium">

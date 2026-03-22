@@ -13,7 +13,8 @@ export type AutoDisplayTransitionType =
   | 'rotate-in'
   | 'blur-in'
   | 'skew-lift'
-  | 'scale-rise';
+  | 'scale-rise'
+  | 'ndc-scatter';
 
 export type AutoDisplayContextKey =
   | 'commandants'
@@ -52,6 +53,7 @@ export const TRANSITION_TYPES: Array<{ id: AutoDisplayTransitionType; label: str
   { id: 'blur-in', label: 'Blur In' },
   { id: 'skew-lift', label: 'Skew Lift' },
   { id: 'scale-rise', label: 'Scale Rise' },
+  { id: 'ndc-scatter', label: 'Scattered NDC Logo' },
 ];
 
 export const AUTO_DISPLAY_CONTEXTS: Array<{ key: AutoDisplayContextKey; label: string }> = [
@@ -129,6 +131,7 @@ export const DEFAULT_AUTO_DISPLAY_SETTINGS: AutoDisplaySettings = {
     'blur-in': 560,
     'skew-lift': 580,
     'scale-rise': 520,
+    'ndc-scatter': 2500,
   },
 };
 

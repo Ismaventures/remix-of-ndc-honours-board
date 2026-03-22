@@ -5,6 +5,7 @@ import { useCommandantsStore } from '@/hooks/useStore';
 import { resolveMediaRefToObjectUrl } from '@/lib/persistentMedia';
 import { BootSequenceSettings, DEFAULT_BOOT_SEQUENCE_SETTINGS } from '@/hooks/useBootSequenceSettings';
 import ndcCrest from '/images/ndc-crest.png';
+import { NdcScatteredTransition } from './NdcScatteredTransition';
 
 type BootPortrait = {
   id: string;
@@ -30,7 +31,7 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
   const [portraitVisible, setPortraitVisible] = useState(true);
   const [showWelcomeGate, setShowWelcomeGate] = useState(false);
   const [isEnteringArchive, setIsEnteringArchive] = useState(false);
-  const [bootStage, setBootStage] = useState<'preboot' | 'gate'>('preboot');
+  const [bootStage, setBootStage] = useState<'preboot' | 'scatter' | 'gate'>('preboot');
 
   const line1Txt = 'Initializing Secure Environment...';
   const line2Txt = 'Verifying System Integrity...';
@@ -87,8 +88,11 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
              setTimeout(() => {
                setStep(7);
                setTimeout(() => {
-                 setBootStage('gate');
-                 setShowWelcomeGate(true);
+                 setBootStage('scatter');
+                 setTimeout(() => {
+                   setBootStage('gate');
+                   setShowWelcomeGate(true);
+                 }, 2500); // 2.5 second scatter transition before showing gate
                }, scaledDelay(700, 300));
              }, scaledDelay(1500));
           });
@@ -247,7 +251,8 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
       )}
 
       {bootStage === 'preboot' && (
-      <div className="relative w-full h-full max-h-screen max-w-5xl px-4 md:px-8 pt-4 md:pt-6 pb-24 md:pb-28 flex flex-col items-center justify-between gap-4 md:gap-6 z-10">
+      <div className="relative w-full h-full max-h-screen max-w-5xl px-4 md:px-8 pt-4 md:pt-6 pb-24 md:pb-28 flex flex-col items-center justify-between gap-4 md:gap-6 z-10 transition-opacity duration-500 opacity-100">
+
         
         {/* Header - NDC Top */}
         <div className={`transition-all duration-1000 ease-out flex flex-col items-center w-full shrink-0 ${step >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -369,6 +374,10 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
         </div>
 
       </div>
+      )}
+
+      {bootStage === 'scatter' && (
+        <NdcScatteredTransition durationMs={2500} />
       )}
 
       {bootStage === 'gate' && (
