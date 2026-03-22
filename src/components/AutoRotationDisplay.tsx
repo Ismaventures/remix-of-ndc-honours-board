@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Monitor, SkipForward } from 'lucide-react';
 import { Category, Personnel, DistinguishedVisit, Commandant } from '@/types/domain';
 import { CommandantHero } from './CommandantHero';
+import { ProfileModal } from './ProfileModal';
 import { useAudioStore } from '@/hooks/useAudioStore';
 import { playAudioTrack } from '@/components/AudioManager';
 
@@ -25,6 +26,9 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
   const [transitionType, setTransitionType] = useState<number>(0);
   const [showNavControls, setShowNavControls] = useState(true);
   const [showInteractionHint, setShowInteractionHint] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<Personnel | null>(null);
+  const [selectedCommandant, setSelectedCommandant] = useState<Commandant | null>(null);
+  const [selectedVisit, setSelectedVisit] = useState<DistinguishedVisit | null>(null);
   
   const audioAssignments = useAudioStore(s => s.assignments);
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -311,11 +315,21 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
           className={`${slide.type === 'commandant' ? 'max-w-3xl lg:max-w-4xl' : 'max-w-5xl xl:max-w-6xl'} w-full transition-all duration-600 ease-out ${getTransitionClasses()}`}
         >
           {slide.type === 'commandant' && (
-            <CommandantHero commandant={slide.commandant} compactDescription />
+            <button
+              onClick={() => setSelectedCommandant(slide.commandant)}
+              className="w-full text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              aria-label={`Open profile for ${slide.commandant.name}`}
+            >
+              <CommandantHero commandant={slide.commandant} compactDescription />
+            </button>
           )}
 
           {slide.type === 'personnel' && (
-            <div className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-8 md:p-12 lg:p-14 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] group transform transition-all hover:scale-[1.02] duration-500">
+            <button
+              onClick={() => setSelectedPerson(slide.person)}
+              className="w-full text-left relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-8 md:p-12 lg:p-14 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              aria-label={`Open profile for ${slide.person.name}`}
+            >
               {/* Background styling layers */}
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,215,0,0.08)_0%,transparent_60%)]" />
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
@@ -365,11 +379,15 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
                   </div>
                 </div>
               </div>
-            </div>
+            </button>
           )}
 
           {slide.type === 'visit' && (
-            <div className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-10 md:p-14 lg:p-16 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] text-center group transform transition-all hover:scale-[1.02] duration-500">
+            <button
+              onClick={() => setSelectedVisit(slide.visit)}
+              className="w-full text-center relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-10 md:p-14 lg:p-16 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              aria-label={`Open profile for ${slide.visit.name}`}
+            >
               {/* Background ambient lighting */}
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,215,0,0.06)_0%,transparent_70%)]" />
               <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[120%] h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
@@ -407,7 +425,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
                   {slide.visit.description}
                 </p>
               </div>
-            </div>
+            </button>
           )}
         </div>
       </div>
@@ -423,6 +441,54 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
           />
         ))}
       </div>
+
+      {selectedPerson && <ProfileModal person={selectedPerson} onClose={() => setSelectedPerson(null)} />}
+
+      {selectedCommandant && (
+        <div className="fixed inset-0 z-[70] bg-background/85 backdrop-blur-sm p-4 md:p-8 overflow-y-auto">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={() => setSelectedCommandant(null)}
+                className="px-3 py-1.5 rounded text-xs bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Close
+              </button>
+            </div>
+            <CommandantHero commandant={selectedCommandant} compactDescription={false} />
+          </div>
+        </div>
+      )}
+
+      {selectedVisit && (
+        <div className="fixed inset-0 z-[70] bg-background/85 backdrop-blur-sm p-4 md:p-8 overflow-y-auto">
+          <div className="max-w-4xl mx-auto rounded-xl border border-primary/35 bg-card p-6 md:p-8 shadow-[0_0_40px_rgba(0,0,0,0.25)]">
+            <div className="flex justify-between items-start gap-4 mb-5">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-primary/85 font-semibold">Distinguished Visit</p>
+                <h3 className="text-2xl md:text-3xl font-bold font-serif text-foreground mt-1">{selectedVisit.name}</h3>
+              </div>
+              <button
+                onClick={() => setSelectedVisit(null)}
+                className="px-3 py-1.5 rounded text-xs bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Close
+              </button>
+            </div>
+
+            <p className="text-sm md:text-base text-primary/90 font-semibold tracking-[0.12em] uppercase mb-3">{selectedVisit.title}</p>
+            <p className="text-sm text-muted-foreground mb-6">{selectedVisit.country} · {selectedVisit.date}</p>
+
+            {selectedVisit.imageUrl && (
+              <div className="w-full max-w-xl mx-auto mb-6 rounded-lg overflow-hidden border border-primary/25">
+                <img src={selectedVisit.imageUrl} alt={selectedVisit.name} className="w-full h-auto object-cover" />
+              </div>
+            )}
+
+            <p className="text-base leading-relaxed text-foreground/90">{selectedVisit.description}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
