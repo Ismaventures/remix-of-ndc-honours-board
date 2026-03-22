@@ -28,6 +28,9 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
   const [bootPortraits, setBootPortraits] = useState<BootPortrait[]>([]);
   const [activePortraitIndex, setActivePortraitIndex] = useState(0);
   const [portraitVisible, setPortraitVisible] = useState(true);
+  const [showWelcomeGate, setShowWelcomeGate] = useState(false);
+  const [isEnteringArchive, setIsEnteringArchive] = useState(false);
+  const [bootStage, setBootStage] = useState<'preboot' | 'gate'>('preboot');
 
   const line1Txt = 'Initializing Secure Environment...';
   const line2Txt = 'Verifying System Integrity...';
@@ -43,7 +46,7 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
     step < 4 ? 'Authenticating' :
     step < 6 ? 'Syncing Archives' :
     step < 7 ? 'Final Checks' :
-    'Mission Ready';
+    'Archive Ready';
 
   const currentPortrait = bootPortraits[activePortraitIndex] ?? null;
 
@@ -83,14 +86,10 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
              setStep(6);
              setTimeout(() => {
                setStep(7);
-               
-               // End sequence and transition out
-               if (onComplete) {
-                   setTimeout(() => {
-                     setStep(8);
-                     setTimeout(onComplete, scaledDelay(1000));
-                   }, scaledDelay(2000));
-               }
+               setTimeout(() => {
+                 setBootStage('gate');
+                 setShowWelcomeGate(true);
+               }, scaledDelay(700, 300));
              }, scaledDelay(1500));
           });
         });
@@ -227,7 +226,7 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
   };
 
   return (
-    <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950 overflow-hidden transition-opacity duration-1000 ${step === 8 ? 'opacity-0' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950 overflow-hidden transition-all duration-[1500ms] ease-in-out ${isEnteringArchive ? 'opacity-0 scale-[1.15] blur-md brightness-150 pointer-events-none' : 'opacity-100 scale-100 blur-none brightness-100'}`}>
       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,rgba(200,169,81,0.11),rgba(2,6,23,0.96)_48%,rgba(2,6,23,1)_100%)]" />
 
       <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '44px 44px' }} />
@@ -237,9 +236,7 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
          <img src={ndcCrest} alt="" className="w-[800px] h-[800px] object-contain" />
       </div>
 
-      {/* Horizontal sweeping scan line */}
-      <div className={`absolute left-0 w-full h-[2px] bg-primary/60 shadow-[0_0_20px_rgba(200,169,81,0.8)] transition-transform ease-linear z-0 ${step >= 1 ? 'translate-y-full' : '-translate-y-full'}`} style={{ top: 0, transitionDuration: '3000ms' }} />
-
+      {bootStage === 'preboot' && (
       <div className={`absolute top-3 left-3 right-3 md:top-5 md:left-6 md:right-6 z-20 transition-all duration-700 ${step >= 1 ? 'opacity-100' : 'opacity-0'}`}>
         <div className="flex items-center justify-between gap-3 text-[10px] md:text-xs font-mono uppercase tracking-[0.18em] bg-slate-900/72 border border-white/20 px-3 py-2 rounded-md backdrop-blur-sm text-white/90">
           <span>Classification: Restricted</span>
@@ -247,8 +244,10 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
           <span>UTC: {utcLabel}</span>
         </div>
       </div>
+      )}
 
-      <div className="relative w-full h-full max-h-screen max-w-5xl px-4 md:px-8 py-4 md:py-6 flex flex-col items-center justify-between gap-4 md:gap-6 z-10">
+      {bootStage === 'preboot' && (
+      <div className="relative w-full h-full max-h-screen max-w-5xl px-4 md:px-8 pt-4 md:pt-6 pb-24 md:pb-28 flex flex-col items-center justify-between gap-4 md:gap-6 z-10">
         
         {/* Header - NDC Top */}
         <div className={`transition-all duration-1000 ease-out flex flex-col items-center w-full shrink-0 ${step >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -266,7 +265,7 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
         </div>
 
         {/* Dynamic Center Row: Commandant Portrait + Terminal */}
-        <div className="w-full flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 max-w-4xl">
+        <div className="w-full flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 max-w-4xl mb-6 md:mb-8">
            
            {/* Boot Portrait Sequence: past commandants in motion, then current commandant lock-in */}
            {(currentCommandant || currentPortrait) && (
@@ -312,7 +311,7 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
            )}
 
            {/* Sequence / Console panel */}
-            <div className={`w-full md:w-[420px] text-left font-mono text-xs md:text-sm text-white/82 ${currentCommandant ? 'md:border-l md:border-white/18 md:pl-8' : ''} py-2 min-h-[90px]`}>
+            <div className={`w-full md:w-[420px] text-left font-mono text-xs md:text-sm text-white/82 ${currentCommandant ? 'md:border-l md:border-white/18 md:pl-8' : ''} py-2 min-h-[90px] md:max-h-[230px] overflow-y-auto`}> 
               {step < 7 ? (
                 <div className="space-y-4 md:space-y-5">
                   <div className="text-[10px] md:text-xs text-[#d4af37] uppercase tracking-[0.16em] pb-1 border-b border-white/20">
@@ -355,21 +354,53 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
 
         </div>
 
-        {/* STATUS READY */}
-        <div className="w-full max-w-3xl min-h-[66px] md:min-h-[72px] flex flex-col items-center justify-center shrink-0 gap-2">
-          <div className="w-full h-2 bg-slate-800/80 border border-white/20 rounded overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-[#d4af37]/60 via-[#d4af37] to-[#d4af37]/60 transition-all duration-700" style={{ width: `${progress}%` }} />
+        {/* Boot progress indicator (kept low and minimal for a formal look) */}
+        <div className="absolute bottom-3 md:bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:w-[calc(100%-4rem)] max-w-3xl min-h-[72px] flex flex-col items-center justify-center shrink-0 gap-2 bg-slate-950/65 backdrop-blur-sm rounded-lg px-2 py-2 border border-white/10">
+          <div className="w-full h-2 bg-slate-800/80 border border-white/15 rounded overflow-hidden">
+            <div className="h-full bg-[#d4af37]/85 transition-all duration-700" style={{ width: `${progress}%` }} />
           </div>
-          <div className="flex items-center justify-between w-full text-[10px] md:text-xs font-mono uppercase tracking-[0.14em] text-white/82">
-            <span>Progress {progress}%</span>
+          <div className="flex items-center justify-between w-full text-[10px] md:text-xs font-mono uppercase tracking-[0.12em] text-white/78">
+            <span>Loading {progress}%</span>
             <span>{statusLabel}</span>
           </div>
-          <div className={`text-lg md:text-xl font-mono text-[#d4af37] font-bold tracking-[0.15em] md:tracking-[0.25em] transition-all duration-700 ease-out origin-center drop-shadow-[0_0_10px_rgba(212,175,55,0.6)] ${step >= 7 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-            STATUS: READY
+          <div className={`text-base md:text-lg font-mono text-[#d4af37] font-semibold tracking-[0.12em] md:tracking-[0.2em] transition-all duration-700 ease-out origin-center ${step >= 7 ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+            ARCHIVE READY
           </div>
         </div>
 
       </div>
+      )}
+
+      {bootStage === 'gate' && (
+        <div className={`relative z-30 w-full h-full flex items-center justify-center px-4 transition-all duration-1000 ease-out ${showWelcomeGate ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}>
+          <div className={`absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(200,169,81,0.15),rgba(2,6,23,0.98)_55%,rgba(2,6,23,1)_100%)] transition-opacity duration-1000 ${showWelcomeGate ? 'opacity-100' : 'opacity-0'}`} />
+          <div className="relative w-full max-w-2xl rounded-2xl border-2 border-[#d4af37]/30 bg-slate-900/80 backdrop-blur-xl shadow-[0_20px_100px_rgba(212,175,55,0.15)] px-6 py-10 md:px-14 md:py-14 text-center">
+            <div className={`mx-auto mb-6 w-20 h-20 md:w-24 md:h-24 rounded-full border border-[#d4af37]/60 bg-[#d4af37]/10 flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.3)] animate-[pulse_2.2s_ease-in-out_infinite] transition-all duration-1000 delay-300 ${showWelcomeGate ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 rotate-[-15deg]'}`}>
+              <img src={ndcCrest} alt="NDC Crest" className="w-14 h-14 md:w-16 md:h-16 object-contain" />
+            </div>
+            <p className={`text-[12px] md:text-sm uppercase tracking-[0.25em] text-[#d4af37] font-semibold mb-2 transition-all duration-700 delay-500 ${showWelcomeGate ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>National Defence College Nigeria</p>
+            <h3 className={`text-xl md:text-4xl font-serif text-white tracking-widest uppercase text-shadow-lg drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all duration-700 delay-700 ${showWelcomeGate ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>Archive Access Portal</h3>
+            <p className={`mt-4 text-xs md:text-base text-white/80 leading-relaxed max-w-md mx-auto font-light transition-all duration-700 delay-[900ms] ${showWelcomeGate ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              Initialization completed. Access to the Commandant Honours Archive is now ready. Select the portal entry below to proceed.
+            </p>
+            <div className={`transition-all duration-1000 delay-[1100ms] ${showWelcomeGate ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+              <button
+                onClick={() => {
+                  if (isEnteringArchive) return;
+                  setIsEnteringArchive(true);
+                  setTimeout(() => {
+                    if (onComplete) onComplete();
+                  }, 1300);
+                }}
+                className="group relative overflow-hidden mt-10 inline-flex items-center justify-center px-10 py-5 md:px-16 md:py-6 rounded-lg border-2 border-[#d4af37] bg-[linear-gradient(45deg,rgba(212,175,55,0.1),rgba(212,175,55,0.3)_50%,rgba(212,175,55,0.1))] hover:bg-[#d4af37]/40 text-[#f2d998] text-lg md:text-xl font-bold tracking-[0.25em] md:tracking-[0.3em] uppercase hover:scale-[1.05] hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] hover:-translate-y-1 transition-all duration-500 ease-out"
+              >
+                <div className="absolute inset-0 bg-[#d4af37]/20 -translate-x-[150%] skew-x-[30deg] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
+                <span className="relative z-10 drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] text-[#fff3cd] mix-blend-screen">ENTER ARCHIVE</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

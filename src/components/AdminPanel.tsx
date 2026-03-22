@@ -117,7 +117,7 @@ export function AdminPanel({
   onBack,
   onSignOut,
 }: AdminPanelProps) {
-  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'audio'>('personnel');
+  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio'>('personnel');
   const [editingP, setEditingP] = useState<Personnel | null>(null);
   const [editingV, setEditingV] = useState<DistinguishedVisit | null>(null);
   const [editingC, setEditingC] = useState<Commandant | null>(null);
@@ -275,6 +275,7 @@ export function AdminPanel({
             {tabBtn('visits', 'Visits')}
             {tabBtn('commandants', 'Commandants')}
             {tabBtn('theme', 'Theme')}
+            {tabBtn('transitions', 'Transitions')}
             {tabBtn('audio', 'Audio Settings')}
           </div>
         </div>
@@ -510,8 +511,21 @@ export function AdminPanel({
                   Reset to Default (Indoor 1)
                 </button>
               </div>
+            </div>
+          </div>
+        )}
 
-              <div className="mt-8 border-t border-primary/10 pt-6">
+        {tab === 'transitions' && (
+          <div className="view-enter">
+            <div className="surface-panel p-5 md:p-6">
+              <div className="mb-5">
+                <h4 className="text-base font-semibold gold-text">Transition & Boot Experience</h4>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Control boot timing, transition styles, and sequence behavior. These settings stay saved until an admin changes them.
+                </p>
+              </div>
+
+              <div className="mt-2 border-t border-primary/10 pt-6">
                 <h4 className="text-base font-semibold gold-text">Boot Sequence Timing</h4>
                 <p className="text-xs text-muted-foreground mt-1">
                   Tune how fast archive portraits transition and how long the full initialization lasts.
