@@ -9,6 +9,8 @@ export type DeviceControlCommandType =
   | 'set-auto-display'
   | 'apply-device-profile'
   | 'clear-device-profile'
+  | 'open-person-profile'
+  | 'close-profile'
   | 'close-app'
   | 'reopen-app';
 

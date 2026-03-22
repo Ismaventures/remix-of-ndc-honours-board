@@ -52,6 +52,8 @@ interface AdminPanelProps {
   onSendDeviceAutoDisplay: (deviceIds: string[], enabled: boolean) => Promise<boolean>;
   onSendDeviceCloseApp: (deviceIds: string[], reason: string) => Promise<boolean>;
   onSendDeviceReopenApp: (deviceIds: string[]) => Promise<boolean>;
+  onSendDeviceOpenPersonProfile: (deviceIds: string[], payload: { view: 'fwc' | 'fdc' | 'directing' | 'allied'; personId: string }) => Promise<boolean>;
+  onSendDeviceCloseProfile: (deviceIds: string[]) => Promise<boolean>;
   onSendDeviceApplyProfile: (deviceIds: string[], payload: {
     themeMode: ThemeMode;
     bootSequenceSettings: BootSequenceSettings;
@@ -282,6 +284,8 @@ export function AdminPanel({
   onSendDeviceAutoDisplay,
   onSendDeviceCloseApp,
   onSendDeviceReopenApp,
+  onSendDeviceOpenPersonProfile,
+  onSendDeviceCloseProfile,
   onSendDeviceApplyProfile,
   onSendDeviceClearProfile,
   onSendGlobalSiteClose,
@@ -805,6 +809,7 @@ export function AdminPanel({
           <div className="view-enter">
             <DeviceControlPanel
               devices={devices}
+              personnel={personnel}
               currentDeviceId={currentDeviceId}
               isSuperAdmin={isSuperAdmin}
               currentThemeMode={themeMode}
@@ -815,6 +820,8 @@ export function AdminPanel({
               onSendAutoDisplay={onSendDeviceAutoDisplay}
               onSendCloseApp={onSendDeviceCloseApp}
               onSendReopenApp={onSendDeviceReopenApp}
+              onSendOpenPersonProfile={onSendDeviceOpenPersonProfile}
+              onSendCloseProfile={onSendDeviceCloseProfile}
               onSendApplyProfile={onSendDeviceApplyProfile}
               onSendClearProfile={onSendDeviceClearProfile}
               onSendGlobalClose={onSendGlobalSiteClose}

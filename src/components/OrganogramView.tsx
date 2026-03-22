@@ -13,6 +13,8 @@ interface OrganogramViewProps {
   title: string;
   category: Category;
   onBack: () => void;
+  forcedSelectedId?: string | null;
+  forcedSelectionNonce?: number;
 }
 
 type SortMode = "oldest" | "rank";
@@ -91,7 +93,7 @@ function ArchiveProfileImage({ person }: { person: Personnel }) {
   );
 }
 
-export function OrganogramView({ data, title, category, onBack }: OrganogramViewProps) {
+export function OrganogramView({ data, title, category, onBack, forcedSelectedId = undefined, forcedSelectionNonce = 0 }: OrganogramViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("oldest");
@@ -111,6 +113,15 @@ export function OrganogramView({ data, title, category, onBack }: OrganogramView
     const t = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    if (forcedSelectedId === undefined) return;
+    setRankFilter('all');
+    setServiceFilter('all');
+    setYearFilter('all');
+    setCurrentPage(1);
+    setSelectedId(forcedSelectedId);
+  }, [forcedSelectedId, forcedSelectionNonce]);
 
   // Reset page when filters change
   useEffect(() => {

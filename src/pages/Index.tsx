@@ -32,7 +32,6 @@ const SECTION_CATEGORIES: Record<string, Category> = {
   directing: 'Directing Staff',
   allied: 'Allied',
 };
-
 const SUPER_ADMIN_EMAILS = (import.meta.env.VITE_SUPER_ADMIN_EMAILS || import.meta.env.VITE_QUICK_ADMIN_EMAIL || '')
   .split(',')
   .map(item => item.trim().toLowerCase())
@@ -47,6 +46,7 @@ const Index = () => {
   const [authReady, setAuthReady] = useState(false);
   const [autoDisplayActive, setAutoDisplayActive] = useState(false);
   const [forcedAutoDisplay, setForcedAutoDisplay] = useState<{ enabled: boolean; nonce: number }>({ enabled: false, nonce: 0 });
+  const [forcedProfileSelection, setForcedProfileSelection] = useState<{ id: string | null; nonce: number }>({ id: null, nonce: 0 });
   const [siteClosed, setSiteClosed] = useState(false);
   const [siteClosedReason, setSiteClosedReason] = useState('Temporarily closed by super admin.');
   const [deviceClosed, setDeviceClosed] = useState(false);
@@ -108,6 +108,7 @@ const Index = () => {
       const nextView = mapCommandViewToAppView(payload.view);
       if (nextView) {
         setView(nextView);
+        setForcedProfileSelection(prev => ({ ...prev, id: null, nonce: prev.nonce + 1 }));
       }
       return;
     }
@@ -150,6 +151,22 @@ const Index = () => {
     if (commandType === 'clear-device-profile') {
       clearDeviceOverrides();
       window.location.reload();
+      return;
+    }
+
+    if (commandType === 'close-app') {
+      const targetView = payload.view;
+      const personId = typeof payload.personId === 'string' ? payload.personId : null;
+      if ((targetView === 'fwc' || targetView === 'fdc' || targetView === 'directing' || targetView === 'allied') && personId) {
+        setView(targetView);
+        setForcedAutoDisplay(prev => ({ enabled: false, nonce: prev.nonce + 1 }));
+        setForcedProfileSelection(prev => ({ id: personId, nonce: prev.nonce + 1 }));
+      }
+      return;
+    }
+
+    if (commandType === 'close-profile') {
+      setForcedProfileSelection(prev => ({ id: null, nonce: prev.nonce + 1 }));
       return;
     }
 
@@ -306,6 +323,12 @@ const Index = () => {
           onSendDeviceReopenApp={async (deviceIds) => {
             return sendCommandToDevices(deviceIds, 'reopen-app', {});
           }}
+          onSendDeviceOpenPersonProfile={async (deviceIds, payload) => {
+            return sendCommandToDevices(deviceIds, 'open-person-profile', payload as unknown as Record<string, unknown>);
+          }}
+          onSendDeviceCloseProfile={async (deviceIds) => {
+            return sendCommandToDevices(deviceIds, 'close-profile', {});
+          }}
           onSendDeviceApplyProfile={async (deviceIds, payload) => {
             return sendCommandToDevices(deviceIds, 'apply-device-profile', payload as unknown as Record<string, unknown>);
           }}
@@ -362,6 +385,8 @@ const Index = () => {
           data={personnel}
           title={SECTION_TITLES[view]}
           category={category}
+          forcedSelectedId={SECTION_CATEGORIES[view] === category ? forcedProfileSelection.id : null}
+          forcedSelectionNonce={forcedProfileSelection.nonce}
           onBack={() => setView('home')}
         />
       );

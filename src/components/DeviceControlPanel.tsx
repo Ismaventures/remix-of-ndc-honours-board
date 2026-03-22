@@ -3,9 +3,11 @@ import { DeviceClient, DeviceControlView } from '@/hooks/useDeviceControl';
 import { ThemeMode } from '@/hooks/useThemeMode';
 import { BootSequenceSettings } from '@/hooks/useBootSequenceSettings';
 import { AutoDisplaySettings } from '@/hooks/useAutoDisplaySettings';
+import { Personnel } from '@/types/domain';
 
 interface DeviceControlPanelProps {
   devices: DeviceClient[];
+  personnel: Personnel[];
   currentDeviceId: string;
   isSuperAdmin: boolean;
   currentThemeMode: ThemeMode;
@@ -16,6 +18,8 @@ interface DeviceControlPanelProps {
   onSendAutoDisplay: (deviceIds: string[], enabled: boolean) => Promise<boolean>;
   onSendCloseApp: (deviceIds: string[], reason: string) => Promise<boolean>;
   onSendReopenApp: (deviceIds: string[]) => Promise<boolean>;
+  onSendOpenPersonProfile: (deviceIds: string[], payload: { view: Exclude<DeviceControlView, 'home' | 'visits' | 'admin'>; personId: string }) => Promise<boolean>;
+  onSendCloseProfile: (deviceIds: string[]) => Promise<boolean>;
   onSendApplyProfile: (deviceIds: string[], payload: {
     themeMode: ThemeMode;
     bootSequenceSettings: BootSequenceSettings;
@@ -38,6 +42,7 @@ const VIEW_OPTIONS: Array<{ id: DeviceControlView; label: string }> = [
 
 export function DeviceControlPanel({
   devices,
+  personnel,
   currentDeviceId,
   isSuperAdmin,
   currentThemeMode,
@@ -48,6 +53,8 @@ export function DeviceControlPanel({
   onSendAutoDisplay,
   onSendCloseApp,
   onSendReopenApp,
+  onSendOpenPersonProfile,
+  onSendCloseProfile,
   onSendApplyProfile,
   onSendClearProfile,
   onSendGlobalClose,
@@ -56,6 +63,8 @@ export function DeviceControlPanel({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [shutdownReason, setShutdownReason] = useState('Temporarily closed by super admin.');
+  const [remoteView, setRemoteView] = useState<Exclude<DeviceControlView, 'home' | 'visits' | 'admin'>>('fwc');
+  const [remotePersonId, setRemotePersonId] = useState('');
 
   const selectedCount = selectedIds.length;
 
@@ -67,6 +76,19 @@ export function DeviceControlPanel({
       return { ...device, online };
     });
   }, [devices]);
+
+  const remoteProfiles = useMemo(() => {
+    const categoryMap: Record<Exclude<DeviceControlView, 'home' | 'visits' | 'admin'>, string> = {
+      fwc: 'FWC',
+      fdc: 'FDC',
+      directing: 'Directing Staff',
+      allied: 'Allied',
+    };
+    const category = categoryMap[remoteView];
+    return personnel
+      .filter(person => person.category === category)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [personnel, remoteView]);
 
   const toggleDevice = (deviceId: string, enabled: boolean) => {
     if (enabled) {
@@ -113,6 +135,20 @@ export function DeviceControlPanel({
     if (selectedIds.length === 0) return;
     setBusy(true);
     await onSendClearProfile(selectedIds);
+    setBusy(false);
+  };
+
+  const openRemoteProfile = async () => {
+    if (selectedIds.length === 0 || !remotePersonId) return;
+    setBusy(true);
+    await onSendOpenPersonProfile(selectedIds, { view: remoteView, personId: remotePersonId });
+    setBusy(false);
+  };
+
+  const closeRemoteProfile = async () => {
+    if (selectedIds.length === 0) return;
+    setBusy(true);
+    await onSendCloseProfile(selectedIds);
     setBusy(false);
   };
 
@@ -217,6 +253,53 @@ export function DeviceControlPanel({
             className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50"
           >
             Clear Device Profile
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-primary/15 bg-card/60 p-3 space-y-3">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">Remote Profile Navigation</p>
+        <p className="text-[11px] text-muted-foreground">Navigate selected screens into a category and open a specific personnel profile remotely.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <select
+            value={remoteView}
+            onChange={e => {
+              const nextView = e.target.value as Exclude<DeviceControlView, 'home' | 'visits' | 'admin'>;
+              setRemoteView(nextView);
+              setRemotePersonId('');
+            }}
+            className="px-3 py-2 rounded border border-primary/20 bg-background/80 text-xs text-foreground"
+          >
+            <option value="fwc">FWC</option>
+            <option value="fdc">FDC</option>
+            <option value="directing">Directing Staff</option>
+            <option value="allied">Allied</option>
+          </select>
+          <select
+            value={remotePersonId}
+            onChange={e => setRemotePersonId(e.target.value)}
+            className="px-3 py-2 rounded border border-primary/20 bg-background/80 text-xs text-foreground"
+          >
+            <option value="">Select personnel profile</option>
+            {remoteProfiles.map(person => (
+              <option key={person.id} value={person.id}>{person.rank} {person.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => void openRemoteProfile()}
+            disabled={busy || selectedCount === 0 || !remotePersonId}
+            className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            Open Selected Profile
+          </button>
+          <button
+            onClick={() => void closeRemoteProfile()}
+            disabled={busy || selectedCount === 0}
+            className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            Close Open Profile
           </button>
         </div>
       </div>
