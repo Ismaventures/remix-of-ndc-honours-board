@@ -1,6 +1,7 @@
 import { X, User, Shield } from "lucide-react";
 import { Personnel } from "@/types/domain";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
 
 interface ProfileModalProps {
@@ -11,11 +12,29 @@ interface ProfileModalProps {
 export function ProfileModal({ person, onClose }: ProfileModalProps) {
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [portalReady, setPortalReady] = useState(false);
   const resolvedImageUrl = useResolvedMediaUrl(person.imageUrl);
 
   useEffect(() => {
     const timer = setTimeout(() => setDetailsVisible(true), 200);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    setPortalReady(true);
+    return () => setPortalReady(false);
+  }, []);
+
+  useEffect(() => {
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
   }, []);
 
   const isLongCitation = person.citation && person.citation.length > 200;
@@ -24,13 +43,15 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
       ? person.citation.substring(0, 200) + "..."
       : person.citation;
 
-  return (
+  if (!portalReady) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm modal-backdrop-enter overflow-y-auto pt-2 md:pt-4 pb-2"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm modal-backdrop-enter p-3 md:p-4 overflow-hidden overscroll-none"
       onClick={onClose}
     >
       <div
-        className="bg-card/95 backdrop-blur-md gold-border rounded-xl max-w-4xl w-full mx-3 md:mx-4 overflow-hidden shadow-[0_10px_50px_hsl(var(--primary)/0.22)] modal-enter relative mt-0 md:mt-1"
+        className="bg-card/95 backdrop-blur-md gold-border rounded-xl max-w-4xl w-full overflow-hidden shadow-[0_10px_50px_hsl(var(--primary)/0.22)] modal-enter relative max-h-[92dvh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Decorative Top Accent */}
@@ -49,7 +70,7 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
           </button>
         </div>
 
-        <div className="p-5 md:p-6">
+        <div className="p-5 md:p-6 overflow-y-auto overscroll-contain">
           <div className="flex flex-col sm:flex-row gap-5 mb-6">
             <div className="h-28 w-28 sm:h-36 sm:w-36 rounded-xl bg-muted/40 flex items-center justify-center text-primary border-2 border-primary/30 shrink-0 self-center sm:self-start shadow-inner relative overflow-hidden group">
               <div className="absolute inset-0 bg-primary/10 z-0 group-hover:bg-primary/20 transition-colors" />
@@ -133,6 +154,7 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
