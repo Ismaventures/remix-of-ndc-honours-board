@@ -76,11 +76,11 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
   }, []);
 
   return (
-    <section className="mb-10">
+    <section className="mb-8 sm:mb-10">
       <div className="mb-6 flex flex-col items-center">
-        <h2 className="text-3xl font-bold font-serif gold-text tracking-wider uppercase text-center mt-8">Command Directory</h2>
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-serif gold-text tracking-wider uppercase text-center mt-6 sm:mt-8">Command Directory</h2>
         <div className="h-1 w-24 bg-primary mt-2 mb-2 rounded-full" />
-        <p className="text-sm text-muted-foreground tracking-widest uppercase text-center">Select a category to view hierarchy</p>
+        <p className="text-xs sm:text-sm text-muted-foreground tracking-widest uppercase text-center">Select a category to view hierarchy</p>
       </div>
 
       <div className={`transition-all duration-1000 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
@@ -89,7 +89,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
             align: "start",
             loop: true,
           }}
-          className="w-full max-w-5xl mx-auto"
+          className="w-full max-w-6xl mx-auto"
         >
           <CarouselContent className="-ml-2 md:-ml-4">
             {CARDS.map((card, i) => {
@@ -99,7 +99,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                   <div className="p-1 h-full">
                     <button
                       onClick={() => onSelect(card.key)}
-                      className="relative w-full h-[280px] overflow-hidden premium-card-border shimmer-effect rounded-xl bg-card text-left group transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_40px_rgba(200,169,81,0.2)] flex flex-col justify-end"
+                      className="relative w-full h-[240px] sm:h-[280px] lg:h-[300px] overflow-hidden premium-card-border shimmer-effect rounded-xl bg-card text-left group transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_40px_rgba(200,169,81,0.2)] flex flex-col justify-end"
                     >
                       <div className={`absolute inset-0 bg-gradient-to-br ${card.accentClass} opacity-80 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay`} />
                       
@@ -109,10 +109,10 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                       </div>
 
                       <div className="absolute top-4 right-4 text-primary/10 group-hover:text-primary/20 transition-colors duration-500">
-                        <Icon className="w-32 h-32" />
+                        <Icon className="w-24 h-24 sm:w-32 sm:h-32" />
                       </div>
 
-                      <div className="relative p-6 z-10 w-full bg-gradient-to-t from-background via-background/95 to-transparent pt-12">
+                      <div className="relative p-4 sm:p-6 z-10 w-full bg-gradient-to-t from-background via-background/95 to-transparent pt-10 sm:pt-12">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-14 h-14 rounded-full bg-navy gold-border flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-lg p-2 relative overflow-hidden">
                             <div className="absolute inset-0 bg-primary/10 animate-pulse-slow"></div>
@@ -123,7 +123,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                           </div>
                         </div>
                         <div>
-                          <h3 className="text-xl font-bold font-serif leading-snug text-foreground mb-1 group-hover:text-primary transition-colors drop-shadow-sm">{card.label}</h3>
+                          <h3 className="text-lg sm:text-xl font-bold font-serif leading-snug text-foreground mb-1 group-hover:text-primary transition-colors drop-shadow-sm">{card.label}</h3>
                           <p className="text-xs text-muted-foreground tracking-widest uppercase">{card.subtitle}</p>
                         </div>
 

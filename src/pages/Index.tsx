@@ -145,10 +145,10 @@ const Index = () => {
       {isBooting && <BootSequence onComplete={() => setIsBooting(false)} />}
       <div className={`min-h-screen flex flex-col bg-background animate-bg-sweep bg-gradient-to-br from-background via-background to-secondary/10 transition-opacity duration-1000 ${isBooting ? 'opacity-0' : 'opacity-100'}`}>
         <AppHeader onHomeClick={() => setView('home')} />
-        <main className="flex-1 overflow-y-auto">
-          <div className="max-w-6xl mx-auto px-6 py-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="max-w-[1800px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
             {/* Auto-rotation button */}
-            <div className="flex justify-end mb-4">
+            <div className="flex justify-end mb-3 sm:mb-4">
               <AutoRotationDisplay personnel={personnel} visits={visits} commandants={commandants} activeCategory={activeCategory} activeView={activeView} />
             </div>
 

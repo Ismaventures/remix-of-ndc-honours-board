@@ -288,7 +288,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
       </div>
 
       {/* Slide content */}
-      <div className="flex-1 flex items-center justify-center p-12 overflow-hidden">
+      <div className="flex-1 flex items-center justify-center p-3 sm:p-6 md:p-12 overflow-hidden">
         <div className={`absolute top-20 md:top-24 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ${showInteractionHint ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
           <div className="px-4 py-2 rounded-md border border-primary/30 bg-slate-950/85 backdrop-blur text-[10px] md:text-xs uppercase tracking-[0.16em] text-primary/90 text-center whitespace-nowrap">
             Swipe • Arrow Keys • Side Buttons
@@ -312,7 +312,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
         </button>
 
         <div
-          className={`${slide.type === 'commandant' ? 'max-w-3xl lg:max-w-4xl' : 'max-w-5xl xl:max-w-6xl'} w-full transition-all duration-600 ease-out ${getTransitionClasses()}`}
+          className={`${slide.type === 'commandant' ? 'max-w-3xl lg:max-w-4xl xl:max-w-5xl' : 'max-w-5xl xl:max-w-6xl 2xl:max-w-7xl'} w-full transition-all duration-600 ease-out ${getTransitionClasses()}`}
         >
           {slide.type === 'commandant' && (
             <button
@@ -327,7 +327,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
           {slide.type === 'personnel' && (
             <button
               onClick={() => setSelectedPerson(slide.person)}
-              className="w-full text-left relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-8 md:p-12 lg:p-14 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              className="w-full text-left relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-4 sm:p-6 md:p-10 lg:p-14 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
               aria-label={`Open profile for ${slide.person.name}`}
             >
               {/* Background styling layers */}
@@ -335,8 +335,8 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
 
-              <div className="relative flex flex-col md:flex-row items-center md:items-start gap-10">
-                <div className="relative w-40 h-52 md:w-48 md:h-64 rounded-md border border-primary/40 overflow-hidden bg-muted flex-shrink-0 shadow-xl group-hover:-translate-y-2 transition-transform duration-500">
+              <div className="relative flex flex-col md:flex-row items-center md:items-start gap-5 sm:gap-7 md:gap-10">
+                <div className="relative w-28 h-36 sm:w-36 sm:h-48 md:w-48 md:h-64 rounded-md border border-primary/40 overflow-hidden bg-muted flex-shrink-0 shadow-xl group-hover:-translate-y-2 transition-transform duration-500">
                   <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/30 transition-colors duration-500 z-20 rounded-md" />
                   {slide.person.imageUrl ? (
                     <img src={slide.person.imageUrl} alt={slide.person.name} className="w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-110" />
@@ -360,20 +360,20 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
                   </div>
                   
                   <h2 className="mb-3 tracking-wide drop-shadow-md bg-gradient-to-r from-foreground via-primary/90 to-foreground/80 bg-clip-text text-transparent leading-tight">
-                    <span className="text-2xl md:text-3xl font-semibold font-serif align-middle mr-2">{slide.person.rank}</span>
-                    <span className="text-4xl md:text-5xl font-bold font-serif align-middle">{slide.person.name}</span>
+                    <span className="text-lg sm:text-2xl md:text-3xl font-semibold font-serif align-middle mr-2">{slide.person.rank}</span>
+                    <span className="text-2xl sm:text-4xl md:text-5xl font-bold font-serif align-middle">{slide.person.name}</span>
                   </h2>
                   
                   <div className="h-px w-24 bg-gradient-to-r from-primary/80 to-transparent mx-auto md:mx-0 mb-4" />
                   
-                  <div className="flex items-center justify-center md:justify-start gap-3 mb-6 text-sm text-foreground/80">
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-3 mb-5 sm:mb-6 text-xs sm:text-sm text-foreground/80">
                     <span className="bg-foreground/5 px-2 py-0.5 rounded border border-foreground/10">{slide.person.service}</span>
                     <span className="text-primary/40">•</span>
                     <span className="font-mono tracking-wider text-primary/70">{slide.person.periodStart}–{slide.person.periodEnd}</span>
                   </div>
 
                   <div className="relative pl-4 border-l-2 border-primary/30 py-1">
-                    <p className="text-base text-muted-foreground italic leading-relaxed font-light">
+                    <p className="text-sm sm:text-base text-muted-foreground italic leading-relaxed font-light line-clamp-5 sm:line-clamp-none">
                       "{slide.person.citation}"
                     </p>
                   </div>
@@ -385,7 +385,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
           {slide.type === 'visit' && (
             <button
               onClick={() => setSelectedVisit(slide.visit)}
-              className="w-full text-center relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-10 md:p-14 lg:p-16 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              className="w-full text-center relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-5 sm:p-8 md:p-12 lg:p-16 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
               aria-label={`Open profile for ${slide.visit.name}`}
             >
               {/* Background ambient lighting */}
@@ -400,7 +400,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
                   </p>
                 </div>
                 
-                <div className="w-56 h-36 mx-auto mb-8 rounded-lg border-2 border-primary/30 overflow-hidden bg-muted shadow-2xl relative group-hover:-translate-y-1 transition-transform duration-500">
+                <div className="w-40 h-28 sm:w-52 sm:h-34 md:w-56 md:h-36 mx-auto mb-6 sm:mb-8 rounded-lg border-2 border-primary/30 overflow-hidden bg-muted shadow-2xl relative group-hover:-translate-y-1 transition-transform duration-500">
                   <div className="absolute inset-0 bg-primary/10 mix-blend-overlay z-10" />
                   {slide.visit.imageUrl ? (
                     <img src={slide.visit.imageUrl} alt={slide.visit.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
@@ -409,19 +409,19 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
                   )}
                 </div>
                 
-                <h2 className="text-4xl md:text-5xl font-bold font-serif mb-3 tracking-wide bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent drop-shadow-sm">
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold font-serif mb-3 tracking-wide bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent drop-shadow-sm">
                   {slide.visit.name}
                 </h2>
                 
                 <p className="text-sm md:text-base text-primary/90 font-semibold mb-4 tracking-[0.14em] uppercase">{slide.visit.title}</p>
                 
-                <div className="flex items-center justify-center gap-4 mb-8">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
                   <span className="px-3 py-1 rounded bg-foreground/5 border border-foreground/10 text-foreground/80 text-sm">{slide.visit.country}</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
                   <span className="text-primary/70 font-mono text-sm tracking-wider">{slide.visit.date}</span>
                 </div>
 
-                <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto font-light border-t border-primary/20 pt-6">
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto font-light border-t border-primary/20 pt-4 sm:pt-6">
                   {slide.visit.description}
                 </p>
               </div>

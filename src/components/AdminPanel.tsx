@@ -99,7 +99,7 @@ export function AdminPanel({
   const tabBtn = (key: typeof tab, label: string) => (
     <button
       onClick={() => setTab(key)}
-      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+      className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
         tab === key
           ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-100'
           : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95'
@@ -123,20 +123,20 @@ export function AdminPanel({
 
   return (
     <div className="page-enter-slide">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <button
             onClick={onBack}
             className="p-2 rounded-full border border-primary/20 bg-card hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all active:scale-95 shadow-sm"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <div>
-            <h2 className="text-2xl font-bold font-serif gold-text leading-tight">Admin Console</h2>
+          <div className="min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold font-serif gold-text leading-tight truncate">Admin Console</h2>
             <p className="text-sm text-muted-foreground mt-0.5">Manage records and system options</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onSignOut && (
             <button
               onClick={onSignOut}
@@ -145,12 +145,12 @@ export function AdminPanel({
               Sign Out
             </button>
           )}
-          <div className="flex gap-2 p-1 bg-card/60 backdrop-blur-sm rounded-full border border-primary/15">
-          {tabBtn('personnel', 'Personnel')}
-          {tabBtn('visits', 'Visits')}
-          {tabBtn('commandants', 'Commandants')}
-          {tabBtn('theme', 'Theme')}
-          {tabBtn('audio', 'Audio Settings')}
+          <div className="flex gap-2 p-1 bg-card/60 backdrop-blur-sm rounded-full border border-primary/15 overflow-x-auto max-w-[calc(100vw-120px)] lg:max-w-none">
+            {tabBtn('personnel', 'Personnel')}
+            {tabBtn('visits', 'Visits')}
+            {tabBtn('commandants', 'Commandants')}
+            {tabBtn('theme', 'Theme')}
+            {tabBtn('audio', 'Audio Settings')}
           </div>
         </div>
       </div>
