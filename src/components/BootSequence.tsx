@@ -373,8 +373,36 @@ export function BootSequence({ settings, onComplete }: { settings?: BootSequence
 
       {bootStage === 'gate' && (
         <div className={`relative z-30 w-full h-full flex items-center justify-center px-4 transition-all duration-1000 ease-out ${showWelcomeGate ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}>
+          
           <div className={`absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(200,169,81,0.15),rgba(2,6,23,0.98)_55%,rgba(2,6,23,1)_100%)] transition-opacity duration-1000 ${showWelcomeGate ? 'opacity-100' : 'opacity-0'}`} />
-          <div className="relative w-full max-w-2xl rounded-2xl border-2 border-[#d4af37]/30 bg-slate-900/80 backdrop-blur-xl shadow-[0_20px_100px_rgba(212,175,55,0.15)] px-6 py-10 md:px-14 md:py-14 text-center">
+          
+          {/* Faded plenty images of the NDC crest animated matrix */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 flex items-center justify-center mix-blend-plus-lighter">
+            <div 
+              className={`absolute -inset-[150%] opacity-0 animate-[spin_240s_linear_infinite] transition-opacity duration-[2000ms] delay-700 ease-in-out ${showWelcomeGate ? 'opacity-[0.04]' : 'opacity-0'}`}
+              style={{ 
+                backgroundImage: `url(${ndcCrest})`, 
+                backgroundSize: '240px 240px',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'repeat',
+                filter: 'grayscale(100%)',
+              }}
+            />
+            <div 
+              className={`absolute -inset-[150%] opacity-0 animate-[spin_180s_linear_infinite_reverse] transition-opacity duration-[2000ms] delay-1000 ease-in-out ${showWelcomeGate ? 'opacity-[0.02]' : 'opacity-0'}`}
+              style={{ 
+                backgroundImage: `url(${ndcCrest})`, 
+                backgroundSize: '400px 400px',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'repeat',
+                filter: 'grayscale(100%) contrast(150%)',
+              }}
+            />
+            {/* Added a pulsing glowing overlay to make it look active */}
+            <div className={`absolute inset-0 bg-[#d4af37]/5 mix-blend-color-burn transition-all duration-1000 animate-pulse-slow ${showWelcomeGate ? 'opacity-100' : 'opacity-0'}`} />
+          </div>
+
+          <div className="relative z-10 w-full max-w-2xl rounded-2xl border-2 border-[#d4af37]/30 bg-slate-900/80 backdrop-blur-xl shadow-[0_20px_100px_rgba(212,175,55,0.15)] px-6 py-10 md:px-14 md:py-14 text-center">
             <div className={`mx-auto mb-6 w-20 h-20 md:w-24 md:h-24 rounded-full border border-[#d4af37]/60 bg-[#d4af37]/10 flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.3)] animate-[pulse_2.2s_ease-in-out_infinite] transition-all duration-1000 delay-300 ${showWelcomeGate ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 rotate-[-15deg]'}`}>
               <img src={ndcCrest} alt="NDC Crest" className="w-14 h-14 md:w-16 md:h-16 object-contain" />
             </div>
