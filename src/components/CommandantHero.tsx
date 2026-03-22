@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react';
-import { Shield, Star } from 'lucide-react';
-import { Commandant } from '@/types/domain';
-import ndcCrest from '/images/ndc-crest.png';
-import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
+import { useEffect, useState } from "react";
+import { Shield, Star } from "lucide-react";
+import { Commandant } from "@/types/domain";
+import ndcCrest from "/images/ndc-crest.png";
+import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
 
 interface CommandantHeroProps {
   commandant?: Commandant;
   compactDescription?: boolean;
 }
 
-export function CommandantHero({ commandant, compactDescription = true }: CommandantHeroProps) {
+export function CommandantHero({
+  commandant,
+  compactDescription = true,
+}: CommandantHeroProps) {
   const [visible, setVisible] = useState(false);
   const isCompact = compactDescription;
 
@@ -18,124 +21,130 @@ export function CommandantHero({ commandant, compactDescription = true }: Comman
     return () => clearTimeout(timer);
   }, []);
 
-  const name = commandant?.name ?? 'No commandant record available';
-  const titleText = commandant?.title ?? 'Commandant record pending database data';
-  const description = commandant?.description ??
-    'No commandant biography is currently available from the database.';
+  const name = commandant?.name ?? "No commandant record available";
+  const titleText =
+    commandant?.title ?? "Commandant record pending database data";
+  const description =
+    commandant?.description ??
+    "No commandant biography is currently available from the database.";
   const isCurrent = commandant?.isCurrent ?? false;
   const commandantImageUrl = useResolvedMediaUrl(commandant?.imageUrl);
+  const tenureLabel = commandant
+    ? `${commandant.tenureStart}${commandant.tenureEnd ? ` - ${commandant.tenureEnd}` : " - Present"}`
+    : "Tenure unavailable";
 
   return (
-    <section className={`relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] ${isCurrent ? 'commandant-hero-current' : ''} ${isCompact ? 'mb-0' : 'mb-8'} transform transition-all hover:scale-[1.01] hover:shadow-[0_0_80px_-15px_rgba(255,215,0,0.2)] duration-500 group`}>
-      {/* Subtle radar sweep & premium glow */}
+    <section
+      className={`relative overflow-hidden rounded-2xl border border-primary/35 bg-gradient-to-br from-[#071427]/95 via-card/95 to-[#0b1f3a]/95 backdrop-blur-md shadow-[0_24px_70px_rgba(0,0,0,0.34)] ${isCurrent ? "commandant-hero-current" : ""} ${isCompact ? "mb-0" : "mb-8"} transition-all duration-500 group`}
+    >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {isCurrent && (
           <>
             <div className="absolute inset-0 command-sweep-light" />
-            <div className="absolute top-0 left-0 h-[2px] w-full bg-gradient-to-r from-transparent via-primary to-transparent animate-command-topline" />
+            <div className="absolute top-0 left-0 h-[1px] w-full bg-gradient-to-r from-transparent via-primary/90 to-transparent animate-command-topline" />
           </>
         )}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-50" />
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-50" />
-        
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,215,0,0.08)_0%,transparent_70%)]" />
-        
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-primary/5 animate-radar-pulse" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-primary/3 animate-radar-pulse" style={{ animationDelay: '1.5s' }} />
-        
-        {/* Decorative corner lines */}
-        <div className="absolute top-4 left-4 w-12 h-12 border-t border-l border-primary/30 rounded-tl-lg" />
-        <div className="absolute top-4 right-4 w-12 h-12 border-t border-r border-primary/30 rounded-tr-lg" />
-        <div className="absolute bottom-4 left-4 w-12 h-12 border-b border-l border-primary/30 rounded-bl-lg" />
-        <div className="absolute bottom-4 right-4 w-12 h-12 border-b border-r border-primary/30 rounded-br-lg" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,hsl(var(--primary)/0.12)_0%,transparent_60%)]" />
+        <div className="absolute inset-0 opacity-[0.14] bg-[linear-gradient(90deg,hsl(var(--foreground)/0.08)_1px,transparent_1px),linear-gradient(hsl(var(--foreground)/0.08)_1px,transparent_1px)] bg-[size:42px_42px]" />
+        <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-white/[0.06] to-transparent" />
       </div>
 
-      <div className={`relative flex flex-col md:flex-row items-center ${isCompact ? 'gap-6 md:gap-8 p-6 md:p-10' : 'gap-10 p-8 md:p-14'}`}>
-        {/* Portrait side */}
+      <div
+        className={`relative grid items-center ${isCompact ? "gap-6 md:gap-8 p-5 md:p-7 grid-cols-1 md:grid-cols-[240px_1fr]" : "gap-8 md:gap-10 p-7 md:p-10 grid-cols-1 md:grid-cols-[280px_1fr]"}`}
+      >
         <div
-          className={`shrink-0 transition-all duration-1000 ease-out flex flex-col items-center group-hover:transform group-hover:translate-y-[-5px] ${
-            visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
+          className={`transition-all duration-700 ease-out ${
+            visible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
           }`}
         >
-          <div className="relative">
-            {/* Outer animated border ring */}
-            <div className="absolute -inset-2 rounded-lg border border-primary/20 bg-primary/5 blur-[2px] " />
-            <div className="absolute -inset-1 rounded-lg border border-primary/30 rotate-1 transition-transform group-hover:rotate-0 duration-500" />
-            <div className="absolute -inset-1 rounded-lg border border-primary/30 -rotate-1 transition-transform group-hover:rotate-0 duration-500" />
-            
-            <div className={`relative rounded-md bg-muted gold-border-strong flex items-center justify-center overflow-hidden z-10 shadow-2xl ${isCurrent ? 'commandant-portrait-frame' : ''} ${isCompact ? 'w-40 h-52 md:w-48 md:h-64' : 'w-48 h-60 md:w-56 md:h-72'}`}>
+          <div className="relative mx-auto md:mx-0 w-fit">
+            <div
+              className={`relative rounded-lg bg-muted/70 border border-primary/45 flex items-center justify-center overflow-hidden z-10 shadow-2xl ${isCurrent ? "commandant-portrait-frame" : ""} ${isCompact ? "w-40 h-52 md:w-44 md:h-58" : "w-48 h-60 md:w-52 md:h-68"}`}
+            >
               {commandantImageUrl ? (
-                <img src={commandantImageUrl} alt={name} className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
+                <img
+                  src={commandantImageUrl}
+                  alt={name}
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                />
               ) : (
                 <div className="flex flex-col items-center gap-3 text-primary/40">
-                  <Shield className="h-16 w-16" />
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Official Portrait</span>
+                  <Shield className="h-14 w-14" />
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Official Portrait
+                  </span>
                 </div>
               )}
             </div>
-            
-            {/* Gold corner accents (closer in) */}
-            <div className="absolute -top-1.5 -left-1.5 w-6 h-6 border-t-2 border-l-2 border-primary z-20 rounded-tl" />
-            <div className="absolute -top-1.5 -right-1.5 w-6 h-6 border-t-2 border-r-2 border-primary z-20 rounded-tr" />
-            <div className="absolute -bottom-1.5 -left-1.5 w-6 h-6 border-b-2 border-l-2 border-primary z-20 rounded-bl" />
-            <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 border-b-2 border-r-2 border-primary z-20 rounded-br" />
+            <div className="absolute -inset-2 rounded-xl border border-primary/20 pointer-events-none" />
           </div>
         </div>
 
-        {/* Details side */}
         <div
-          className={`flex-1 text-center md:text-left transition-all duration-1000 ease-out delay-300 ${
-            visible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+          className={`text-center md:text-left transition-all duration-700 ease-out delay-150 ${
+            visible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
           }`}
         >
-          <div className="inline-flex items-center justify-center md:justify-start gap-3 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 mb-4 backdrop-blur shadow-[0_0_15px_rgba(255,215,0,0.1)]">
-            <Star className="h-3.5 w-3.5 text-primary animate-pulse-slow fill-primary/30" />
-            <span className="text-[10px] uppercase tracking-[0.25em] text-primary/90 font-semibold">
-              {isCurrent ? 'Current Commandant' : 'Past Commandant'}
+          <div className="inline-flex items-center justify-center md:justify-start gap-2.5 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25 mb-4 backdrop-blur">
+            <Star className="h-3.5 w-3.5 text-primary fill-primary/30" />
+            <span className="text-[10px] uppercase tracking-[0.22em] text-primary/90 font-semibold">
+              {isCurrent ? "Current Commandant" : "Past Commandant"}
             </span>
-            <Star className="h-3.5 w-3.5 text-primary animate-pulse-slow fill-primary/30" />
+            <Star className="h-3.5 w-3.5 text-primary fill-primary/30" />
           </div>
 
-          <h2 className={`${isCompact ? 'text-3xl md:text-4xl' : 'text-4xl md:text-5xl'} font-bold font-serif mb-2 leading-tight bg-gradient-to-r from-foreground via-primary/90 to-foreground/80 bg-clip-text text-transparent drop-shadow-sm`}>
+          <h2
+            className={`${isCompact ? "text-3xl md:text-[2.4rem]" : "text-4xl md:text-[3rem]"} font-bold font-serif mb-2 leading-tight text-white`}
+          >
             {name}
           </h2>
 
-          <div className="relative h-px w-full max-w-sm mx-auto md:mx-0 mb-5 overflow-hidden bg-primary/10 mt-2">
-            <div
-              className={`absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-yellow-200 to-transparent transition-all duration-1500 ease-out delay-700 ${
-                visible ? 'w-full' : 'w-0'
-              }`}
-            />
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 mb-4 text-[11px] uppercase tracking-[0.18em] text-primary/90">
+            <span className="px-2.5 py-1 rounded border border-primary/30 bg-primary/10">{isCurrent ? "Active Command" : "Archive Record"}</span>
+            <span className="text-primary/50">•</span>
+            <span>{tenureLabel}</span>
           </div>
 
-          {isCurrent && <div className="h-[3px] w-32 mb-4 mx-auto md:mx-0 rounded-full bg-gradient-to-r from-primary/0 via-primary/80 to-primary/0 animate-command-underline" />}
+          <div className="h-px w-full max-w-xl mx-auto md:mx-0 mb-4 bg-gradient-to-r from-primary/70 via-primary/35 to-transparent" />
 
-          <p className={`${isCompact ? 'text-base md:text-lg mb-3' : 'text-lg md:text-xl mb-4'} gold-text font-medium tracking-wide uppercase text-primary/90`}>
+          <p
+            className={`${isCompact ? "text-sm md:text-base mb-3" : "text-base md:text-lg mb-4"} text-primary/95 font-semibold tracking-[0.05em] uppercase`}
+          >
             {titleText}
           </p>
 
           <p
-            className={`${isCompact ? 'text-sm md:text-[15px]' : 'text-sm md:text-base'} text-muted-foreground leading-relaxed max-w-2xl transition-all duration-1000 ease-out delay-500 font-medium ${
-              visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            className={`${isCompact ? "text-sm md:text-[15px]" : "text-sm md:text-base"} text-muted-foreground/95 leading-relaxed max-w-3xl transition-all duration-700 ease-out delay-300 font-medium ${
+              visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
-            style={compactDescription ? {
-              display: '-webkit-box',
-              WebkitBoxOrient: 'vertical',
-              WebkitLineClamp: 4,
-              overflow: 'hidden',
-            } : undefined}
+            style={
+              compactDescription
+                ? {
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 3,
+                    overflow: "hidden",
+                  }
+                : undefined
+            }
           >
             {description}
           </p>
 
           <div
-            className={`flex items-center ${isCompact ? 'gap-4 mt-6 p-3' : 'gap-5 mt-8 p-4'} justify-center md:justify-start transition-all duration-1000 ease-out delay-700 rounded-lg bg-black/20 border border-white/5 inline-flex ${
-              visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            className={`flex items-center ${isCompact ? "gap-4 mt-5 p-3" : "gap-5 mt-7 p-4"} justify-center md:justify-start transition-all duration-700 ease-out delay-500 rounded-lg bg-black/25 border border-primary/20 inline-flex ${
+              visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            <img src={ndcCrest} alt="NDC Crest" className={`${isCompact ? 'h-10 w-10' : 'h-12 w-12'} object-contain opacity-80 drop-shadow-[0_0_8px_rgba(255,215,0,0.3)]`} />
-            <div className={`${isCompact ? 'h-8' : 'h-10'} w-px bg-primary/30`} />
-            <span className="text-[11px] uppercase tracking-[0.25em] text-white/80 font-semibold drop-shadow-sm">
+            <img
+              src={ndcCrest}
+              alt="NDC Crest"
+              className={`${isCompact ? "h-10 w-10" : "h-12 w-12"} object-contain opacity-80 drop-shadow-[0_0_8px_hsl(var(--primary)/0.35)]`}
+            />
+            <div
+              className={`${isCompact ? "h-8" : "h-10"} w-px bg-primary/30`}
+            />
+            <span className="text-[11px] uppercase tracking-[0.22em] text-white/80 font-semibold">
               Intellect · Courage · Patriotism
             </span>
           </div>

@@ -1,11 +1,13 @@
-import { useEffect, useState, useMemo } from 'react';
-import ndcCrest from '/images/ndc-crest.png';
+import { useEffect, useState, useMemo } from "react";
+import ndcCrest from "/images/ndc-crest.png";
 
 interface NdcScatteredTransitionProps {
   durationMs: number;
 }
 
-export function NdcScatteredTransition({ durationMs }: NdcScatteredTransitionProps) {
+export function NdcScatteredTransition({
+  durationMs,
+}: NdcScatteredTransitionProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -32,17 +34,17 @@ export function NdcScatteredTransition({ durationMs }: NdcScatteredTransitionPro
   return (
     <div className="absolute inset-0 z-50 overflow-hidden pointer-events-none flex items-center justify-center bg-slate-950">
       {/* Background sweep to clear previous content slightly */}
-      <div 
-        className="absolute inset-0 bg-[#d4af37]/10 mix-blend-color-burn" 
-        style={{ 
-          animation: `pulse ${durationMs * 0.8}ms ease-in-out forwards` 
-        }} 
+      <div
+        className="absolute inset-0 bg-primary/10 mix-blend-color-burn"
+        style={{
+          animation: `pulse ${durationMs * 0.8}ms ease-in-out forwards`,
+        }}
       />
-      
-      {particles.map(p => (
+
+      {particles.map((p) => (
         <div
           key={p.id}
-          className="absolute origin-center opacity-0 drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]"
+          className="absolute origin-center opacity-0 drop-shadow-[0_0_15px_hsl(var(--primary)/0.45)]"
           style={{
             left: `${p.x}%`,
             top: `${p.y}%`,
@@ -50,25 +52,25 @@ export function NdcScatteredTransition({ durationMs }: NdcScatteredTransitionPro
             transform: `translate(-50%, -50%) rotate(${p.rotate}deg)`,
           }}
         >
-          <img 
-            src={ndcCrest} 
-            alt="" 
-            className="w-24 h-24 sm:w-32 sm:h-32 object-contain filter grayscale opacity-40 mix-blend-screen" 
+          <img
+            src={ndcCrest}
+            alt=""
+            className="w-24 h-24 sm:w-32 sm:h-32 object-contain filter grayscale opacity-40 mix-blend-screen"
           />
         </div>
       ))}
 
       {/* Main giant logo pulling focus in the middle at the end */}
-      <div 
+      <div
         className="absolute inset-0 flex items-center justify-center opacity-0"
         style={{
-          animation: `scatterCenterFocus ${durationMs * 0.8}ms cubic-bezier(0.4, 0, 0.2, 1) ${durationMs * 0.2}ms forwards`
+          animation: `scatterCenterFocus ${durationMs * 0.8}ms cubic-bezier(0.4, 0, 0.2, 1) ${durationMs * 0.2}ms forwards`,
         }}
       >
-        <img 
-          src={ndcCrest} 
-          alt="" 
-          className="w-64 h-64 sm:w-96 sm:h-96 object-contain drop-shadow-[0_0_50px_rgba(212,175,55,0.8)]" 
+        <img
+          src={ndcCrest}
+          alt=""
+          className="w-64 h-64 sm:w-96 sm:h-96 object-contain drop-shadow-[0_0_50px_hsl(var(--primary)/0.7)]"
         />
       </div>
 
