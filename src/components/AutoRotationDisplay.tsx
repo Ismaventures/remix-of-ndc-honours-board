@@ -1,76 +1,103 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Monitor, SkipForward } from 'lucide-react';
-import { Category, Personnel, DistinguishedVisit, Commandant } from '@/types/domain';
-import { CommandantHero } from './CommandantHero';
-import { ProfileModal } from './ProfileModal';
-import { useAudioStore } from '@/hooks/useAudioStore';
-import { playAudioTrack } from '@/components/AudioManager';
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { ChevronLeft, ChevronRight, Monitor, SkipForward } from "lucide-react";
+import {
+  Category,
+  Personnel,
+  DistinguishedVisit,
+  Commandant,
+} from "@/types/domain";
+import { CommandantHero } from "./CommandantHero";
+import { ProfileModal } from "./ProfileModal";
+import { useAudioStore } from "@/hooks/useAudioStore";
+import { playAudioTrack } from "@/components/AudioManager";
 import {
   AutoDisplayContextKey,
   AutoDisplaySettings,
   AutoDisplayTransitionType,
   DEFAULT_AUTO_DISPLAY_SETTINGS,
-} from '@/hooks/useAutoDisplaySettings';
-import { NdcScatteredTransition } from './NdcScatteredTransition';
+} from "@/hooks/useAutoDisplaySettings";
+import { NdcScatteredTransition } from "./NdcScatteredTransition";
 
 interface AutoRotationDisplayProps {
   personnel: Personnel[];
   visits: DistinguishedVisit[];
   commandants: Commandant[];
   activeCategory?: Category | null;
-  activeView?: 'home' | 'visits' | 'admin' | 'category';
+  activeView?: "home" | "visits" | "admin" | "category";
   settings?: AutoDisplaySettings;
   forcedControl?: { enabled: boolean; nonce: number };
   onActiveChange?: (active: boolean) => void;
 }
 
 type Slide =
-  | { type: 'commandant'; commandant: Commandant }
-  | { type: 'personnel'; person: Personnel }
-  | { type: 'visit'; visit: DistinguishedVisit };
+  | { type: "commandant"; commandant: Commandant }
+  | { type: "personnel"; person: Personnel }
+  | { type: "visit"; visit: DistinguishedVisit };
 
 const resolveDisplayContext = (
   activeCategory: Category | null,
-  activeView: 'home' | 'visits' | 'admin' | 'category'
+  activeView: "home" | "visits" | "admin" | "category",
 ): AutoDisplayContextKey => {
-  if (activeView === 'visits') return 'visits';
-  if (activeCategory === 'FWC') return 'FWC';
-  if (activeCategory === 'FDC') return 'FDC';
-  if (activeCategory === 'Directing Staff') return 'Directing Staff';
-  if (activeCategory === 'Allied') return 'Allied';
-  return 'commandants';
+  if (activeView === "visits") return "visits";
+  if (activeCategory === "FWC") return "FWC";
+  if (activeCategory === "FDC") return "FDC";
+  if (activeCategory === "Directing Staff") return "Directing Staff";
+  if (activeCategory === "Allied") return "Allied";
+  return "commandants";
 };
 
-export function AutoRotationDisplay({ personnel, visits, commandants, activeCategory = null, activeView = 'home', settings, forcedControl, onActiveChange }: AutoRotationDisplayProps) {
+export function AutoRotationDisplay({
+  personnel,
+  visits,
+  commandants,
+  activeCategory = null,
+  activeView = "home",
+  settings,
+  forcedControl,
+  onActiveChange,
+}: AutoRotationDisplayProps) {
   const [isActive, setIsActive] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [fadeState, setFadeState] = useState<'in' | 'out'>('in');
-  const [transitionType, setTransitionType] = useState<AutoDisplayTransitionType>('fade-zoom');
+  const [fadeState, setFadeState] = useState<"in" | "out">("in");
+  const [transitionType, setTransitionType] =
+    useState<AutoDisplayTransitionType>("fade-zoom");
   const [showNavControls, setShowNavControls] = useState(true);
   const [showInteractionHint, setShowInteractionHint] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<Personnel | null>(null);
-  const [selectedCommandant, setSelectedCommandant] = useState<Commandant | null>(null);
-  const [selectedVisit, setSelectedVisit] = useState<DistinguishedVisit | null>(null);
-  
-  const audioAssignments = useAudioStore(s => s.assignments);
+  const [selectedCommandant, setSelectedCommandant] =
+    useState<Commandant | null>(null);
+  const [selectedVisit, setSelectedVisit] = useState<DistinguishedVisit | null>(
+    null,
+  );
+
+  const audioAssignments = useAudioStore((s) => s.assignments);
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const interactionHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const interactionHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const touchStartXRef = useRef<number | null>(null);
   const isTransitioningRef = useRef(false);
   const transitionStepRef = useRef(0);
 
-  const setDisplayActive = useCallback((nextActive: boolean) => {
-    setIsActive(nextActive);
-    onActiveChange?.(nextActive);
-  }, [onActiveChange]);
+  const setDisplayActive = useCallback(
+    (nextActive: boolean) => {
+      setIsActive(nextActive);
+      onActiveChange?.(nextActive);
+    },
+    [onActiveChange],
+  );
 
   const effectiveSettings = settings ?? DEFAULT_AUTO_DISPLAY_SETTINGS;
   const displayContext = resolveDisplayContext(activeCategory, activeView);
-  const contextTiming = effectiveSettings.byContext[displayContext] ?? effectiveSettings.global;
-  const appliedTransition = effectiveSettings.appliedTransitionByContext?.[displayContext] ?? null;
-  const contextSequence = effectiveSettings.transitionSequenceByContext?.[displayContext] ?? [];
-  const useAppliedTransitionOnly = Boolean(appliedTransition) && displayContext !== 'commandants';
+  const contextTiming =
+    effectiveSettings.byContext[displayContext] ?? effectiveSettings.global;
+  const appliedTransition =
+    effectiveSettings.appliedTransitionByContext?.[displayContext] ?? null;
+  const contextSequence =
+    effectiveSettings.transitionSequenceByContext?.[displayContext] ?? [];
+  const useAppliedTransitionOnly =
+    Boolean(appliedTransition) && displayContext !== "commandants";
   const sequence = useAppliedTransitionOnly
     ? [appliedTransition]
     : contextSequence.length > 0
@@ -81,31 +108,41 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
 
   const getTransitionDurationMs = useCallback(
     (transition: AutoDisplayTransitionType) => {
-      const perType = effectiveSettings.transitionDurationByTypeMs[transition] ?? effectiveSettings.global.transitionDurationMs;
-      const blended = Math.round((contextTiming.transitionDurationMs + perType) / 2);
+      const perType =
+        effectiveSettings.transitionDurationByTypeMs[transition] ??
+        effectiveSettings.global.transitionDurationMs;
+      const blended = Math.round(
+        (contextTiming.transitionDurationMs + perType) / 2,
+      );
       return Math.max(250, Math.min(3200, blended));
     },
-    [contextTiming.transitionDurationMs, effectiveSettings]
+    [contextTiming.transitionDurationMs, effectiveSettings],
   );
 
   const slides: Slide[] = useMemo(() => {
     if (activeCategory) {
       const categoryPersonnel = personnel
-        .filter(p => p.category === activeCategory)
+        .filter((p) => p.category === activeCategory)
         .sort((a, b) => a.seniorityOrder - b.seniorityOrder)
         .slice(0, 12)
-        .map(person => ({ type: 'personnel' as const, person }));
+        .map((person) => ({ type: "personnel" as const, person }));
 
       return categoryPersonnel.length > 0
         ? categoryPersonnel
-        : commandants.slice(0, 1).map(commandant => ({ type: 'commandant' as const, commandant }));
+        : commandants
+            .slice(0, 1)
+            .map((commandant) => ({ type: "commandant" as const, commandant }));
     }
 
-    if (activeView === 'visits') {
-      const visitSlides = visits.slice(0, 12).map(visit => ({ type: 'visit' as const, visit }));
+    if (activeView === "visits") {
+      const visitSlides = visits
+        .slice(0, 12)
+        .map((visit) => ({ type: "visit" as const, visit }));
       return visitSlides.length > 0
         ? visitSlides
-        : commandants.slice(0, 1).map(commandant => ({ type: 'commandant' as const, commandant }));
+        : commandants
+            .slice(0, 1)
+            .map((commandant) => ({ type: "commandant" as const, commandant }));
     }
 
     return commandants
@@ -115,7 +152,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
         if (!a.isCurrent && b.isCurrent) return 1;
         return (b.tenureStart ?? 0) - (a.tenureStart ?? 0);
       })
-      .map(commandant => ({ type: 'commandant' as const, commandant }));
+      .map((commandant) => ({ type: "commandant" as const, commandant }));
   }, [activeCategory, activeView, personnel, visits, commandants]);
 
   const revealControls = useCallback(() => {
@@ -124,28 +161,32 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
     navTimerRef.current = setTimeout(() => setShowNavControls(false), 2200);
   }, []);
 
-  const transitionTo = useCallback((nextIndex: number) => {
-    if (slides.length <= 1 || isTransitioningRef.current) return;
-    isTransitioningRef.current = true;
+  const transitionTo = useCallback(
+    (nextIndex: number) => {
+      if (slides.length <= 1 || isTransitioningRef.current) return;
+      isTransitioningRef.current = true;
 
-    const nextTransition = sequence[transitionStepRef.current % sequence.length] ?? 'fade-zoom';
-    const durationMs = getTransitionDurationMs(nextTransition);
-    const outDurationMs = Math.max(140, Math.round(durationMs * 0.42));
-    setTransitionType(nextTransition);
-    setFadeState('out');
+      const nextTransition =
+        sequence[transitionStepRef.current % sequence.length] ?? "fade-zoom";
+      const durationMs = getTransitionDurationMs(nextTransition);
+      const outDurationMs = Math.max(140, Math.round(durationMs * 0.42));
+      setTransitionType(nextTransition);
+      setFadeState("out");
 
-    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
 
-    transitionTimerRef.current = setTimeout(() => {
-      setCurrentIndex(nextIndex);
+      transitionTimerRef.current = setTimeout(() => {
+        setCurrentIndex(nextIndex);
 
-      setTimeout(() => {
-        setFadeState('in');
-        transitionStepRef.current += 1;
-        isTransitioningRef.current = false;
-      }, 22);
-    }, outDurationMs);
-  }, [getTransitionDurationMs, sequence, slides.length]);
+        setTimeout(() => {
+          setFadeState("in");
+          transitionStepRef.current += 1;
+          isTransitioningRef.current = false;
+        }, 22);
+      }, outDurationMs);
+    },
+    [getTransitionDurationMs, sequence, slides.length],
+  );
 
   const advance = useCallback(() => {
     transitionTo((currentIndex + 1) % slides.length);
@@ -175,7 +216,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
     if (!forcedControl) return;
 
     if (forcedControl.enabled) {
-      setTransitionType(sequence[0] ?? 'fade-zoom');
+      setTransitionType(sequence[0] ?? "fade-zoom");
       transitionStepRef.current = 0;
       setCurrentIndex(0);
       setDisplayActive(true);
@@ -205,10 +246,25 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
     }
 
     setShowInteractionHint(true);
-    if (interactionHintTimerRef.current) clearTimeout(interactionHintTimerRef.current);
+    if (interactionHintTimerRef.current)
+      clearTimeout(interactionHintTimerRef.current);
     interactionHintTimerRef.current = setTimeout(() => {
       setShowInteractionHint(false);
     }, 2200);
+  }, [isActive]);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
   }, [isActive]);
 
   useEffect(() => {
@@ -221,24 +277,42 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
     if (isActive) {
       const slide = slides[currentIndex];
       let trackId = audioAssignments.globalAuto;
-      
-      if (activeCategory === 'FWC' && audioAssignments.distinguished_fellows_fwc) {
+
+      if (
+        activeCategory === "FWC" &&
+        audioAssignments.distinguished_fellows_fwc
+      ) {
         trackId = audioAssignments.distinguished_fellows_fwc;
-      } else if (activeCategory === 'FDC' && audioAssignments.distinguished_fellows_fdc) {
+      } else if (
+        activeCategory === "FDC" &&
+        audioAssignments.distinguished_fellows_fdc
+      ) {
         trackId = audioAssignments.distinguished_fellows_fdc;
-      } else if (activeCategory === 'Directing Staff' && audioAssignments.directing_staff) {
+      } else if (
+        activeCategory === "Directing Staff" &&
+        audioAssignments.directing_staff
+      ) {
         trackId = audioAssignments.directing_staff;
-      } else if (activeCategory === 'Allied' && audioAssignments.allied_officers) {
+      } else if (
+        activeCategory === "Allied" &&
+        audioAssignments.allied_officers
+      ) {
         trackId = audioAssignments.allied_officers;
-      } else if (slide?.type === 'personnel' && slide.person.category) {
+      } else if (slide?.type === "personnel" && slide.person.category) {
         const cat = slide.person.category.toLowerCase();
-        if (cat.includes('fwc') && audioAssignments.distinguished_fellows_fwc) {
+        if (cat.includes("fwc") && audioAssignments.distinguished_fellows_fwc) {
           trackId = audioAssignments.distinguished_fellows_fwc;
-        } else if (cat.includes('fdc') && audioAssignments.distinguished_fellows_fdc) {
+        } else if (
+          cat.includes("fdc") &&
+          audioAssignments.distinguished_fellows_fdc
+        ) {
           trackId = audioAssignments.distinguished_fellows_fdc;
-        } else if (cat.includes('directing') && audioAssignments.directing_staff) {
+        } else if (
+          cat.includes("directing") &&
+          audioAssignments.directing_staff
+        ) {
           trackId = audioAssignments.directing_staff;
-        } else if (cat.includes('allied') && audioAssignments.allied_officers) {
+        } else if (cat.includes("allied") && audioAssignments.allied_officers) {
           trackId = audioAssignments.allied_officers;
         }
       }
@@ -252,7 +326,8 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
     return () => {
       if (navTimerRef.current) clearTimeout(navTimerRef.current);
       if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
-      if (interactionHintTimerRef.current) clearTimeout(interactionHintTimerRef.current);
+      if (interactionHintTimerRef.current)
+        clearTimeout(interactionHintTimerRef.current);
     };
   }, []);
 
@@ -278,7 +353,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
     return (
       <button
         onClick={() => {
-          setTransitionType(sequence[0] ?? 'fade-zoom');
+          setTransitionType(sequence[0] ?? "fade-zoom");
           transitionStepRef.current = 0;
           setCurrentIndex(0);
           setDisplayActive(true);
@@ -289,9 +364,9 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
         <span>
           {activeCategory
             ? `${activeCategory} Auto Display`
-            : activeView === 'visits'
-              ? 'Visits Auto Display'
-              : 'Commandants Auto Display'}
+            : activeView === "visits"
+              ? "Visits Auto Display"
+              : "Commandants Auto Display"}
         </span>
       </button>
     );
@@ -301,37 +376,59 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
 
   const getTransitionClasses = () => {
     switch (transitionType) {
-      case 'slide-up':
-        return fadeState === 'in' ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-16 blur-[4px]';
-      case 'slide-left':
-        return fadeState === 'in' ? 'opacity-100 translate-x-0 blur-0' : 'opacity-0 -translate-x-16 blur-[4px]';
-      case 'slide-right':
-        return fadeState === 'in' ? 'opacity-100 translate-x-0 blur-0' : 'opacity-0 translate-x-16 blur-[4px]';
-      case 'zoom-out':
-        return fadeState === 'in' ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-[1.05] blur-[4px]';
-      case 'slide-down':
-        return fadeState === 'in' ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 -translate-y-16 blur-[4px]';
-      case 'flip-x':
-        return fadeState === 'in'
-          ? 'opacity-100 [transform:perspective(1200px)_rotateX(0deg)_scale(1)]'
-          : 'opacity-0 [transform:perspective(1200px)_rotateX(12deg)_scale(0.98)]';
-      case 'flip-y':
-        return fadeState === 'in'
-          ? 'opacity-100 [transform:perspective(1200px)_rotateY(0deg)_scale(1)]'
-          : 'opacity-0 [transform:perspective(1200px)_rotateY(12deg)_scale(0.98)]';
-      case 'rotate-in':
-        return fadeState === 'in' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-2 scale-[0.97]';
-      case 'blur-in':
-        return fadeState === 'in' ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-[8px] scale-[1.01]';
-      case 'skew-lift':
-        return fadeState === 'in' ? 'opacity-100 skew-y-0 translate-y-0' : 'opacity-0 skew-y-1 translate-y-8';
-      case 'scale-rise':
-        return fadeState === 'in' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-[0.92] translate-y-6';
-      case 'ndc-scatter':
-        return fadeState === 'in' ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-[0.90] blur-[10px]';
-      case 'fade-zoom':
+      case "slide-up":
+        return fadeState === "in"
+          ? "opacity-100 translate-y-0 blur-0"
+          : "opacity-0 translate-y-16 blur-[4px]";
+      case "slide-left":
+        return fadeState === "in"
+          ? "opacity-100 translate-x-0 blur-0"
+          : "opacity-0 -translate-x-16 blur-[4px]";
+      case "slide-right":
+        return fadeState === "in"
+          ? "opacity-100 translate-x-0 blur-0"
+          : "opacity-0 translate-x-16 blur-[4px]";
+      case "zoom-out":
+        return fadeState === "in"
+          ? "opacity-100 scale-100 blur-0"
+          : "opacity-0 scale-[1.05] blur-[4px]";
+      case "slide-down":
+        return fadeState === "in"
+          ? "opacity-100 translate-y-0 blur-0"
+          : "opacity-0 -translate-y-16 blur-[4px]";
+      case "flip-x":
+        return fadeState === "in"
+          ? "opacity-100 [transform:perspective(1200px)_rotateX(0deg)_scale(1)]"
+          : "opacity-0 [transform:perspective(1200px)_rotateX(12deg)_scale(0.98)]";
+      case "flip-y":
+        return fadeState === "in"
+          ? "opacity-100 [transform:perspective(1200px)_rotateY(0deg)_scale(1)]"
+          : "opacity-0 [transform:perspective(1200px)_rotateY(12deg)_scale(0.98)]";
+      case "rotate-in":
+        return fadeState === "in"
+          ? "opacity-100 rotate-0 scale-100"
+          : "opacity-0 rotate-2 scale-[0.97]";
+      case "blur-in":
+        return fadeState === "in"
+          ? "opacity-100 blur-0 scale-100"
+          : "opacity-0 blur-[8px] scale-[1.01]";
+      case "skew-lift":
+        return fadeState === "in"
+          ? "opacity-100 skew-y-0 translate-y-0"
+          : "opacity-0 skew-y-1 translate-y-8";
+      case "scale-rise":
+        return fadeState === "in"
+          ? "opacity-100 scale-100 translate-y-0"
+          : "opacity-0 scale-[0.92] translate-y-6";
+      case "ndc-scatter":
+        return fadeState === "in"
+          ? "opacity-100 scale-100 blur-0"
+          : "opacity-0 scale-[0.90] blur-[10px]";
+      case "fade-zoom":
       default:
-        return fadeState === 'in' ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-[0.95] blur-[4px]';
+        return fadeState === "in"
+          ? "opacity-100 scale-100 blur-0"
+          : "opacity-0 scale-[0.95] blur-[4px]";
     }
   };
 
@@ -339,18 +436,18 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-background flex flex-col"
+      className="fixed inset-0 z-50 h-dvh overflow-hidden bg-background flex flex-col"
       onMouseMove={revealControls}
       onTouchStart={(e) => onTouchStart(e.touches[0].clientX)}
       onTouchEnd={(e) => onTouchEnd(e.changedTouches[0].clientX)}
       onKeyDown={(e) => {
-        if (e.key === 'ArrowRight') handleManualAdvance();
-        if (e.key === 'ArrowLeft') handleManualRetreat();
+        if (e.key === "ArrowRight") handleManualAdvance();
+        if (e.key === "ArrowLeft") handleManualRetreat();
       }}
       tabIndex={0}
     >
       {/* Cinematic Transition Overlay */}
-      {transitionType === 'ndc-scatter' && fadeState === 'out' && (
+      {transitionType === "ndc-scatter" && fadeState === "out" && (
         <NdcScatteredTransition durationMs={currentTransitionDuration} />
       )}
 
@@ -359,16 +456,20 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
         <span className="text-xs uppercase tracking-widest text-primary font-medium">
           {activeCategory
             ? `${activeCategory} Auto Display`
-            : activeView === 'visits'
-              ? 'Visits Auto Display'
-              : 'Commandants Auto Display'} · {currentIndex + 1}/{slides.length}
+            : activeView === "visits"
+              ? "Visits Auto Display"
+              : "Commandants Auto Display"}{" "}
+          · {currentIndex + 1}/{slides.length}
         </span>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 border-r border-primary/20 pr-4">
             {/* Audio controls are now handled globally via the AudioManager floating button */}
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={handleManualAdvance} className="p-2 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+            <button
+              onClick={handleManualAdvance}
+              className="p-2 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            >
               <SkipForward className="h-4 w-4" />
             </button>
             <button
@@ -382,8 +483,10 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
       </div>
 
       {/* Slide content */}
-      <div className="flex-1 flex items-center justify-center p-3 sm:p-6 md:p-12 overflow-hidden">
-        <div className={`absolute top-20 md:top-24 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ${showInteractionHint ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
+      <div className="flex-1 min-h-0 flex items-center justify-center px-2 sm:px-4 md:px-6 pt-2 sm:pt-4 md:pt-6 pb-8 sm:pb-10 md:pb-12 overflow-hidden">
+        <div
+          className={`absolute top-20 md:top-24 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ${showInteractionHint ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}`}
+        >
           <div className="px-4 py-2 rounded-md border border-primary/30 bg-slate-950/85 backdrop-blur text-[10px] md:text-xs uppercase tracking-[0.16em] text-primary/90 text-center whitespace-nowrap">
             Swipe • Arrow Keys • Side Buttons
           </div>
@@ -391,7 +494,7 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
 
         <button
           onClick={handleManualRetreat}
-          className={`absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 md:h-12 md:w-12 rounded-full border border-primary/35 bg-background/70 backdrop-blur flex items-center justify-center text-primary transition-all duration-200 ${showNavControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+          className={`absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 md:h-12 md:w-12 rounded-full border border-primary/35 bg-background/70 backdrop-blur flex items-center justify-center text-primary transition-all duration-200 ${showNavControls ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
           aria-label="Previous slide"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -399,34 +502,37 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
 
         <button
           onClick={handleManualAdvance}
-          className={`absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 md:h-12 md:w-12 rounded-full border border-primary/35 bg-background/70 backdrop-blur flex items-center justify-center text-primary transition-all duration-200 ${showNavControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+          className={`absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 md:h-12 md:w-12 rounded-full border border-primary/35 bg-background/70 backdrop-blur flex items-center justify-center text-primary transition-all duration-200 ${showNavControls ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
           aria-label="Next slide"
         >
           <ChevronRight className="h-5 w-5" />
         </button>
 
         <div
-          className={`${slide.type === 'commandant' ? 'max-w-3xl lg:max-w-4xl xl:max-w-5xl' : 'max-w-5xl xl:max-w-6xl 2xl:max-w-7xl'} w-full transition-all ease-out ${getTransitionClasses()}`}
+          className={`${slide.type === "commandant" ? "max-w-5xl xl:max-w-6xl" : "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl"} w-full max-h-full -translate-y-2 sm:-translate-y-3 md:-translate-y-4 transition-all ease-out ${getTransitionClasses()}`}
           style={{ transitionDuration: `${currentTransitionDuration}ms` }}
         >
-          {slide.type === 'commandant' && (
+          {slide.type === "commandant" && (
             <button
               onClick={() => setSelectedCommandant(slide.commandant)}
               className="w-full text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
               aria-label={`Open profile for ${slide.commandant.name}`}
             >
-              <CommandantHero commandant={slide.commandant} compactDescription />
+              <CommandantHero
+                commandant={slide.commandant}
+                compactDescription
+              />
             </button>
           )}
 
-          {slide.type === 'personnel' && (
+          {slide.type === "personnel" && (
             <button
               onClick={() => setSelectedPerson(slide.person)}
-              className="w-full text-left relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-4 sm:p-6 md:p-10 lg:p-14 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              className="w-full text-left relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-4 sm:p-6 md:p-10 lg:p-14 shadow-[0_0_50px_-12px_hsl(var(--primary)/0.2)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
               aria-label={`Open profile for ${slide.person.name}`}
             >
               {/* Background styling layers */}
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,215,0,0.08)_0%,transparent_60%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.14)_0%,transparent_60%)]" />
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
 
@@ -434,7 +540,11 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
                 <div className="relative w-28 h-36 sm:w-36 sm:h-48 md:w-48 md:h-64 rounded-md border border-primary/40 overflow-hidden bg-muted flex-shrink-0 shadow-xl group-hover:-translate-y-2 transition-transform duration-500">
                   <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/30 transition-colors duration-500 z-20 rounded-md" />
                   {slide.person.imageUrl ? (
-                    <img src={slide.person.imageUrl} alt={slide.person.name} className="w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-110" />
+                    <img
+                      src={slide.person.imageUrl}
+                      alt={slide.person.name}
+                      className="w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-110"
+                    />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-xs uppercase tracking-widest text-primary/40 bg-gradient-to-b from-muted to-muted/50 p-4 text-center">
                       <span>No Image</span>
@@ -453,18 +563,26 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
                       {slide.person.category}
                     </p>
                   </div>
-                  
+
                   <h2 className="mb-3 tracking-wide drop-shadow-md bg-gradient-to-r from-foreground via-primary/90 to-foreground/80 bg-clip-text text-transparent leading-tight">
-                    <span className="text-lg sm:text-2xl md:text-3xl font-semibold font-serif align-middle mr-2">{slide.person.rank}</span>
-                    <span className="text-2xl sm:text-4xl md:text-5xl font-bold font-serif align-middle">{slide.person.name}</span>
+                    <span className="text-lg sm:text-2xl md:text-3xl font-semibold font-serif align-middle mr-2">
+                      {slide.person.rank}
+                    </span>
+                    <span className="text-2xl sm:text-4xl md:text-5xl font-bold font-serif align-middle">
+                      {slide.person.name}
+                    </span>
                   </h2>
-                  
+
                   <div className="h-px w-24 bg-gradient-to-r from-primary/80 to-transparent mx-auto md:mx-0 mb-4" />
-                  
+
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-3 mb-5 sm:mb-6 text-xs sm:text-sm text-foreground/80">
-                    <span className="bg-foreground/5 px-2 py-0.5 rounded border border-foreground/10">{slide.person.service}</span>
+                    <span className="bg-foreground/5 px-2 py-0.5 rounded border border-foreground/10">
+                      {slide.person.service}
+                    </span>
                     <span className="text-primary/40">•</span>
-                    <span className="font-mono tracking-wider text-primary/70">{slide.person.periodStart}–{slide.person.periodEnd}</span>
+                    <span className="font-mono tracking-wider text-primary/70">
+                      {slide.person.periodStart}–{slide.person.periodEnd}
+                    </span>
                   </div>
 
                   <div className="relative pl-4 border-l-2 border-primary/30 py-1">
@@ -477,43 +595,55 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
             </button>
           )}
 
-          {slide.type === 'visit' && (
+          {slide.type === "visit" && (
             <button
               onClick={() => setSelectedVisit(slide.visit)}
-              className="w-full text-center relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-5 sm:p-8 md:p-12 lg:p-16 shadow-[0_0_50px_-12px_rgba(255,215,0,0.15)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              className="w-full text-center relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-5 sm:p-8 md:p-12 lg:p-16 shadow-[0_0_50px_-12px_hsl(var(--primary)/0.2)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
               aria-label={`Open profile for ${slide.visit.name}`}
             >
               {/* Background ambient lighting */}
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,215,0,0.06)_0%,transparent_70%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.1)_0%,transparent_70%)]" />
               <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[120%] h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
               <div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-[80%] h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
               <div className="relative z-10">
-                <div className="inline-flex items-center justify-center px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full mb-8 shadow-[0_0_15px_rgba(255,215,0,0.05)]">
+                <div className="inline-flex items-center justify-center px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full mb-8 shadow-[0_0_15px_hsl(var(--primary)/0.16)]">
                   <p className="text-[11px] uppercase tracking-[0.3em] text-primary/90 font-medium">
                     Distinguished Visit
                   </p>
                 </div>
-                
+
                 <div className="w-40 h-28 sm:w-52 sm:h-34 md:w-56 md:h-36 mx-auto mb-6 sm:mb-8 rounded-lg border-2 border-primary/30 overflow-hidden bg-muted shadow-2xl relative group-hover:-translate-y-1 transition-transform duration-500">
                   <div className="absolute inset-0 bg-primary/10 mix-blend-overlay z-10" />
                   {slide.visit.imageUrl ? (
-                    <img src={slide.visit.imageUrl} alt={slide.visit.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                    <img
+                      src={slide.visit.imageUrl}
+                      alt={slide.visit.name}
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                    />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs uppercase tracking-widest text-primary/40 bg-gradient-to-br from-muted to-muted/80">No Image</div>
+                    <div className="w-full h-full flex items-center justify-center text-xs uppercase tracking-widest text-primary/40 bg-gradient-to-br from-muted to-muted/80">
+                      No Image
+                    </div>
                   )}
                 </div>
-                
+
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold font-serif mb-3 tracking-wide bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent drop-shadow-sm">
                   {slide.visit.name}
                 </h2>
-                
-                <p className="text-sm md:text-base text-primary/90 font-semibold mb-4 tracking-[0.14em] uppercase">{slide.visit.title}</p>
-                
+
+                <p className="text-sm md:text-base text-primary/90 font-semibold mb-4 tracking-[0.14em] uppercase">
+                  {slide.visit.title}
+                </p>
+
                 <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
-                  <span className="px-3 py-1 rounded bg-foreground/5 border border-foreground/10 text-foreground/80 text-sm">{slide.visit.country}</span>
+                  <span className="px-3 py-1 rounded bg-foreground/5 border border-foreground/10 text-foreground/80 text-sm">
+                    {slide.visit.country}
+                  </span>
                   <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-                  <span className="text-primary/70 font-mono text-sm tracking-wider">{slide.visit.date}</span>
+                  <span className="text-primary/70 font-mono text-sm tracking-wider">
+                    {slide.visit.date}
+                  </span>
                 </div>
 
                 <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto font-light border-t border-primary/20 pt-4 sm:pt-6">
@@ -531,13 +661,20 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
           <div
             key={i}
             className={`h-1 rounded-full transition-all duration-500 ${
-              i === currentIndex ? 'w-6 bg-primary' : 'w-1.5 bg-muted-foreground/30'
+              i === currentIndex
+                ? "w-6 bg-primary"
+                : "w-1.5 bg-muted-foreground/30"
             }`}
           />
         ))}
       </div>
 
-      {selectedPerson && <ProfileModal person={selectedPerson} onClose={() => setSelectedPerson(null)} />}
+      {selectedPerson && (
+        <ProfileModal
+          person={selectedPerson}
+          onClose={() => setSelectedPerson(null)}
+        />
+      )}
 
       {selectedCommandant && (
         <div className="fixed inset-0 z-[70] bg-background/85 backdrop-blur-sm p-4 md:p-8 overflow-y-auto">
@@ -550,7 +687,10 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
                 Close
               </button>
             </div>
-            <CommandantHero commandant={selectedCommandant} compactDescription={false} />
+            <CommandantHero
+              commandant={selectedCommandant}
+              compactDescription={false}
+            />
           </div>
         </div>
       )}
@@ -560,8 +700,12 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
           <div className="max-w-4xl mx-auto rounded-xl border border-primary/35 bg-card p-6 md:p-8 shadow-[0_0_40px_rgba(0,0,0,0.25)]">
             <div className="flex justify-between items-start gap-4 mb-5">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-primary/85 font-semibold">Distinguished Visit</p>
-                <h3 className="text-2xl md:text-3xl font-bold font-serif text-foreground mt-1">{selectedVisit.name}</h3>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-primary/85 font-semibold">
+                  Distinguished Visit
+                </p>
+                <h3 className="text-2xl md:text-3xl font-bold font-serif text-foreground mt-1">
+                  {selectedVisit.name}
+                </h3>
               </div>
               <button
                 onClick={() => setSelectedVisit(null)}
@@ -571,16 +715,26 @@ export function AutoRotationDisplay({ personnel, visits, commandants, activeCate
               </button>
             </div>
 
-            <p className="text-sm md:text-base text-primary/90 font-semibold tracking-[0.12em] uppercase mb-3">{selectedVisit.title}</p>
-            <p className="text-sm text-muted-foreground mb-6">{selectedVisit.country} · {selectedVisit.date}</p>
+            <p className="text-sm md:text-base text-primary/90 font-semibold tracking-[0.12em] uppercase mb-3">
+              {selectedVisit.title}
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              {selectedVisit.country} · {selectedVisit.date}
+            </p>
 
             {selectedVisit.imageUrl && (
               <div className="w-full max-w-xl mx-auto mb-6 rounded-lg overflow-hidden border border-primary/25">
-                <img src={selectedVisit.imageUrl} alt={selectedVisit.name} className="w-full h-auto object-cover" />
+                <img
+                  src={selectedVisit.imageUrl}
+                  alt={selectedVisit.name}
+                  className="w-full h-auto object-cover"
+                />
               </div>
             )}
 
-            <p className="text-base leading-relaxed text-foreground/90">{selectedVisit.description}</p>
+            <p className="text-base leading-relaxed text-foreground/90">
+              {selectedVisit.description}
+            </p>
           </div>
         </div>
       )}
