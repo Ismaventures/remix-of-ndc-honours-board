@@ -84,6 +84,61 @@ const THEME_OPTIONS: Array<{ mode: ThemeMode; label: string; description: string
   },
 ];
 
+const TRANSITION_USAGE_GUIDES: Record<AutoDisplayTransitionType, { bestFor: string; tip: string }> = {
+  'fade-zoom': {
+    bestFor: 'Formal and calm transitions for commandants and ceremony-focused pages.',
+    tip: 'Use mid-range timing (450-700ms) for smooth readability.',
+  },
+  'slide-up': {
+    bestFor: 'Lists or profiles where content should feel like it is progressing upward.',
+    tip: 'Works best for personnel categories with frequent card changes.',
+  },
+  'slide-left': {
+    bestFor: 'Timeline style narratives or forward progression flow.',
+    tip: 'Use when your users read left-to-right and expect “next” motion.',
+  },
+  'slide-right': {
+    bestFor: 'Reverse or reflective transitions, especially for revisiting records.',
+    tip: 'Good when combined with manual navigation controls.',
+  },
+  'slide-down': {
+    bestFor: 'Announcement-like entries where content should descend into focus.',
+    tip: 'Keep duration moderate to avoid a heavy “drop” feeling.',
+  },
+  'zoom-out': {
+    bestFor: 'Highlighting importance while keeping transitions elegant.',
+    tip: 'Use for hero-heavy screens with strong imagery.',
+  },
+  'flip-x': {
+    bestFor: 'Board-style reveal effects where each new item feels “flipped in”.',
+    tip: 'Use sparingly for premium sections, not every category.',
+  },
+  'flip-y': {
+    bestFor: 'Cinematic perspective transitions for dramatic moments.',
+    tip: 'Best for larger displays and curated showcase cycles.',
+  },
+  'rotate-in': {
+    bestFor: 'Subtle visual energy without losing formality.',
+    tip: 'Great compromise between dynamic and professional.',
+  },
+  'blur-in': {
+    bestFor: 'Soft archival reveals and historical content.',
+    tip: 'Pairs very well with slower slide durations.',
+  },
+  'skew-lift': {
+    bestFor: 'Modern command-center style transitions.',
+    tip: 'Use in sections where you want a technical dashboard feel.',
+  },
+  'scale-rise': {
+    bestFor: 'Balanced, modern transitions for general categories.',
+    tip: 'A safe default when you need clarity and polish together.',
+  },
+  'ndc-scatter': {
+    bestFor: 'Signature branded moments and major section changes.',
+    tip: 'Use for premium categories, intros, or limited high-impact transitions.',
+  },
+};
+
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -132,6 +187,9 @@ export function AdminPanel({
   const [autoDisplayDraft, setAutoDisplayDraft] = useState<AutoDisplaySettings>(autoDisplaySettings);
   const [previewTransition, setPreviewTransition] = useState<AutoDisplayTransitionType>('fade-zoom');
   const [previewNonce, setPreviewNonce] = useState(0);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewContextLabel, setPreviewContextLabel] = useState('Global');
+  const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'actions'>('boot');
 
   useEffect(() => {
     setThemeDraft(themeMode);
@@ -330,6 +388,13 @@ export function AdminPanel({
       default:
         return 'animate-[preview-fade-zoom_900ms_ease-out_forwards]';
     }
+  };
+
+  const openTransitionPreview = (transition: AutoDisplayTransitionType, contextLabel: string) => {
+    setPreviewTransition(transition);
+    setPreviewContextLabel(contextLabel);
+    setPreviewNonce(prev => prev + 1);
+    setPreviewModalOpen(true);
   };
 
   const tabBtn = (key: typeof tab, label: string) => (
@@ -639,230 +704,153 @@ export function AdminPanel({
               <div className="mb-5">
                 <h4 className="text-base font-semibold gold-text">Transition & Boot Experience</h4>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Control boot timing, transition styles, and sequence behavior. These settings stay saved until an admin changes them.
+                  Control boot timing, transition styles, and sequence behavior. Open any section to configure only what you need.
                 </p>
               </div>
 
-              <div className="mt-2 border-t border-primary/10 pt-6">
-                <h4 className="text-base font-semibold gold-text">Boot Sequence Timing</h4>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Tune how fast archive portraits transition and how long the full initialization lasts.
-                </p>
-
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Archive Transition</label>
-                      <span className="text-xs text-foreground">{bootDraft.archiveTransitionMs} ms</span>
+              <div className="space-y-3 mt-3">
+                <button onClick={() => setActiveTransitionPanel('guide')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Transition Usage Guide</span>
+                </button>
+                {activeTransitionPanel === 'guide' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
+                      <div>
+                        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Select Transition</label>
+                        <select
+                          value={previewTransition}
+                          onChange={e => setPreviewTransition(e.target.value as AutoDisplayTransitionType)}
+                          className="w-full mt-1 bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground"
+                        >
+                          {TRANSITION_TYPES.map(transition => (
+                            <option key={`guide-${transition.id}`} value={transition.id}>{transition.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openTransitionPreview(previewTransition, 'Guide Preview')}
+                        className="px-3 py-2 rounded border border-primary/25 text-xs uppercase tracking-wider text-primary hover:bg-primary/10"
+                      >
+                        Preview From Center
+                      </button>
                     </div>
-                    <input
-                      type="range"
-                      min={250}
-                      max={2000}
-                      step={50}
-                      value={bootDraft.archiveTransitionMs}
-                      onChange={e => setBootDraft(prev => ({ ...prev, archiveTransitionMs: Number(e.target.value) }))}
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Total Boot Duration</label>
-                      <span className="text-xs text-foreground">{bootDraft.totalDurationMs} ms</span>
+                    <div className="rounded border border-primary/15 bg-slate-950/60 p-3">
+                      <p className="text-xs text-muted-foreground">Best For</p>
+                      <p className="text-sm text-foreground mt-1">{TRANSITION_USAGE_GUIDES[previewTransition].bestFor}</p>
+                      <p className="text-xs text-muted-foreground mt-3">How To Use</p>
+                      <p className="text-sm text-foreground mt-1">{TRANSITION_USAGE_GUIDES[previewTransition].tip}</p>
                     </div>
-                    <input
-                      type="range"
-                      min={7000}
-                      max={24000}
-                      step={500}
-                      value={bootDraft.totalDurationMs}
-                      onChange={e => setBootDraft(prev => ({ ...prev, totalDurationMs: Number(e.target.value) }))}
-                      className="w-full"
-                    />
                   </div>
-                </div>
+                )}
 
-                <div className="mt-5 flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setBootDraft({ totalDurationMs: 11000, archiveTransitionMs: 600 })}
-                    className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
-                  >
-                    Reset Boot Draft Defaults
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-8 border-t border-primary/10 pt-6">
-                <h4 className="text-base font-semibold gold-text">Auto Display Transition Control</h4>
-                <p className="text-xs text-muted-foreground mt-1">
-                  All timing and sequence settings are saved locally and remain unchanged after closing and reopening the app until an admin updates them.
-                </p>
-
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Global Slide Time</label>
-                      <span className="text-xs text-foreground">{autoDisplayDraft.global.slideDurationMs} ms</span>
+                <button onClick={() => setActiveTransitionPanel('boot')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Boot Sequence Timing</span>
+                </button>
+                {activeTransitionPanel === 'boot' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Archive Transition</label>
+                        <span className="text-xs text-foreground">{bootDraft.archiveTransitionMs} ms</span>
+                      </div>
+                      <input type="range" min={250} max={2000} step={50} value={bootDraft.archiveTransitionMs} onChange={e => setBootDraft(prev => ({ ...prev, archiveTransitionMs: Number(e.target.value) }))} className="w-full" />
                     </div>
-                    <input
-                      type="range"
-                      min={3000}
-                      max={30000}
-                      step={250}
-                      value={autoDisplayDraft.global.slideDurationMs}
-                      onChange={e => setAutoDisplayDraft(prev => ({ ...prev, global: { ...prev.global, slideDurationMs: Number(e.target.value) } }))}
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Global Transition Time</label>
-                      <span className="text-xs text-foreground">{autoDisplayDraft.global.transitionDurationMs} ms</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Total Boot Duration</label>
+                        <span className="text-xs text-foreground">{bootDraft.totalDurationMs} ms</span>
+                      </div>
+                      <input type="range" min={7000} max={24000} step={500} value={bootDraft.totalDurationMs} onChange={e => setBootDraft(prev => ({ ...prev, totalDurationMs: Number(e.target.value) }))} className="w-full" />
                     </div>
-                    <input
-                      type="range"
-                      min={250}
-                      max={2600}
-                      step={50}
-                      value={autoDisplayDraft.global.transitionDurationMs}
-                      onChange={e => setAutoDisplayDraft(prev => ({ ...prev, global: { ...prev.global, transitionDurationMs: Number(e.target.value) } }))}
-                      className="w-full"
-                    />
                   </div>
-                </div>
+                )}
 
-                <div className="mt-6">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Category-Specific Timing</p>
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <button onClick={() => setActiveTransitionPanel('globalTiming')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Global Timing</span>
+                </button>
+                {activeTransitionPanel === 'globalTiming' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between"><label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Global Slide Time</label><span className="text-xs text-foreground">{autoDisplayDraft.global.slideDurationMs} ms</span></div>
+                      <input type="range" min={3000} max={30000} step={250} value={autoDisplayDraft.global.slideDurationMs} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, global: { ...prev.global, slideDurationMs: Number(e.target.value) } }))} className="w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between"><label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Global Transition Time</label><span className="text-xs text-foreground">{autoDisplayDraft.global.transitionDurationMs} ms</span></div>
+                      <input type="range" min={250} max={2600} step={50} value={autoDisplayDraft.global.transitionDurationMs} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, global: { ...prev.global, transitionDurationMs: Number(e.target.value) } }))} className="w-full" />
+                    </div>
+                  </div>
+                )}
+
+                <button onClick={() => setActiveTransitionPanel('categoryTiming')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Category-Specific Timing</span>
+                </button>
+                {activeTransitionPanel === 'categoryTiming' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
                     {AUTO_DISPLAY_CONTEXTS.map(context => (
-                      <div key={context.key} className="rounded-lg border border-primary/15 bg-card/60 p-3 space-y-3">
+                      <div key={context.key} className="rounded-lg border border-primary/15 bg-card/50 p-3 space-y-3">
                         <p className="text-sm font-semibold text-foreground">{context.label}</p>
-
                         <div className="space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Slide Time</label>
-                            <span className="text-[11px] text-foreground">{autoDisplayDraft.byContext[context.key].slideDurationMs} ms</span>
-                          </div>
-                          <input
-                            type="range"
-                            min={3000}
-                            max={30000}
-                            step={250}
-                            value={autoDisplayDraft.byContext[context.key].slideDurationMs}
-                            onChange={e => setAutoDisplayDraft(prev => ({
-                              ...prev,
-                              byContext: {
-                                ...prev.byContext,
-                                [context.key]: {
-                                  ...prev.byContext[context.key],
-                                  slideDurationMs: Number(e.target.value),
-                                },
-                              },
-                            }))}
-                            className="w-full"
-                          />
+                          <div className="flex items-center justify-between"><label className="text-[11px] uppercase tracking-wider text-muted-foreground">Slide Time</label><span className="text-[11px] text-foreground">{autoDisplayDraft.byContext[context.key].slideDurationMs} ms</span></div>
+                          <input type="range" min={3000} max={30000} step={250} value={autoDisplayDraft.byContext[context.key].slideDurationMs} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, byContext: { ...prev.byContext, [context.key]: { ...prev.byContext[context.key], slideDurationMs: Number(e.target.value) } } }))} className="w-full" />
                         </div>
-
                         <div className="space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Transition Base Time</label>
-                            <span className="text-[11px] text-foreground">{autoDisplayDraft.byContext[context.key].transitionDurationMs} ms</span>
-                          </div>
-                          <input
-                            type="range"
-                            min={250}
-                            max={2600}
-                            step={50}
-                            value={autoDisplayDraft.byContext[context.key].transitionDurationMs}
-                            onChange={e => setAutoDisplayDraft(prev => ({
-                              ...prev,
-                              byContext: {
-                                ...prev.byContext,
-                                [context.key]: {
-                                  ...prev.byContext[context.key],
-                                  transitionDurationMs: Number(e.target.value),
-                                },
-                              },
-                            }))}
-                            className="w-full"
-                          />
+                          <div className="flex items-center justify-between"><label className="text-[11px] uppercase tracking-wider text-muted-foreground">Transition Base Time</label><span className="text-[11px] text-foreground">{autoDisplayDraft.byContext[context.key].transitionDurationMs} ms</span></div>
+                          <input type="range" min={250} max={2600} step={50} value={autoDisplayDraft.byContext[context.key].transitionDurationMs} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, byContext: { ...prev.byContext, [context.key]: { ...prev.byContext[context.key], transitionDurationMs: Number(e.target.value) } } }))} className="w-full" />
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
+                )}
 
-                <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-3">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Transition Library (Enable / Disable)</p>
+                <button onClick={() => setActiveTransitionPanel('library')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Transition Library (Multi-Select)</span>
+                </button>
+                {activeTransitionPanel === 'library' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {TRANSITION_TYPES.map(transition => {
                         const enabled = autoDisplayDraft.transitionSequence.includes(transition.id);
                         return (
                           <label key={transition.id} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
                             <span className="text-foreground">{transition.label}</span>
-                            <input
-                              type="checkbox"
-                              checked={enabled}
-                              onChange={e => toggleTransitionInSequence(transition.id, e.target.checked)}
-                            />
+                            <input type="checkbox" checked={enabled} onChange={e => toggleTransitionInSequence(transition.id, e.target.checked)} />
                           </label>
                         );
                       })}
                     </div>
-                    <p className="text-[11px] text-muted-foreground mt-3">At least one transition must stay enabled.</p>
                   </div>
+                )}
 
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-3">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Sequence Order</p>
-                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                      {autoDisplayDraft.transitionSequence.map((transition, index) => {
-                        const label = TRANSITION_TYPES.find(item => item.id === transition)?.label ?? transition;
-                        return (
-                          <div key={`${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
-                            <span className="text-foreground">{index + 1}. {label}</span>
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => moveTransitionInSequence(transition, -1)}
-                                className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40"
-                              >
-                                Up
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => moveTransitionInSequence(transition, 1)}
-                                className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40"
-                              >
-                                Down
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                <button onClick={() => setActiveTransitionPanel('sequence')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Global Sequence Order (Multi-Select)</span>
+                </button>
+                {activeTransitionPanel === 'sequence' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 space-y-2 max-h-72 overflow-y-auto">
+                    {autoDisplayDraft.transitionSequence.map((transition, index) => {
+                      const label = TRANSITION_TYPES.find(item => item.id === transition)?.label ?? transition;
+                      return (
+                        <div key={`${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
+                          <span className="text-foreground">{index + 1}. {label}</span>
+                          <div className="flex gap-1"><button type="button" onClick={() => moveTransitionInSequence(transition, -1)} className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40">Up</button><button type="button" onClick={() => moveTransitionInSequence(transition, 1)} className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40">Down</button></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <button onClick={() => setActiveTransitionPanel('categorySequence')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Per-Category Sequence (Multi-Select)</span>
+                </button>
+                {activeTransitionPanel === 'categorySequence' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Selected Category</p>
+                      <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="bg-background border border-primary/20 rounded-md px-2 py-1 text-xs text-foreground">
+                        {AUTO_DISPLAY_CONTEXTS.map(context => <option key={context.key} value={context.key}>{context.label}</option>)}
+                      </select>
                     </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 rounded-lg border border-primary/15 bg-card/60 p-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Per-Category Sequence Order</p>
-                    <select
-                      value={sequenceContext}
-                      onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)}
-                      className="bg-background border border-primary/20 rounded-md px-2 py-1 text-xs text-foreground"
-                    >
-                      {AUTO_DISPLAY_CONTEXTS.map(context => (
-                        <option key={context.key} value={context.key}>{context.label}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[11px] text-muted-foreground mb-2">Enable transitions for selected category</p>
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {TRANSITION_TYPES.map(transition => {
                           const activeSequence = autoDisplayDraft.transitionSequenceByContext[sequenceContext] ?? autoDisplayDraft.transitionSequence;
@@ -870,194 +858,153 @@ export function AdminPanel({
                           return (
                             <label key={`${sequenceContext}-${transition.id}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
                               <span className="text-foreground">{transition.label}</span>
-                              <input
-                                type="checkbox"
-                                checked={enabled}
-                                onChange={e => toggleTransitionInContextSequence(sequenceContext, transition.id, e.target.checked)}
-                              />
+                              <input type="checkbox" checked={enabled} onChange={e => toggleTransitionInContextSequence(sequenceContext, transition.id, e.target.checked)} />
                             </label>
                           );
                         })}
                       </div>
-                    </div>
-
-                    <div>
-                      <p className="text-[11px] text-muted-foreground mb-2">Order used for selected category</p>
                       <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                         {(autoDisplayDraft.transitionSequenceByContext[sequenceContext] ?? autoDisplayDraft.transitionSequence).map((transition, index) => {
                           const label = TRANSITION_TYPES.find(item => item.id === transition)?.label ?? transition;
                           return (
                             <div key={`${sequenceContext}-${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
                               <span className="text-foreground">{index + 1}. {label}</span>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => moveTransitionInContextSequence(sequenceContext, transition, -1)}
-                                  className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40"
-                                >
-                                  Up
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => moveTransitionInContextSequence(sequenceContext, transition, 1)}
-                                  className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40"
-                                >
-                                  Down
-                                </button>
-                              </div>
+                              <div className="flex gap-1"><button type="button" onClick={() => moveTransitionInContextSequence(sequenceContext, transition, -1)} className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40">Up</button><button type="button" onClick={() => moveTransitionInContextSequence(sequenceContext, transition, 1)} className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40">Down</button></div>
                             </div>
                           );
                         })}
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="mt-6 rounded-lg border border-primary/15 bg-card/60 p-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Per-Category Applied Transition</p>
-                    <select
-                      value={sequenceContext}
-                      onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)}
-                      className="bg-background border border-primary/20 rounded-md px-2 py-1 text-xs text-foreground"
-                    >
-                      {AUTO_DISPLAY_CONTEXTS.map(context => (
-                        <option key={`apply-${context.key}`} value={context.key}>{context.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground mb-3">
-                    Choose one transition to lock for this category, or select "Use Sequence" to keep rotating through the category sequence.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Applied Transition</label>
-                      <select
-                        value={autoDisplayDraft.appliedTransitionByContext[sequenceContext] ?? 'sequence'}
-                        onChange={e => {
-                          const value = e.target.value;
-                          setAutoDisplayDraft(prev => ({
-                            ...prev,
-                            appliedTransitionByContext: {
-                              ...prev.appliedTransitionByContext,
-                              [sequenceContext]: value === 'sequence' ? null : value as AutoDisplayTransitionType,
-                            },
-                          }));
-                        }}
-                        className="w-full bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground"
-                      >
-                        <option value="sequence">Use Sequence</option>
-                        {TRANSITION_TYPES.map(transition => (
-                          <option key={`applied-${transition.id}`} value={transition.id}>{transition.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const selected = autoDisplayDraft.appliedTransitionByContext[sequenceContext] ?? 'fade-zoom';
-                        setPreviewTransition(selected);
-                        setPreviewNonce(prev => prev + 1);
-                      }}
-                      className="px-3 py-2 rounded border border-primary/25 text-xs uppercase tracking-wider text-primary hover:bg-primary/10"
-                    >
-                      Preview Selected
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-6 rounded-lg border border-primary/15 bg-card/60 p-3">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Individual Transition Times</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {TRANSITION_TYPES.map(transition => (
-                      <div key={transition.id} className="space-y-1.5 rounded border border-primary/10 p-2">
-                        <div className="flex items-center justify-between">
-                          <label className="text-[11px] text-foreground">{transition.label}</label>
-                          <span className="text-[11px] text-muted-foreground">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span>
-                        </div>
-                        <input
-                          type="range"
-                          min={250}
-                          max={3000}
-                          step={50}
-                          value={autoDisplayDraft.transitionDurationByTypeMs[transition.id]}
-                          onChange={e => setAutoDisplayDraft(prev => ({
-                            ...prev,
-                            transitionDurationByTypeMs: {
-                              ...prev.transitionDurationByTypeMs,
-                              [transition.id]: Number(e.target.value),
-                            },
-                          }))}
-                          className="w-full"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPreviewTransition(transition.id);
-                            setPreviewNonce(prev => prev + 1);
-                          }}
-                          className="w-full mt-1 px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
-                        >
-                          Preview
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-6 rounded-lg border border-primary/15 bg-card/60 p-3">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">Transition Preview</p>
-                  <div className="h-28 rounded-lg border border-primary/20 bg-slate-950/70 overflow-hidden relative flex items-center justify-center">
-                    <div
-                      key={`${previewTransition}-${previewNonce}`}
-                      className={`px-6 py-3 rounded-md border border-primary/35 bg-primary/15 text-primary font-semibold tracking-wider ${getPreviewTransitionClasses(previewTransition)}`}
-                    >
-                      {TRANSITION_TYPES.find(item => item.id === previewTransition)?.label ?? previewTransition}
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground mt-2">Use Preview to test animation before you apply and save.</p>
-                </div>
-
-                <div className="mt-5 flex flex-wrap gap-2">
-                  <button
-                    onClick={exportSettingsBundle}
-                    className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
-                  >
-                    Export UI Settings
-                  </button>
-                  <label className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors cursor-pointer">
-                    Import UI Settings
-                    <input
-                      type="file"
-                      accept="application/json,.json"
-                      className="hidden"
-                      onChange={e => {
-                        void importSettingsBundle(e.target.files?.[0] ?? null);
-                        e.currentTarget.value = '';
-                      }}
-                    />
-                  </label>
-                  <button
-                    onClick={() => {
-                      setBootDraft({ totalDurationMs: 11000, archiveTransitionMs: 600 });
-                      setAutoDisplayDraft(DEFAULT_AUTO_DISPLAY_SETTINGS);
-                    }}
-                    className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
-                  >
-                    Reset Auto Display Defaults
-                  </button>
-                  <button
-                    onClick={applyBootAndTransitionsSettings}
-                    disabled={!isBootDirty && !isAutoDisplayDirty}
-                    className="px-4 py-2 rounded-md text-sm font-medium border border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Apply & Save Transitions
-                  </button>
-                </div>
-                {settingsImportStatus && (
-                  <p className="text-xs text-primary mt-3">{settingsImportStatus}</p>
                 )}
+
+                <button onClick={() => setActiveTransitionPanel('categoryApplied')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Per-Category Applied Transition (Single Choice)</span>
+                </button>
+                {activeTransitionPanel === 'categoryApplied' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                      <div>
+                        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Category</label>
+                        <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="w-full mt-1 bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground">
+                          {AUTO_DISPLAY_CONTEXTS.map(context => <option key={`apply-${context.key}`} value={context.key}>{context.label}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Applied Transition</label>
+                        <select
+                          value={autoDisplayDraft.appliedTransitionByContext[sequenceContext] ?? 'sequence'}
+                          onChange={e => {
+                            const value = e.target.value;
+                            const contextLabel = AUTO_DISPLAY_CONTEXTS.find(item => item.key === sequenceContext)?.label ?? sequenceContext;
+                            setAutoDisplayDraft(prev => ({
+                              ...prev,
+                              appliedTransitionByContext: {
+                                ...prev.appliedTransitionByContext,
+                                [sequenceContext]: value === 'sequence' ? null : value as AutoDisplayTransitionType,
+                              },
+                            }));
+                            if (value !== 'sequence') {
+                              openTransitionPreview(value as AutoDisplayTransitionType, contextLabel);
+                            }
+                          }}
+                          className="w-full mt-1 bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground"
+                        >
+                          <option value="sequence">Use Sequence</option>
+                          {TRANSITION_TYPES.map(transition => <option key={`applied-${transition.id}`} value={transition.id}>{transition.label}</option>)}
+                        </select>
+                      </div>
+                      <button type="button" onClick={() => {
+                        const selected = autoDisplayDraft.appliedTransitionByContext[sequenceContext] ?? 'fade-zoom';
+                        const contextLabel = AUTO_DISPLAY_CONTEXTS.find(item => item.key === sequenceContext)?.label ?? sequenceContext;
+                        openTransitionPreview(selected, contextLabel);
+                      }} className="px-3 py-2 rounded border border-primary/25 text-xs uppercase tracking-wider text-primary hover:bg-primary/10">Preview</button>
+                    </div>
+                  </div>
+                )}
+
+                <button onClick={() => setActiveTransitionPanel('durations')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Individual Transition Times</span>
+                </button>
+                {activeTransitionPanel === 'durations' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {TRANSITION_TYPES.map(transition => (
+                        <div key={transition.id} className="space-y-1.5 rounded border border-primary/10 p-2">
+                          <div className="flex items-center justify-between"><label className="text-[11px] text-foreground">{transition.label}</label><span className="text-[11px] text-muted-foreground">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span></div>
+                          <input type="range" min={250} max={3000} step={50} value={autoDisplayDraft.transitionDurationByTypeMs[transition.id]} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, transitionDurationByTypeMs: { ...prev.transitionDurationByTypeMs, [transition.id]: Number(e.target.value) } }))} className="w-full" />
+                          <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Preview</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button onClick={() => setActiveTransitionPanel('actions')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Save / Import / Export</span>
+                </button>
+                {activeTransitionPanel === 'actions' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={exportSettingsBundle}
+                        className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
+                      >
+                        Export UI Settings
+                      </button>
+                      <label className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors cursor-pointer">
+                        Import UI Settings
+                        <input
+                          type="file"
+                          accept="application/json,.json"
+                          className="hidden"
+                          onChange={e => {
+                            void importSettingsBundle(e.target.files?.[0] ?? null);
+                            e.currentTarget.value = '';
+                          }}
+                        />
+                      </label>
+                      <button
+                        onClick={() => {
+                          setBootDraft({ totalDurationMs: 11000, archiveTransitionMs: 600 });
+                          setAutoDisplayDraft(DEFAULT_AUTO_DISPLAY_SETTINGS);
+                        }}
+                        className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
+                      >
+                        Reset Auto Display Defaults
+                      </button>
+                      <button
+                        onClick={applyBootAndTransitionsSettings}
+                        disabled={!isBootDirty && !isAutoDisplayDirty}
+                        className="px-4 py-2 rounded-md text-sm font-medium border border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Apply & Save Transitions
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {settingsImportStatus && <p className="text-xs text-primary mt-3">{settingsImportStatus}</p>}
               </div>
+
+              {previewModalOpen && (
+                <div className="fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center px-4">
+                  <div className="w-full max-w-lg rounded-xl border border-primary/25 bg-card/95 p-5 shadow-2xl">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground">Transition Preview</p>
+                        <p className="text-sm font-semibold text-foreground">{previewContextLabel}</p>
+                      </div>
+                      <button onClick={() => setPreviewModalOpen(false)} className="px-3 py-1 rounded border border-primary/20 text-xs hover:bg-muted/40">Close</button>
+                    </div>
+                    <div className="h-44 rounded-lg border border-primary/20 bg-slate-950/70 overflow-hidden relative flex items-center justify-center">
+                      <div key={`${previewTransition}-${previewNonce}`} className={`px-6 py-3 rounded-md border border-primary/35 bg-primary/15 text-primary font-semibold tracking-wider ${getPreviewTransitionClasses(previewTransition)}`}>
+                        {TRANSITION_TYPES.find(item => item.id === previewTransition)?.label ?? previewTransition}
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-3">Preview opens from center so you can test one transition cleanly without clutter.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
