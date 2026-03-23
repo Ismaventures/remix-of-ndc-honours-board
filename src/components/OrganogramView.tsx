@@ -508,55 +508,60 @@ export function OrganogramView({
         </Popover>
       </div>
 
-      <div className="bg-card gold-border shadow-[inset_0_0_40px_rgba(0,0,0,0.05)] rounded-xl p-3 md:p-6 min-h-[520px] relative overflow-hidden flex flex-col">
+      <div className="bg-card gold-border rounded-xl p-3 md:p-6 min-h-[520px] relative overflow-hidden flex flex-col shadow-[inset_0_1px_0_hsl(var(--gold-bright)/0.15),inset_0_0_40px_rgba(0,0,0,0.12),0_16px_45px_rgba(0,0,0,0.22)]">
+        <div className="absolute inset-0 pointer-events-none opacity-[0.1] bg-[linear-gradient(45deg,hsl(var(--foreground)/0.06)_25%,transparent_25%,transparent_75%,hsl(var(--foreground)/0.06)_75%),linear-gradient(45deg,hsl(var(--foreground)/0.06)_25%,transparent_25%,transparent_75%,hsl(var(--foreground)/0.06)_75%)] bg-[length:52px_52px] bg-[position:0_0,26px_26px]" />
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(140%_100%_at_50%_0%,hsl(var(--primary)/0.12),transparent_60%)]" />
         {filtered.length > 0 ? (
           <>
-            <div className="space-y-4 flex-1">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-5 flex-1 auto-rows-fr">
               {paginatedRecords.map((person, index) => (
                 <button
                   key={person.id}
                   onClick={() => setSelectedId(person.id)}
-                  className="group relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 w-full text-left rounded-xl border border-primary/20 bg-card/60 p-4 sm:p-5 transition-all duration-300 hover:border-primary/50 hover:bg-card hover:shadow-[0_8px_30px_hsl(var(--primary)/0.2)] overflow-hidden"
+                  className="group relative w-full h-full text-left rounded-xl border border-primary/22 bg-[linear-gradient(160deg,hsl(var(--card)/0.96),hsl(var(--card)/0.86))] p-4 sm:p-5 transition-all duration-300 hover:border-primary/55 hover:shadow-[0_12px_38px_hsl(var(--primary)/0.24)] overflow-hidden flex flex-col"
                 >
-                  {/* Subtle hover gradient background */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/[0.04] to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  {/* Polished panel layers */}
+                  <div className="absolute inset-0 pointer-events-none opacity-[0.12] bg-[linear-gradient(45deg,hsl(var(--foreground)/0.08)_25%,transparent_25%,transparent_75%,hsl(var(--foreground)/0.08)_75%),linear-gradient(45deg,hsl(var(--foreground)/0.08)_25%,transparent_25%,transparent_75%,hsl(var(--foreground)/0.08)_75%)] bg-[length:34px_34px] bg-[position:0_0,17px_17px]" />
+                  <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120%_100%_at_0%_0%,hsl(var(--primary)/0.16),transparent_55%)]" />
+                  <div className="absolute inset-x-0 top-0 h-16 pointer-events-none bg-gradient-to-b from-white/[0.07] to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/[0.05] to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
 
                   {/* Left accent strip */}
                   <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary/40 to-primary/10 opacity-60 group-hover:opacity-100 transition-opacity" />
 
-                  <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto z-10">
-                    <div className="hidden sm:flex flex-col items-center justify-center min-w-[32px] text-muted-foreground group-hover:text-primary transition-colors">
-                      <span className="text-sm font-bold opacity-60">
-                        #{(currentPage - 1) * itemsPerPage + index + 1}
-                      </span>
+                  <div className="relative z-10 flex items-center justify-between mb-3">
+                    <span className="text-sm font-bold opacity-65 text-muted-foreground group-hover:text-primary transition-colors">
+                      #{(currentPage - 1) * itemsPerPage + index + 1}
+                    </span>
+                    <span className="px-3 py-1.5 rounded-md border border-primary/35 bg-primary/12 text-primary font-bold shadow-[0_0_16px_hsl(var(--primary)/0.22)] whitespace-nowrap text-xs">
+                      {person.periodStart} - {person.periodEnd}
+                    </span>
+                  </div>
+
+                  <div className="relative z-10 flex items-start gap-4 sm:gap-5 flex-1 min-h-0">
+                    <div className="shrink-0 pt-0.5">
+                      <ArchiveProfileImage person={person} />
                     </div>
 
-                    <ArchiveProfileImage person={person} />
-
-                    <div className="flex flex-col gap-1.5 pr-4">
+                    <div className="flex flex-col gap-2 min-w-0">
                       <h4 className="text-lg sm:text-xl font-bold font-serif text-foreground leading-tight group-hover:text-primary transition-colors drop-shadow-sm flex items-center flex-wrap">
                         <span className="text-primary/90 text-sm sm:text-base mr-2 uppercase tracking-widest font-sans">
                           {person.rank}
-                        </span>{" "}
+                        </span>
                         {person.name}
                       </h4>
-                      <p className="text-sm text-muted-foreground/90 leading-relaxed line-clamp-2 max-w-2xl">
+                      <p className="text-sm text-muted-foreground/90 leading-relaxed line-clamp-3 max-w-2xl">
                         {person.citation}
                       </p>
-                    </div>
-                  </div>
 
-                  <div className="flex flex-row sm:flex-col items-center sm:items-end flex-wrap gap-2 text-xs w-full sm:w-auto mt-2 sm:mt-0 z-10 pl-1 sm:pl-0 sm:shrink-0 border-t border-border/40 sm:border-0 pt-3 sm:pt-0 shrink-0">
-                    <span className="px-3 py-1.5 rounded-md border border-primary/30 bg-primary/10 text-primary font-bold shadow-[0_0_15px_hsl(var(--primary)/0.2)] whitespace-nowrap">
-                      {person.periodStart} - {person.periodEnd}
-                    </span>
-                    <div className="flex gap-2">
-                      <span className="px-2.5 py-1 rounded bg-muted/40 text-muted-foreground font-medium uppercase tracking-wider text-[10px]">
-                        {person.service}
-                      </span>
-                      <span className="px-2.5 py-1 rounded bg-muted/40 text-muted-foreground font-medium uppercase tracking-wider text-[10px]">
-                        {person.category}
-                      </span>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <span className="px-2.5 py-1 rounded border border-primary/20 bg-muted/40 text-muted-foreground font-medium uppercase tracking-wider text-[10px]">
+                          {person.service}
+                        </span>
+                        <span className="px-2.5 py-1 rounded border border-primary/20 bg-muted/40 text-muted-foreground font-medium uppercase tracking-wider text-[10px]">
+                          {person.category}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </button>
