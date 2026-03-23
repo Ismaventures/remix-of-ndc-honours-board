@@ -1,7 +1,15 @@
 import { useRef, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Shield } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Commandant } from "@/types/domain";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
+import {
+  activeCardStates,
+  CINEMATIC_EASE,
+  MOTION_TIMINGS,
+  textStaggerContainer,
+  textStaggerItem,
+} from "@/lib/cinematicMotion";
 
 interface PastCommandantsProps {
   commandants: Commandant[];
@@ -33,6 +41,8 @@ export function PastCommandants({
   const navRafRef = useRef<number | null>(null);
   const [mounted, setMounted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const prefersReducedMotion = useReducedMotion();
   const past = commandants.filter((c) => !c.isCurrent);
   const loopedPast = useMemo(() => {
     if (past.length <= 1) return past;
@@ -190,19 +200,26 @@ export function PastCommandants({
         </div>
       </div>
 
-      <div
+      <motion.div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onFocus={() => setIsPaused(true)}
         onBlur={() => setIsPaused(false)}
+        variants={textStaggerContainer}
+        initial={prefersReducedMotion ? undefined : "initial"}
+        animate={prefersReducedMotion ? undefined : "animate"}
       >
         {loopedPast.map((cmd, i) => (
-          <button
+          <motion.button
             key={`${cmd.id}-${i}`}
             type="button"
             onClick={() => onSelectCommandant?.(cmd)}
+            onMouseEnter={() => setActiveCardId(cmd.id)}
+            onFocus={() => setActiveCardId(cmd.id)}
+            onMouseLeave={() => setActiveCardId(null)}
+            onBlur={() => setActiveCardId(null)}
             aria-label={`Open profile for ${cmd.name}`}
             className="shrink-0 w-72 gold-border rounded-lg bg-card p-5 card-lift text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
             style={{
@@ -210,6 +227,15 @@ export function PastCommandants({
               transform: mounted ? "translateX(0)" : "translateX(30px)",
               transition: `all 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${0.4 + (i % Math.max(past.length, 1)) * 0.08}s`,
             }}
+            variants={textStaggerItem}
+            animate={
+              !activeCardId || activeCardId === cmd.id
+                ? activeCardStates.active
+                : activeCardStates.inactive
+            }
+            whileHover={prefersReducedMotion ? undefined : { y: MOTION_TIMINGS.microHoverY, scale: MOTION_TIMINGS.microHoverScale }}
+            whileTap={prefersReducedMotion ? undefined : { scale: MOTION_TIMINGS.microTapScale }}
+            transition={{ duration: 0.28, ease: CINEMATIC_EASE }}
           >
             <div className="flex items-start gap-4 mb-3">
               <div className="w-14 h-14 rounded bg-muted gold-border flex items-center justify-center shrink-0">
@@ -227,9 +253,9 @@ export function PastCommandants({
             <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
               {cmd.description}
             </p>
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

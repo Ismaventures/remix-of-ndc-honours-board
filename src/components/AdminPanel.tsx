@@ -16,6 +16,7 @@ import {
   DEFAULT_AUTO_DISPLAY_SETTINGS,
   TRANSITION_TYPES,
 } from '@/hooks/useAutoDisplaySettings';
+import { useCinematicExperienceSettings } from '@/hooks/useCinematicExperienceSettings';
 
 interface AdminPanelProps {
   personnel: Personnel[];
@@ -157,10 +158,14 @@ const TRANSITION_USAGE_GUIDES: Record<AutoDisplayTransitionType, { bestFor: stri
     bestFor: 'Signature branded moments and major section changes.',
     tip: 'Use for premium categories, intros, or limited high-impact transitions.',
   },
+  'pro-slider': {
+    bestFor: 'Cinematic storytelling with layered depth, Ken Burns image motion, and synchronized audio cues.',
+    tip: 'Best for commandant archives and hero-led displays where authority and prestige are critical.',
+  },
 };
 
 type GuideTargetTab = 'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices';
-type GuideTargetPanel = 'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'actions';
+type GuideTargetPanel = 'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'cinematic' | 'actions';
 
 const FEATURE_GUIDE_SECTIONS: Array<{
   id: string;
@@ -310,9 +315,14 @@ export function AdminPanel({
   const [previewNonce, setPreviewNonce] = useState(0);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewContextLabel, setPreviewContextLabel] = useState('Global');
-  const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'actions'>('boot');
+  const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'cinematic' | 'actions'>('boot');
   const [guideFlowActive, setGuideFlowActive] = useState(false);
   const [guideNextSectionId, setGuideNextSectionId] = useState<string | null>(null);
+  const {
+    settings: cinematicSettings,
+    updateSettings: updateCinematicSettings,
+    resetSettings: resetCinematicSettings,
+  } = useCinematicExperienceSettings();
 
   useEffect(() => {
     setThemeDraft(themeMode);
@@ -481,6 +491,63 @@ export function AdminPanel({
     onImportAutoDisplaySettings(autoDisplayDraft);
   };
 
+  const applyCinematicPreset = () => {
+    const commandantFocused: AutoDisplayTransitionType[] = [
+      'pro-slider',
+      'fade-zoom',
+      'scale-rise',
+      'blur-in',
+      'slide-left',
+    ];
+
+    const imageFocused: AutoDisplayTransitionType[] = [
+      'pro-slider',
+      'slide-left',
+      'slide-right',
+      'fade-zoom',
+      'scale-rise',
+    ];
+
+    setAutoDisplayDraft(prev => ({
+      ...prev,
+      global: {
+        ...prev.global,
+        transitionDurationMs: 760,
+      },
+      byContext: {
+        ...prev.byContext,
+        commandants: { ...prev.byContext.commandants, transitionDurationMs: 860 },
+        visits: { ...prev.byContext.visits, transitionDurationMs: 520 },
+        FWC: { ...prev.byContext.FWC, transitionDurationMs: 520 },
+        FDC: { ...prev.byContext.FDC, transitionDurationMs: 520 },
+        'Directing Staff': { ...prev.byContext['Directing Staff'], transitionDurationMs: 520 },
+        Allied: { ...prev.byContext.Allied, transitionDurationMs: 520 },
+      },
+      transitionSequence: commandantFocused,
+      transitionSequenceByContext: {
+        ...prev.transitionSequenceByContext,
+        commandants: commandantFocused,
+        visits: imageFocused,
+        FWC: imageFocused,
+        FDC: imageFocused,
+        'Directing Staff': imageFocused,
+        Allied: imageFocused,
+      },
+      appliedTransitionByContext: {
+        ...prev.appliedTransitionByContext,
+        commandants: 'pro-slider',
+      },
+      transitionDurationByTypeMs: {
+        ...prev.transitionDurationByTypeMs,
+        'pro-slider': 860,
+        'fade-zoom': 720,
+        'scale-rise': 560,
+        'slide-left': 520,
+        'slide-right': 520,
+      },
+    }));
+  };
+
   const getPreviewTransitionClasses = (transition: AutoDisplayTransitionType) => {
     switch (transition) {
       case 'slide-up':
@@ -507,6 +574,8 @@ export function AdminPanel({
         return 'animate-[preview-scale-rise_900ms_ease-out_forwards]';
       case 'ndc-scatter':
         return 'animate-[preview-ndc-scatter_900ms_ease-out_forwards]';
+      case 'pro-slider':
+        return 'animate-[preview-pro-slider_900ms_cubic-bezier(0.22,1,0.36,1)_forwards]';
       case 'fade-zoom':
       default:
         return 'animate-[preview-fade-zoom_900ms_ease-out_forwards]';
@@ -1038,6 +1107,143 @@ export function AdminPanel({
                   </div>
                 )}
 
+                <button onClick={() => setActiveTransitionPanel('cinematic')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Cinematic Experience Preset</span>
+                </button>
+                {activeTransitionPanel === 'cinematic' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 space-y-3">
+                    <p className="text-xs text-muted-foreground">
+                      Enables defence-grade pacing: commandant cards transition at 0.7-1.0s, image-heavy categories at 0.4-0.6s,
+                      with Pro Slider layered motion, synchronized whoosh/chime audio cues, ambient fade, and auto-pause on user interaction.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="rounded border border-primary/15 bg-background/50 p-3">
+                        <p className="text-[11px] uppercase tracking-wider text-primary">Authority Motion Rules</p>
+                        <p className="text-xs text-muted-foreground mt-2">Ken Burns background zoom, foreground card lift, delayed text reveal, and reduced-motion fallback.</p>
+                      </div>
+                      <div className="rounded border border-primary/15 bg-background/50 p-3">
+                        <p className="text-[11px] uppercase tracking-wider text-primary">Audio Sync Rules</p>
+                        <p className="text-xs text-muted-foreground mt-2">Whoosh on slide start, soft chime on completion, ambient loop with fade-in/out, cooldown anti-spam protection.</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                          <span>Whoosh Cooldown</span>
+                          <span>{cinematicSettings.whooshCooldownMs}ms</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={300}
+                          max={500}
+                          step={10}
+                          value={cinematicSettings.whooshCooldownMs}
+                          onChange={e => updateCinematicSettings({ whooshCooldownMs: Number(e.target.value) })}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                          <span>Ambient Level</span>
+                          <span>{Math.round(cinematicSettings.ambientLevel * 100)}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={10}
+                          max={25}
+                          step={1}
+                          value={Math.round(cinematicSettings.ambientLevel * 100)}
+                          onChange={e => updateCinematicSettings({ ambientLevel: Number(e.target.value) / 100 })}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                          <span>Ambient Fade In</span>
+                          <span>{cinematicSettings.ambientFadeInMs}ms</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={2000}
+                          max={3000}
+                          step={100}
+                          value={cinematicSettings.ambientFadeInMs}
+                          onChange={e => updateCinematicSettings({ ambientFadeInMs: Number(e.target.value) })}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                          <span>Ambient Fade Out</span>
+                          <span>{cinematicSettings.ambientFadeOutMs}ms</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={1200}
+                          max={2800}
+                          step={100}
+                          value={cinematicSettings.ambientFadeOutMs}
+                          onChange={e => updateCinematicSettings({ ambientFadeOutMs: Number(e.target.value) })}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                          <span>Commandant Duration</span>
+                          <span>{cinematicSettings.commandantDurationMs}ms</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={700}
+                          max={1000}
+                          step={10}
+                          value={cinematicSettings.commandantDurationMs}
+                          onChange={e => updateCinematicSettings({ commandantDurationMs: Number(e.target.value) })}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                          <span>Image Duration</span>
+                          <span>{cinematicSettings.imageDurationMs}ms</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={400}
+                          max={600}
+                          step={10}
+                          value={cinematicSettings.imageDurationMs}
+                          onChange={e => updateCinematicSettings({ imageDurationMs: Number(e.target.value) })}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={applyCinematicPreset}
+                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-primary hover:bg-primary/10"
+                      >
+                        Apply Cinematic Preset
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openTransitionPreview('pro-slider', 'Cinematic Preset')}
+                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-primary hover:bg-primary/10"
+                      >
+                        Preview Pro Slider
+                      </button>
+                      <button
+                        type="button"
+                        onClick={resetCinematicSettings}
+                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-primary hover:bg-primary/10"
+                      >
+                        Reset Cinematic Controls
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <button onClick={() => setActiveTransitionPanel('boot')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Boot Sequence Timing</span>
                 </button>
@@ -1317,6 +1523,7 @@ export function AdminPanel({
           @keyframes preview-skew-lift { from { opacity: 0; transform: skewY(2deg) translateY(10px);} to { opacity: 1; transform: skewY(0deg) translateY(0);} }
           @keyframes preview-scale-rise { from { opacity: 0; transform: scale(0.9) translateY(8px);} to { opacity: 1; transform: scale(1) translateY(0);} }
           @keyframes preview-ndc-scatter { from { opacity: 0; transform: scale(0.6) rotate(-8deg); filter: blur(5px);} to { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0);} }
+          @keyframes preview-pro-slider { from { opacity: 0; transform: translateX(26px) scale(0.96); filter: blur(8px);} to { opacity: 1; transform: translateX(0) scale(1); filter: blur(0);} }
         `}</style>
       </div>
     </div>

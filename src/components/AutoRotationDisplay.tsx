@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { ChevronLeft, ChevronRight, Monitor, SkipForward } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Category,
   Personnel,
@@ -17,6 +18,15 @@ import {
   DEFAULT_AUTO_DISPLAY_SETTINGS,
 } from "@/hooks/useAutoDisplaySettings";
 import { NdcScatteredTransition } from "./NdcScatteredTransition";
+import { useSliderControl } from "@/hooks/useSliderControl";
+import {
+  cinematicTransition,
+  layeredSlideVariants,
+  textStaggerContainer,
+  textStaggerItem,
+} from "@/lib/cinematicMotion";
+import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
+import { useCinematicExperienceSettings } from "@/hooks/useCinematicExperienceSettings";
 
 interface AutoRotationDisplayProps {
   personnel: Personnel[];
@@ -69,6 +79,8 @@ export function AutoRotationDisplay({
   const [selectedVisit, setSelectedVisit] = useState<DistinguishedVisit | null>(
     null,
   );
+  const prefersReducedMotion = useReducedMotion();
+  const { settings: cinematicSettings } = useCinematicExperienceSettings();
 
   const audioAssignments = useAudioStore((s) => s.assignments);
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,6 +91,10 @@ export function AutoRotationDisplay({
   const touchStartXRef = useRef<number | null>(null);
   const isTransitioningRef = useRef(false);
   const transitionStepRef = useRef(0);
+  const transitionDirectionRef = useRef<1 | -1>(1);
+  const { isPaused, registerInteraction } = useSliderControl({
+    resumeAfterMs: 4200,
+  });
 
   const setDisplayActive = useCallback(
     (nextActive: boolean) => {
@@ -94,17 +110,28 @@ export function AutoRotationDisplay({
     effectiveSettings.byContext[displayContext] ?? effectiveSettings.global;
   const appliedTransition =
     effectiveSettings.appliedTransitionByContext?.[displayContext] ?? null;
-  const contextSequence =
-    effectiveSettings.transitionSequenceByContext?.[displayContext] ?? [];
+  const contextSequence = useMemo(
+    () => effectiveSettings.transitionSequenceByContext?.[displayContext] ?? [],
+    [displayContext, effectiveSettings.transitionSequenceByContext],
+  );
   const useAppliedTransitionOnly =
     Boolean(appliedTransition) && displayContext !== "commandants";
-  const sequence = useAppliedTransitionOnly
-    ? [appliedTransition]
-    : contextSequence.length > 0
-      ? contextSequence
-      : effectiveSettings.transitionSequence.length > 0
-        ? effectiveSettings.transitionSequence
-        : DEFAULT_AUTO_DISPLAY_SETTINGS.transitionSequence;
+  const sequence = useMemo(
+    () =>
+      useAppliedTransitionOnly
+        ? [appliedTransition]
+        : contextSequence.length > 0
+          ? contextSequence
+          : effectiveSettings.transitionSequence.length > 0
+            ? effectiveSettings.transitionSequence
+            : DEFAULT_AUTO_DISPLAY_SETTINGS.transitionSequence,
+    [
+      appliedTransition,
+      contextSequence,
+      effectiveSettings.transitionSequence,
+      useAppliedTransitionOnly,
+    ],
+  );
 
   const getTransitionDurationMs = useCallback(
     (transition: AutoDisplayTransitionType) => {
@@ -162,13 +189,45 @@ export function AutoRotationDisplay({
   }, []);
 
   const transitionTo = useCallback(
-    (nextIndex: number) => {
+    (nextIndex: number, isManual = false) => {
       if (slides.length <= 1 || isTransitioningRef.current) return;
+      const previousIndex = currentIndex;
+      const forwardIndex = (previousIndex + 1) % slides.length;
+      const backwardIndex =
+        (previousIndex - 1 + slides.length) % slides.length;
+      transitionDirectionRef.current =
+        nextIndex === backwardIndex
+          ? -1
+          : nextIndex === forwardIndex
+            ? 1
+            : nextIndex > previousIndex
+              ? 1
+              : -1;
       isTransitioningRef.current = true;
+      if (isManual) {
+        registerInteraction();
+      }
 
       const nextTransition =
         sequence[transitionStepRef.current % sequence.length] ?? "fade-zoom";
-      const durationMs = getTransitionDurationMs(nextTransition);
+      const baseDurationMs = getTransitionDurationMs(nextTransition);
+      const nextSlide = slides[nextIndex];
+      const durationMs =
+        nextSlide?.type === "commandant"
+          ? Math.max(900, Math.min(1800, Math.round((baseDurationMs + cinematicSettings.commandantDurationMs) / 2)))
+          : Math.max(650, Math.min(1400, Math.round((baseDurationMs + cinematicSettings.imageDurationMs) / 2)));
+      
+      if (nextTransition === "pro-slider") {
+        setTransitionType(nextTransition);
+        setCurrentIndex(nextIndex);
+        transitionStepRef.current += 1;
+        
+        setTimeout(() => {
+          isTransitioningRef.current = false;
+        }, durationMs);
+        return;
+      }
+
       const outDurationMs = Math.max(140, Math.round(durationMs * 0.42));
       setTransitionType(nextTransition);
       setFadeState("out");
@@ -185,7 +244,15 @@ export function AutoRotationDisplay({
         }, 22);
       }, outDurationMs);
     },
-    [getTransitionDurationMs, sequence, slides.length],
+    [
+      currentIndex,
+      getTransitionDurationMs,
+      registerInteraction,
+      sequence,
+      slides,
+      cinematicSettings.commandantDurationMs,
+      cinematicSettings.imageDurationMs,
+    ],
   );
 
   const advance = useCallback(() => {
@@ -198,19 +265,22 @@ export function AutoRotationDisplay({
 
   const handleManualAdvance = useCallback(() => {
     revealControls();
-    advance();
-  }, [advance, revealControls]);
+    transitionTo((currentIndex + 1) % slides.length, true);
+  }, [currentIndex, revealControls, slides.length, transitionTo]);
 
   const handleManualRetreat = useCallback(() => {
     revealControls();
-    retreat();
-  }, [retreat, revealControls]);
+    transitionTo((currentIndex - 1 + slides.length) % slides.length, true);
+  }, [currentIndex, revealControls, slides.length, transitionTo]);
 
   useEffect(() => {
-    if (!isActive) return;
-    const interval = setInterval(advance, contextTiming.slideDurationMs);
+    if (!isActive || isPaused) return;
+    const interval = setInterval(
+      advance,
+      Math.round(contextTiming.slideDurationMs * 1.2),
+    );
     return () => clearInterval(interval);
-  }, [isActive, advance, contextTiming.slideDurationMs]);
+  }, [isActive, isPaused, advance, contextTiming.slideDurationMs]);
 
   useEffect(() => {
     if (!forcedControl) return;
@@ -224,7 +294,7 @@ export function AutoRotationDisplay({
     }
 
     setDisplayActive(false);
-  }, [forcedControl?.nonce, sequence, setDisplayActive]);
+  }, [forcedControl, sequence, setDisplayActive]);
 
   useEffect(() => {
     transitionStepRef.current = 0;
@@ -334,6 +404,7 @@ export function AutoRotationDisplay({
   const onTouchStart = (x: number) => {
     touchStartXRef.current = x;
     revealControls();
+    registerInteraction();
   };
 
   const onTouchEnd = (x: number) => {
@@ -348,6 +419,34 @@ export function AutoRotationDisplay({
       handleManualRetreat();
     }
   };
+
+  const slide = slides[currentIndex] ?? slides[0];
+  const isPortraitSlide =
+    slide?.type === "commandant" || slide?.type === "personnel";
+  const currentTransitionDuration = useMemo(() => {
+    if (!slide) return getTransitionDurationMs(transitionType);
+    const baseDuration = getTransitionDurationMs(transitionType);
+    const targetDuration =
+      slide.type === "commandant"
+        ? cinematicSettings.commandantDurationMs
+        : cinematicSettings.imageDurationMs;
+    return Math.round((baseDuration + targetDuration) / 2);
+  }, [
+    cinematicSettings.commandantDurationMs,
+    cinematicSettings.imageDurationMs,
+    getTransitionDurationMs,
+    slide,
+    transitionType,
+  ]);
+  const slideImageUrl = useResolvedMediaUrl(
+    slide
+      ? slide.type === "commandant"
+        ? slide.commandant.imageUrl
+        : slide.type === "personnel"
+          ? slide.person.imageUrl
+          : slide.visit.imageUrl
+      : undefined,
+  );
 
   if (!isActive) {
     return (
@@ -372,9 +471,13 @@ export function AutoRotationDisplay({
     );
   }
 
-  const slide = slides[currentIndex];
+  if (!slide) return null;
 
   const getTransitionClasses = () => {
+    if (prefersReducedMotion) {
+      return fadeState === "in" ? "opacity-100" : "opacity-0";
+    }
+
     switch (transitionType) {
       case "slide-up":
         return fadeState === "in"
@@ -424,6 +527,8 @@ export function AutoRotationDisplay({
         return fadeState === "in"
           ? "opacity-100 scale-100 blur-0"
           : "opacity-0 scale-[0.90] blur-[10px]";
+      case "pro-slider":
+        return "opacity-100"; // Handled by framer-motion AnimatePresence
       case "fade-zoom":
       default:
         return fadeState === "in"
@@ -432,7 +537,177 @@ export function AutoRotationDisplay({
     }
   };
 
-  const currentTransitionDuration = getTransitionDurationMs(transitionType);
+  const renderSlideContent = () => (
+    <>
+      {slide.type === "commandant" && (
+        <motion.button
+          onClick={() => setSelectedCommandant(slide.commandant)}
+          className="w-full text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 relative overflow-hidden"
+          aria-label={`Open profile for ${slide.commandant.name}`}
+          whileHover={prefersReducedMotion ? undefined : { y: -5, scale: 1.01 }}
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+          transition={cinematicTransition(0.24)}
+        >
+          <motion.div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-primary/20 to-transparent"
+            animate={
+              prefersReducedMotion
+                ? undefined
+                : { x: ["-10%", "360%"] }
+            }
+            transition={
+              prefersReducedMotion
+                ? undefined
+                : cinematicTransition(2.8, { repeat: Infinity, repeatDelay: 2.4 })
+            }
+          />
+          <CommandantHero commandant={slide.commandant} compactDescription />
+        </motion.button>
+      )}
+
+      {slide.type === "personnel" && (
+        <motion.button
+          onClick={() => setSelectedPerson(slide.person)}
+          className="w-full text-left relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-4 sm:p-6 md:p-10 lg:p-14 shadow-[0_0_50px_-12px_hsl(var(--primary)/0.2)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+          aria-label={`Open profile for ${slide.person.name}`}
+          whileHover={prefersReducedMotion ? undefined : { y: -5, scale: 1.03 }}
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+          transition={cinematicTransition(0.24)}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.14)_0%,transparent_60%)]" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
+
+          <div className="relative flex flex-col md:flex-row items-center md:items-start gap-5 sm:gap-7 md:gap-10">
+            <div className="relative w-28 h-36 sm:w-36 sm:h-48 md:w-48 md:h-64 rounded-md border border-primary/40 overflow-hidden bg-muted flex-shrink-0 shadow-xl group-hover:-translate-y-2 transition-transform duration-500">
+              <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/30 transition-colors duration-500 z-20 rounded-md" />
+              {slide.person.imageUrl ? (
+                <img
+                  src={slide.person.imageUrl}
+                  alt={slide.person.name}
+                  className="w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-110"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-xs uppercase tracking-widest text-primary/40 bg-gradient-to-b from-muted to-muted/50 p-4 text-center">
+                  <span>No Image</span>
+                </div>
+              )}
+              <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-primary/50 z-20" />
+              <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-primary/50 z-20" />
+              <div className="absolute bottom-2 left-2 w-3 h-3 border-b border-l border-primary/50 z-20" />
+              <div className="absolute bottom-2 right-2 w-3 h-3 border-b border-r border-primary/50 z-20" />
+            </div>
+
+            <motion.div
+              className="text-center md:text-left flex-1 min-w-0 z-10 flex flex-col justify-center pt-2"
+              variants={textStaggerContainer}
+              initial={prefersReducedMotion ? false : "initial"}
+              animate={prefersReducedMotion ? undefined : "animate"}
+            >
+              <div className="inline-flex px-3 py-1 bg-primary/10 border border-primary/20 rounded-sm mb-4">
+                <motion.p variants={textStaggerItem} className="text-[11px] uppercase tracking-[0.3em] text-primary/90 font-medium">
+                  {slide.person.category}
+                </motion.p>
+              </div>
+
+              <motion.h2 variants={textStaggerItem} className="mb-3 tracking-wide drop-shadow-md bg-gradient-to-r from-foreground via-primary/90 to-foreground/80 bg-clip-text text-transparent leading-tight">
+                <span className="text-lg sm:text-2xl md:text-3xl font-semibold font-serif align-middle mr-2">
+                  {slide.person.rank}
+                </span>
+                <span className="text-2xl sm:text-4xl md:text-5xl font-bold font-serif align-middle">
+                  {slide.person.name}
+                </span>
+              </motion.h2>
+
+              <div className="h-px w-24 bg-gradient-to-r from-primary/80 to-transparent mx-auto md:mx-0 mb-4" />
+
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-3 mb-5 sm:mb-6 text-xs sm:text-sm text-foreground/80">
+                <span className="bg-foreground/5 px-2 py-0.5 rounded border border-foreground/10">
+                  {slide.person.service}
+                </span>
+                <span className="text-primary/40">•</span>
+                <span className="font-mono tracking-wider text-primary/70">
+                  {slide.person.periodStart}–{slide.person.periodEnd}
+                </span>
+              </div>
+
+              <motion.div variants={textStaggerItem} className="relative pl-4 border-l-2 border-primary/30 py-1">
+                <p className="text-sm sm:text-base text-muted-foreground italic leading-relaxed font-light line-clamp-5 sm:line-clamp-none">
+                  "{slide.person.citation}"
+                </p>
+              </motion.div>
+            </motion.div>
+          </div>
+        </motion.button>
+      )}
+
+      {slide.type === "visit" && (
+        <motion.button
+          onClick={() => setSelectedVisit(slide.visit)}
+          className="w-full text-center relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-5 sm:p-8 md:p-12 lg:p-16 shadow-[0_0_50px_-12px_hsl(var(--primary)/0.2)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+          aria-label={`Open profile for ${slide.visit.name}`}
+          whileHover={prefersReducedMotion ? undefined : { y: -5, scale: 1.03 }}
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+          transition={cinematicTransition(0.24)}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.1)_0%,transparent_70%)]" />
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[120%] h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+          <div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-[80%] h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
+          <motion.div
+            className="relative z-10"
+            variants={textStaggerContainer}
+            initial={prefersReducedMotion ? false : "initial"}
+            animate={prefersReducedMotion ? undefined : "animate"}
+          >
+            <div className="inline-flex items-center justify-center px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full mb-8 shadow-[0_0_15px_hsl(var(--primary)/0.16)]">
+              <motion.p variants={textStaggerItem} className="text-[11px] uppercase tracking-[0.3em] text-primary/90 font-medium">
+                Distinguished Visit
+              </motion.p>
+            </div>
+
+            <div className="w-40 h-28 sm:w-52 sm:h-34 md:w-56 md:h-36 mx-auto mb-6 sm:mb-8 rounded-lg border-2 border-primary/30 overflow-hidden bg-muted shadow-2xl relative group-hover:-translate-y-1 transition-transform duration-500">
+              <div className="absolute inset-0 bg-primary/10 mix-blend-overlay z-10" />
+              {slide.visit.imageUrl ? (
+                <img
+                  src={slide.visit.imageUrl}
+                  alt={slide.visit.name}
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xs uppercase tracking-widest text-primary/40 bg-gradient-to-br from-muted to-muted/80">
+                  No Image
+                </div>
+              )}
+            </div>
+
+            <motion.h2 variants={textStaggerItem} className="text-2xl sm:text-4xl md:text-5xl font-bold font-serif mb-3 tracking-wide bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent drop-shadow-sm">
+              {slide.visit.name}
+            </motion.h2>
+
+            <p className="text-sm md:text-base text-primary/90 font-semibold mb-4 tracking-[0.14em] uppercase">
+              {slide.visit.title}
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
+              <span className="px-3 py-1 rounded bg-foreground/5 border border-foreground/10 text-foreground/80 text-sm">
+                {slide.visit.country}
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+              <span className="text-primary/70 font-mono text-sm tracking-wider">
+                {slide.visit.date}
+              </span>
+            </div>
+
+            <motion.p variants={textStaggerItem} className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto font-light border-t border-primary/20 pt-4 sm:pt-6">
+              {slide.visit.description}
+            </motion.p>
+          </motion.div>
+        </motion.button>
+      )}
+    </>
+  );
 
   return (
     <div
@@ -441,6 +716,7 @@ export function AutoRotationDisplay({
       onTouchStart={(e) => onTouchStart(e.touches[0].clientX)}
       onTouchEnd={(e) => onTouchEnd(e.changedTouches[0].clientX)}
       onKeyDown={(e) => {
+        registerInteraction();
         if (e.key === "ArrowRight") handleManualAdvance();
         if (e.key === "ArrowLeft") handleManualRetreat();
       }}
@@ -509,148 +785,63 @@ export function AutoRotationDisplay({
         </button>
 
         <div
-          className={`${slide.type === "commandant" ? "max-w-5xl xl:max-w-6xl" : "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl"} w-full max-h-full -translate-y-2 sm:-translate-y-3 md:-translate-y-4 transition-all ease-out ${getTransitionClasses()}`}
+          className={`${slide.type === "commandant" ? "max-w-5xl xl:max-w-6xl" : "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl"} relative w-full max-h-full -translate-y-2 sm:-translate-y-3 md:-translate-y-4 transition-all ease-out will-change-transform ${getTransitionClasses()}`}
           style={{ transitionDuration: `${currentTransitionDuration}ms` }}
         >
-          {slide.type === "commandant" && (
-            <button
-              onClick={() => setSelectedCommandant(slide.commandant)}
-              className="w-full text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-              aria-label={`Open profile for ${slide.commandant.name}`}
+          {slideImageUrl && (
+            <motion.div
+              aria-hidden="true"
+              className="absolute inset-0 -z-10 rounded-xl overflow-hidden"
+              initial={{ opacity: 0.12, scale: isPortraitSlide ? 1 : 1.03, x: 0, y: 0 }}
+              animate={
+                prefersReducedMotion
+                  ? { opacity: 0.24, scale: isPortraitSlide ? 1.01 : 1.03 }
+                  : {
+                      opacity: [0.2, 0.32, 0.22],
+                      scale: isPortraitSlide
+                        ? [1, 1.03, 1.01]
+                        : [1.04, 1.08, 1.05],
+                      x: isPortraitSlide
+                        ? [0, 10, -6, 0]
+                        : [0, 16, -10, 0],
+                      y: isPortraitSlide
+                        ? [0, -6, 4, 0]
+                        : [0, -8, 6, 0],
+                    }
+              }
+              transition={cinematicTransition(14, { repeat: Infinity, repeatType: "mirror" })}
+              style={{ willChange: "transform" }}
             >
-              <CommandantHero
-                commandant={slide.commandant}
-                compactDescription
+              <img
+                src={slideImageUrl}
+                alt=""
+                className={`h-full w-full ${isPortraitSlide ? "object-contain object-top" : "object-cover"} blur-[2.5px]`}
               />
-            </button>
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/76 via-slate-950/68 to-slate-950/82" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,hsl(var(--primary)/0.22)_0%,transparent_40%),radial-gradient(circle_at_85%_78%,hsl(var(--primary)/0.16)_0%,transparent_44%)]" />
+            </motion.div>
           )}
-
-          {slide.type === "personnel" && (
-            <button
-              onClick={() => setSelectedPerson(slide.person)}
-              className="w-full text-left relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-4 sm:p-6 md:p-10 lg:p-14 shadow-[0_0_50px_-12px_hsl(var(--primary)/0.2)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-              aria-label={`Open profile for ${slide.person.name}`}
-            >
-              {/* Background styling layers */}
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.14)_0%,transparent_60%)]" />
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
-
-              <div className="relative flex flex-col md:flex-row items-center md:items-start gap-5 sm:gap-7 md:gap-10">
-                <div className="relative w-28 h-36 sm:w-36 sm:h-48 md:w-48 md:h-64 rounded-md border border-primary/40 overflow-hidden bg-muted flex-shrink-0 shadow-xl group-hover:-translate-y-2 transition-transform duration-500">
-                  <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/30 transition-colors duration-500 z-20 rounded-md" />
-                  {slide.person.imageUrl ? (
-                    <img
-                      src={slide.person.imageUrl}
-                      alt={slide.person.name}
-                      className="w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-xs uppercase tracking-widest text-primary/40 bg-gradient-to-b from-muted to-muted/50 p-4 text-center">
-                      <span>No Image</span>
-                    </div>
-                  )}
-                  {/* Decorative internal corners */}
-                  <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-primary/50 z-20" />
-                  <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-primary/50 z-20" />
-                  <div className="absolute bottom-2 left-2 w-3 h-3 border-b border-l border-primary/50 z-20" />
-                  <div className="absolute bottom-2 right-2 w-3 h-3 border-b border-r border-primary/50 z-20" />
-                </div>
-
-                <div className="text-center md:text-left flex-1 min-w-0 z-10 flex flex-col justify-center pt-2">
-                  <div className="inline-flex px-3 py-1 bg-primary/10 border border-primary/20 rounded-sm mb-4">
-                    <p className="text-[11px] uppercase tracking-[0.3em] text-primary/90 font-medium">
-                      {slide.person.category}
-                    </p>
-                  </div>
-
-                  <h2 className="mb-3 tracking-wide drop-shadow-md bg-gradient-to-r from-foreground via-primary/90 to-foreground/80 bg-clip-text text-transparent leading-tight">
-                    <span className="text-lg sm:text-2xl md:text-3xl font-semibold font-serif align-middle mr-2">
-                      {slide.person.rank}
-                    </span>
-                    <span className="text-2xl sm:text-4xl md:text-5xl font-bold font-serif align-middle">
-                      {slide.person.name}
-                    </span>
-                  </h2>
-
-                  <div className="h-px w-24 bg-gradient-to-r from-primary/80 to-transparent mx-auto md:mx-0 mb-4" />
-
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-3 mb-5 sm:mb-6 text-xs sm:text-sm text-foreground/80">
-                    <span className="bg-foreground/5 px-2 py-0.5 rounded border border-foreground/10">
-                      {slide.person.service}
-                    </span>
-                    <span className="text-primary/40">•</span>
-                    <span className="font-mono tracking-wider text-primary/70">
-                      {slide.person.periodStart}–{slide.person.periodEnd}
-                    </span>
-                  </div>
-
-                  <div className="relative pl-4 border-l-2 border-primary/30 py-1">
-                    <p className="text-sm sm:text-base text-muted-foreground italic leading-relaxed font-light line-clamp-5 sm:line-clamp-none">
-                      "{slide.person.citation}"
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </button>
-          )}
-
-          {slide.type === "visit" && (
-            <button
-              onClick={() => setSelectedVisit(slide.visit)}
-              className="w-full text-center relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-5 sm:p-8 md:p-12 lg:p-16 shadow-[0_0_50px_-12px_hsl(var(--primary)/0.2)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-              aria-label={`Open profile for ${slide.visit.name}`}
-            >
-              {/* Background ambient lighting */}
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.1)_0%,transparent_70%)]" />
-              <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[120%] h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-              <div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-[80%] h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-
-              <div className="relative z-10">
-                <div className="inline-flex items-center justify-center px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full mb-8 shadow-[0_0_15px_hsl(var(--primary)/0.16)]">
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-primary/90 font-medium">
-                    Distinguished Visit
-                  </p>
-                </div>
-
-                <div className="w-40 h-28 sm:w-52 sm:h-34 md:w-56 md:h-36 mx-auto mb-6 sm:mb-8 rounded-lg border-2 border-primary/30 overflow-hidden bg-muted shadow-2xl relative group-hover:-translate-y-1 transition-transform duration-500">
-                  <div className="absolute inset-0 bg-primary/10 mix-blend-overlay z-10" />
-                  {slide.visit.imageUrl ? (
-                    <img
-                      src={slide.visit.imageUrl}
-                      alt={slide.visit.name}
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs uppercase tracking-widest text-primary/40 bg-gradient-to-br from-muted to-muted/80">
-                      No Image
-                    </div>
-                  )}
-                </div>
-
-                <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold font-serif mb-3 tracking-wide bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent drop-shadow-sm">
-                  {slide.visit.name}
-                </h2>
-
-                <p className="text-sm md:text-base text-primary/90 font-semibold mb-4 tracking-[0.14em] uppercase">
-                  {slide.visit.title}
-                </p>
-
-                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
-                  <span className="px-3 py-1 rounded bg-foreground/5 border border-foreground/10 text-foreground/80 text-sm">
-                    {slide.visit.country}
-                  </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-                  <span className="text-primary/70 font-mono text-sm tracking-wider">
-                    {slide.visit.date}
-                  </span>
-                </div>
-
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto font-light border-t border-primary/20 pt-4 sm:pt-6">
-                  {slide.visit.description}
-                </p>
-              </div>
-            </button>
+          {transitionType === "pro-slider" ? (
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={`${slide.type}-${currentIndex}`}
+                custom={transitionDirectionRef.current}
+                variants={layeredSlideVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={cinematicTransition(
+                  slide.type === "commandant"
+                    ? Math.max(0.9, Math.min(1.8, cinematicSettings.commandantDurationMs / 1000))
+                    : Math.max(0.65, Math.min(1.4, cinematicSettings.imageDurationMs / 1000)),
+                )}
+                style={{ willChange: "transform" }}
+              >
+                {renderSlideContent()}
+              </motion.div>
+            </AnimatePresence>
+          ) : (
+            renderSlideContent()
           )}
         </div>
       </div>
