@@ -15,7 +15,8 @@ export type AutoDisplayTransitionType =
   | 'blur-in'
   | 'skew-lift'
   | 'scale-rise'
-  | 'ndc-scatter';
+  | 'ndc-scatter'
+  | 'pro-slider';
 
 export type AutoDisplayContextKey =
   | 'commandants'
@@ -56,6 +57,7 @@ export const TRANSITION_TYPES: Array<{ id: AutoDisplayTransitionType; label: str
   { id: 'skew-lift', label: 'Skew Lift' },
   { id: 'scale-rise', label: 'Scale Rise' },
   { id: 'ndc-scatter', label: 'Scattered NDC Logo' },
+  { id: 'pro-slider', label: 'Pro Slider (Framer)' },
 ];
 
 export const AUTO_DISPLAY_CONTEXTS: Array<{ key: AutoDisplayContextKey; label: string }> = [
@@ -81,6 +83,7 @@ export const DEFAULT_AUTO_DISPLAY_SETTINGS: AutoDisplaySettings = {
     Allied: { slideDurationMs: 8200, transitionDurationMs: 480 },
   },
   transitionSequence: [
+    'pro-slider',
     'fade-zoom',
     'slide-up',
     'slide-left',
@@ -96,27 +99,27 @@ export const DEFAULT_AUTO_DISPLAY_SETTINGS: AutoDisplaySettings = {
   ],
   transitionSequenceByContext: {
     commandants: [
-      'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
+      'pro-slider', 'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
       'flip-x', 'flip-y', 'rotate-in', 'blur-in', 'skew-lift', 'scale-rise',
     ],
     visits: [
-      'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
+      'pro-slider', 'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
       'flip-x', 'flip-y', 'rotate-in', 'blur-in', 'skew-lift', 'scale-rise',
     ],
     FWC: [
-      'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
+      'pro-slider', 'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
       'flip-x', 'flip-y', 'rotate-in', 'blur-in', 'skew-lift', 'scale-rise',
     ],
     FDC: [
-      'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
+      'pro-slider', 'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
       'flip-x', 'flip-y', 'rotate-in', 'blur-in', 'skew-lift', 'scale-rise',
     ],
     'Directing Staff': [
-      'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
+      'pro-slider', 'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
       'flip-x', 'flip-y', 'rotate-in', 'blur-in', 'skew-lift', 'scale-rise',
     ],
     Allied: [
-      'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
+      'pro-slider', 'fade-zoom', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out',
       'flip-x', 'flip-y', 'rotate-in', 'blur-in', 'skew-lift', 'scale-rise',
     ],
   },
@@ -142,6 +145,7 @@ export const DEFAULT_AUTO_DISPLAY_SETTINGS: AutoDisplaySettings = {
     'skew-lift': 580,
     'scale-rise': 520,
     'ndc-scatter': 2500,
+    'pro-slider': 800,
   },
 };
 

@@ -175,6 +175,7 @@ export function OrganogramView({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("oldest");
+  const [searchQuery, setSearchQuery] = useState("");
   const [rankFilter, setRankFilter] = useState<string>("all");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
@@ -194,6 +195,7 @@ export function OrganogramView({
 
   useEffect(() => {
     if (forcedSelectedId === undefined) return;
+    setSearchQuery("");
     setRankFilter("all");
     setServiceFilter("all");
     setYearFilter("all");
@@ -204,7 +206,7 @@ export function OrganogramView({
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [rankFilter, serviceFilter, yearFilter, sortMode]);
+  }, [searchQuery, rankFilter, serviceFilter, yearFilter, sortMode]);
 
   const categoryRecords = useMemo(
     () => data.filter((p) => p.category === category),
@@ -237,7 +239,23 @@ export function OrganogramView({
   }, [categoryRecords]);
 
   const filtered = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
     const records = categoryRecords.filter((p) => {
+      if (normalizedQuery) {
+        const searchable = [
+          p.name,
+          p.rank,
+          p.service,
+          p.citation,
+          String(p.periodStart),
+          String(p.periodEnd),
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        if (!searchable.includes(normalizedQuery)) return false;
+      }
       if (rankFilter !== "all" && p.rank !== rankFilter) return false;
       if (serviceFilter !== "all" && p.service !== serviceFilter) return false;
       if (yearFilter !== "all") {
@@ -264,7 +282,14 @@ export function OrganogramView({
     });
 
     return records;
-  }, [categoryRecords, rankFilter, serviceFilter, yearFilter, sortMode]);
+  }, [
+    categoryRecords,
+    rankFilter,
+    searchQuery,
+    serviceFilter,
+    sortMode,
+    yearFilter,
+  ]);
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
@@ -297,8 +322,41 @@ export function OrganogramView({
             </p>
           </div>
         </div>
+        <div className="text-xs uppercase tracking-widest text-muted-foreground">
+          {filtered.length} Records
+        </div>
+      </div>
 
-        <div className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-card/70 p-1">
+      <div className="mb-6 p-4 md:p-5 rounded-xl border border-primary/20 bg-card/60 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-primary/90 font-semibold">
+            Search and Filters
+          </p>
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setRankFilter("all");
+              setServiceFilter("all");
+              setYearFilter("all");
+              setSortMode("oldest");
+            }}
+            className="px-3 py-1.5 text-xs rounded-md border border-primary/25 text-muted-foreground hover:text-foreground hover:border-primary/45 transition-colors"
+          >
+            Reset All
+          </button>
+        </div>
+
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search name, rank, service, citation, or year..."
+            className="h-11 w-full rounded-lg border-2 border-primary/20 bg-background/80 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors shadow-sm"
+          />
+        </div>
+
+        <div className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-background/70 p-1 w-full md:w-auto">
           <button
             onClick={() => setSortMode("oldest")}
             className={`px-3 py-2 text-xs font-semibold rounded-md transition-colors ${
@@ -322,9 +380,8 @@ export function OrganogramView({
             </span>
           </button>
         </div>
-      </div>
 
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 p-4 rounded-xl border border-primary/20 bg-card/60 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* RANK FILTER COMBOBOX */}
         <Popover open={rankOpen} onOpenChange={setRankOpen}>
           <PopoverTrigger asChild>
@@ -506,6 +563,7 @@ export function OrganogramView({
             </div>
           </PopoverContent>
         </Popover>
+        </div>
       </div>
 
       <div className="bg-card gold-border rounded-xl p-3 md:p-6 min-h-[520px] relative overflow-hidden flex flex-col shadow-[inset_0_1px_0_hsl(var(--gold-bright)/0.15),inset_0_0_40px_rgba(0,0,0,0.12),0_16px_45px_rgba(0,0,0,0.22)]">

@@ -16,6 +16,7 @@ import {
   useCommandantsStore,
 } from "@/hooks/useStore";
 import { useThemeMode } from "@/hooks/useThemeMode";
+import type { ThemeMode } from "@/hooks/useThemeMode";
 import { useBootSequenceSettings } from "@/hooks/useBootSequenceSettings";
 import { useAutoDisplaySettings } from "@/hooks/useAutoDisplaySettings";
 import {
@@ -43,6 +44,7 @@ const SECTION_CATEGORIES: Record<string, Category> = {
   directing: "Directing Staff",
   allied: "Allied",
 };
+
 const SUPER_ADMIN_EMAILS = (
   import.meta.env.VITE_SUPER_ADMIN_EMAILS ||
   import.meta.env.VITE_QUICK_ADMIN_EMAIL ||
@@ -78,6 +80,7 @@ const Index = () => {
   const globalCommandRef = useRef<number | null>(null);
 
   const [view, setView] = useState<ViewKey>("home");
+
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
   const {
     settings: bootSequenceSettings,
@@ -94,6 +97,7 @@ const Index = () => {
     importSettings: importAutoDisplaySettings,
     resetSettings: resetAutoDisplaySettings,
   } = useAutoDisplaySettings();
+
   const { personnel, addPersonnel, updatePersonnel, deletePersonnel } =
     usePersonnelStore();
   const { visits, addVisit, updateVisit, deleteVisit } = useVisitsStore();
@@ -110,10 +114,12 @@ const Index = () => {
         : view === "admin"
           ? "admin"
           : "category";
+
   const isSuperAdmin = useMemo(() => {
     if (!adminEmail) return false;
     return SUPER_ADMIN_EMAILS.includes(adminEmail.toLowerCase());
   }, [adminEmail]);
+
   const showLockScreen = deviceClosed || (siteClosed && !isSuperAdmin);
 
   const applyGlobalSiteAction = (
@@ -172,40 +178,38 @@ const Index = () => {
     }
 
     if (commandType === "apply-device-profile") {
-      const themeMode =
-        typeof payload.themeMode === "string" ? payload.themeMode : null;
-      const bootSequenceSettings = payload.bootSequenceSettings;
-      const autoDisplaySettingsPayload = payload.autoDisplaySettings;
+      const remoteThemeMode: ThemeMode | null =
+        typeof payload.themeMode === "string"
+          ? (payload.themeMode as ThemeMode)
+          : null;
+      const bootPayload = payload.bootSequenceSettings;
+      const autoDisplayPayload = payload.autoDisplaySettings;
 
       saveDeviceOverrides({
-        themeMode: themeMode ?? undefined,
+        themeMode: remoteThemeMode ?? undefined,
         bootSequenceSettings:
-          bootSequenceSettings && typeof bootSequenceSettings === "object"
-            ? (bootSequenceSettings as Record<string, unknown>)
+          bootPayload && typeof bootPayload === "object"
+            ? (bootPayload as Record<string, unknown>)
             : undefined,
         autoDisplaySettings:
-          autoDisplaySettingsPayload &&
-          typeof autoDisplaySettingsPayload === "object"
-            ? (autoDisplaySettingsPayload as Record<string, unknown>)
+          autoDisplayPayload && typeof autoDisplayPayload === "object"
+            ? (autoDisplayPayload as Record<string, unknown>)
             : undefined,
       });
 
-      if (themeMode) {
-        setThemeMode(themeMode as Parameters<typeof setThemeMode>[0]);
+      if (remoteThemeMode) {
+        setThemeMode(remoteThemeMode);
       }
-      if (bootSequenceSettings && typeof bootSequenceSettings === "object") {
+
+      if (bootPayload && typeof bootPayload === "object") {
         setBootSequenceSettings(
-          bootSequenceSettings as Parameters<typeof setBootSequenceSettings>[0],
+          bootPayload as Parameters<typeof setBootSequenceSettings>[0],
         );
       }
-      if (
-        autoDisplaySettingsPayload &&
-        typeof autoDisplaySettingsPayload === "object"
-      ) {
+
+      if (autoDisplayPayload && typeof autoDisplayPayload === "object") {
         importAutoDisplaySettings(
-          autoDisplaySettingsPayload as Parameters<
-            typeof importAutoDisplaySettings
-          >[0],
+          autoDisplayPayload as Parameters<typeof importAutoDisplaySettings>[0],
         );
       }
       return;
@@ -217,7 +221,7 @@ const Index = () => {
       return;
     }
 
-    if (commandType === "close-app") {
+    if (commandType === "open-person-profile") {
       const targetView = payload.view;
       const personId =
         typeof payload.personId === "string" ? payload.personId : null;
@@ -354,11 +358,7 @@ const Index = () => {
     }
 
     if (view === "visits") {
-      return (
-        <>
-          <VisitsSection visits={visits} onBack={() => setView("home")} />
-        </>
-      );
+      return <VisitsSection visits={visits} onBack={() => setView("home")} />;
     }
 
     if (view === "admin") {
@@ -527,6 +527,7 @@ const Index = () => {
           onComplete={() => setIsBooting(false)}
         />
       )}
+
       {showLockScreen && (
         <div className="fixed inset-0 z-[120] bg-black/95 backdrop-blur flex items-center justify-center p-6">
           <div className="max-w-xl w-full rounded-xl border border-destructive/40 bg-card/95 p-6 md:p-8 text-center space-y-3">
@@ -540,14 +541,15 @@ const Index = () => {
           </div>
         </div>
       )}
+
       <div
         className={`command-center-bg min-h-screen flex flex-col transition-opacity duration-1000 ${isBooting ? "opacity-0" : "opacity-100"}`}
       >
         <AppHeader onHomeClick={() => setView("home")} />
+
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="max-w-[1840px]">
-            <div className="app-shell-frame p-3 sm:p-4 md:p-6 lg:p-8">
-              {/* Auto-rotation button */}
+          <div className="max-w-[1840px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 relative z-10">
+            <div className="app-shell-frame rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8">
               <div className="flex justify-end mb-3 sm:mb-4">
                 <AutoRotationDisplay
                   personnel={personnel}
