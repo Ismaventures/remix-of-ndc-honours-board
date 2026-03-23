@@ -545,8 +545,8 @@ const Index = () => {
       >
         <AppHeader onHomeClick={() => setView("home")} />
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="max-w-[1840px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 relative z-10">
-            <div className="app-shell-frame rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8">
+          <div className="max-w-[1840px]">
+            <div className="app-shell-frame p-3 sm:p-4 md:p-6 lg:p-8">
               {/* Auto-rotation button */}
               <div className="flex justify-end mb-3 sm:mb-4">
                 <AutoRotationDisplay
