@@ -59,13 +59,13 @@ export function CommandantHero({
         </div>
 
         {/* Main Content Container */}
-        <div className="relative z-10 flex flex-col items-center w-full h-full max-w-[95%] mx-auto justify-evenly py-[4%]">
+        <div className="relative z-10 flex flex-col items-center w-full h-full max-w-[95%] mx-auto justify-center py-[2vh] gap-[2vh]">
           {/* Portrait with Yellow/Gold frame */}
-          <div className="relative w-full flex justify-center items-center flex-grow-[2] min-h-0">
-            <div className="p-[0.3vh] bg-[#FFD700] shadow-2xl transition-transform duration-500 max-h-full">
+          <div className="relative w-full flex justify-center items-center flex-shrink min-h-0">
+            <div className="p-[0.3vh] bg-[#FFD700] shadow-2xl transition-transform duration-500 max-h-[50vh]">
               <div className="p-[0.3vh] bg-white">
                 <div className="p-[0.2vh] bg-[#FFD700]">
-                  <div className="relative aspect-[4/5] h-[55vh] max-h-full w-auto bg-slate-100 overflow-hidden shadow-inner">
+                  <div className="relative aspect-[4/5] h-[45vh] lg:h-[48vh] max-h-full w-auto bg-slate-100 overflow-hidden shadow-inner">
                     {commandantImageUrl ? (
                       <img
                         src={commandantImageUrl}
