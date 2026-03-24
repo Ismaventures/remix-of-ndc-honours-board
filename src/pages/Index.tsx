@@ -545,12 +545,12 @@ const Index = () => {
       <div
         className={`command-center-bg min-h-screen flex flex-col transition-opacity duration-1000 ${isBooting ? "opacity-0" : "opacity-100"}`}
       >
-        <AppHeader onHomeClick={() => setView("home")} />
+        {!autoDisplayActive && <AppHeader onHomeClick={() => setView("home")} />}
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="max-w-[1840px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 relative z-10">
-            <div className="app-shell-frame rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8">
-              <div className="flex justify-end mb-3 sm:mb-4">
+        <main className={`flex-1 overflow-y-auto overflow-x-hidden ${autoDisplayActive ? "p-0" : ""}`}>
+          <div className={`${autoDisplayActive ? "w-screen h-screen max-w-none p-0" : "max-w-[1840px] px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8"} mx-auto relative z-10`}>
+            <div className={`${autoDisplayActive ? "bg-transparent border-none p-0 rounded-none shadow-none" : "app-shell-frame rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8"}`}>
+              <div className={`${autoDisplayActive ? "fixed top-4 right-4 z-[100]" : "flex justify-end mb-3 sm:mb-4"}`}>
                 <AutoRotationDisplay
                   personnel={personnel}
                   visits={visits}
@@ -563,7 +563,7 @@ const Index = () => {
                 />
               </div>
 
-              {renderContent()}
+              {!autoDisplayActive && renderContent()}
             </div>
           </div>
         </main>
