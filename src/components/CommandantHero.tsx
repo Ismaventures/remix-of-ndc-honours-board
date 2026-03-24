@@ -42,7 +42,6 @@ export function CommandantHero({
           <div className="flex-1 bg-[#002060]" title="Navy" />
           <div className="flex-1 bg-[#FF0000]" title="Army" />
           <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
-          <div className="flex-1 bg-[#00FFFF]" title="Cyan" />
         </div>
 
         {/* Background elements */}
@@ -62,11 +61,11 @@ export function CommandantHero({
         {/* Main Content Container */}
         <div className="relative z-10 flex flex-col items-center w-full h-full max-w-[95%] mx-auto justify-center py-[2vh] gap-[1vh] md:gap-[2vh]">
           {/* Portrait with Yellow/Gold frame */}
-          <div className="relative w-full flex justify-center items-center flex-shrink min-h-0 overflow-hidden px-[2vw]">
-            <div className="p-[0.3vh] bg-[#FFD700] shadow-2xl transition-transform duration-500 max-h-[50vh] md:max-h-[55vh]">
+          <div className="relative w-full flex justify-center items-center flex-shrink min-h-0 overflow-hidden">
+            <div className="p-[0.3vh] bg-[#FFD700] shadow-2xl transition-transform duration-500 max-h-[55vh] md:max-h-[60vh]">
               <div className="p-[0.3vh] bg-white">
                 <div className="p-[0.2vh] bg-[#FFD700]">
-                  <div className="relative aspect-[4/5] h-[35vh] sm:h-[40vh] md:h-[48vh] lg:h-[52vh] max-h-full w-auto bg-slate-100 overflow-hidden shadow-inner">
+                  <div className="relative aspect-[4/5] h-[45vh] sm:h-[50vh] md:h-[55vh] lg:h-[58vh] max-h-full w-auto bg-slate-100 overflow-hidden shadow-inner">
                     {commandantImageUrl ? (
                       <img
                         src={commandantImageUrl}
@@ -86,7 +85,7 @@ export function CommandantHero({
           </div>
 
           {/* Identity Plate */}
-          <div className="w-full relative max-w-[90%] md:max-w-[85%] flex-shrink-0 mt-[1vh] md:mt-[2vh]">
+          <div className="w-full relative flex-shrink-0 mt-[1vh] md:mt-[2vh]">
             {/* Top Red Bar */}
             <div className="h-[0.6vh] min-h-[2px] w-full bg-[#FF0000]" />
             {/* Main Info Bar */}
@@ -95,21 +94,21 @@ export function CommandantHero({
                 <h2 className="text-[clamp(1.1rem,4.5vh,4.5rem)] font-bold tracking-tight text-[#FFD700] uppercase drop-shadow-md leading-tight">
                   {name}
                 </h2>
-                <span className="text-[clamp(0.5rem,1.8vh,1.5rem)] font-medium text-white/95 tracking-widest uppercase italic border-t border-white/10 pt-[0.3vh] mt-[0.3vh]">
+                <span className="text-[clamp(0.5rem,2.2vh,1.8rem)] font-medium text-white/95 tracking-widest uppercase italic border-t border-white/10 pt-[0.3vh] mt-[0.3vh]">
                   {titleText}
                 </span>
               </div>
               
               <div className="flex flex-col items-center gap-[0.1vh] md:gap-[0.2vh]">
-                <p className="text-[clamp(0.7rem,2.2vh,2rem)] font-bold text-white tracking-[0.25em] uppercase">
+                <p className="text-[clamp(0.7rem,2.4vh,2.2rem)] font-bold text-white tracking-[0.25em] uppercase">
                   {isCurrent ? "Current Commandant" : "Past Commandant"}
                 </p>
                 <div className="flex flex-col items-center gap-1 md:gap-2 mt-1 md:mt-2">
-                  <p className="text-[clamp(0.6rem,1.8vh,1.4rem)] font-semibold text-[#FFD700] tracking-[0.15em] uppercase bg-white/5 px-3 py-0.5 md:px-4 md:py-1 rounded">
+                  <p className="text-[clamp(0.6rem,2vh,1.6rem)] font-semibold text-[#FFD700] tracking-[0.15em] uppercase bg-white/5 px-3 py-0.5 md:px-4 md:py-1 rounded">
                     {tenureLabel}
                   </p>
                 </div>
-                <p className="text-[clamp(0.7rem,2.2vh,2rem)] font-bold text-[#FFD700] tracking-[0.25em] uppercase mt-2 md:mt-4">
+                <p className="text-[clamp(0.7rem,2.4vh,2.2rem)] font-bold text-[#FFD700] tracking-[0.25em] uppercase mt-2 md:mt-4">
                   National Defence College
                 </p>
               </div>
@@ -117,13 +116,18 @@ export function CommandantHero({
             {/* Bottom Red Bar */}
             <div className="h-[0.6vh] min-h-[2px] w-full bg-[#FF0000]" />
             
-            {/* Sequence Number Indicator */}
-            <div className="absolute -bottom-[1.5vh] right-0 translate-y-1/2">
-               <div className="bg-white text-black text-[clamp(7px,1.2vh,14px)] font-bold px-[1.5vw] py-[0.3vh] border border-slate-400 shadow-md">
-                  c-{commandant?.id ?? "0"}
-               </div>
-            </div>
-          </div>
+        {/* Sequence Number Indicator */}
+        <div className="absolute bottom-[2%] right-[4vw] z-40">
+           <div className="bg-white text-black text-[clamp(7px,1.2vh,14px)] font-bold px-[1.5vw] py-[0.3vh] border border-slate-400 shadow-md">
+              c-{commandant?.id ?? "0"}
+           </div>
+        </div>
+
+        {/* Bottom Defence Colors Strip */}
+        <div className="absolute bottom-0 inset-x-0 h-[2.5%] min-h-[8px] flex z-30">
+          <div className="flex-1 bg-[#002060]" title="Navy" />
+          <div className="flex-1 bg-[#FF0000]" title="Army" />
+          <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
         </div>
       </section>
     );
