@@ -732,8 +732,8 @@ export function AutoRotationDisplay({
         <NdcScatteredTransition durationMs={currentTransitionDuration} />
       )}
 
-      {/* Controls bar */}
-      <div className="flex items-center justify-between px-6 py-3 bg-card/80 backdrop-blur border-b border-primary/15">
+      {/* Controls bar - Now hidden in Auto Mode but keeps Exit functionality accessible via overlay or gesture */}
+      <div className="flex items-center justify-between px-6 py-3 bg-card/80 backdrop-blur border-b border-primary/15 opacity-0 hover:opacity-100 transition-opacity duration-300 absolute top-0 left-0 right-0 z-[60]">
         <span className="text-xs uppercase tracking-widest text-primary font-medium">
           {activeCategory
             ? `${activeCategory} Auto Display`
@@ -764,7 +764,7 @@ export function AutoRotationDisplay({
       </div>
 
       {/* Slide content */}
-      <div className="flex-1 min-h-0 flex items-center justify-center px-2 sm:px-4 md:px-6 pt-2 sm:pt-4 md:pt-6 pb-8 sm:pb-10 md:pb-12 overflow-hidden">
+      <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
         <div
           className={`absolute top-20 md:top-24 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ${showInteractionHint ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}`}
         >
