@@ -115,6 +115,8 @@ export function CommandantHero({
             </div>
             {/* Bottom Red Bar */}
             <div className="h-[0.6vh] min-h-[2px] w-full bg-[#FF0000]" />
+          </div>
+        </div>
             
         {/* Sequence Number Indicator */}
         <div className="absolute bottom-[2%] right-[4vw] z-40">
