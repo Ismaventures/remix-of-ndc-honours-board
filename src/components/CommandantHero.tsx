@@ -100,8 +100,6 @@ export function CommandantHero({
           </h2>
 
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 mb-4 text-[11px] uppercase tracking-[0.18em] text-primary/90">
-            <span className="px-2.5 py-1 rounded border border-primary/30 bg-primary/10">{isCurrent ? "Active Command" : "Archive Record"}</span>
-            <span className="text-primary/50">•</span>
             <span>{tenureLabel}</span>
           </div>
 
@@ -130,24 +128,6 @@ export function CommandantHero({
           >
             {description}
           </p>
-
-          <div
-            className={`flex items-center ${isCompact ? "gap-4 mt-5 p-3" : "gap-5 mt-7 p-4"} justify-center md:justify-start transition-all duration-700 ease-out delay-500 rounded-lg bg-black/25 border border-primary/20 inline-flex ${
-              visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            }`}
-          >
-            <img
-              src={ndcCrest}
-              alt="NDC Crest"
-              className={`${isCompact ? "h-10 w-10" : "h-12 w-12"} object-contain opacity-80 drop-shadow-[0_0_8px_hsl(var(--primary)/0.35)]`}
-            />
-            <div
-              className={`${isCompact ? "h-8" : "h-10"} w-px bg-primary/30`}
-            />
-            <span className="text-[11px] uppercase tracking-[0.22em] text-white/80 font-semibold">
-              Intellect · Courage · Patriotism
-            </span>
-          </div>
         </div>
       </div>
     </section>

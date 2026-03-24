@@ -32,9 +32,6 @@ export function BootSequence({
   const { commandants } = useCommandantsStore();
 
   const currentCommandant = commandants.find((c) => c.isCurrent);
-  const [typedLine1, setTypedLine1] = useState("");
-  const [typedLine2, setTypedLine2] = useState("");
-  const [typedLine3, setTypedLine3] = useState("");
   const [bootPortraits, setBootPortraits] = useState<BootPortrait[]>([]);
   const [activePortraitIndex, setActivePortraitIndex] = useState(0);
   const [portraitVisible, setPortraitVisible] = useState(true);
@@ -43,10 +40,6 @@ export function BootSequence({
   const [bootStage, setBootStage] = useState<"preboot" | "scatter" | "gate">(
     "preboot",
   );
-
-  const line1Txt = "Initializing Secure Environment...";
-  const line2Txt = "Verifying System Integrity...";
-  const line3Txt = "Loading Honour Archives...";
 
   const bootSettings = settings ?? DEFAULT_BOOT_SEQUENCE_SETTINGS;
   const timeScale = Math.max(
@@ -90,6 +83,14 @@ export function BootSequence({
   });
 
   useEffect(() => {
+    // Lock body scroll while boot sequence is active
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  useEffect(() => {
     if (assignments.preloader) {
       playAudioTrack(assignments.preloader, true);
     }
@@ -97,36 +98,35 @@ export function BootSequence({
     const t1 = setTimeout(() => setStep(1), scaledDelay(1000));
     const t2 = setTimeout(() => setStep(2), scaledDelay(2000));
 
+    const transitionTimers: ReturnType<typeof setTimeout>[] = [];
     const t3 = setTimeout(() => {
       setStep(3);
-      typeText(line1Txt, setTypedLine1, () => {
-        setStep(4);
-        typeText(line2Txt, setTypedLine2, () => {
-          setStep(5);
-          typeText(line3Txt, setTypedLine3, () => {
-            setStep(6);
+      transitionTimers.push(
+        setTimeout(() => setStep(4), scaledDelay(700, 280)),
+        setTimeout(() => setStep(5), scaledDelay(1400, 560)),
+        setTimeout(() => setStep(6), scaledDelay(2100, 840)),
+        setTimeout(() => {
+          setStep(7);
+          transitionTimers.push(
             setTimeout(() => {
-              setStep(7);
-              setTimeout(
-                () => {
-                  setBootStage("scatter");
-                  setTimeout(() => {
-                    setBootStage("gate");
-                    setShowWelcomeGate(true);
-                  }, 2500); // 2.5 second scatter transition before showing gate
-                },
-                scaledDelay(700, 300),
+              setBootStage("scatter");
+              transitionTimers.push(
+                setTimeout(() => {
+                  setBootStage("gate");
+                  setShowWelcomeGate(true);
+                }, 2500),
               );
-            }, scaledDelay(1500));
-          });
-        });
-      });
+            }, scaledDelay(700, 300)),
+          );
+        }, scaledDelay(3600, 1440)),
+      );
     }, scaledDelay(3000));
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
+      transitionTimers.forEach((timer) => clearTimeout(timer));
     };
   }, [assignments.preloader, onComplete, timeScale]);
 
@@ -207,16 +207,20 @@ export function BootSequence({
 
     if (step < 2 || rotationIndices.length === 0) return;
 
-    const archiveBase = Math.max(250, bootSettings.archiveTransitionMs);
+    const archiveBase = Math.max(850, bootSettings.archiveTransitionMs);
     const intervalMs =
       step < 5
-        ? Math.round(archiveBase * 0.85)
+        ? Math.round(archiveBase * 1.6)
         : step < 6
-          ? Math.round(archiveBase * 1.1)
-          : Math.round(archiveBase * 1.35);
-    const fadeOutMs = Math.max(
-      90,
-      Math.min(240, Math.round(archiveBase * 0.24)),
+          ? Math.round(archiveBase * 1.85)
+          : Math.round(archiveBase * 2.1);
+    const flipOutMs = Math.max(
+      180,
+      Math.min(420, Math.round(archiveBase * 0.36)),
+    );
+    const flipInDelayMs = Math.max(
+      120,
+      Math.min(260, Math.round(archiveBase * 0.2)),
     );
 
     const timer = setInterval(() => {
@@ -230,8 +234,10 @@ export function BootSequence({
           const nextPastIndex = (prevIndexInPast + 1) % rotationIndices.length;
           return rotationIndices[nextPastIndex];
         });
-        setPortraitVisible(true);
-      }, fadeOutMs);
+        setTimeout(() => {
+          setPortraitVisible(true);
+        }, flipInDelayMs);
+      }, flipOutMs);
     }, intervalMs);
 
     return () => clearInterval(timer);
@@ -244,26 +250,6 @@ export function BootSequence({
 
     return () => clearInterval(timer);
   }, []);
-
-  const typeText = (
-    text: string,
-    setter: React.Dispatch<React.SetStateAction<string>>,
-    onFinish: () => void,
-  ) => {
-    let current = "";
-    let i = 0;
-    const letterMs = Math.max(20, Math.min(120, Math.round(40 * timeScale)));
-    const settleMs = scaledDelay(400, 180);
-    const interval = setInterval(() => {
-      current += text[i];
-      setter(current);
-      i++;
-      if (i === text.length) {
-        clearInterval(interval);
-        setTimeout(onFinish, settleMs);
-      }
-    }, letterMs);
-  };
 
   return (
     <div
@@ -307,7 +293,7 @@ export function BootSequence({
       )}
 
       {bootStage === "preboot" && (
-        <div className="relative w-full h-full max-h-screen max-w-5xl px-4 md:px-8 pt-4 md:pt-6 pb-24 md:pb-28 flex flex-col items-center justify-between gap-4 md:gap-6 z-10 transition-opacity duration-500 opacity-100">
+        <div className="relative w-full h-full max-h-screen max-w-5xl px-4 md:px-8 pt-4 md:pt-6 pb-4 md:pb-6 flex flex-col items-center justify-start gap-4 md:gap-6 z-10 transition-opacity duration-500 opacity-100 overflow-hidden scrollbar-hide">
           {/* Header - NDC Top */}
           <div
             className={`transition-all duration-1000 ease-out flex flex-col items-center w-full shrink-0 ${step >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
@@ -337,25 +323,27 @@ export function BootSequence({
             </h2>
           </div>
 
-          {/* Dynamic Center Row: Commandant Portrait + Terminal */}
-          <div className="w-full flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 max-w-4xl mb-6 md:mb-8">
+          {/* Dynamic Center Row: Commandant Portrait */}
+          <div className="w-full flex-1 min-h-0 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 max-w-5xl py-1">
             {/* Boot Portrait Sequence: past commandants in motion, then current commandant lock-in */}
             {(currentCommandant || currentPortrait) && (
               <div
-                className={`transition-all duration-1000 delay-300 ease-out flex flex-col items-center shrink-0 ${step >= 3 ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+                className={`transition-all duration-1000 delay-300 ease-out flex w-[clamp(130px,28vh,224px)] flex-col items-center shrink-0 justify-center ${step >= 3 ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
               >
-                <div className="relative p-1 rounded-full border border-white/25 bg-white/5 shadow-[0_0_30px_hsl(var(--primary)/0.25)] flex-shrink-0">
-                  <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-2 border-primary relative z-10 bg-slate-900">
+                <div className="relative w-full rounded-xl border border-white/20 bg-slate-900/75 backdrop-blur-md p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)] flex flex-col">
+                  <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120%_100%_at_0%_0%,hsl(var(--primary)/0.2),transparent_58%)] rounded-xl" />
+                  <div
+                    className={`relative z-10 w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full overflow-hidden border-2 border-primary/45 bg-slate-950 transition-all duration-700 ${portraitVisible ? "opacity-100 [transform:perspective(1000px)_rotateY(0deg)_translateX(0px)_scale(1)]" : "opacity-0 [transform:perspective(1000px)_rotateY(76deg)_translateX(-26px)_scale(0.94)]"}`}
+                    style={{ transformOrigin: "left center" }}
+                  >
                     {currentPortrait?.imageUrl ? (
                       <img
                         src={currentPortrait.imageUrl}
                         alt={currentPortrait.name}
-                        className={`w-full h-full object-cover object-top transition-all duration-500 ${portraitVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"} ${currentPortrait?.isCurrent && step >= 7 ? "grayscale-0" : "grayscale"}`}
+                        className={`w-full h-full object-cover object-top transition-all duration-500 ${currentPortrait?.isCurrent && step >= 7 ? "grayscale-0" : "grayscale-[35%]"}`}
                       />
                     ) : (
-                      <div
-                        className={`w-full h-full bg-slate-900 flex items-center justify-center transition-all duration-500 ${portraitVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
-                      >
+                      <div className="w-full h-full bg-slate-900 flex items-center justify-center">
                         <div className="flex flex-col items-center gap-2 text-white/70">
                           <img
                             src={ndcCrest}
@@ -368,82 +356,75 @@ export function BootSequence({
                         </div>
                       </div>
                     )}
+                    <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/0 via-black/0 to-black/45" />
+                    <div className="absolute inset-0 pointer-events-none opacity-[0.08] bg-[linear-gradient(45deg,hsl(var(--foreground)/0.15)_25%,transparent_25%,transparent_75%,hsl(var(--foreground)/0.15)_75%),linear-gradient(45deg,hsl(var(--foreground)/0.15)_25%,transparent_25%,transparent_75%,hsl(var(--foreground)/0.15)_75%)] bg-[length:24px_24px] bg-[position:0_0,12px_12px]" />
                   </div>
 
-                  {/* Holographic scanning circle elements */}
-                  <div className="absolute inset-0 rounded-full border-[1px] border-primary border-dashed animate-[spin_10s_linear_infinite] opacity-50" />
-                  <div className="absolute -inset-4 rounded-full border-[1px] border-primary border-dotted animate-[spin_15s_linear_infinite_reverse] opacity-30" />
+                  <div className="mt-2 text-left rounded-lg bg-slate-950/70 p-1.5 z-10 w-full">
+                    <p className="text-[7px] text-white/65 tracking-widest uppercase mb-0.5">
+                      {currentPortrait?.isCurrent && step >= 7
+                        ? "Current Commandant"
+                        : "Commandants Sequence"}
+                    </p>
+                    <p className="text-[9px] md:text-[11px] font-bold text-white tracking-wide uppercase leading-tight">
+                      {currentPortrait?.name ?? currentCommandant.name}
+                    </p>
+                    <p className="text-[8px] text-primary mt-0.5 uppercase tracking-wide truncate">
+                      {currentPortrait?.rankOrTitle ?? currentCommandant.title}
+                    </p>
+                    <p className="text-[8px] text-white/72 mt-0.5 uppercase tracking-wide">
+                      {currentPortrait?.tenureLabel ??
+                        `${currentCommandant.tenureStart}${currentCommandant.tenureEnd ? ` - ${currentCommandant.tenureEnd}` : " - Present"}`}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="mt-3 md:mt-4 text-center bg-slate-950/82 py-2 px-3 md:px-4 rounded-lg border border-white/15 backdrop-blur max-w-[280px]">
-                  <p className="text-[10px] text-white/65 tracking-widest uppercase mb-1">
+                <div className="mt-2 w-full rounded-md border border-white/12 bg-slate-950/70 px-1 py-1 overflow-hidden hidden sm:block">
+                  <div className="relative h-6 md:h-8">
+                    <div
+                      className="absolute inset-y-0 left-0 flex items-center gap-1.5 transition-transform duration-700"
+                      style={{ transform: `translateX(-${activePortraitIndex * 40}px)` }}
+                    >
+                      {bootPortraits.slice(0, 20).map((item, idx) => (
+                        <div
+                          key={item.id}
+                          className={`h-6 w-6 md:h-8 md:w-8 shrink-0 rounded-full overflow-hidden border transition-all duration-300 ${idx === activePortraitIndex ? "border-primary shadow-[0_0_14px_hsl(var(--primary)/0.42)] scale-110" : "border-white/20 opacity-70"}`}
+                        >
+                          {item.imageUrl ? (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.name}
+                              className="h-full w-full object-cover object-top"
+                            />
+                          ) : (
+                            <div className="h-full w-full bg-slate-800" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-2 text-center bg-slate-950/82 py-1 px-2 md:px-3 rounded-lg border border-white/15 backdrop-blur w-full">
+                  <p className="text-[7px] text-white/65 tracking-widest uppercase mb-0.5">
                     {step >= 7
                       ? "Authorizing Command"
                       : "Archive Commandant Sequence"}
                   </p>
-                  <p className="text-xs md:text-sm font-bold text-white tracking-wide uppercase drop-shadow-[0_0_5px_hsl(var(--primary)/0.45)]">
+                  <p className="text-[9px] md:text-[11px] font-bold text-white tracking-wide uppercase drop-shadow-[0_0_5px_hsl(var(--primary)/0.45)]">
                     {currentPortrait?.name ?? currentCommandant.name}
                   </p>
-                  <p className="text-[9px] md:text-[10px] text-primary mt-1 uppercase tracking-wide truncate">
+                  <p className="text-[7px] md:text-[8px] text-primary mt-0.5 uppercase tracking-wide truncate">
                     {currentPortrait?.rankOrTitle ?? currentCommandant.title}
-                  </p>
-                  <p className="text-[9px] md:text-[10px] text-white/72 mt-0.5 uppercase tracking-wide">
-                    {currentPortrait?.tenureLabel ??
-                      `${currentCommandant.tenureStart}${currentCommandant.tenureEnd ? ` - ${currentCommandant.tenureEnd}` : " - Present"}`}
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Sequence / Console panel */}
-            <div
-              className={`w-full md:w-[420px] text-left font-mono text-xs md:text-sm text-white/82 ${currentCommandant ? "md:border-l md:border-white/18 md:pl-8" : ""} py-2 min-h-[90px] md:max-h-[230px] overflow-y-auto`}
-            >
-              {step < 7 ? (
-                <div className="space-y-4 md:space-y-5">
-                  <div className="text-[10px] md:text-xs text-primary uppercase tracking-[0.16em] pb-1 border-b border-white/20">
-                    Commandants Archive Sequence
-                  </div>
-
-                  <div className="flex items-center gap-1.5 overflow-hidden">
-                    {bootPortraits.slice(0, 14).map((item, idx) => (
-                      <span
-                        key={item.id}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${idx === activePortraitIndex ? "w-6 bg-primary" : "w-1.5 bg-white/25"}`}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="h-px bg-gradient-to-r from-primary/0 via-primary/75 to-primary/0 animate-pulse-slow" />
-
-                  <div className="text-[10px] uppercase tracking-[0.16em] text-white/78">
-                    {statusLabel}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2 md:space-y-3">
-                  <div className="text-[10px] md:text-xs text-primary uppercase tracking-[0.14em] pb-1 border-b border-white/20">
-                    Command Console - {statusLabel}
-                  </div>
-                  <div className="flex items-center">
-                    <span className="mr-2 text-primary/80">[01]</span>
-                    <span>{typedLine1}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="mr-2 text-primary/80">[02]</span>
-                    <span>{typedLine2}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="mr-2 text-primary/80">[03]</span>
-                    <span>{typedLine3}</span>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Boot progress indicator (kept low and minimal for a formal look) */}
-          <div className="absolute bottom-3 md:bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:w-[calc(100%-4rem)] max-w-3xl min-h-[72px] flex flex-col items-center justify-center shrink-0 gap-2 bg-slate-950/65 backdrop-blur-sm rounded-lg px-2 py-2 border border-white/10">
+          <div className="w-full max-w-3xl min-h-[72px] flex flex-col items-center justify-center shrink-0 gap-2 bg-slate-950/65 backdrop-blur-sm rounded-lg px-2 py-2 border border-white/10 mt-auto">
             <div className="w-full h-2 bg-slate-800/80 border border-white/15 rounded overflow-hidden">
               <div
                 className="h-full bg-primary/85 transition-all duration-700"
@@ -524,7 +505,7 @@ export function BootSequence({
             <p
               className={`mt-4 text-xs md:text-base text-white/80 leading-relaxed max-w-md mx-auto font-light transition-all duration-700 delay-[900ms] ${showWelcomeGate ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
             >
-              Initialization completed. Access to the Commandant Honours Archive
+              Initialization completed. Access to the NDC Chronicles of Staffs Archive
               is now ready. Select the portal entry below to proceed.
             </p>
             <div

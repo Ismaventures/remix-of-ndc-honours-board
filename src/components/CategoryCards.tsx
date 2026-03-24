@@ -106,7 +106,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
     <section className="mb-8 sm:mb-10">
       <div className="mb-6 flex flex-col items-center">
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-serif text-foreground tracking-wider uppercase text-center mt-6 sm:mt-8">
-          Chronicles of Staff
+          Chronicles of Directing Staff
         </h2>
         <div className="h-1 w-24 bg-border mt-2 mb-2 rounded-full" />
         <p className="text-xs sm:text-sm text-muted-foreground tracking-widest uppercase text-center">

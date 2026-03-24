@@ -17,17 +17,14 @@ export function AppHeader({ onHomeClick }: AppHeaderProps) {
           className="h-10 w-10 sm:h-14 sm:w-14 object-contain shrink-0 drop-shadow-[0_0_10px_hsl(var(--primary)/0.35)]"
         />
         <div className="flex flex-col min-w-0">
-          <h1 className="text-sm sm:text-lg lg:text-xl font-extrabold tracking-[0.06em] text-white leading-tight truncate uppercase">
+          <h1 className="text-sm sm:text-lg lg:text-xl font-extrabold tracking-[0.06em] text-white leading-tight truncate uppercase text-left">
             National Defence College Nigeria
           </h1>
-          <p className="text-[10px] sm:text-xs text-white/65 tracking-[0.22em] uppercase truncate">
-            Strategic Archive Console
+          <p className="text-[10px] sm:text-xs text-primary/80 tracking-[0.12em] sm:tracking-[0.18em] uppercase truncate text-left mt-0.5">
+            Intellect · Courage · Patriotism
           </p>
         </div>
       </button>
-      <div className="shrink-0 hidden sm:flex items-center text-[10px] md:text-xs uppercase tracking-[0.18em] text-white/55 border border-primary/20 rounded-md px-3 py-1 bg-white/[0.03]">
-        Live Archive
-      </div>
     </header>
   );
 }
