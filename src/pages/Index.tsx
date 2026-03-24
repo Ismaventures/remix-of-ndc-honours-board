@@ -98,6 +98,7 @@ const Index = () => {
     setTransitionDuration: setAutoDisplayTransitionDuration,
     setTransitionSequence: setAutoDisplayTransitionSequence,
     setContextTransitionSequence: setAutoDisplayContextTransitionSequence,
+    setCommandantLayout: setAutoDisplayCommandantLayout,
     importSettings: importAutoDisplaySettings,
     resetSettings: resetAutoDisplaySettings,
   } = useAutoDisplaySettings();
@@ -438,6 +439,7 @@ const Index = () => {
           onAutoDisplayContextTransitionSequenceChange={
             setAutoDisplayContextTransitionSequence
           }
+          onAutoDisplayCommandantLayoutChange={setAutoDisplayCommandantLayout}
           onImportAutoDisplaySettings={importAutoDisplaySettings}
           onResetAutoDisplaySettings={resetAutoDisplaySettings}
           devices={devices}

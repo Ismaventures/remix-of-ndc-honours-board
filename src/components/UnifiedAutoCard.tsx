@@ -31,7 +31,7 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
   const citation = isPersonnel ? person.citation : visit.description;
 
   return (
-    <section className="relative w-full aspect-video flex flex-col items-center justify-center overflow-hidden bg-white text-slate-900 border border-slate-200">
+    <section className="relative w-full h-full min-h-[320px] flex flex-col items-center justify-center overflow-hidden bg-white text-slate-900 border border-slate-200">
       {/* Top Defence Colors Strip */}
       <div className="absolute top-0 inset-x-0 h-[3%] min-h-[10px] flex z-30">
         <div className="flex-1 bg-[#002060]" title="Navy" />
@@ -54,20 +54,22 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
       </div>
 
       {/* Main Content Container */}
-      <div className="relative z-10 flex flex-col items-center w-full h-full max-w-[100%] mx-auto justify-center py-[2vh] gap-[1vh] md:gap-[2vh]">
+      <div className="relative z-10 flex flex-col items-center w-full h-full max-w-[min(96vw,980px)] sm:max-w-[min(95vw,1050px)] md:max-w-[min(92vw,1120px)] mx-auto justify-center py-[max(10px,1.4vh)] gap-[max(8px,1.1vh)] md:gap-[2vh]">
         {/* Portrait with Yellow/Gold frame */}
         <div className="relative w-full flex justify-center items-center flex-shrink min-h-0 overflow-hidden">
-          <div className="p-[0.3vh] bg-[#FFD700] shadow-2xl transition-transform duration-500 max-h-[55vh] md:max-h-[60vh]">
-            <div className="p-[0.3vh] bg-white">
-              <div className="p-[0.2vh] bg-[#FFD700]">
-                <div className="relative aspect-[4/5] h-[45vh] sm:h-[50vh] md:h-[55vh] lg:h-[58vh] max-h-full w-auto bg-slate-100 overflow-hidden shadow-inner">
+          <div className="p-[max(2px,0.24vh)] bg-[#FFD700] shadow-2xl transition-transform duration-500">
+            <div className="p-[max(2px,0.24vh)] bg-white">
+              <div className="p-[max(1px,0.2vh)] bg-[#FFD700]">
+                <div className="relative aspect-[4/5] h-[clamp(220px,54dvh,560px)] sm:h-[clamp(260px,56dvh,600px)] md:h-[clamp(280px,58dvh,640px)] w-auto max-h-[62dvh] bg-slate-100 overflow-hidden shadow-inner">
                   {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={mainName}
-                      className="w-full h-full object-cover object-top"
-                      loading="eager"
-                    />
+                    <div className="w-full h-full p-[max(4px,0.55vh)] bg-slate-100">
+                      <img
+                        src={imageUrl}
+                        alt={mainName}
+                        className="w-full h-full object-contain object-center"
+                        loading="eager"
+                      />
+                    </div>
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
                       <Shield className="h-[15%] w-auto opacity-20" />

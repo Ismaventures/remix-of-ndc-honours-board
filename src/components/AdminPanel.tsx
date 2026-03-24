@@ -43,6 +43,7 @@ interface AdminPanelProps {
   onAutoDisplayTransitionDurationChange: (transition: AutoDisplayTransitionType, durationMs: number) => void;
   onAutoDisplayTransitionSequenceChange: (sequence: AutoDisplayTransitionType[]) => void;
   onAutoDisplayContextTransitionSequenceChange: (context: AutoDisplayContextKey, sequence: AutoDisplayTransitionType[]) => void;
+  onAutoDisplayCommandantLayoutChange?: (layout: 'standard' | 'split') => void;
   onImportAutoDisplaySettings: (settings: Partial<AutoDisplaySettings>) => void;
   onResetAutoDisplaySettings: () => void;
   devices: DeviceClient[];
@@ -319,7 +320,7 @@ export function AdminPanel({
   const [previewNonce, setPreviewNonce] = useState(0);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewContextLabel, setPreviewContextLabel] = useState('Global');
-  const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'cinematic' | 'actions'>('boot');
+  const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'cinematic' | 'actions' | 'commandantLayout'>('boot');
   const [guideFlowActive, setGuideFlowActive] = useState(false);
   const [guideNextSectionId, setGuideNextSectionId] = useState<string | null>(null);
   const {
@@ -1448,6 +1449,32 @@ export function AdminPanel({
                           <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Preview</button>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                <button onClick={() => setActiveTransitionPanel('commandantLayout')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Commandant Auto-Display Layout</span>
+                </button>
+                {activeTransitionPanel === 'commandantLayout' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 space-y-4">
+                    <p className="text-xs text-muted-foreground">Select the layout style used for Commandants when the Auto Rotation Display is running.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <button 
+                        onClick={() => setAutoDisplayDraft(prev => ({ ...prev, commandantLayout: 'standard' }))}
+                        className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'standard' || !autoDisplayDraft.commandantLayout ? 'border-primary/60 bg-primary/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-primary/20 bg-background/50 hover:bg-muted/30'}`}
+                      >
+                        <h4 className="text-sm font-bold text-foreground">Standard Layout</h4>
+                        <p className="text-[11px] text-muted-foreground mt-1">Portrait on top, centered identity plate underneath.</p>
+                      </button>
+                      
+                      <button 
+                        onClick={() => setAutoDisplayDraft(prev => ({ ...prev, commandantLayout: 'split' }))}
+                        className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'split' ? 'border-primary/60 bg-primary/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-primary/20 bg-background/50 hover:bg-muted/30'}`}
+                      >
+                        <h4 className="text-sm font-bold text-foreground">Split (Side-by-Side) Layout</h4>
+                        <p className="text-[11px] text-muted-foreground mt-1">Portrait on one side, write-up and bio details on the other.</p>
+                      </button>
                     </div>
                   </div>
                 )}

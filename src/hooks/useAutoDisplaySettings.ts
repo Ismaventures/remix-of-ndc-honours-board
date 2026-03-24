@@ -26,6 +26,8 @@ export type AutoDisplayContextKey =
   | 'Directing Staff'
   | 'Allied';
 
+export type CommandantLayoutType = 'standard' | 'split';
+
 export interface AutoDisplayTiming {
   slideDurationMs: number;
   transitionDurationMs: number;
@@ -38,6 +40,7 @@ export interface AutoDisplaySettings {
   transitionSequenceByContext: Record<AutoDisplayContextKey, AutoDisplayTransitionType[]>;
   appliedTransitionByContext: Record<AutoDisplayContextKey, AutoDisplayTransitionType | null>;
   transitionDurationByTypeMs: Record<AutoDisplayTransitionType, number>;
+  commandantLayout?: CommandantLayoutType;
 }
 
 const STORAGE_KEY = 'ndc-auto-display-settings';
@@ -147,6 +150,7 @@ export const DEFAULT_AUTO_DISPLAY_SETTINGS: AutoDisplaySettings = {
     'ndc-scatter': 2500,
     'pro-slider': 800,
   },
+  commandantLayout: 'standard',
 };
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
@@ -207,6 +211,10 @@ function sanitizeSettings(input: Partial<AutoDisplaySettings> | null | undefined
     return acc;
   }, {} as Record<AutoDisplayTransitionType, number>);
 
+  const commandantLayout = (input?.commandantLayout === 'split' || input?.commandantLayout === 'standard') 
+    ? input.commandantLayout 
+    : DEFAULT_AUTO_DISPLAY_SETTINGS.commandantLayout;
+
   return {
     global,
     byContext,
@@ -214,6 +222,7 @@ function sanitizeSettings(input: Partial<AutoDisplaySettings> | null | undefined
     transitionSequenceByContext,
     appliedTransitionByContext,
     transitionDurationByTypeMs,
+    commandantLayout,
   };
 }
 
@@ -311,6 +320,14 @@ export function useAutoDisplaySettings() {
     write(merged);
   };
 
+  const setCommandantLayout = (layout: 'standard' | 'split') => {
+    const merged = sanitizeSettings({
+      ...settings,
+      commandantLayout: layout,
+    });
+    write(merged);
+  };
+
   const importSettings = (candidate: Partial<AutoDisplaySettings>) => {
     const merged = sanitizeSettings(candidate);
     write(merged);
@@ -326,6 +343,7 @@ export function useAutoDisplaySettings() {
       setTransitionDuration,
       setTransitionSequence,
       setContextTransitionSequence,
+      setCommandantLayout,
       importSettings,
       resetSettings,
     }),

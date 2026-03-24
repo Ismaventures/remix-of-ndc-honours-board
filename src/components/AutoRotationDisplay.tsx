@@ -8,6 +8,7 @@ import {
   Commandant,
 } from "@/types/domain";
 import { CommandantHero } from "./CommandantHero";
+import { CommandantSplitHero } from "./CommandantSplitHero";
 import { UnifiedAutoCard } from "./UnifiedAutoCard";
 import { ProfileModal } from "./ProfileModal";
 import ndcCrest from "/images/ndc-crest.png";
@@ -601,11 +602,18 @@ export function AutoRotationDisplay({
                 : cinematicTransition(2.8, { repeat: Infinity, repeatDelay: 2.4 })
             }
           />
-          <CommandantHero 
-            commandant={slide.commandant} 
-            compactDescription 
-            isAutoDisplay 
-          />
+          {effectiveSettings.commandantLayout === 'split' ? (
+            <CommandantSplitHero 
+              commandant={slide.commandant} 
+              isAutoDisplay 
+            />
+          ) : (
+            <CommandantHero 
+              commandant={slide.commandant} 
+              compactDescription 
+              isAutoDisplay 
+            />
+          )}
         </motion.button>
       )}
 
@@ -735,7 +743,7 @@ export function AutoRotationDisplay({
         </button>
 
         <div
-          className={`${slide.type === "commandant" ? "max-w-5xl xl:max-w-6xl" : "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl"} relative w-full max-h-full -translate-y-2 sm:-translate-y-3 md:-translate-y-4 transition-all ease-out will-change-transform ${getTransitionClasses()}`}
+          className={`${slide.type === "commandant" ? "max-w-[min(96vw,1120px)] xl:max-w-[min(92vw,1240px)]" : "max-w-[min(97vw,1140px)] xl:max-w-[min(93vw,1260px)]"} relative w-full max-h-full transition-all ease-out will-change-transform ${getTransitionClasses()}`}
           style={{ transitionDuration: `${currentTransitionDuration}ms` }}
         >
           {slideImageUrl && (
