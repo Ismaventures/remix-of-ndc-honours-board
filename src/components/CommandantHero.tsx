@@ -59,22 +59,23 @@ export function CommandantHero({
         </div>
 
         {/* Main Content Container */}
-        <div className="relative z-10 flex flex-col items-center w-full max-w-5xl px-8">
+        <div className="relative z-10 flex flex-col items-center w-full max-w-[90vw] lg:max-w-6xl px-4 md:px-8">
           {/* Portrait with Yellow/Gold frame */}
-          <div className="relative mb-8 pt-6">
-            <div className="p-[3px] bg-[#FFD700] shadow-xl">
-              <div className="p-[3px] bg-white">
-                <div className="p-[2px] bg-[#FFD700]">
-                  <div className="w-[320px] h-[400px] bg-slate-100 overflow-hidden relative">
+          <div className="relative mb-6 md:mb-10 pt-4 md:pt-8 w-full flex justify-center">
+            <div className="p-[2px] md:p-[4px] bg-[#FFD700] shadow-2xl transition-transform duration-500 hover:scale-[1.01]">
+              <div className="p-[2px] md:p-[4px] bg-white">
+                <div className="p-[1px] md:p-[2px] bg-[#FFD700]">
+                  <div className="w-[min(85vw,460px)] aspect-[4/5] md:w-[480px] md:h-[600px] bg-slate-100 overflow-hidden relative shadow-inner">
                     {commandantImageUrl ? (
                       <img
                         src={commandantImageUrl}
                         alt={name}
                         className="w-full h-full object-cover object-top"
+                        loading="eager"
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
-                        <Shield className="h-20 w-20" />
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
+                        <Shield className="h-24 w-24 opacity-20" />
                       </div>
                     )}
                   </div>
@@ -84,32 +85,35 @@ export function CommandantHero({
           </div>
 
           {/* Identity Plate */}
-          <div className="w-full relative max-w-4xl">
+          <div className="w-full relative max-w-[min(90vw,900px)]">
             {/* Top Red Bar */}
-            <div className="h-1.5 w-full bg-[#FF0000]" />
+            <div className="h-1 md:h-2 w-full bg-[#FF0000]" />
             {/* Main Info Bar */}
-            <div className="bg-[#002060] w-full py-5 px-8 flex flex-col items-center justify-center text-center shadow-2xl">
-              <div className="flex flex-wrap items-baseline justify-center gap-3 mb-1">
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#FFD700] uppercase drop-shadow-sm">
+            <div className="bg-[#002060] w-full py-4 md:py-7 px-4 md:px-12 flex flex-col items-center justify-center text-center shadow-2xl">
+              <div className="flex flex-col items-center gap-1 md:gap-2 mb-2 md:mb-3">
+                <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#FFD700] uppercase drop-shadow-md leading-tight">
                   {name}
                 </h2>
-                <span className="text-sm md:text-base font-medium text-white/90 tracking-wider">
+                <span className="text-xs sm:text-base md:text-lg lg:text-xl font-medium text-white/95 tracking-widest uppercase italic border-t border-white/10 pt-1 mt-1">
                   {titleText}
                 </span>
               </div>
-              <p className="text-lg md:text-xl font-bold text-white tracking-widest uppercase mb-0.5">
-                Commandant
-              </p>
-              <p className="text-lg md:text-xl font-bold text-[#FFD700] tracking-widest uppercase">
-                National Defence College
-              </p>
+              
+              <div className="flex flex-col items-center gap-0.5 md:gap-1">
+                <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-white tracking-[0.2em] uppercase">
+                  Commandant
+                </p>
+                <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-[#FFD700] tracking-[0.2em] uppercase">
+                  National Defence College
+                </p>
+              </div>
             </div>
             {/* Bottom Red Bar */}
-            <div className="h-1.5 w-full bg-[#FF0000]" />
+            <div className="h-1 md:h-2 w-full bg-[#FF0000]" />
             
             {/* Sequence Number Indicator */}
-            <div className="absolute -bottom-6 right-0">
-               <div className="bg-white text-black text-xs font-bold px-3 py-1 border border-slate-400 shadow-sm">
+            <div className="absolute -bottom-4 md:-bottom-8 right-0">
+               <div className="bg-white text-black text-[10px] md:text-sm font-bold px-3 md:px-5 py-1 md:py-2 border border-slate-400 shadow-md">
                   c-{commandant?.id ?? "0"}
                </div>
             </div>
