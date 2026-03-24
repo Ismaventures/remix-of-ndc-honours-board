@@ -8,6 +8,7 @@ import {
   Commandant,
 } from "@/types/domain";
 import { CommandantHero } from "./CommandantHero";
+import { UnifiedAutoCard } from "./UnifiedAutoCard";
 import { ProfileModal } from "./ProfileModal";
 import ndcCrest from "/images/ndc-crest.png";
 import { useAudioStore } from "@/hooks/useAudioStore";
@@ -574,141 +575,34 @@ export function AutoRotationDisplay({
       {slide.type === "personnel" && (
         <motion.button
           onClick={() => setSelectedPerson(slide.person)}
-          className="w-full text-left relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-4 sm:p-6 md:p-10 lg:p-14 shadow-[0_0_50px_-12px_hsl(var(--primary)/0.2)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+          className="w-full text-left relative overflow-hidden focus-visible:outline-none"
           aria-label={`Open profile for ${slide.person.name}`}
-          whileHover={prefersReducedMotion ? undefined : { y: -5, scale: 1.03 }}
-          whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+          whileHover={prefersReducedMotion ? undefined : { scale: 1.01 }}
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
           transition={cinematicTransition(0.24)}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.14)_0%,transparent_60%)]" />
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
-
-          <div className="relative flex flex-col md:flex-row items-center md:items-start gap-5 sm:gap-7 md:gap-10">
-            <div className="relative w-28 h-36 sm:w-36 sm:h-48 md:w-48 md:h-64 rounded-md border border-primary/40 overflow-hidden bg-muted flex-shrink-0 shadow-xl group-hover:-translate-y-2 transition-transform duration-500">
-              <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/30 transition-colors duration-500 z-20 rounded-md" />
-              {slide.person.imageUrl ? (
-                <img
-                  src={slide.person.imageUrl}
-                  alt={slide.person.name}
-                  className="w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-110"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-xs uppercase tracking-widest text-primary/40 bg-gradient-to-b from-muted to-muted/50 p-4 text-center">
-                  <span>No Image</span>
-                </div>
-              )}
-              <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-primary/50 z-20" />
-              <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-primary/50 z-20" />
-              <div className="absolute bottom-2 left-2 w-3 h-3 border-b border-l border-primary/50 z-20" />
-              <div className="absolute bottom-2 right-2 w-3 h-3 border-b border-r border-primary/50 z-20" />
-            </div>
-
-            <motion.div
-              className="text-center md:text-left flex-1 min-w-0 z-10 flex flex-col justify-center pt-2"
-              variants={textStaggerContainer}
-              initial={prefersReducedMotion ? false : "initial"}
-              animate={prefersReducedMotion ? undefined : "animate"}
-            >
-              <div className="inline-flex px-3 py-1 bg-primary/10 border border-primary/20 rounded-sm mb-4">
-                <motion.p variants={textStaggerItem} className="text-[11px] uppercase tracking-[0.3em] text-primary/90 font-medium">
-                  {slide.person.category}
-                </motion.p>
-              </div>
-
-              <motion.h2 variants={textStaggerItem} className="mb-3 tracking-wide drop-shadow-md bg-gradient-to-r from-foreground via-primary/90 to-foreground/80 bg-clip-text text-transparent leading-tight">
-                <span className="text-lg sm:text-2xl md:text-3xl font-semibold font-serif align-middle mr-2">
-                  {slide.person.rank}
-                </span>
-                <span className="text-2xl sm:text-4xl md:text-5xl font-bold font-serif align-middle">
-                  {slide.person.name}
-                </span>
-              </motion.h2>
-
-              <div className="h-px w-24 bg-gradient-to-r from-primary/80 to-transparent mx-auto md:mx-0 mb-4" />
-
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-3 mb-5 sm:mb-6 text-xs sm:text-sm text-foreground/80">
-                <span className="bg-foreground/5 px-2 py-0.5 rounded border border-foreground/10">
-                  {slide.person.service}
-                </span>
-                <span className="text-primary/40">•</span>
-                <span className="font-mono tracking-wider text-primary/70">
-                  {slide.person.periodStart}–{slide.person.periodEnd}
-                </span>
-              </div>
-
-              <motion.div variants={textStaggerItem} className="relative pl-4 border-l-2 border-primary/30 py-1">
-                <p className="text-sm sm:text-base text-muted-foreground italic leading-relaxed font-light line-clamp-5 sm:line-clamp-none">
-                  "{slide.person.citation}"
-                </p>
-              </motion.div>
-            </motion.div>
-          </div>
+          <UnifiedAutoCard 
+            type="personnel" 
+            data={slide.person} 
+            id={`p-${slide.person.id}`}
+          />
         </motion.button>
       )}
 
       {slide.type === "visit" && (
         <motion.button
           onClick={() => setSelectedVisit(slide.visit)}
-          className="w-full text-center relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-b from-slate-900/90 via-card/95 to-slate-900/90 backdrop-blur-md p-5 sm:p-8 md:p-12 lg:p-16 shadow-[0_0_50px_-12px_hsl(var(--primary)/0.2)] group transform transition-all hover:scale-[1.02] duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+          className="w-full text-center relative overflow-hidden focus-visible:outline-none"
           aria-label={`Open profile for ${slide.visit.name}`}
-          whileHover={prefersReducedMotion ? undefined : { y: -5, scale: 1.03 }}
-          whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+          whileHover={prefersReducedMotion ? undefined : { scale: 1.01 }}
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
           transition={cinematicTransition(0.24)}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.1)_0%,transparent_70%)]" />
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[120%] h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-          <div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-[80%] h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-
-          <motion.div
-            className="relative z-10"
-            variants={textStaggerContainer}
-            initial={prefersReducedMotion ? false : "initial"}
-            animate={prefersReducedMotion ? undefined : "animate"}
-          >
-            <div className="inline-flex items-center justify-center px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full mb-8 shadow-[0_0_15px_hsl(var(--primary)/0.16)]">
-              <motion.p variants={textStaggerItem} className="text-[11px] uppercase tracking-[0.3em] text-primary/90 font-medium">
-                Distinguished Visit
-              </motion.p>
-            </div>
-
-            <div className="w-40 h-28 sm:w-52 sm:h-34 md:w-56 md:h-36 mx-auto mb-6 sm:mb-8 rounded-lg border-2 border-primary/30 overflow-hidden bg-muted shadow-2xl relative group-hover:-translate-y-1 transition-transform duration-500">
-              <div className="absolute inset-0 bg-primary/10 mix-blend-overlay z-10" />
-              {slide.visit.imageUrl ? (
-                <img
-                  src={slide.visit.imageUrl}
-                  alt={slide.visit.name}
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-xs uppercase tracking-widest text-primary/40 bg-gradient-to-br from-muted to-muted/80">
-                  No Image
-                </div>
-              )}
-            </div>
-
-            <motion.h2 variants={textStaggerItem} className="text-2xl sm:text-4xl md:text-5xl font-bold font-serif mb-3 tracking-wide bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent drop-shadow-sm">
-              {slide.visit.name}
-            </motion.h2>
-
-            <p className="text-sm md:text-base text-primary/90 font-semibold mb-4 tracking-[0.14em] uppercase">
-              {slide.visit.title}
-            </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
-              <span className="px-3 py-1 rounded bg-foreground/5 border border-foreground/10 text-foreground/80 text-sm">
-                {slide.visit.country}
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-              <span className="text-primary/70 font-mono text-sm tracking-wider">
-                {slide.visit.date}
-              </span>
-            </div>
-
-            <motion.p variants={textStaggerItem} className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto font-light border-t border-primary/20 pt-4 sm:pt-6">
-              {slide.visit.description}
-            </motion.p>
-          </motion.div>
+          <UnifiedAutoCard 
+            type="visit" 
+            data={slide.visit} 
+            id={`v-${slide.visit.id}`}
+          />
         </motion.button>
       )}
     </>
