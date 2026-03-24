@@ -128,7 +128,7 @@ export function BootSequence({
       clearTimeout(t3);
       transitionTimers.forEach((timer) => clearTimeout(timer));
     };
-  }, [assignments.preloader, onComplete, timeScale]);
+  }, [assignments.preloader, timeScale]);
 
   useEffect(() => {
     let mounted = true;
@@ -328,12 +328,12 @@ export function BootSequence({
             {/* Boot Portrait Sequence: past commandants in motion, then current commandant lock-in */}
             {(currentCommandant || currentPortrait) && (
               <div
-                className={`transition-all duration-1000 delay-300 ease-out flex w-[clamp(130px,28vh,224px)] flex-col items-center shrink-0 justify-center ${step >= 3 ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+                className={`transition-all duration-1000 delay-300 ease-out flex w-[clamp(120px,24vw,188px)] flex-col items-center shrink-0 justify-center ${step >= 3 ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
               >
                 <div className="relative w-full rounded-xl border border-white/20 bg-slate-900/75 backdrop-blur-md p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)] flex flex-col">
                   <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120%_100%_at_0%_0%,hsl(var(--primary)/0.2),transparent_58%)] rounded-xl" />
                   <div
-                    className={`relative z-10 w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full overflow-hidden border-2 border-primary/45 bg-slate-950 transition-all duration-700 ${portraitVisible ? "opacity-100 [transform:perspective(1000px)_rotateY(0deg)_translateX(0px)_scale(1)]" : "opacity-0 [transform:perspective(1000px)_rotateY(76deg)_translateX(-26px)_scale(0.94)]"}`}
+                    className={`relative z-10 w-[clamp(84px,20vw,144px)] h-[clamp(84px,20vw,144px)] mx-auto rounded-full overflow-hidden border-2 border-primary/45 bg-slate-950 transition-all duration-700 ${portraitVisible ? "opacity-100 [transform:perspective(1000px)_rotateY(0deg)_translateX(0px)_scale(1)]" : "opacity-0 [transform:perspective(1000px)_rotateY(76deg)_translateX(-26px)_scale(0.94)]"}`}
                     style={{ transformOrigin: "left center" }}
                   >
                     {currentPortrait?.imageUrl ? (

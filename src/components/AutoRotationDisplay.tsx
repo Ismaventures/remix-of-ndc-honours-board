@@ -562,7 +562,11 @@ export function AutoRotationDisplay({
                 : cinematicTransition(2.8, { repeat: Infinity, repeatDelay: 2.4 })
             }
           />
-          <CommandantHero commandant={slide.commandant} compactDescription />
+          <CommandantHero 
+            commandant={slide.commandant} 
+            compactDescription 
+            isAutoDisplay 
+          />
         </motion.button>
       )}
 
