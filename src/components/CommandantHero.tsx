@@ -101,9 +101,25 @@ export function CommandantHero({
               
               <div className="flex flex-col items-center gap-[0.2vh]">
                 <p className="text-[clamp(0.9rem,2.8vh,2rem)] font-bold text-white tracking-[0.25em] uppercase">
-                  Commandant
+                  {isCurrent ? "Current Commandant" : "Past Commandant"}
                 </p>
-                <p className="text-[clamp(0.9rem,2.8vh,2rem)] font-bold text-[#FFD700] tracking-[0.25em] uppercase">
+                <div className="flex flex-col items-center gap-2 mt-2">
+                  <p className="text-[clamp(0.7rem,2vh,1.4rem)] font-semibold text-[#FFD700] tracking-[0.15em] uppercase bg-white/5 px-4 py-1 rounded">
+                    {tenureLabel}
+                  </p>
+                  
+                  {!isCurrent && description && (
+                    <div className="max-w-2xl mt-4 px-6 py-4 bg-white/5 border border-white/10 backdrop-blur-sm rounded-lg">
+                      <p className="text-[clamp(0.6rem,1.8vh,1.1rem)] text-white/80 leading-relaxed font-light line-clamp-3">
+                        {description}
+                      </p>
+                      <div className="mt-2 flex items-center justify-center gap-2 text-[#FFD700] animate-pulse">
+                        <span className="text-[10px] uppercase tracking-[0.2em] font-bold">Tap to read full biography</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-[clamp(0.9rem,2.8vh,2rem)] font-bold text-[#FFD700] tracking-[0.25em] uppercase mt-4">
                   National Defence College
                 </p>
               </div>

@@ -733,35 +733,49 @@ export function AutoRotationDisplay({
       )}
 
       {/* Controls bar */}
-      <div className="flex items-center justify-between px-6 py-3 bg-card/80 backdrop-blur border-b border-primary/15">
-        <span className="text-xs uppercase tracking-widest text-primary font-medium">
-          {activeCategory
-            ? `${activeCategory} Auto Display`
-            : activeView === "visits"
-              ? "Visits Auto Display"
-              : "Commandants Auto Display"}{" "}
-          · {currentIndex + 1}/{slides.length}
-        </span>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 border-r border-primary/20 pr-4">
-            {/* Audio controls are now handled globally via the AudioManager floating button */}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleManualAdvance}
-              className="p-2 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            >
-              <SkipForward className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setDisplayActive(false)}
-              className="px-3 py-1.5 rounded text-xs bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Exit
-            </button>
+      {!isActive && (
+        <div className="flex items-center justify-between px-6 py-3 bg-card/80 backdrop-blur border-b border-primary/15">
+          <span className="text-xs uppercase tracking-widest text-primary font-medium">
+            {activeCategory
+              ? `${activeCategory} Auto Display`
+              : activeView === "visits"
+                ? "Visits Auto Display"
+                : "Commandants Auto Display"}{" "}
+            · {currentIndex + 1}/{slides.length}
+          </span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 border-r border-primary/20 pr-4">
+              {/* Audio controls are now handled globally via the AudioManager floating button */}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleManualAdvance}
+                className="p-2 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              >
+                <SkipForward className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setDisplayActive(false)}
+                className="px-3 py-1.5 rounded text-xs bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Exit
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Exit Button overlay for Auto Display */}
+      {isActive && (
+        <div className="fixed top-4 right-4 z-[100] flex gap-2">
+          <button
+            onClick={() => setDisplayActive(false)}
+            className="px-4 py-2 rounded-full bg-slate-900/60 backdrop-blur-md border border-white/20 text-white/70 hover:text-white hover:bg-slate-900 transition-all text-xs font-bold tracking-widest uppercase shadow-2xl"
+          >
+            Exit Display
+          </button>
+        </div>
+      )}
 
       {/* Slide content */}
       <div className="flex-1 min-h-0 flex items-center justify-center px-2 sm:px-4 md:px-6 pt-2 sm:pt-4 md:pt-6 pb-8 sm:pb-10 md:pb-12 overflow-hidden">
