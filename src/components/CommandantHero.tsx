@@ -36,31 +36,36 @@ export function CommandantHero({
 
   if (isAutoDisplay) {
     return (
-      <section className="relative w-full aspect-[16/9] flex flex-col items-center justify-center overflow-hidden bg-[#001D3D] text-white">
+      <section className="relative w-full aspect-[16/9] flex flex-col items-center justify-center overflow-hidden bg-white text-slate-900 border border-slate-200">
+        {/* Top Defence Colors Strip */}
+        <div className="absolute top-0 inset-x-0 h-4 flex z-30">
+          <div className="flex-1 bg-[#002060]" title="Navy" />
+          <div className="flex-1 bg-[#FF0000]" title="Army" />
+          <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
+        </div>
+
         {/* Background elements */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-[#001D3D]" />
-          <div className="absolute inset-0 opacity-[0.05] bg-[linear-gradient(90deg,white_1px,transparent_1px),linear-gradient(white_1px,transparent_1px)] bg-[size:50px_50px]" />
-          <div className="absolute top-0 inset-x-0 h-1 bg-[#2C5282] opacity-50" />
-          <div className="absolute bottom-0 inset-x-0 h-1 bg-[#2C5282] opacity-50" />
+        <div className="absolute inset-0 z-0 opacity-40">
+          <div className="absolute inset-0 bg-white" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
         </div>
 
         {/* NDC Logos in corners */}
-        <div className="absolute top-4 left-6 z-20">
-          <img src={ndcCrest} alt="NDC Logo" className="h-10 w-10 object-contain drop-shadow-md" />
+        <div className="absolute top-8 left-8 z-20">
+          <img src={ndcCrest} alt="NDC Logo" className="h-12 w-12 object-contain filter drop-shadow-sm" />
         </div>
-        <div className="absolute top-4 right-6 z-20">
-          <img src={ndcCrest} alt="NDC Logo" className="h-10 w-10 object-contain drop-shadow-md" />
+        <div className="absolute top-8 right-8 z-20">
+          <img src={ndcCrest} alt="NDC Logo" className="h-12 w-12 object-contain filter drop-shadow-sm" />
         </div>
 
         {/* Main Content Container */}
-        <div className="relative z-10 flex flex-col items-center w-full max-w-4xl px-8">
-          {/* Portrait with triple border */}
-          <div className="relative mb-6">
-            <div className="p-1 bg-[#FFD700] rounded-sm shadow-2xl">
-              <div className="p-1 bg-[#001D3D] rounded-sm">
-                <div className="p-0.5 bg-[#FFD700] rounded-sm">
-                  <div className="w-[300px] h-[380px] bg-slate-800 overflow-hidden relative">
+        <div className="relative z-10 flex flex-col items-center w-full max-w-5xl px-8">
+          {/* Portrait with Yellow/Gold frame */}
+          <div className="relative mb-8 pt-6">
+            <div className="p-[3px] bg-[#FFD700] shadow-xl">
+              <div className="p-[3px] bg-white">
+                <div className="p-[2px] bg-[#FFD700]">
+                  <div className="w-[320px] h-[400px] bg-slate-100 overflow-hidden relative">
                     {commandantImageUrl ? (
                       <img
                         src={commandantImageUrl}
@@ -68,7 +73,7 @@ export function CommandantHero({
                         className="w-full h-full object-cover object-top"
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-primary/40 bg-slate-900">
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
                         <Shield className="h-20 w-20" />
                       </div>
                     )}
@@ -79,36 +84,32 @@ export function CommandantHero({
           </div>
 
           {/* Identity Plate */}
-          <div className="w-full relative">
+          <div className="w-full relative max-w-4xl">
             {/* Top Red Bar */}
-            <div className="h-1.5 w-full bg-[#E53E3E]" />
-            {/* Main Blue Info Bar */}
-            <div className="bg-[#1A365D] w-full py-4 px-6 border-y-2 border-[#4A5568] flex flex-col items-center justify-center text-center shadow-lg">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#FFD700] uppercase mb-1">
+            <div className="h-1.5 w-full bg-[#FF0000]" />
+            {/* Main Info Bar */}
+            <div className="bg-[#002060] w-full py-5 px-8 flex flex-col items-center justify-center text-center shadow-2xl">
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-[#FFD700] uppercase mb-2 drop-shadow-sm">
                 {name}
               </h2>
-              <p className="text-lg md:text-xl font-bold text-white tracking-wide mb-1">
+              <p className="text-xl md:text-2xl font-bold text-white tracking-widest uppercase mb-1">
                 Commandant
               </p>
-              <p className="text-lg md:text-xl font-bold text-[#FFD700] tracking-wide">
+              <p className="text-xl md:text-2xl font-bold text-[#FFD700] tracking-widest uppercase">
                 National Defence College
               </p>
             </div>
             {/* Bottom Red Bar */}
-            <div className="h-1.5 w-full bg-[#E53E3E]" />
+            <div className="h-1.5 w-full bg-[#FF0000]" />
             
-            {/* Sequence Number Indicator (Bottom Right) */}
-            <div className="absolute -bottom-4 right-0 transform translate-y-full">
-               <div className="bg-white text-black text-[10px] font-bold px-2 py-0.5 border border-slate-300">
-                  {commandant?.id ?? "0"}
+            {/* Sequence Number Indicator */}
+            <div className="absolute -bottom-6 right-0">
+               <div className="bg-white text-black text-xs font-bold px-3 py-1 border border-slate-400 shadow-sm">
+                  c-{commandant?.id ?? "0"}
                </div>
             </div>
           </div>
         </div>
-        
-        {/* Subtle Side Accents */}
-        <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-transparent via-[#FFD700]/30 to-transparent" />
-        <div className="absolute inset-y-0 right-0 w-1 bg-gradient-to-b from-transparent via-[#FFD700]/30 to-transparent" />
       </section>
     );
   }
