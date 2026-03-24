@@ -137,22 +137,21 @@ export function CommandantHero({
 
   return (
     <section
-      className={`relative overflow-hidden rounded-2xl border border-primary/35 bg-gradient-to-br from-[#071427]/95 via-card/95 to-[#0b1f3a]/95 backdrop-blur-md shadow-[0_24px_70px_rgba(0,0,0,0.34)] ${isCurrent ? "commandant-hero-current" : ""} ${isCompact ? "mb-0" : "mb-8"} transition-all duration-500 group`}
+      className={`relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(0,0,0,0.15)] ${isCurrent ? "commandant-hero-current" : ""} ${isCompact ? "mb-0" : "mb-8"} transition-all duration-500 group`}
     >
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {isCurrent && (
-          <>
-            <div className="absolute inset-0 command-sweep-light" />
-            <div className="absolute top-0 left-0 h-[1px] w-full bg-gradient-to-r from-transparent via-primary/90 to-transparent animate-command-topline" />
-          </>
-        )}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,hsl(var(--primary)/0.12)_0%,transparent_60%)]" />
-        <div className="absolute inset-0 opacity-[0.14] bg-[linear-gradient(90deg,hsl(var(--foreground)/0.08)_1px,transparent_1px),linear-gradient(hsl(var(--foreground)/0.08)_1px,transparent_1px)] bg-[size:42px_42px]" />
-        <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-white/[0.06] to-transparent" />
+      {/* Top Defence Colors Strip */}
+      <div className="absolute top-0 inset-x-0 h-[8px] flex z-30">
+        <div className="flex-1 bg-[#002060]" title="Navy" />
+        <div className="flex-1 bg-[#FF0000]" title="Army" />
+        <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
+      </div>
+
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:42px_42px]" />
       </div>
 
       <div
-        className={`relative grid items-center ${isCompact ? "gap-6 md:gap-8 p-5 md:p-7 grid-cols-1 md:grid-cols-[240px_1fr]" : "gap-8 md:gap-10 p-7 md:p-10 grid-cols-1 md:grid-cols-[280px_1fr]"}`}
+        className={`relative grid items-center ${isCompact ? "gap-6 md:gap-8 p-6 md:p-8 pt-10 grid-cols-1 md:grid-cols-[240px_1fr]" : "gap-8 md:gap-10 p-8 md:p-12 pt-14 grid-cols-1 md:grid-cols-[280px_1fr]"}`}
       >
         <div
           className={`transition-all duration-700 ease-out ${
@@ -160,25 +159,26 @@ export function CommandantHero({
           }`}
         >
           <div className="relative mx-auto md:mx-0 w-fit">
-            <div
-              className={`relative rounded-lg bg-muted/70 border border-primary/45 flex items-center justify-center overflow-hidden z-10 shadow-2xl ${isCurrent ? "commandant-portrait-frame" : ""} ${isCompact ? "w-40 h-52 md:w-44 md:h-58" : "w-48 h-60 md:w-52 md:h-68"}`}
-            >
-              {commandantImageUrl ? (
-                <img
-                  src={commandantImageUrl}
-                  alt={name}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-3 text-primary/40">
-                  <Shield className="h-14 w-14" />
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Official Portrait
-                  </span>
+            {/* Professional Framed Portrait */}
+            <div className="p-1 bg-[#FFD700] shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
+              <div className="p-1 bg-white">
+                <div className="p-0.5 bg-[#FFD700]">
+                  <div 
+                    className={`relative bg-slate-100 overflow-hidden shadow-inner flex items-center justify-center ${isCompact ? "w-40 h-50 md:w-44 md:h-55" : "w-48 h-60 md:w-52 md:h-65"}`}
+                  >
+                    {commandantImageUrl ? (
+                      <img
+                        src={commandantImageUrl}
+                        alt={name}
+                        className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+                      />
+                    ) : (
+                      <Shield className="h-14 w-14 text-slate-300 opacity-40" />
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
-            <div className="absolute -inset-2 rounded-xl border border-primary/20 pointer-events-none" />
           </div>
         </div>
 
@@ -187,50 +187,60 @@ export function CommandantHero({
             visible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
           }`}
         >
-          <div className="inline-flex items-center justify-center md:justify-start gap-2.5 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25 mb-4 backdrop-blur">
-            <Star className="h-3.5 w-3.5 text-primary fill-primary/30" />
-            <span className="text-[10px] uppercase tracking-[0.22em] text-primary/90 font-semibold">
+          {/* Identity Plate Style Header */}
+          <div className="inline-flex items-center justify-center md:justify-start gap-2 mb-4">
+            <div className="h-px w-8 bg-[#002060]/30" />
+            <span className="text-[10px] uppercase tracking-[0.25em] text-[#002060] font-bold">
               {isCurrent ? "Current Commandant" : "Past Commandant"}
             </span>
-            <Star className="h-3.5 w-3.5 text-primary fill-primary/30" />
+            <div className="h-px w-8 bg-[#002060]/30" />
           </div>
 
           <h2
-            className={`${isCompact ? "text-3xl md:text-[2.4rem]" : "text-4xl md:text-[3rem]"} font-bold font-serif mb-2 leading-tight text-white`}
+            className={`${isCompact ? "text-3xl md:text-[2.4rem]" : "text-4xl md:text-[3.2rem]"} font-bold mb-2 leading-tight text-[#002060] uppercase tracking-tight`}
           >
             {name}
           </h2>
 
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 mb-4 text-[11px] uppercase tracking-[0.18em] text-primary/90">
-            <span>{tenureLabel}</span>
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 mb-5">
+             <span className="px-3 py-1 bg-[#002060] text-white text-[11px] font-bold uppercase tracking-[0.2em]">
+                {tenureLabel}
+             </span>
           </div>
 
-          <div className="h-px w-full max-w-xl mx-auto md:mx-0 mb-4 bg-gradient-to-r from-primary/70 via-primary/35 to-transparent" />
-
           <p
-            className={`${isCompact ? "text-sm md:text-base mb-3" : "text-base md:text-lg mb-4"} text-primary/95 font-semibold tracking-[0.05em] uppercase`}
+            className={`${isCompact ? "text-sm md:text-base mb-4" : "text-base md:text-xl mb-6"} text-[#FF0000] font-bold tracking-[0.1em] uppercase border-l-4 border-[#FF0000] pl-4 italic`}
           >
             {titleText}
           </p>
 
-          <p
-            className={`${isCompact ? "text-sm md:text-[15px]" : "text-sm md:text-base"} text-muted-foreground/95 leading-relaxed max-w-3xl transition-all duration-700 ease-out delay-300 font-medium ${
-              visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            }`}
-            style={
-              compactDescription
-                ? {
-                    display: "-webkit-box",
-                    WebkitBoxOrient: "vertical",
-                    WebkitLineClamp: 3,
-                    overflow: "hidden",
-                  }
-                : undefined
-            }
-          >
-            {description}
-          </p>
+          <div className="relative">
+            <p
+              className={`${isCompact ? "text-sm md:text-[15px]" : "text-sm md:text-base"} text-slate-700 leading-relaxed max-w-3xl transition-all duration-700 ease-out delay-300 font-medium ${
+                visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              }`}
+              style={
+                compactDescription
+                  ? {
+                      display: "-webkit-box",
+                      WebkitBoxOrient: "vertical",
+                      WebkitLineClamp: 4,
+                      overflow: "hidden",
+                    }
+                  : undefined
+              }
+            >
+              {description}
+            </p>
+          </div>
         </div>
+      </div>
+
+      {/* Bottom Defence Colors Strip */}
+      <div className="absolute bottom-0 inset-x-0 h-[6px] flex z-30">
+        <div className="flex-1 bg-[#002060]" title="Navy" />
+        <div className="flex-1 bg-[#FF0000]" title="Army" />
+        <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
       </div>
     </section>
   );
