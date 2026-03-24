@@ -54,6 +54,8 @@ interface AdminPanelProps {
   onSendDeviceCloseApp: (deviceIds: string[], reason: string) => Promise<boolean>;
   onSendDeviceReopenApp: (deviceIds: string[]) => Promise<boolean>;
   onSendDeviceOpenPersonProfile: (deviceIds: string[], payload: { view: 'fwc' | 'fdc' | 'directing' | 'allied'; personId: string }) => Promise<boolean>;
+  onSendDeviceOpenCommandantProfile: (deviceIds: string[], payload: { commandantId: string }) => Promise<boolean>;
+  onSendDeviceSlideStep: (deviceIds: string[], direction: 'next' | 'prev') => Promise<boolean>;
   onSendDeviceCloseProfile: (deviceIds: string[]) => Promise<boolean>;
   onSendDeviceApplyProfile: (deviceIds: string[], payload: {
     themeMode: ThemeMode;
@@ -290,6 +292,8 @@ export function AdminPanel({
   onSendDeviceCloseApp,
   onSendDeviceReopenApp,
   onSendDeviceOpenPersonProfile,
+  onSendDeviceOpenCommandantProfile,
+  onSendDeviceSlideStep,
   onSendDeviceCloseProfile,
   onSendDeviceApplyProfile,
   onSendDeviceClearProfile,
@@ -879,6 +883,7 @@ export function AdminPanel({
             <DeviceControlPanel
               devices={devices}
               personnel={personnel}
+              commandants={commandants}
               currentDeviceId={currentDeviceId}
               isSuperAdmin={isSuperAdmin}
               currentThemeMode={themeMode}
@@ -890,6 +895,8 @@ export function AdminPanel({
               onSendCloseApp={onSendDeviceCloseApp}
               onSendReopenApp={onSendDeviceReopenApp}
               onSendOpenPersonProfile={onSendDeviceOpenPersonProfile}
+              onSendOpenCommandantProfile={onSendDeviceOpenCommandantProfile}
+              onSendSlideStep={onSendDeviceSlideStep}
               onSendCloseProfile={onSendDeviceCloseProfile}
               onSendApplyProfile={onSendDeviceApplyProfile}
               onSendClearProfile={onSendDeviceClearProfile}
@@ -1026,16 +1033,21 @@ export function AdminPanel({
                     <button
                       key={option.mode}
                       onClick={() => setThemeDraft(option.mode)}
-                      className={`text-left rounded-lg border p-4 transition-all ${
+                      className={`relative text-left rounded-lg border p-4 transition-all ${
                         isActive
                           ? 'border-primary/60 bg-primary/10 shadow-md shadow-primary/10'
                           : 'border-primary/15 bg-card/50 hover:border-primary/35 hover:bg-muted/30'
                       }`}
                     >
+                      {isActive && (
+                        <span className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] uppercase tracking-[0.14em] font-bold bg-[#002060] text-white border border-[#001846] shadow-sm">
+                          Active Mode
+                        </span>
+                      )}
                       <p className="text-sm font-semibold text-foreground">{option.label}</p>
                       <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{option.description}</p>
-                      <p className={`mt-3 text-[10px] uppercase tracking-wider font-semibold ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
-                        {isActive ? 'Active Mode' : 'Click to Activate'}
+                      <p className={`mt-3 text-[10px] uppercase tracking-wider font-semibold ${isActive ? 'text-[#002060]' : 'text-muted-foreground'}`}>
+                        {isActive ? 'Currently Applied' : 'Click to Activate'}
                       </p>
                     </button>
                   );

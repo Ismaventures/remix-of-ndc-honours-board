@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, Play, Pause, UserRound } from 'lucide-react';
 import { DeviceClient, DeviceControlView } from '@/hooks/useDeviceControl';
 import { ThemeMode } from '@/hooks/useThemeMode';
 import { BootSequenceSettings } from '@/hooks/useBootSequenceSettings';
 import { AutoDisplaySettings } from '@/hooks/useAutoDisplaySettings';
-import { Personnel } from '@/types/domain';
+import { Commandant, Personnel } from '@/types/domain';
 
 interface DeviceControlPanelProps {
   devices: DeviceClient[];
   personnel: Personnel[];
+  commandants: Commandant[];
   currentDeviceId: string;
   isSuperAdmin: boolean;
   currentThemeMode: ThemeMode;
@@ -19,6 +21,8 @@ interface DeviceControlPanelProps {
   onSendCloseApp: (deviceIds: string[], reason: string) => Promise<boolean>;
   onSendReopenApp: (deviceIds: string[]) => Promise<boolean>;
   onSendOpenPersonProfile: (deviceIds: string[], payload: { view: Exclude<DeviceControlView, 'home' | 'visits' | 'admin'>; personId: string }) => Promise<boolean>;
+  onSendOpenCommandantProfile: (deviceIds: string[], payload: { commandantId: string }) => Promise<boolean>;
+  onSendSlideStep: (deviceIds: string[], direction: 'next' | 'prev') => Promise<boolean>;
   onSendCloseProfile: (deviceIds: string[]) => Promise<boolean>;
   onSendApplyProfile: (deviceIds: string[], payload: {
     themeMode: ThemeMode;
@@ -43,6 +47,7 @@ const VIEW_OPTIONS: Array<{ id: DeviceControlView; label: string }> = [
 export function DeviceControlPanel({
   devices,
   personnel,
+  commandants,
   currentDeviceId,
   isSuperAdmin,
   currentThemeMode,
@@ -54,6 +59,8 @@ export function DeviceControlPanel({
   onSendCloseApp,
   onSendReopenApp,
   onSendOpenPersonProfile,
+  onSendOpenCommandantProfile,
+  onSendSlideStep,
   onSendCloseProfile,
   onSendApplyProfile,
   onSendClearProfile,
@@ -65,6 +72,7 @@ export function DeviceControlPanel({
   const [shutdownReason, setShutdownReason] = useState('Temporarily closed by super admin.');
   const [remoteView, setRemoteView] = useState<Exclude<DeviceControlView, 'home' | 'visits' | 'admin'>>('fwc');
   const [remotePersonId, setRemotePersonId] = useState('');
+  const [remoteCommandantId, setRemoteCommandantId] = useState('');
 
   const selectedCount = selectedIds.length;
 
@@ -89,6 +97,18 @@ export function DeviceControlPanel({
       .filter(person => person.category === category)
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [personnel, remoteView]);
+
+  const commandantProfiles = useMemo(
+    () =>
+      commandants
+        .slice()
+        .sort((a, b) => {
+          if (a.isCurrent && !b.isCurrent) return -1;
+          if (!a.isCurrent && b.isCurrent) return 1;
+          return (b.tenureStart ?? 0) - (a.tenureStart ?? 0);
+        }),
+    [commandants],
+  );
 
   const toggleDevice = (deviceId: string, enabled: boolean) => {
     if (enabled) {
@@ -142,6 +162,20 @@ export function DeviceControlPanel({
     if (selectedIds.length === 0 || !remotePersonId) return;
     setBusy(true);
     await onSendOpenPersonProfile(selectedIds, { view: remoteView, personId: remotePersonId });
+    setBusy(false);
+  };
+
+  const openRemoteCommandantProfile = async () => {
+    if (selectedIds.length === 0 || !remoteCommandantId) return;
+    setBusy(true);
+    await onSendOpenCommandantProfile(selectedIds, { commandantId: remoteCommandantId });
+    setBusy(false);
+  };
+
+  const sendSlideStep = async (direction: 'next' | 'prev') => {
+    if (selectedIds.length === 0) return;
+    setBusy(true);
+    await onSendSlideStep(selectedIds, direction);
     setBusy(false);
   };
 
@@ -232,6 +266,71 @@ export function DeviceControlPanel({
             className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50"
           >
             Stop Auto Display
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-primary/25 bg-gradient-to-br from-background via-card/70 to-background p-4 md:p-5 space-y-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold">Mobile Remote Control App</p>
+          <p className="text-[11px] text-muted-foreground mt-1">Use this panel on your phone over Wi-Fi to remotely swipe slides, control auto mode, and open full profile views.</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => void sendSlideStep('prev')}
+            disabled={busy || selectedCount === 0}
+            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Swipe Left
+          </button>
+          <button
+            onClick={() => void sendSlideStep('next')}
+            disabled={busy || selectedCount === 0}
+            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            Swipe Right
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => void sendAutoDisplay(true)}
+            disabled={busy || selectedCount === 0}
+            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            <Play className="h-4 w-4" />
+            Start Auto
+          </button>
+          <button
+            onClick={() => void sendAutoDisplay(false)}
+            disabled={busy || selectedCount === 0}
+            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            <Pause className="h-4 w-4" />
+            Stop Auto
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <select
+            value={remoteCommandantId}
+            onChange={e => setRemoteCommandantId(e.target.value)}
+            className="px-3 py-2 rounded border border-primary/20 bg-background/80 text-xs text-foreground"
+          >
+            <option value="">Select commandant profile</option>
+            {commandantProfiles.map(commandant => (
+              <option key={commandant.id} value={commandant.id}>
+                {commandant.name} ({commandant.tenureStart}-{commandant.tenureEnd ?? 'Present'})
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => void openRemoteCommandantProfile()}
+            disabled={busy || selectedCount === 0 || !remoteCommandantId}
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            <UserRound className="h-4 w-4" />
+            Open Commandant Full View
           </button>
         </div>
       </div>

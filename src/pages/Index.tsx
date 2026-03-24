@@ -70,6 +70,10 @@ const Index = () => {
     id: string | null;
     nonce: number;
   }>({ id: null, nonce: 0 });
+  const [forcedSlideStep, setForcedSlideStep] = useState<{
+    direction: "next" | "prev";
+    nonce: number;
+  }>({ direction: "next", nonce: 0 });
   const [siteClosed, setSiteClosed] = useState(false);
   const [siteClosedReason, setSiteClosedReason] = useState(
     "Temporarily closed by super admin.",
@@ -159,6 +163,14 @@ const Index = () => {
     payload: Record<string, unknown>,
   ) => {
     if (commandType === "set-view") {
+      if (payload.action === "next-slide" || payload.action === "prev-slide") {
+        setForcedSlideStep((prev) => ({
+          direction: payload.action === "next-slide" ? "next" : "prev",
+          nonce: prev.nonce + 1,
+        }));
+        return;
+      }
+
       const nextView = mapCommandViewToAppView(payload.view);
       if (nextView) {
         setView(nextView);
@@ -222,6 +234,25 @@ const Index = () => {
     }
 
     if (commandType === "open-person-profile") {
+      if (payload.profileType === "commandant") {
+        const commandantId =
+          typeof payload.commandantId === "string" ? payload.commandantId : null;
+        const commandant =
+          commandantId
+            ? commandants.find((entry) => entry.id === commandantId) ?? null
+            : null;
+
+        if (commandant) {
+          setView("home");
+          setForcedAutoDisplay((prev) => ({
+            enabled: false,
+            nonce: prev.nonce + 1,
+          }));
+          setSelectedPastCommandant(commandant);
+        }
+        return;
+      }
+
       const targetView = payload.view;
       const personId =
         typeof payload.personId === "string" ? payload.personId : null;
@@ -246,6 +277,7 @@ const Index = () => {
     }
 
     if (commandType === "close-profile") {
+      setSelectedPastCommandant(null);
       setForcedProfileSelection((prev) => ({
         id: null,
         nonce: prev.nonce + 1,
@@ -437,6 +469,17 @@ const Index = () => {
               payload as unknown as Record<string, unknown>,
             );
           }}
+          onSendDeviceOpenCommandantProfile={async (deviceIds, payload) => {
+            return sendCommandToDevices(deviceIds, "open-person-profile", {
+              profileType: "commandant",
+              commandantId: payload.commandantId,
+            });
+          }}
+          onSendDeviceSlideStep={async (deviceIds, direction) => {
+            return sendCommandToDevices(deviceIds, "set-view", {
+              action: direction === "next" ? "next-slide" : "prev-slide",
+            });
+          }}
           onSendDeviceCloseProfile={async (deviceIds) => {
             return sendCommandToDevices(deviceIds, "close-profile", {});
           }}
@@ -559,6 +602,7 @@ const Index = () => {
                   activeView={activeView}
                   settings={autoDisplaySettings}
                   forcedControl={forcedAutoDisplay}
+                  forcedStep={forcedSlideStep}
                   onActiveChange={setAutoDisplayActive}
                 />
               </div>

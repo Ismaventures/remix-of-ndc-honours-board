@@ -58,7 +58,7 @@ export function AppSidebar({ active, onNavigate }: AppSidebarProps) {
           );
         })}
       </nav>
-      <div className="px-4 py-4 border-t border-sidebar-border text-[10px] text-sidebar-foreground/50 tracking-wide uppercase">
+      <div className="px-4 py-4 border-t border-sidebar-border text-[10px] text-sidebar-foreground/85 tracking-[0.14em] uppercase font-semibold bg-sidebar-accent/25">
         Intellect · Courage · Patriotism
       </div>
     </aside>

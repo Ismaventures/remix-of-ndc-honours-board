@@ -38,6 +38,7 @@ interface AutoRotationDisplayProps {
   activeView?: "home" | "visits" | "admin" | "category";
   settings?: AutoDisplaySettings;
   forcedControl?: { enabled: boolean; nonce: number };
+  forcedStep?: { direction: "next" | "prev"; nonce: number };
   onActiveChange?: (active: boolean) => void;
 }
 
@@ -66,6 +67,7 @@ export function AutoRotationDisplay({
   activeView = "home",
   settings,
   forcedControl,
+  forcedStep,
   onActiveChange,
 }: AutoRotationDisplayProps) {
   const [isActive, setIsActive] = useState(false);
@@ -90,6 +92,7 @@ export function AutoRotationDisplay({
   const interactionHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const lastForcedStepNonceRef = useRef<number>(0);
   const touchStartXRef = useRef<number | null>(null);
   const isTransitioningRef = useRef(false);
   const transitionStepRef = useRef(0);
@@ -297,6 +300,40 @@ export function AutoRotationDisplay({
 
     setDisplayActive(false);
   }, [forcedControl, sequence, setDisplayActive]);
+
+  useEffect(() => {
+    if (!forcedStep || slides.length <= 1) return;
+    if (forcedStep.nonce <= 0) return;
+    if (forcedStep.nonce === lastForcedStepNonceRef.current) return;
+    lastForcedStepNonceRef.current = forcedStep.nonce;
+
+    const runStep = () => {
+      if (forcedStep.direction === "next") {
+        handleManualAdvance();
+        return;
+      }
+      handleManualRetreat();
+    };
+
+    if (!isActive) {
+      setTransitionType(sequence[0] ?? "fade-zoom");
+      transitionStepRef.current = 0;
+      setCurrentIndex(0);
+      setDisplayActive(true);
+      const stepTimer = setTimeout(runStep, 120);
+      return () => clearTimeout(stepTimer);
+    }
+
+    runStep();
+  }, [
+    forcedStep,
+    handleManualAdvance,
+    handleManualRetreat,
+    isActive,
+    sequence,
+    setDisplayActive,
+    slides.length,
+  ]);
 
   useEffect(() => {
     transitionStepRef.current = 0;

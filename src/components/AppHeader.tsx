@@ -20,7 +20,7 @@ export function AppHeader({ onHomeClick }: AppHeaderProps) {
           <h1 className="text-sm sm:text-lg lg:text-xl font-extrabold tracking-[0.06em] text-white leading-tight truncate uppercase text-left">
             National Defence College Nigeria
           </h1>
-          <p className="text-[10px] sm:text-xs text-primary/80 tracking-[0.12em] sm:tracking-[0.18em] uppercase truncate text-left mt-0.5">
+          <p className="inline-flex w-fit max-w-full items-center rounded-sm bg-black/15 px-1.5 py-0.5 text-[10px] sm:text-xs text-white tracking-[0.12em] sm:tracking-[0.18em] uppercase truncate text-left mt-0.5 font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.35)]">
             Intellect · Courage · Patriotism
           </p>
         </div>

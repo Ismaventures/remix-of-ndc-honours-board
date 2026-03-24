@@ -186,13 +186,6 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
           <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
         </div>
       </div>
-    </div>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>,
     document.body,
   );
