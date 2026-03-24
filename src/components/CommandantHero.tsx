@@ -36,9 +36,9 @@ export function CommandantHero({
 
   if (isAutoDisplay) {
     return (
-      <section className="relative w-full aspect-[16/9] flex flex-col items-center justify-center overflow-hidden bg-white text-slate-900 border border-slate-200">
+      <section className="relative w-full aspect-video flex flex-col items-center justify-center overflow-hidden bg-white text-slate-900 border border-slate-200">
         {/* Top Defence Colors Strip */}
-        <div className="absolute top-0 inset-x-0 h-4 flex z-30">
+        <div className="absolute top-0 inset-x-0 h-[2.5%] min-h-[8px] flex z-30">
           <div className="flex-1 bg-[#002060]" title="Navy" />
           <div className="flex-1 bg-[#FF0000]" title="Army" />
           <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
@@ -47,25 +47,25 @@ export function CommandantHero({
         {/* Background elements */}
         <div className="absolute inset-0 z-0 opacity-40">
           <div className="absolute inset-0 bg-white" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:3vw_3vw]" />
         </div>
 
         {/* NDC Logos in corners */}
-        <div className="absolute top-8 left-8 z-20">
-          <img src={ndcCrest} alt="NDC Logo" className="h-12 w-12 object-contain filter drop-shadow-sm" />
+        <div className="absolute top-[6%] left-[4%] z-20">
+          <img src={ndcCrest} alt="NDC Logo" className="h-[clamp(32px,8vh,64px)] w-auto object-contain filter drop-shadow-sm" />
         </div>
-        <div className="absolute top-8 right-8 z-20">
-          <img src={ndcCrest} alt="NDC Logo" className="h-12 w-12 object-contain filter drop-shadow-sm" />
+        <div className="absolute top-[6%] right-[4%] z-20">
+          <img src={ndcCrest} alt="NDC Logo" className="h-[clamp(32px,8vh,64px)] w-auto object-contain filter drop-shadow-sm" />
         </div>
 
         {/* Main Content Container */}
-        <div className="relative z-10 flex flex-col items-center w-full max-w-[90vw] lg:max-w-6xl px-4 md:px-8">
+        <div className="relative z-10 flex flex-col items-center w-full h-full max-w-[95%] mx-auto justify-evenly py-[4%]">
           {/* Portrait with Yellow/Gold frame */}
-          <div className="relative mb-6 md:mb-10 pt-4 md:pt-8 w-full flex justify-center">
-            <div className="p-[2px] md:p-[4px] bg-[#FFD700] shadow-2xl transition-transform duration-500 hover:scale-[1.01]">
-              <div className="p-[2px] md:p-[4px] bg-white">
-                <div className="p-[1px] md:p-[2px] bg-[#FFD700]">
-                  <div className="w-[min(85vw,460px)] aspect-[4/5] md:w-[480px] md:h-[600px] bg-slate-100 overflow-hidden relative shadow-inner">
+          <div className="relative w-full flex justify-center items-center flex-grow-[2] min-h-0">
+            <div className="p-[0.3vh] bg-[#FFD700] shadow-2xl transition-transform duration-500 max-h-full">
+              <div className="p-[0.3vh] bg-white">
+                <div className="p-[0.2vh] bg-[#FFD700]">
+                  <div className="relative aspect-[4/5] h-[55vh] max-h-full w-auto bg-slate-100 overflow-hidden shadow-inner">
                     {commandantImageUrl ? (
                       <img
                         src={commandantImageUrl}
@@ -75,7 +75,7 @@ export function CommandantHero({
                       />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
-                        <Shield className="h-24 w-24 opacity-20" />
+                        <Shield className="h-[15%] w-auto opacity-20" />
                       </div>
                     )}
                   </div>
@@ -85,40 +85,43 @@ export function CommandantHero({
           </div>
 
           {/* Identity Plate */}
-          <div className="w-full relative max-w-[min(90vw,900px)]">
+          <div className="w-full relative max-w-[85%] flex-shrink-0 mt-[2vh]">
             {/* Top Red Bar */}
-            <div className="h-1 md:h-2 w-full bg-[#FF0000]" />
+            <div className="h-[0.6vh] min-h-[3px] w-full bg-[#FF0000]" />
             {/* Main Info Bar */}
-            <div className="bg-[#002060] w-full py-4 md:py-7 px-4 md:px-12 flex flex-col items-center justify-center text-center shadow-2xl">
-              <div className="flex flex-col items-center gap-1 md:gap-2 mb-2 md:mb-3">
-                <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#FFD700] uppercase drop-shadow-md leading-tight">
+            <div className="bg-[#002060] w-full py-[2.5vh] px-[4vw] flex flex-col items-center justify-center text-center shadow-2xl">
+              <div className="flex flex-col items-center gap-[0.5vh] mb-[1vh]">
+                <h2 className="text-[clamp(1.5rem,5.5vh,4.5rem)] font-bold tracking-tight text-[#FFD700] uppercase drop-shadow-md leading-tight">
                   {name}
                 </h2>
-                <span className="text-xs sm:text-base md:text-lg lg:text-xl font-medium text-white/95 tracking-widest uppercase italic border-t border-white/10 pt-1 mt-1">
+                <span className="text-[clamp(0.7rem,2.2vh,1.5rem)] font-medium text-white/95 tracking-widest uppercase italic border-t border-white/10 pt-[0.5vh] mt-[0.5vh]">
                   {titleText}
                 </span>
               </div>
               
-              <div className="flex flex-col items-center gap-0.5 md:gap-1">
-                <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-white tracking-[0.2em] uppercase">
+              <div className="flex flex-col items-center gap-[0.2vh]">
+                <p className="text-[clamp(0.9rem,2.8vh,2rem)] font-bold text-white tracking-[0.25em] uppercase">
                   Commandant
                 </p>
-                <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-[#FFD700] tracking-[0.2em] uppercase">
+                <p className="text-[clamp(0.9rem,2.8vh,2rem)] font-bold text-[#FFD700] tracking-[0.25em] uppercase">
                   National Defence College
                 </p>
               </div>
             </div>
             {/* Bottom Red Bar */}
-            <div className="h-1 md:h-2 w-full bg-[#FF0000]" />
+            <div className="h-[0.6vh] min-h-[3px] w-full bg-[#FF0000]" />
             
             {/* Sequence Number Indicator */}
-            <div className="absolute -bottom-4 md:-bottom-8 right-0">
-               <div className="bg-white text-black text-[10px] md:text-sm font-bold px-3 md:px-5 py-1 md:py-2 border border-slate-400 shadow-md">
+            <div className="absolute -bottom-[2vh] right-0 translate-y-1/2">
+               <div className="bg-white text-black text-[clamp(8px,1.5vh,16px)] font-bold px-[1.5vw] py-[0.5vh] border border-slate-400 shadow-md">
                   c-{commandant?.id ?? "0"}
                </div>
             </div>
           </div>
         </div>
+      </section>
+    );
+  }
       </section>
     );
   }
