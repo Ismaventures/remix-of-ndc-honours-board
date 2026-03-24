@@ -900,6 +900,7 @@ export function AutoRotationDisplay({
               <CommandantHero
                 commandant={selectedCommandant}
                 compactDescription={false}
+                isAutoDisplay={false}
               />
             </div>
           </div>
