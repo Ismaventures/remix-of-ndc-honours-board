@@ -9,6 +9,7 @@ import {
 } from "@/types/domain";
 import { CommandantHero } from "./CommandantHero";
 import { ProfileModal } from "./ProfileModal";
+import ndcCrest from "/images/ndc-crest.png";
 import { useAudioStore } from "@/hooks/useAudioStore";
 import { playAudioTrack } from "@/components/AudioManager";
 import {
