@@ -122,9 +122,6 @@ export function CommandantHero({
       </section>
     );
   }
-      </section>
-    );
-  }
 
   return (
     <section
