@@ -94,7 +94,7 @@ export function CommandantHero({
                   {name}
                 </h2>
                 <span className="text-sm md:text-base font-medium text-white/90 tracking-wider">
-                  {commandant?.description?.split('.')[0] || ""}
+                  {titleText}
                 </span>
               </div>
               <p className="text-lg md:text-xl font-bold text-white tracking-widest uppercase mb-0.5">
