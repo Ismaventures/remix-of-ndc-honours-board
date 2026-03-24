@@ -872,20 +872,36 @@ export function AutoRotationDisplay({
       )}
 
       {selectedCommandant && (
-        <div className="fixed inset-0 z-[70] bg-background/85 backdrop-blur-sm p-4 md:p-8 overflow-y-auto">
-          <div className="max-w-5xl mx-auto">
-            <div className="flex justify-end mb-4">
+        <div className="fixed inset-0 z-[70] bg-[#020817] p-0 overflow-y-auto overflow-x-hidden">
+          <div className="min-h-screen w-full flex flex-col items-center">
+            {/* Close Button Header */}
+            <div className="sticky top-0 z-[80] w-full bg-[#020817]/80 backdrop-blur-md border-b border-white/10 px-6 py-4 flex justify-between items-center shadow-lg">
+              <div className="flex items-center gap-3">
+                <img src={ndcCrest} alt="Logo" className="h-8 w-8 object-contain" />
+                <span className="text-white font-serif tracking-widest uppercase text-sm font-semibold">
+                  Officer Profile : {selectedCommandant.name}
+                </span>
+              </div>
               <button
                 onClick={() => setSelectedCommandant(null)}
-                className="px-3 py-1.5 rounded text-xs bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/20 transition-all duration-300"
               >
-                Close
+                <div className="w-5 h-5 flex items-center justify-center rounded-full bg-white/10 group-hover:bg-red-500/20 group-hover:text-red-400 transition-all">
+                  <span className="text-xs">✕</span>
+                </div>
+                <span className="text-xs uppercase tracking-[0.2em] text-white/70 font-bold group-hover:text-white transition-colors">
+                  Close Profile
+                </span>
               </button>
             </div>
-            <CommandantHero
-              commandant={selectedCommandant}
-              compactDescription={false}
-            />
+
+            {/* Main Content */}
+            <div className="w-full max-w-[1400px] px-6 py-12">
+              <CommandantHero
+                commandant={selectedCommandant}
+                compactDescription={false}
+              />
+            </div>
           </div>
         </div>
       )}

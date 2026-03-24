@@ -89,13 +89,18 @@ export function CommandantHero({
             <div className="h-1.5 w-full bg-[#FF0000]" />
             {/* Main Info Bar */}
             <div className="bg-[#002060] w-full py-5 px-8 flex flex-col items-center justify-center text-center shadow-2xl">
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-[#FFD700] uppercase mb-2 drop-shadow-sm">
-                {name}
-              </h2>
-              <p className="text-xl md:text-2xl font-bold text-white tracking-widest uppercase mb-1">
+              <div className="flex flex-wrap items-baseline justify-center gap-3 mb-1">
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#FFD700] uppercase drop-shadow-sm">
+                  {name}
+                </h2>
+                <span className="text-sm md:text-base font-medium text-white/90 tracking-wider">
+                  {commandant?.description?.split('.')[0] || ""}
+                </span>
+              </div>
+              <p className="text-lg md:text-xl font-bold text-white tracking-widest uppercase mb-0.5">
                 Commandant
               </p>
-              <p className="text-xl md:text-2xl font-bold text-[#FFD700] tracking-widest uppercase">
+              <p className="text-lg md:text-xl font-bold text-[#FFD700] tracking-widest uppercase">
                 National Defence College
               </p>
             </div>
