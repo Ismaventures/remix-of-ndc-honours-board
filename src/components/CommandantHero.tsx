@@ -36,7 +36,7 @@ export function CommandantHero({
 
   if (isAutoDisplay) {
     return (
-      <section className="relative w-full h-full min-h-[320px] flex flex-col items-center justify-center overflow-hidden bg-white text-slate-900 border border-slate-200">
+      <section className="relative w-full h-full min-h-0 max-h-full flex flex-col items-stretch overflow-hidden bg-white text-slate-900 border border-slate-200">
         {/* Top Defence Colors Strip */}
         <div className="absolute top-0 inset-x-0 h-[8px] flex z-30">
           <div className="flex-1 bg-[#002060]" title="Navy" />
@@ -58,23 +58,21 @@ export function CommandantHero({
           <img src={ndcCrest} alt="NDC Logo" className="h-[clamp(20px,4.8vh,56px)] w-auto object-contain filter drop-shadow-sm" />
         </div>
 
-        {/* Main Content Container */}
-        <div className="relative z-10 flex flex-col items-center w-full h-full max-w-[min(96vw,980px)] sm:max-w-[min(95vw,1050px)] md:max-w-[min(92vw,1120px)] mx-auto justify-center px-2 sm:px-3 py-[max(10px,1.4vh)] gap-[max(8px,1.1vh)] md:gap-[2vh]">
-          {/* Portrait with Yellow/Gold frame */}
-          <div className="relative w-full flex justify-center items-center flex-shrink min-h-0 overflow-hidden">
-            <div className="p-[max(2px,0.24vh)] bg-[#FFD700] shadow-2xl transition-transform duration-500">
-              <div className="p-[max(2px,0.24vh)] bg-white">
-                <div className="p-[max(1px,0.2vh)] bg-[#FFD700]">
-                  <div className="relative aspect-[4/5] h-[clamp(220px,54dvh,560px)] sm:h-[clamp(260px,56dvh,600px)] md:h-[clamp(280px,58dvh,640px)] w-auto max-h-[62dvh] bg-slate-100 overflow-hidden shadow-inner">
+        {/* Main content: symmetric inset; crests are absolute so use balanced pt/pb */}
+        <div className="relative z-10 mx-auto flex w-full max-w-[min(96vw,1400px)] flex-1 min-h-0 flex-col items-center justify-center gap-5 px-4 pb-6 pt-[max(4rem,12%)] sm:gap-6 sm:px-5 sm:pb-7 sm:pt-[max(4.25rem,11%)] md:flex-row md:items-center md:justify-center md:gap-7 md:px-7 md:py-7 lg:gap-8">
+          {/* Portrait with Yellow/Gold frame — flex-shrink-0 so the info plate never overlaps a squashed portrait */}
+          <div className="relative flex w-full flex-shrink-0 items-center justify-center md:max-w-[42%] md:w-auto lg:max-w-[40%]">
+            <div className="p-[0.25rem] sm:p-[0.35vh] bg-[#FFD700] shadow-2xl transition-transform duration-500 w-fit max-w-full">
+              <div className="p-[0.25rem] sm:p-[0.35vh] bg-white">
+                <div className="p-[0.15rem] sm:p-[0.25vh] bg-[#FFD700]">
+                  <div className="relative mx-auto aspect-[3/4] h-[min(50vh,70dvh)] w-auto max-w-[min(90vw,420px)] bg-slate-100 shadow-inner overflow-hidden md:h-[min(70vh,80dvh)]">
                     {commandantImageUrl ? (
-                      <div className="w-full h-full p-[max(4px,0.55vh)] bg-slate-100">
-                        <img
-                          src={commandantImageUrl}
-                          alt={name}
-                          className="w-full h-full object-contain object-center"
-                          loading="eager"
-                        />
-                      </div>
+                      <img
+                        src={commandantImageUrl}
+                        alt={name}
+                        className="w-full h-full object-contain object-top bg-slate-100"
+                        loading="eager"
+                      />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
                         <Shield className="h-[15%] w-auto opacity-20" />
@@ -87,7 +85,7 @@ export function CommandantHero({
           </div>
 
           {/* Identity Plate */}
-          <div className="w-full relative flex-shrink-0 mt-[0.4vh] md:mt-[1.2vh]">
+          <div className="relative w-full max-w-[min(92vw,640px)] flex-shrink-0 md:max-w-none md:min-w-0 md:flex-1 md:self-center">
             {/* Top Red Bar */}
             <div className="h-[0.6vh] min-h-[2px] w-full bg-[#FF0000]" />
             {/* Main Info Bar */}
@@ -161,25 +159,23 @@ export function CommandantHero({
           }`}
         >
           <div className="relative mx-auto md:mx-0 w-fit">
-            {/* Professional Framed Portrait */}
-            <div className="p-1 bg-[#FFD700] shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
-              <div className="p-1 bg-white">
-                <div className="p-0.5 bg-[#FFD700]">
-                  <div 
-                    className={`relative bg-slate-100 overflow-hidden shadow-inner flex items-center justify-center ${isCompact ? "w-40 h-50 md:w-44 md:h-55" : "w-48 h-60 md:w-52 md:h-65"}`}
-                  >
-                    {commandantImageUrl ? (
-                      <img
-                        src={commandantImageUrl}
-                        alt={name}
-                        className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
-                      />
-                    ) : (
-                      <Shield className="h-14 w-14 text-slate-300 opacity-40" />
-                    )}
-                  </div>
+            <div
+              className={`relative rounded-lg bg-muted/70 border border-primary/45 flex items-center justify-center overflow-hidden z-10 shadow-2xl ${isCurrent ? "commandant-portrait-frame" : ""} ${isCompact ? "w-40 h-52 md:w-44 md:h-58" : "w-48 h-60 md:w-52 md:h-68"}`}
+            >
+              {commandantImageUrl ? (
+                <img
+                  src={commandantImageUrl}
+                  alt={name}
+                  className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-3 text-primary/40">
+                  <Shield className="h-14 w-14" />
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Official Portrait
+                  </span>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

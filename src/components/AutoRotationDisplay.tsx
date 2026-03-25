@@ -582,7 +582,7 @@ export function AutoRotationDisplay({
       {slide.type === "commandant" && (
         <motion.button
           onClick={() => setSelectedCommandant(slide.commandant)}
-          className="w-full text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 relative overflow-hidden"
+          className="w-full h-full min-h-0 max-h-full flex flex-col text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 relative overflow-x-hidden overflow-y-auto"
           aria-label={`Open profile for ${slide.commandant.name}`}
           whileHover={prefersReducedMotion ? undefined : { y: -5, scale: 1.01 }}
           whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
@@ -704,20 +704,23 @@ export function AutoRotationDisplay({
         </div>
       )}
 
-      {/* Exit Button overlay for Auto Display */}
+      {/* Exit — own row so slide content never sits under the control */}
       {isActive && (
-        <div className="fixed top-4 right-4 z-[100] flex gap-2">
+        <header className="relative z-[100] flex shrink-0 items-center justify-end gap-3 border-b border-border/60 bg-background/90 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-md sm:px-6 sm:pb-4">
           <button
+            type="button"
             onClick={() => setDisplayActive(false)}
-            className="px-4 py-2 rounded-full bg-slate-900/60 backdrop-blur-md border border-white/20 text-white/70 hover:text-white hover:bg-slate-900 transition-all text-xs font-bold tracking-widest uppercase shadow-2xl"
+            className="rounded-full border border-primary/25 bg-card/90 px-4 py-2 text-xs font-bold uppercase tracking-widest text-foreground shadow-md transition-colors hover:border-primary/40 hover:bg-card"
           >
             Exit Display
           </button>
-        </div>
+        </header>
       )}
 
       {/* Slide content */}
-      <div className="flex-1 min-h-0 flex items-center justify-center px-2 sm:px-4 md:px-6 pt-2 sm:pt-4 md:pt-6 pb-8 sm:pb-10 md:pb-12 overflow-hidden">
+      <div
+        className={`flex-1 min-h-0 flex items-center justify-center overflow-hidden px-3 sm:px-5 md:px-8 ${isActive ? "py-4 sm:py-5 md:py-6" : "pt-2 sm:pt-4 md:pt-6 pb-8 sm:pb-10 md:pb-12"}`}
+      >
         <div
           className={`absolute top-20 md:top-24 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ${showInteractionHint ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}`}
         >
@@ -743,7 +746,7 @@ export function AutoRotationDisplay({
         </button>
 
         <div
-          className={`${slide.type === "commandant" ? "max-w-[min(96vw,1120px)] xl:max-w-[min(92vw,1240px)]" : "max-w-[min(97vw,1140px)] xl:max-w-[min(93vw,1260px)]"} relative w-full max-h-full transition-all ease-out will-change-transform ${getTransitionClasses()}`}
+          className={`${slide.type === "commandant" ? "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl h-full min-h-0 flex flex-col" : "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl"} relative w-full max-h-full transition-all ease-out will-change-transform ${slide.type === "commandant" ? "" : "-translate-y-2 sm:-translate-y-3 md:-translate-y-4"} ${getTransitionClasses()}`}
           style={{ transitionDuration: `${currentTransitionDuration}ms` }}
         >
           {slideImageUrl && (
@@ -793,11 +796,20 @@ export function AutoRotationDisplay({
                     ? Math.max(0.9, Math.min(1.8, cinematicSettings.commandantDurationMs / 1000))
                     : Math.max(0.65, Math.min(1.4, cinematicSettings.imageDurationMs / 1000)),
                 )}
+                className={
+                  slide.type === "commandant"
+                    ? "flex min-h-0 flex-1 flex-col"
+                    : undefined
+                }
                 style={{ willChange: "transform" }}
               >
                 {renderSlideContent()}
               </motion.div>
             </AnimatePresence>
+          ) : slide.type === "commandant" ? (
+            <div className="flex min-h-0 flex-1 flex-col">
+              {renderSlideContent()}
+            </div>
           ) : (
             renderSlideContent()
           )}
