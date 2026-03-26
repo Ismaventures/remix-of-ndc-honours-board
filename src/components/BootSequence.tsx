@@ -274,7 +274,7 @@ export function BootSequence({
         <img
           src={ndcCrest}
           alt=""
-          className="w-[800px] h-[800px] object-contain"
+          className="h-[clamp(260px,72vw,800px)] w-[clamp(260px,72vw,800px)] object-contain"
         />
       </div>
 

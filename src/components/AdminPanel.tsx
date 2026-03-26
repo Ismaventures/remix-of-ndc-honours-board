@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, X, ArrowLeft } from 'lucide-react';
 import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/types/domain';
 import { AdvancedAudioAdmin } from './AdvancedAudioAdmin';
@@ -311,6 +311,9 @@ export function AdminPanel({
   const [showFormP, setShowFormP] = useState(false);
   const [showFormV, setShowFormV] = useState(false);
   const [showFormC, setShowFormC] = useState(false);
+  const [personnelCategoryFilter, setPersonnelCategoryFilter] = useState<Category | 'All'>('All');
+  const [personnelSearch, setPersonnelSearch] = useState('');
+  const [selectedPersonnelId, setSelectedPersonnelId] = useState<string | null>(null);
   const [sequenceContext, setSequenceContext] = useState<AutoDisplayContextKey>('commandants');
   const [settingsImportStatus, setSettingsImportStatus] = useState<string | null>(null);
   const [themeDraft, setThemeDraft] = useState<ThemeMode>(themeMode);
@@ -340,6 +343,58 @@ export function AdminPanel({
   useEffect(() => {
     setAutoDisplayDraft(autoDisplaySettings);
   }, [autoDisplaySettings]);
+
+  const personnelCategories = useMemo(() => {
+    const discovered = Array.from(new Set(personnel.map(p => p.category)));
+    const prioritized = CATEGORIES.filter(cat => discovered.includes(cat));
+    const remaining = discovered.filter(cat => !prioritized.includes(cat)).sort((a, b) => a.localeCompare(b));
+    return [...prioritized, ...remaining] as Category[];
+  }, [personnel]);
+
+  const personnelCountsByCategory = useMemo(() => {
+    const counts: Partial<Record<Category, number>> = {};
+    for (const person of personnel) {
+      counts[person.category] = (counts[person.category] ?? 0) + 1;
+    }
+    return counts;
+  }, [personnel]);
+
+  const filteredPersonnel = useMemo(() => {
+    const query = personnelSearch.trim().toLowerCase();
+    return personnel
+      .filter(person => personnelCategoryFilter === 'All' || person.category === personnelCategoryFilter)
+      .filter(person => {
+        if (!query) return true;
+        return [person.name, person.rank, person.category, person.service, String(person.periodStart), String(person.periodEnd)]
+          .join(' ')
+          .toLowerCase()
+          .includes(query);
+      })
+      .sort((a, b) => {
+        if (a.category !== b.category) return a.category.localeCompare(b.category);
+        if (a.seniorityOrder !== b.seniorityOrder) return a.seniorityOrder - b.seniorityOrder;
+        return a.name.localeCompare(b.name);
+      });
+  }, [personnel, personnelCategoryFilter, personnelSearch]);
+
+  const selectedPersonnel = useMemo(
+    () => personnel.find(p => p.id === selectedPersonnelId) ?? null,
+    [personnel, selectedPersonnelId],
+  );
+
+  useEffect(() => {
+    if (personnelCategoryFilter !== 'All' && !personnelCategories.includes(personnelCategoryFilter)) {
+      setPersonnelCategoryFilter('All');
+    }
+  }, [personnelCategories, personnelCategoryFilter]);
+
+  useEffect(() => {
+    if (!selectedPersonnelId) return;
+    const stillExists = personnel.some(p => p.id === selectedPersonnelId);
+    if (!stillExists) {
+      setSelectedPersonnelId(null);
+    }
+  }, [personnel, selectedPersonnelId]);
 
   const isThemeDirty = themeDraft !== themeMode;
   const isBootDirty =
@@ -695,7 +750,7 @@ export function AdminPanel({
           <div className="view-enter">
             {!showFormP && (
               <div className="flex justify-end mb-4">
-                <button onClick={() => { setEditingP(null); setShowFormP(true); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
+                <button onClick={() => { setEditingP(null); setSelectedPersonnelId(null); setShowFormP(true); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
                   <Plus className="h-4 w-4" /> Add Personnel
                 </button>
               </div>
@@ -707,14 +762,135 @@ export function AdminPanel({
                 onSave={(data) => {
                   if (editingP) onUpdatePersonnel(editingP.id, data);
                   else onAddPersonnel(data as Omit<Personnel, 'id'>);
-                  setShowFormP(false); setEditingP(null);
+                  setShowFormP(false);
+                  if (editingP) setSelectedPersonnelId(editingP.id);
+                  setEditingP(null);
                 }}
                 onCancel={() => { setShowFormP(false); setEditingP(null); }}
               />
             ) : personnel.length === 0 ? (
               <EmptyState message="No personnel records found." onAdd={() => setShowFormP(true)} />
+            ) : selectedPersonnel ? (
+              <div className="surface-panel p-5 sm:p-6 view-enter">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Full Profile</p>
+                    <h4 className="text-lg sm:text-xl font-semibold text-foreground">{selectedPersonnel.name}</h4>
+                    <p className="text-sm text-muted-foreground mt-1">{selectedPersonnel.rank} • {selectedPersonnel.category}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedPersonnelId(null)}
+                      className="px-3 py-2 rounded-md border border-primary/20 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    >
+                      Back To List
+                    </button>
+                    <button
+                      onClick={() => { setEditingP(selectedPersonnel); setShowFormP(true); }}
+                      className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90"
+                    >
+                      Edit Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        onDeletePersonnel(selectedPersonnel.id);
+                        setSelectedPersonnelId(null);
+                      }}
+                      className="px-3 py-2 rounded-md border border-destructive/40 text-xs font-semibold text-destructive hover:bg-destructive/10"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Full Name</p>
+                    <p className="font-medium text-foreground mt-1">{selectedPersonnel.name}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank / Title</p>
+                    <p className="font-medium text-foreground mt-1">{selectedPersonnel.rank}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Category</p>
+                    <p className="font-medium text-foreground mt-1">{selectedPersonnel.category}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Service</p>
+                    <p className="font-medium text-foreground mt-1">{selectedPersonnel.service}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Period</p>
+                    <p className="font-medium text-foreground mt-1">{selectedPersonnel.periodStart} - {selectedPersonnel.periodEnd}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Seniority Order</p>
+                    <p className="font-medium text-foreground mt-1">{selectedPersonnel.seniorityOrder}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Citation / Bio</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{selectedPersonnel.citation}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Decoration</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{selectedPersonnel.decoration || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
             ) : (
-              <div className="surface-panel overflow-hidden">
+              <div className="space-y-4">
+                <div className="surface-panel p-4 sm:p-5">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <input
+                        type="text"
+                        value={personnelSearch}
+                        onChange={e => setPersonnelSearch(e.target.value)}
+                        placeholder="Search by name, rank, category, service, or year"
+                        className="w-full sm:max-w-md bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                      />
+                      <select
+                        value={personnelCategoryFilter}
+                        onChange={e => setPersonnelCategoryFilter(e.target.value as Category | 'All')}
+                        className="w-full sm:w-auto bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                      >
+                        <option value="All">All Categories</option>
+                        {personnelCategories.map(category => (
+                          <option key={category} value={category}>{category}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setPersonnelCategoryFilter('All')}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                          personnelCategoryFilter === 'All'
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-card text-muted-foreground border-primary/20 hover:text-foreground hover:bg-muted/50'
+                        }`}
+                      >
+                        All ({personnel.length})
+                      </button>
+                      {personnelCategories.map(category => (
+                        <button
+                          key={category}
+                          onClick={() => setPersonnelCategoryFilter(category)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                            personnelCategoryFilter === category
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-card text-muted-foreground border-primary/20 hover:text-foreground hover:bg-muted/50'
+                          }`}
+                        >
+                          {category} ({personnelCountsByCategory[category] ?? 0})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="surface-panel overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -726,9 +902,21 @@ export function AdminPanel({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-primary/5">
-                      {personnel.slice(0, 20).map(p => (
-                        <tr key={p.id} className="hover:bg-muted/30 transition-colors group">
-                          <td className="px-4 py-3 font-medium text-foreground">{p.name}</td>
+                      {filteredPersonnel.map(p => (
+                        <tr
+                          key={p.id}
+                          onClick={() => setSelectedPersonnelId(p.id)}
+                          className="hover:bg-muted/30 transition-colors group cursor-pointer"
+                        >
+                          <td className="px-4 py-3 font-medium text-foreground">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPersonnelId(p.id)}
+                              className="text-left underline-offset-2 hover:underline"
+                            >
+                              {p.name}
+                            </button>
+                          </td>
                           <td className="px-4 py-3 text-muted-foreground">
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
                               {p.category}
@@ -737,15 +925,33 @@ export function AdminPanel({
                           <td className="px-4 py-3 text-muted-foreground">{p.rank}</td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => { setEditingP(p); setShowFormP(true); }} className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"><Pencil className="h-4 w-4" /></button>
-                              <button onClick={() => onDeletePersonnel(p.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setEditingP(p); setShowFormP(true); }}
+                                className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); onDeletePersonnel(p.id); }}
+                                className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
                             </div>
                           </td>
                         </tr>
                       ))}
+                      {filteredPersonnel.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                            No personnel records match this filter.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
+              </div>
               </div>
             )}
           </div>
@@ -1585,6 +1791,7 @@ function PersonnelForm({ initial, onSave, onCancel }: {
     periodStart: initial?.periodStart || 2020,
     periodEnd: initial?.periodEnd || 2022,
     citation: initial?.citation || 'Recognized for outstanding contributions to strategic leadership and national defence development.',
+    decoration: initial?.decoration || '',
     imageUrl: initial?.imageUrl || '',
     seniorityOrder: initial?.seniorityOrder || 10,
   });
@@ -1676,6 +1883,10 @@ function PersonnelForm({ initial, onSave, onCancel }: {
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Citation / Bio</label>
           <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
         </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
@@ -1700,6 +1911,7 @@ function VisitForm({ initial, onSave, onCancel }: {
     date: initial?.date || '',
     imageUrl: initial?.imageUrl || '',
     description: initial?.description || '',
+    decoration: initial?.decoration || '',
   });
   const update = (key: string, value: string) => setForm(prev => ({ ...prev, [key]: value }));
 
@@ -1773,6 +1985,10 @@ function VisitForm({ initial, onSave, onCancel }: {
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Visit Description / Context</label>
           <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
         </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
@@ -1797,6 +2013,7 @@ function CommandantForm({ initial, onSave, onCancel }: {
     tenureEnd: initial?.tenureEnd ?? '',
     imageUrl: initial?.imageUrl || '',
     description: initial?.description || '',
+    decoration: initial?.decoration || '',
     isCurrent: initial?.isCurrent || false,
   });
   const update = (key: string, value: string | number | boolean) => setForm(prev => ({ ...prev, [key]: value }));
@@ -1870,6 +2087,10 @@ function CommandantForm({ initial, onSave, onCancel }: {
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Biography / Description</label>
           <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <label className="flex items-center gap-3 text-sm text-foreground sm:col-span-2 p-3 rounded-md bg-primary/5 border border-primary/10 cursor-pointer hover:bg-primary/10 transition-colors">
           <div className={`w-5 h-5 rounded border ${form.isCurrent ? 'bg-primary border-primary text-primary-foreground' : 'border-primary/30 bg-background'} flex items-center justify-center transition-colors`}>

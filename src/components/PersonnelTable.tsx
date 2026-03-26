@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Search, ChevronLeft, ChevronRight, LayoutGrid, List, Eye, User } from 'lucide-react';
 import { Personnel, Category } from '@/types/domain';
 import { ProfileModal } from './ProfileModal';
@@ -16,7 +16,9 @@ export function PersonnelTable({ data, title, category }: PersonnelTableProps) {
   const [sortKey, setSortKey] = useState<'name' | 'rank' | 'periodStart'>('periodStart');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(0);
-  const [viewMode, setViewMode] = useState<'table' | 'gallery'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'gallery'>(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768 ? 'gallery' : 'table'
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [serviceFilter, setServiceFilter] = useState('');
 
@@ -53,6 +55,17 @@ export function PersonnelTable({ data, title, category }: PersonnelTableProps) {
 
   const services = [...new Set(data.filter(p => p.category === category).map(p => p.service))];
 
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth < 768) {
+        setViewMode('gallery');
+      }
+    };
+
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   return (
     <div className="scroll-reveal">
       <div className="flex items-center justify-between mb-6">
@@ -68,7 +81,7 @@ export function PersonnelTable({ data, title, category }: PersonnelTableProps) {
       </div>
 
       <div className="flex gap-3 mb-4 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex-1 min-w-[200px] w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
@@ -81,7 +94,7 @@ export function PersonnelTable({ data, title, category }: PersonnelTableProps) {
         <select
           value={serviceFilter}
           onChange={e => { setServiceFilter(e.target.value); setPage(0); }}
-          className="bg-muted text-sm text-foreground rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/40"
+          className="bg-muted text-sm text-foreground rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary/40 w-full sm:w-auto"
         >
           <option value="">All Services</option>
           {services.map(s => <option key={s} value={s}>{s}</option>)}

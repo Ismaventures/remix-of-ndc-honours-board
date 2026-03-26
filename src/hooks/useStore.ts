@@ -12,6 +12,7 @@ type PersonnelRow = {
   period_end: number;
   image_url: string | null;
   citation: string;
+  decoration?: string | null;
   seniority_order: number;
 };
 
@@ -42,6 +43,7 @@ type CommandantRow = {
   tenure_end: number | null;
   image_url: string | null;
   description: string;
+  decoration?: string | null;
   is_current: boolean;
 };
 
@@ -53,6 +55,7 @@ type VisitRow = {
   date: string;
   image_url: string | null;
   description: string;
+  decoration?: string | null;
 };
 
 const mapPersonnelToRow = (p: Personnel): PersonnelRow => ({
@@ -65,6 +68,7 @@ const mapPersonnelToRow = (p: Personnel): PersonnelRow => ({
   period_end: p.periodEnd,
   image_url: p.imageUrl ?? null,
   citation: p.citation,
+  decoration: p.decoration ?? null,
   seniority_order: p.seniorityOrder,
 });
 
@@ -78,6 +82,7 @@ const mapRowToPersonnel = (row: PersonnelRow): Personnel => ({
   periodEnd: row.period_end,
   imageUrl: row.image_url ?? undefined,
   citation: row.citation,
+  decoration: row.decoration ?? undefined,
   seniorityOrder: row.seniority_order,
 });
 
@@ -89,6 +94,7 @@ const mapCommandantToRow = (c: Commandant): CommandantRow => ({
   tenure_end: c.tenureEnd,
   image_url: c.imageUrl ?? null,
   description: c.description,
+  decoration: c.decoration ?? null,
   is_current: c.isCurrent,
 });
 
@@ -100,6 +106,7 @@ const mapRowToCommandant = (row: CommandantRow): Commandant => ({
   tenureEnd: row.tenure_end,
   imageUrl: row.image_url ?? undefined,
   description: row.description,
+  decoration: row.decoration ?? undefined,
   isCurrent: row.is_current,
 });
 
@@ -111,6 +118,7 @@ const mapVisitToRow = (v: DistinguishedVisit): VisitRow => ({
   date: v.date,
   image_url: v.imageUrl ?? null,
   description: v.description,
+  decoration: v.decoration ?? null,
 });
 
 const mapRowToVisit = (row: VisitRow): DistinguishedVisit => ({
@@ -121,6 +129,7 @@ const mapRowToVisit = (row: VisitRow): DistinguishedVisit => ({
   date: row.date,
   imageUrl: row.image_url ?? undefined,
   description: row.description,
+  decoration: row.decoration ?? undefined,
 });
 
 function loadFromStorage<T>(key: string, fallback: T): T {
@@ -178,6 +187,7 @@ export function usePersonnelStore() {
     if (data.periodEnd !== undefined) payload.period_end = data.periodEnd;
     if (data.imageUrl !== undefined) payload.image_url = data.imageUrl ?? null;
     if (data.citation !== undefined) payload.citation = data.citation;
+    if (data.decoration !== undefined) payload.decoration = data.decoration ?? null;
     if (data.seniorityOrder !== undefined) payload.seniority_order = data.seniorityOrder;
 
     void supabase
@@ -254,6 +264,7 @@ export function useCommandantsStore() {
     if (data.tenureEnd !== undefined) payload.tenure_end = data.tenureEnd;
     if (data.imageUrl !== undefined) payload.image_url = data.imageUrl ?? null;
     if (data.description !== undefined) payload.description = data.description;
+    if (data.decoration !== undefined) payload.decoration = data.decoration ?? null;
     if (data.isCurrent !== undefined) payload.is_current = data.isCurrent;
 
     void supabase
@@ -330,6 +341,7 @@ export function useVisitsStore() {
     if (data.date !== undefined) payload.date = data.date;
     if (data.imageUrl !== undefined) payload.image_url = data.imageUrl ?? null;
     if (data.description !== undefined) payload.description = data.description;
+    if (data.decoration !== undefined) payload.decoration = data.decoration ?? null;
 
     void supabase
       .from('visits')

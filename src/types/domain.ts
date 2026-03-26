@@ -11,6 +11,7 @@ export interface Personnel {
   periodEnd: number;
   imageUrl?: string;
   citation: string;
+  decoration?: string;
   seniorityOrder: number;
 }
 
@@ -22,6 +23,7 @@ export interface Commandant {
   tenureEnd: number | null;
   imageUrl?: string;
   description: string;
+  decoration?: string;
   isCurrent: boolean;
 }
 
@@ -33,4 +35,5 @@ export interface DistinguishedVisit {
   date: string;
   imageUrl?: string;
   description: string;
+  decoration?: string;
 }

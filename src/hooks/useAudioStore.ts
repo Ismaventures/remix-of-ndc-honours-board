@@ -40,6 +40,7 @@ interface AudioState {
   renameTrack: (id: string, newName: string) => Promise<void>;
   setAssignment: (context: keyof AudioAssignments, trackId: string | null) => void;
   setMasterVolume: (val: number) => void;
+  setMuted: (muted: boolean) => void;
   toggleMute: () => void;
 }
 
@@ -194,6 +195,7 @@ export const useAudioStore = create<AudioState>()(
       },
 
       setMasterVolume: val => setStore({ masterVolume: val }),
+      setMuted: muted => setStore({ isMuted: muted }),
       toggleMute: () => setStore(state => ({ isMuted: !state.isMuted })),
     }),
     {

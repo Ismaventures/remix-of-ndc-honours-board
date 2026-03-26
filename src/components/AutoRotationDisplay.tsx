@@ -82,74 +82,124 @@ function ContinuousSlideCard({
   const imageUrl = useResolvedMediaUrl(rawUrl);
 
   const isVisit = type === "visit";
-  const title = isVisit
-    ? (item as DistinguishedVisit).title
-    : (item as Personnel).rank;
-  const name = isVisit
-    ? (item as DistinguishedVisit).name
-    : (item as Personnel).name;
+  const title = (
+    isVisit
+      ? (item as DistinguishedVisit).title
+      : (item as Personnel).rank
+  )?.trim();
+  const name = (
+    isVisit
+      ? (item as DistinguishedVisit).name
+      : (item as Personnel).name
+  )?.trim();
   const subtitle = isVisit
     ? (item as DistinguishedVisit).country
     : (item as Personnel).service;
-  const details = isVisit
-    ? (item as DistinguishedVisit).date
-    : `${(item as Personnel).periodStart} - ${(item as Personnel).periodEnd}`;
+  const decoration = isVisit
+    ? (item as DistinguishedVisit).decoration
+    : (item as Personnel).decoration;
+  const safeTitle = title || (isVisit ? "Honoured Guest" : "Officer");
+  const safeName = name || "Name unavailable";
+  const safeDecoration = decoration?.trim() || "";
+
+  const yearLabel = useMemo(() => {
+    if (isVisit) {
+      const visitDate = ((item as DistinguishedVisit).date ?? "").trim();
+      const yearMatch = visitDate.match(/(19|20)\d{2}/);
+      return yearMatch?.[0] ?? (visitDate || "N/A");
+    }
+
+    const start = (item as Personnel).periodStart;
+    const end = (item as Personnel).periodEnd;
+
+    if (start && end) return `${start} - ${end}`;
+    if (start) return String(start);
+    if (end) return String(end);
+    return "N/A";
+  }, [isVisit, item]);
 
   return (
     <button
       type="button"
       onClick={() => onSelect(item)}
-      className={`group relative w-[280px] sm:w-[320px] md:w-[360px] lg:w-[400px] shrink-0 rounded-2xl p-4 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${
+      className={`auto-scroll-card group relative w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] self-start shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${
         isLightMode
-          ? "bg-white/95 border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)]"
-          : "bg-card/92 border border-primary/30 shadow-[0_14px_44px_rgba(2,6,23,0.46)]"
+          ? "bg-white border border-[#002060]/20 shadow-[0_12px_36px_rgba(0,32,96,0.14)]"
+          : "bg-slate-950/90 border border-[#FFD700]/25 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
       }`}
-      aria-label={`${isVisit ? "Visit" : "Staff"} card for ${name}`}
+      aria-label={`${isVisit ? "Visit" : "Staff"} card for ${safeName}`}
     >
-      {!isLightMode && (
-        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[linear-gradient(140deg,hsl(var(--primary)/0.14),transparent_34%,transparent_66%,hsl(var(--primary)/0.09))]" />
-      )}
-
-      <div
-        className={`relative mb-4 h-[300px] sm:h-[340px] md:h-[380px] overflow-hidden rounded-lg border transition-colors ${
-          isLightMode
-            ? "bg-slate-50 border-slate-100"
-            : "bg-muted/40 border-primary/20"
-        }`}
-      >
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={`${title} ${name}`}
-            className={`h-full w-full ${isVisit ? "object-cover" : "object-cover object-top"} transition-transform duration-500 group-hover:scale-[1.03]`}
-            loading="eager"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-primary/45">
-            <Shield className="h-10 w-10" />
-          </div>
-        )}
+      <div className="pointer-events-none absolute top-0 inset-x-0 h-[7px] flex z-20">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#00B0F0]" />
       </div>
-      <p className="text-[11px] uppercase tracking-[0.2em] text-primary/85 font-semibold">
-        {isVisit ? "Distinguished Visit" : "Staff Officer"}
-      </p>
-      <h3
-        className={`mt-1 line-clamp-2 text-base sm:text-lg font-bold ${isLightMode ? "text-slate-900" : "text-foreground"}`}
-      >
-        {title ? `${title} ` : ""}
-        {name}
-      </h3>
-      <p
-        className={`mt-2 text-xs uppercase tracking-[0.12em] ${isLightMode ? "text-slate-500" : "text-muted-foreground"}`}
-      >
-        {subtitle}
-      </p>
-      <p
-        className={`mt-1 text-xs ${isLightMode ? "text-slate-400" : "text-muted-foreground"}`}
-      >
-        {details}
-      </p>
-      <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-primary/80 font-semibold">
+
+      <div className="pointer-events-none absolute bottom-0 inset-x-0 h-[6px] flex z-20">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#00B0F0]" />
+      </div>
+
+      <div className="pointer-events-none absolute inset-0 z-0 opacity-40">
+        <div className={`absolute inset-0 ${isLightMode ? "bg-white" : "bg-slate-950"}`} />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      </div>
+
+      <div className="relative z-10 mb-2.5 sm:mb-3 flex justify-center">
+        <div className="p-[2px] bg-[#FFD700] shadow-xl">
+          <div className="p-[2px] bg-white">
+            <div className="p-[1px] bg-[#FFD700]">
+              <div
+                className={`auto-scroll-image-frame relative h-[clamp(132px,23dvh,205px)] sm:h-[clamp(148px,25dvh,230px)] md:h-[clamp(165px,27dvh,250px)] aspect-[4/5] overflow-hidden ${
+                  isLightMode ? "bg-slate-100" : "bg-slate-900"
+                }`}
+              >
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={`${safeTitle} ${safeName}`}
+                    className={`h-full w-full ${isVisit ? "object-cover" : "object-contain object-top"} transition-transform duration-500 group-hover:scale-[1.015]`}
+                    loading="eager"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-primary/45">
+                    <Shield className="h-10 w-10" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative z-10">
+        <div className="h-[2px] w-full bg-[#FF0000]" />
+        <div className="auto-scroll-plate bg-[#002060] px-2.5 py-2 sm:px-3 sm:py-2.5 text-center shadow-xl">
+          <p className="auto-scroll-title text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.13em] text-white/95 break-words leading-tight">
+            {safeTitle}
+          </p>
+          <h3 className="auto-scroll-name mt-1 text-xs sm:text-sm font-bold leading-snug break-words text-[#FFD700]">
+            {safeName}
+          </h3>
+          {safeDecoration && (
+            <div className="mt-1.5 inline-flex max-w-full items-center justify-center rounded-md border border-[#FFD700]/70 bg-[linear-gradient(135deg,#FFF3B2_0%,#FFD700_40%,#C79A00_100%)] px-2 py-0.5 shadow-[0_0_16px_rgba(255,215,0,0.32)]">
+              <p className="text-[9px] sm:text-[10px] font-bold tracking-[0.07em] text-[#1f2937] break-words">
+                {safeDecoration}
+              </p>
+            </div>
+          )}
+          <p className="auto-scroll-meta mt-1 text-[10px] uppercase tracking-[0.1em] text-white/95 break-words leading-tight">
+            {subtitle}
+          </p>
+          <p className="auto-scroll-year mt-1 text-[10px] sm:text-[11px] text-[#FFD700] font-semibold tracking-[0.07em] uppercase leading-tight">
+            Year: {yearLabel}
+          </p>
+        </div>
+        <div className="h-[2px] w-full bg-[#FF0000]" />
+      </div>
+
+      <p className="relative z-10 mt-2 text-[9px] uppercase tracking-[0.16em] text-primary/80 font-semibold text-center">
         Tap to open full details
       </p>
     </button>
@@ -186,6 +236,8 @@ export function AutoRotationDisplay({
   const isLightMode = themeMode.startsWith("outdoor");
 
   const audioAssignments = useAudioStore((s) => s.assignments);
+  const isMuted = useAudioStore((s) => s.isMuted);
+  const setMuted = useAudioStore((s) => s.setMuted);
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const interactionHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -551,7 +603,7 @@ export function AutoRotationDisplay({
 
     let rafId = 0;
     let last = performance.now();
-    const speedPxPerMs = 0.045;
+    const speedPxPerMs = 0.03;
 
     const tick = (now: number) => {
       const elapsed = now - last;
@@ -681,15 +733,11 @@ export function AutoRotationDisplay({
     }
   }, [slides.length, currentIndex]);
 
-  useEffect(() => {
-    if (isActive) {
-      const slide = slides[currentIndex];
+  const resolveTrackIdForSlide = useCallback(
+    (slideCandidate?: Slide) => {
       let trackId = audioAssignments.globalAuto;
 
-      if (
-        activeCategory === "FWC" &&
-        audioAssignments.distinguished_fellows_fwc
-      ) {
+      if (activeCategory === "FWC" && audioAssignments.distinguished_fellows_fwc) {
         trackId = audioAssignments.distinguished_fellows_fwc;
       } else if (
         activeCategory === "FDC" &&
@@ -706,29 +754,32 @@ export function AutoRotationDisplay({
         audioAssignments.allied_officers
       ) {
         trackId = audioAssignments.allied_officers;
-      } else if (slide?.type === "personnel" && slide.person.category) {
-        const cat = slide.person.category.toLowerCase();
+      } else if (slideCandidate?.type === "personnel" && slideCandidate.person.category) {
+        const cat = slideCandidate.person.category.toLowerCase();
         if (cat.includes("fwc") && audioAssignments.distinguished_fellows_fwc) {
           trackId = audioAssignments.distinguished_fellows_fwc;
-        } else if (
-          cat.includes("fdc") &&
-          audioAssignments.distinguished_fellows_fdc
-        ) {
+        } else if (cat.includes("fdc") && audioAssignments.distinguished_fellows_fdc) {
           trackId = audioAssignments.distinguished_fellows_fdc;
-        } else if (
-          cat.includes("directing") &&
-          audioAssignments.directing_staff
-        ) {
+        } else if (cat.includes("directing") && audioAssignments.directing_staff) {
           trackId = audioAssignments.directing_staff;
         } else if (cat.includes("allied") && audioAssignments.allied_officers) {
           trackId = audioAssignments.allied_officers;
         }
       }
+
+      return trackId;
+    },
+    [activeCategory, audioAssignments],
+  );
+
+  useEffect(() => {
+    if (isActive) {
+      const trackId = resolveTrackIdForSlide(slides[currentIndex]);
       playAudioTrack(trackId);
     } else {
       playAudioTrack(null); // Stop audio when exiting auto mode
     }
-  }, [isActive, currentIndex, slides, audioAssignments, activeCategory]);
+  }, [isActive, currentIndex, resolveTrackIdForSlide, slides]);
 
   useEffect(() => {
     return () => {
@@ -790,6 +841,11 @@ export function AutoRotationDisplay({
     return (
       <button
         onClick={() => {
+          const initialTrackId = resolveTrackIdForSlide(slides[0]);
+          if (isMuted) {
+            setMuted(false);
+          }
+          playAudioTrack(initialTrackId);
           setTransitionType(sequence[0] ?? "fade-zoom");
           transitionStepRef.current = 0;
           setCurrentIndex(0);
@@ -974,26 +1030,37 @@ export function AutoRotationDisplay({
 
   const renderedContinuousContent = (
     <motion.div
-      className="relative mx-auto flex h-full w-full max-w-[1900px] flex-col justify-center"
+      className="relative mx-auto flex h-full min-h-0 w-full max-w-[1900px] flex-col justify-center"
       initial={prefersReducedMotion ? undefined : { opacity: 0, y: 20 }}
       animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
       transition={cinematicTransition(0.6)}
     >
-      <div className="mb-4 sm:mb-6 px-1 sm:px-2">
-        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-primary/85">
-          {getSectionTitle()}
-        </p>
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mt-1">
-          {getSectionSubtitle()}
-        </h2>
-        <p className="mt-2 text-[11px] sm:text-xs uppercase tracking-[0.14em] text-muted-foreground">
-          Continuous motion display. Select any card for full details.
-        </p>
+      <div className="auto-scroll-heading mb-2 sm:mb-3 px-1 sm:px-2 shrink-0">
+        <div className="overflow-hidden rounded-xl border border-[#002060]/20 bg-card/90 backdrop-blur">
+          <div className="h-[6px] flex">
+            <div className="flex-1 bg-[#002060]" />
+            <div className="flex-1 bg-[#FF0000]" />
+            <div className="flex-1 bg-[#00B0F0]" />
+          </div>
+          <div className="h-[2px] w-full bg-[#FF0000]" />
+          <div className="auto-scroll-heading-body bg-[#002060] px-3 py-2 sm:px-4 sm:py-2.5 text-center">
+            <p className="auto-scroll-heading-title text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90">
+              {getSectionTitle()}
+            </p>
+            <h2 className="auto-scroll-heading-subtitle mt-1 text-base sm:text-xl md:text-2xl font-bold uppercase tracking-[0.03em] text-[#FFD700] leading-tight">
+              {getSectionSubtitle()}
+            </h2>
+            <p className="mt-1 text-[9px] sm:text-[10px] uppercase tracking-[0.12em] text-white/90">
+              Continuous motion display. Select any card for full details.
+            </p>
+          </div>
+          <div className="h-[2px] w-full bg-[#FF0000]" />
+        </div>
       </div>
 
       <div
         ref={fdcScrollRef}
-        className="relative flex gap-4 sm:gap-5 overflow-x-auto pb-3 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)]"
+        className="relative flex min-h-0 items-center gap-3 sm:gap-5 overflow-x-auto pb-1 sm:pb-2 pr-1 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]"
         onMouseEnter={() =>
           (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
         }
@@ -1090,12 +1157,12 @@ export function AutoRotationDisplay({
 
       {/* Slide content */}
       <div
-        className={`flex-1 min-h-0 flex items-center justify-center overflow-hidden px-3 sm:px-5 md:px-8 ${isActive ? "py-4 sm:py-5 md:py-6" : "pt-2 sm:pt-4 md:pt-6 pb-8 sm:pb-10 md:pb-12"}`}
+        className={`flex-1 min-h-0 flex items-center justify-center overflow-hidden px-3 sm:px-5 md:px-8 ${isContinuousMode ? "py-2 sm:py-3 md:py-3" : isActive ? "py-4 sm:py-5 md:py-6" : "pt-2 sm:pt-4 md:pt-6 pb-8 sm:pb-10 md:pb-12"}`}
       >
         <div
           className={`absolute top-20 md:top-24 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ${showInteractionHint ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}`}
         >
-          <div className="px-4 py-2 rounded-md border border-primary/30 bg-slate-950/85 backdrop-blur text-[10px] md:text-xs uppercase tracking-[0.16em] text-primary/90 text-center whitespace-nowrap">
+          <div className="max-w-[85vw] px-3 py-2 rounded-md border border-primary/30 bg-slate-950/85 backdrop-blur text-[10px] md:text-xs uppercase tracking-[0.12em] text-primary/90 text-center">
             Swipe • Arrow Keys • Side Buttons
           </div>
         </div>
@@ -1117,7 +1184,7 @@ export function AutoRotationDisplay({
         </button>
 
         <div
-          className={`${slide.type === "commandant" ? "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl h-full min-h-0 flex flex-col" : "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl"} relative w-full max-h-full transition-all ease-out will-change-transform ${slide.type === "commandant" ? "" : "-translate-y-2 sm:-translate-y-3 md:-translate-y-4"} ${getTransitionClasses()}`}
+          className={`${slide.type === "commandant" || isContinuousMode ? "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl h-full min-h-0 flex flex-col" : "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl"} relative w-full max-h-full transition-all ease-out will-change-transform ${slide.type === "commandant" || isContinuousMode ? "" : "-translate-y-2 sm:-translate-y-3 md:-translate-y-4"} ${getTransitionClasses()}`}
           style={{ transitionDuration: `${currentTransitionDuration}ms` }}
         >
           {isContinuousMode && continuousItems.length > 0 ? (
@@ -1236,14 +1303,14 @@ export function AutoRotationDisplay({
         <div className="fixed inset-0 z-[70] bg-[#020817] p-0 overflow-y-auto overflow-x-hidden">
           <div className="min-h-screen w-full flex flex-col items-center">
             {/* Close Button Header */}
-            <div className="sticky top-0 z-[80] w-full bg-[#020817]/80 backdrop-blur-md border-b border-white/10 px-6 py-4 flex justify-between items-center shadow-lg">
+            <div className="sticky top-0 z-[80] w-full bg-[#020817]/80 backdrop-blur-md border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center shadow-lg gap-3">
               <div className="flex items-center gap-3">
                 <img
                   src={ndcCrest}
                   alt="Logo"
                   className="h-8 w-8 object-contain"
                 />
-                <span className="text-white font-serif tracking-widest uppercase text-sm font-semibold">
+                <span className="text-white font-serif tracking-widest uppercase text-[11px] sm:text-sm font-semibold">
                   Officer Profile : {selectedCommandant.name}
                 </span>
               </div>
@@ -1261,20 +1328,54 @@ export function AutoRotationDisplay({
             </div>
 
             {/* Main Content */}
-            <div className="w-full max-w-[1400px] px-6 py-12">
+            <div className="w-full max-w-[1400px] px-3 sm:px-6 py-6 sm:py-12">
               <CommandantHero
                 commandant={selectedCommandant}
                 compactDescription={false}
                 isAutoDisplay={false}
               />
+
+              <div className="mt-6 rounded-xl border border-white/15 bg-white/5 p-5">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 font-semibold mb-3">
+                  Complete Commandant Details
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">Name</p>
+                    <p className="text-white mt-1">{selectedCommandant.name}</p>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">Title</p>
+                    <p className="text-white mt-1">{selectedCommandant.title}</p>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">Tenure</p>
+                    <p className="text-white mt-1">{selectedCommandant.tenureStart} - {selectedCommandant.tenureEnd ?? 'Present'}</p>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">Status</p>
+                    <p className="text-white mt-1">{selectedCommandant.isCurrent ? 'Current Commandant' : 'Past Commandant'}</p>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">Decoration</p>
+                    <div className="mt-1 inline-flex max-w-full items-center rounded-md border border-[#FFD700]/80 bg-[linear-gradient(140deg,#FFF5BF_0%,#FFD700_45%,#C79600_100%)] px-2.5 py-1 shadow-[0_0_16px_rgba(255,215,0,0.33)]">
+                      <p className="text-[#1f2937] font-bold tracking-[0.08em] break-words">{selectedCommandant.decoration || 'N/A'}</p>
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">Description</p>
+                    <p className="text-white/90 mt-1 leading-relaxed">{selectedCommandant.description || 'No description available.'}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {selectedVisit && (
-        <div className="fixed inset-0 z-[70] bg-background/85 backdrop-blur-sm p-4 md:p-8 overflow-y-auto">
-          <div className="max-w-4xl mx-auto rounded-xl border border-primary/35 bg-card p-6 md:p-8 shadow-[0_0_40px_rgba(0,0,0,0.25)]">
+        <div className="fixed inset-0 z-[70] bg-background/85 backdrop-blur-sm p-3 sm:p-4 md:p-8 overflow-y-auto">
+          <div className="max-w-4xl mx-auto rounded-xl border border-primary/35 bg-card p-4 sm:p-6 md:p-8 shadow-[0_0_40px_rgba(0,0,0,0.25)]">
             <div className="flex justify-between items-start gap-4 mb-5">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.22em] text-primary/85 font-semibold">
@@ -1312,6 +1413,35 @@ export function AutoRotationDisplay({
             <p className="text-base leading-relaxed text-foreground/90">
               {selectedVisit.description}
             </p>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Name</p>
+                <p className="text-foreground mt-1">{selectedVisit.name}</p>
+              </div>
+              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Title</p>
+                <p className="text-foreground mt-1">{selectedVisit.title}</p>
+              </div>
+              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Country</p>
+                <p className="text-foreground mt-1">{selectedVisit.country}</p>
+              </div>
+              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Date</p>
+                <p className="text-foreground mt-1">{selectedVisit.date}</p>
+              </div>
+              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2 md:col-span-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Decoration</p>
+                <div className="mt-1 inline-flex max-w-full items-center rounded-md border border-[#D4AF37]/80 bg-[linear-gradient(140deg,#FFF8CF_0%,#EBCB59_45%,#C49A2C_100%)] px-2.5 py-1 shadow-[0_0_14px_rgba(212,175,55,0.3)]">
+                  <p className="text-[#1f2937] font-bold tracking-[0.08em] break-words">{selectedVisit.decoration || 'N/A'}</p>
+                </div>
+              </div>
+              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2 md:col-span-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Description</p>
+                <p className="text-foreground/90 mt-1 leading-relaxed">{selectedVisit.description || 'No description available.'}</p>
+              </div>
+            </div>
           </div>
         </div>
       )}

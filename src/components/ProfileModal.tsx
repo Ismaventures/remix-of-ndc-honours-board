@@ -12,7 +12,6 @@ interface ProfileModalProps {
 
 export function ProfileModal({ person, onClose }: ProfileModalProps) {
   const [detailsVisible, setDetailsVisible] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
   const resolvedImageUrl = useResolvedMediaUrl(person.imageUrl);
   const { themeMode } = useThemeMode();
@@ -39,12 +38,6 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
       document.documentElement.style.overflow = prevHtmlOverflow;
     };
   }, []);
-
-  const isLongCitation = person.citation && person.citation.length > 200;
-  const displayCitation =
-    isLongCitation && !isExpanded
-      ? person.citation.substring(0, 200) + "..."
-      : person.citation;
 
   if (!portalReady) return null;
 
@@ -115,6 +108,13 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
               <h4 className={`text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight uppercase tracking-tight ${isLightMode ? "text-[#002060]" : "text-foreground"}`}>
                 {person.name}
               </h4>
+              {person.decoration && (
+                <div className="mb-4 inline-flex max-w-full self-center md:self-start items-center rounded-md border border-[#FFD700]/80 bg-[linear-gradient(140deg,#FFF5BF_0%,#FFD700_45%,#C79600_100%)] px-3 py-1.5 shadow-[0_0_18px_rgba(255,215,0,0.33)]">
+                  <p className="text-xs md:text-sm font-bold tracking-[0.09em] text-[#1f2937] break-words">
+                    {person.decoration}
+                  </p>
+                </div>
+              )}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
                 <div className={`px-4 py-1.5 border-l-4 text-sm font-bold uppercase tracking-widest italic ${isLightMode ? "border-[#FF0000] bg-slate-100/80 text-slate-700" : "border-red-500/80 bg-muted/40 text-slate-200"}`}>
                   {person.service}
@@ -151,6 +151,17 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
                 ID-{person.id.substring(0, 8)}
               </p>
             </div>
+
+            <div className={`p-5 rounded-lg shadow-sm border md:col-span-2 ${isLightMode ? "bg-slate-50 border-slate-200" : "bg-muted/30 border-border"}`}>
+              <p className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-2 ${isLightMode ? "text-slate-400" : "text-muted-foreground"}`}>
+                Decoration
+              </p>
+              <div className="inline-flex max-w-full items-center rounded-md border border-[#D4AF37]/80 bg-[linear-gradient(140deg,#FFF8CF_0%,#EBCB59_45%,#C49A2C_100%)] px-3 py-1.5 shadow-[0_0_14px_rgba(212,175,55,0.3)]">
+                <p className="text-[#1f2937] text-sm md:text-base font-bold tracking-[0.08em] break-words">
+                  {person.decoration || "N/A"}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div
@@ -168,16 +179,8 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
             </div>
             <div className="relative group/citation">
               <p className={`text-lg md:text-xl leading-relaxed transition-all duration-300 ${isLightMode ? "text-slate-700 font-medium" : "text-slate-300"}`}>
-                {displayCitation}
+                {person.citation || "No citation available."}
               </p>
-              {isLongCitation && (
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className={`mt-6 flex items-center gap-2 text-xs font-black transition-all uppercase tracking-[0.2em] border-b-2 pb-1 ${isLightMode ? "text-[#002060] hover:text-[#FF0000] border-[#002060]/10" : "text-primary hover:text-red-400 border-primary/20"}`}
-                >
-                  {isExpanded ? "Minimize Full Bio" : "View Complete Citation"}
-                </button>
-              )}
             </div>
           </div>
         </div>

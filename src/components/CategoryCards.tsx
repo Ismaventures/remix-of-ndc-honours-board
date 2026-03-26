@@ -106,7 +106,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
               <div key={card.key} className="p-1 h-full">
                 <button
                   onClick={() => onSelect(card.key)}
-                  className={`relative w-full h-[240px] sm:h-[280px] lg:h-[300px] overflow-hidden rounded-2xl border text-left group transition-all duration-500 hover:-translate-y-2 flex flex-col justify-end ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                  className={`relative w-full h-[clamp(220px,36vh,300px)] sm:h-[clamp(240px,34vh,310px)] lg:h-[clamp(260px,33vh,320px)] overflow-hidden rounded-2xl border text-left group transition-all duration-500 hover:-translate-y-2 flex flex-col justify-end ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     isLightMode
                       ? "bg-white border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-slate-200"
                       : `bg-gradient-to-br ${card.cardGradient} border-white/10 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]`
@@ -136,21 +136,21 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                   </div>
 
                   {/* Background Icon */}
-                  <div
-                    className={`absolute top-5 right-5 transition-colors duration-500 transform group-hover:scale-110 group-hover:-rotate-3 will-change-transform ${
+                    <div
+                      className={`absolute top-4 right-4 sm:top-5 sm:right-5 transition-colors duration-500 transform group-hover:scale-110 group-hover:-rotate-3 will-change-transform ${
                       isLightMode
                         ? "text-slate-100 group-hover:text-slate-200"
                         : "text-white/15 group-hover:text-white/25"
                     }`}
                   >
                     <Icon
-                      className="w-24 h-24 sm:w-32 sm:h-32"
+                        className="w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32"
                       strokeWidth={1}
                     />
                   </div>
 
                   <div
-                    className={`relative p-5 sm:p-7 z-10 w-full pt-12 sm:pt-16 ${
+                    className={`relative p-4 sm:p-6 z-10 w-full pt-10 sm:pt-14 ${
                       !isLightMode
                         ? "bg-gradient-to-t from-black/80 via-black/40 to-transparent"
                         : ""

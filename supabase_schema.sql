@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS commandants (
   tenure_end integer,
   image_url text,
   description text,
+  decoration text,
   is_current boolean NOT NULL DEFAULT false
 );
 
@@ -21,6 +22,7 @@ CREATE TABLE IF NOT EXISTS personnel (
   period_end integer NOT NULL,
   image_url text,
   citation text,
+  decoration text,
   seniority_order integer
 );
 
@@ -32,8 +34,13 @@ CREATE TABLE IF NOT EXISTS visits (
   country text NOT NULL,
   date date NOT NULL,
   image_url text,
-  description text
+  description text,
+  decoration text
 );
+
+ALTER TABLE commandants ADD COLUMN IF NOT EXISTS decoration text;
+ALTER TABLE personnel ADD COLUMN IF NOT EXISTS decoration text;
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS decoration text;
 
 -- Table: audio_tracks
 CREATE TABLE IF NOT EXISTS audio_tracks (

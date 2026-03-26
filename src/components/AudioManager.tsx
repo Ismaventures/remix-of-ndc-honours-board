@@ -25,15 +25,19 @@ export function AudioManager() {
     const handleCommand = async (e: Event) => {
       const customEvent = e as CustomEvent<{ targetId: string | null; preloader?: boolean }>;
       const { targetId, preloader } = customEvent.detail;
-      
-      if (targetId === currentId) return; // Same audio already playing
-
-      const nextUrl = targetId ? await getAudioUrl(targetId) : null;
-      setCurrentId(targetId);
 
       const a1 = audio1Ref.current;
       const a2 = audio2Ref.current;
       if (!a1 || !a2) return;
+
+      const activeAudio = activeRef.current === 1 ? a1 : a2;
+      if (targetId === currentId) {
+        const hasActivePlayback = targetId === null || (!activeAudio.paused && Boolean(activeAudio.src));
+        if (hasActivePlayback) return;
+      }
+
+      const nextUrl = targetId ? await getAudioUrl(targetId) : null;
+      setCurrentId(targetId);
 
       const fadeDuration = 1500;
       const steps = 30;

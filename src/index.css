@@ -54,12 +54,47 @@
 }
 
 @layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
   html,
   body,
   #root {
     width: 100%;
     min-height: 100%;
     overflow-x: hidden;
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    max-width: 100%;
+  }
+
+  p,
+  li,
+  td,
+  th,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  span {
+    overflow-wrap: anywhere;
   }
 
   * {
@@ -118,6 +153,64 @@
 
   :root[data-theme-mode="outdoor-high-contrast-command"] body {
     font-weight: 600;
+  }
+
+  @media (max-width: 420px) {
+    html {
+      font-size: 15px;
+    }
+  }
+
+  @media (min-width: 1920px) {
+    html {
+      font-size: 17px;
+    }
+  }
+}
+
+@media (max-height: 820px) {
+  .auto-scroll-heading {
+    margin-bottom: 0.35rem;
+  }
+
+  .auto-scroll-heading .auto-scroll-heading-body {
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+  }
+
+  .auto-scroll-heading .auto-scroll-heading-title {
+    font-size: 0.78rem;
+  }
+
+  .auto-scroll-heading .auto-scroll-heading-subtitle {
+    font-size: 1rem;
+  }
+
+  .auto-scroll-card .auto-scroll-image-frame {
+    height: clamp(104px, 17dvh, 156px);
+  }
+}
+
+@media (max-height: 700px) {
+  .auto-scroll-card {
+    padding: 0.5rem;
+  }
+
+  .auto-scroll-card .auto-scroll-plate {
+    padding: 0.45rem 0.55rem;
+  }
+
+  .auto-scroll-card .auto-scroll-title {
+    font-size: 0.62rem;
+  }
+
+  .auto-scroll-card .auto-scroll-name {
+    font-size: 0.73rem;
+  }
+
+  .auto-scroll-card .auto-scroll-meta,
+  .auto-scroll-card .auto-scroll-year {
+    font-size: 0.58rem;
   }
 }
 
