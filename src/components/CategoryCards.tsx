@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Shield, Award, Users, Globe, Star, Settings } from "lucide-react";
 import ndcCrest from "/images/ndc-crest.png";
+import { useThemeMode } from "@/hooks/useThemeMode";
 
 export type ViewKey =
   | "home"
@@ -20,82 +21,63 @@ const CARDS: {
   label: string;
   subtitle: string;
   icon: React.ElementType;
+  color: string;
   cardGradient: string;
-  panelGradient: string;
-  glossGradient: string;
-  hoverGlow: string;
-  edgeTone: string;
 }[] = [
   {
     key: "fwc",
     label: "Distinguished Fellows (FWC)",
     subtitle: "Fellows of the War College",
     icon: Shield,
-    cardGradient: "from-[#0c2547] via-[#12335d] to-[#163f71]",
-    panelGradient: "from-[#081b35]/96 via-[#0b2548]/90 to-transparent",
-    glossGradient: "from-white/18 via-white/6 to-transparent",
-    hoverGlow: "hover:shadow-[0_18px_45px_rgba(33,84,145,0.45)]",
-    edgeTone: "border-[#355f93]/65",
+    color: "text-blue-600",
+    cardGradient: "from-[#0f2c4e] via-[#14365d] to-[#1a4373]",
   },
   {
     key: "fdc",
     label: "Distinguished Fellows (FDC)",
     subtitle: "Fellows of the Defence College",
     icon: Award,
-    cardGradient: "from-[#0c2742] via-[#123a60] to-[#1a4a75]",
-    panelGradient: "from-[#071c33]/96 via-[#0a2844]/90 to-transparent",
-    glossGradient: "from-white/16 via-white/6 to-transparent",
-    hoverGlow: "hover:shadow-[0_18px_45px_rgba(31,96,152,0.43)]",
-    edgeTone: "border-[#3a678f]/65",
+    color: "text-sky-600",
+    cardGradient: "from-[#0e2d4a] via-[#133e66] to-[#195080]",
   },
   {
     key: "directing",
     label: "Directing Staff",
     subtitle: "Chronicle of Excellence",
     icon: Users,
-    cardGradient: "from-[#17315a] via-[#1d3d68] to-[#234b77]",
-    panelGradient: "from-[#0c203d]/96 via-[#112d50]/90 to-transparent",
-    glossGradient: "from-white/18 via-white/7 to-transparent",
-    hoverGlow: "hover:shadow-[0_18px_45px_rgba(52,108,168,0.4)]",
-    edgeTone: "border-[#416f9d]/65",
+    color: "text-indigo-600",
+    cardGradient: "from-[#1a365d] via-[#214373] to-[#2a528a]",
   },
   {
     key: "allied",
     label: "Allied Officers",
     subtitle: "International Partnerships",
     icon: Globe,
-    cardGradient: "from-[#0f2b4b] via-[#174069] to-[#1d4f7c]",
-    panelGradient: "from-[#0a2038]/96 via-[#0f2c4e]/90 to-transparent",
-    glossGradient: "from-white/17 via-white/6 to-transparent",
-    hoverGlow: "hover:shadow-[0_18px_45px_rgba(35,101,161,0.4)]",
-    edgeTone: "border-[#3d6d9a]/65",
+    color: "text-cyan-600",
+    cardGradient: "from-[#112f4f] via-[#19406b] to-[#205285]",
   },
   {
     key: "visits",
     label: "Distinguished Visits",
     subtitle: "Honours & Ceremonies",
     icon: Star,
-    cardGradient: "from-[#1a3050] via-[#24416a] to-[#2d5080]",
-    panelGradient: "from-[#0e233f]/96 via-[#163255]/90 to-transparent",
-    glossGradient: "from-white/16 via-white/6 to-transparent",
-    hoverGlow: "hover:shadow-[0_18px_45px_rgba(69,115,175,0.38)]",
-    edgeTone: "border-[#4e739f]/65",
+    color: "text-blue-500",
+    cardGradient: "from-[#1d3455] via-[#264570] to-[#30578a]",
   },
   {
     key: "admin",
     label: "Admin Panel",
     subtitle: "Manage Records",
     icon: Settings,
-    cardGradient: "from-[#2d3444] via-[#37405a] to-[#424d69]",
-    panelGradient: "from-[#1f2737]/96 via-[#29334a]/90 to-transparent",
-    glossGradient: "from-white/14 via-white/5 to-transparent",
-    hoverGlow: "hover:shadow-[0_18px_45px_rgba(92,111,148,0.35)]",
-    edgeTone: "border-[#617294]/60",
+    color: "text-slate-600",
+    cardGradient: "from-[#2e3747] via-[#3a445d] to-[#475270]",
   },
 ];
 
 export function CategoryCards({ onSelect }: CategoryCardsProps) {
   const [mounted, setMounted] = useState(false);
+  const { themeMode } = useThemeMode();
+  const isLightMode = themeMode.startsWith("outdoor");
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 100);
@@ -124,54 +106,114 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
               <div key={card.key} className="p-1 h-full">
                 <button
                   onClick={() => onSelect(card.key)}
-                  className={`relative w-full h-[240px] sm:h-[280px] lg:h-[300px] overflow-hidden rounded-xl bg-gradient-to-br ${card.cardGradient} ${card.edgeTone} border text-left group transition-all duration-500 hover:-translate-y-1.5 ${card.hoverGlow} flex flex-col justify-end`}
+                  className={`relative w-full h-[240px] sm:h-[280px] lg:h-[300px] overflow-hidden rounded-2xl border text-left group transition-all duration-500 hover:-translate-y-2 flex flex-col justify-end ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    isLightMode
+                      ? "bg-white border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-slate-200"
+                      : `bg-gradient-to-br ${card.cardGradient} border-white/10 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]`
+                  }`}
                 >
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${card.glossGradient} opacity-70 group-hover:opacity-100 transition-opacity duration-500`}
-                  />
-
-                  <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/12 via-white/[0.04] to-transparent opacity-90" />
+                  {/* Gloss/Highlight Effect - Dark Mode Only */}
+                  {!isLightMode && (
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700" />
+                      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/10 via-white/5 to-transparent opacity-80" />
+                    </>
+                  )}
 
                   {/* NDC Logo Background Watermark */}
-                  <div className="absolute right-[-20%] top-[-10%] w-64 h-64 opacity-[0.06] group-hover:opacity-12 transition-all duration-700 pointer-events-none transform group-hover:scale-110 group-hover:rotate-3">
+                  <div
+                    className={`absolute -right-16 -top-16 w-72 h-72 transition-all duration-700 pointer-events-none transform group-hover:scale-105 group-hover:rotate-6 ${
+                      isLightMode
+                        ? "opacity-[0.03] group-hover:opacity-[0.06] filter grayscale"
+                        : "opacity-[0.08] group-hover:opacity-[0.14] filter grayscale invert"
+                    }`}
+                  >
                     <img
                       src={ndcCrest}
                       alt=""
-                      className="w-full h-full object-contain filter grayscale invert"
+                      className="w-full h-full object-contain"
                     />
                   </div>
 
-                  <div className="absolute top-4 right-4 text-white/12 group-hover:text-white/18 transition-colors duration-500">
-                    <Icon className="w-24 h-24 sm:w-32 sm:h-32" />
+                  {/* Background Icon */}
+                  <div
+                    className={`absolute top-5 right-5 transition-colors duration-500 transform group-hover:scale-110 group-hover:-rotate-3 will-change-transform ${
+                      isLightMode
+                        ? "text-slate-100 group-hover:text-slate-200"
+                        : "text-white/15 group-hover:text-white/25"
+                    }`}
+                  >
+                    <Icon
+                      className="w-24 h-24 sm:w-32 sm:h-32"
+                      strokeWidth={1}
+                    />
                   </div>
 
                   <div
-                    className={`relative p-4 sm:p-6 z-10 w-full bg-gradient-to-t ${card.panelGradient} pt-10 sm:pt-12`}
+                    className={`relative p-5 sm:p-7 z-10 w-full pt-12 sm:pt-16 ${
+                      !isLightMode
+                        ? "bg-gradient-to-t from-black/80 via-black/40 to-transparent"
+                        : ""
+                    }`}
                   >
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-14 h-14 rounded-full bg-[#0a1f3c]/85 border border-white/25 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-lg p-2 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-white/8"></div>
+                    <div className="flex items-center gap-4 mb-4">
+                      <div
+                        className={`w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-xl p-2.5 relative overflow-hidden backdrop-blur-sm ${
+                          isLightMode
+                            ? "bg-white border border-slate-100 shadow-slate-200/50"
+                            : "bg-black/25 border border-white/20"
+                        }`}
+                      >
+                        {!isLightMode && (
+                          <div className="absolute inset-0 bg-white/5"></div>
+                        )}
                         <img
                           src={ndcCrest}
                           alt="NDC Crest"
                           className="w-full h-full object-contain relative z-10 drop-shadow-md"
                         />
                       </div>
-                      <div className="w-10 h-10 rounded-full bg-black/20 border border-white/25 flex items-center justify-center shrink-0 shadow-inner backdrop-blur-sm">
-                        <Icon className="h-5 w-5 text-white/90" />
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-inner backdrop-blur-sm ${
+                          isLightMode
+                            ? "bg-slate-50 border border-slate-100"
+                            : "bg-white/10 border border-white/20"
+                        }`}
+                      >
+                        <Icon
+                          className={`h-5 w-5 ${isLightMode ? card.color : "text-white/95"}`}
+                        />
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-lg sm:text-xl font-bold font-serif leading-snug text-white mb-1 transition-colors drop-shadow-sm">
+                      <h3
+                        className={`text-lg sm:text-xl font-bold font-serif leading-tight mb-1.5 transition-colors tracking-tight ${
+                          isLightMode
+                            ? "text-slate-900 drop-shadow-none"
+                            : "text-white drop-shadow-md"
+                        }`}
+                      >
                         {card.label}
                       </h3>
-                      <p className="text-xs text-white/70 tracking-widest uppercase">
+                      <p
+                        className={`text-[11px] sm:text-xs tracking-widest uppercase font-medium ${
+                          isLightMode ? "text-slate-500" : "text-white/75"
+                        }`}
+                      >
                         {card.subtitle}
                       </p>
                     </div>
 
-                    <div className="h-0.5 w-full bg-white/20 mt-4 overflow-hidden rounded-full">
-                      <div className="h-full bg-white/75 w-0 group-hover:w-full transition-all duration-700 ease-out" />
+                    <div
+                      className={`h-[2px] w-full mt-5 overflow-hidden rounded-full ${isLightMode ? "bg-slate-100" : "bg-white/10"}`}
+                    >
+                      <div
+                        className={`h-full w-0 group-hover:w-full transition-all duration-1000 ease-in-out opacity-80 ${
+                          isLightMode
+                            ? "bg-gradient-to-r from-slate-200 via-slate-400 to-slate-200"
+                            : "bg-gradient-to-r from-white/40 via-white/80 to-white/40"
+                        }`}
+                      />
                     </div>
                   </div>
                 </button>

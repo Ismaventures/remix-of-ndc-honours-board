@@ -19,8 +19,13 @@ export default {
     },
     extend: {
       fontFamily: {
-        serif: ['"Cinzel"', '"Playfair Display"', "Georgia", "serif"],
-        sans: ['"Source Sans 3"', "system-ui", "sans-serif"],
+        serif: [
+          '"Cormorant Garamond"',
+          '"Playfair Display"',
+          "Georgia",
+          "serif",
+        ],
+        sans: ['"Manrope"', '"Source Sans 3"', "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

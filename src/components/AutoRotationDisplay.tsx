@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { ChevronLeft, ChevronRight, Monitor, SkipForward } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Monitor,
+  Shield,
+  SkipForward,
+} from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Category,
@@ -22,6 +28,7 @@ import {
 } from "@/hooks/useAutoDisplaySettings";
 import { NdcScatteredTransition } from "./NdcScatteredTransition";
 import { useSliderControl } from "@/hooks/useSliderControl";
+import { useThemeMode } from "@/hooks/useThemeMode";
 import {
   cinematicTransition,
   layeredSlideVariants,
@@ -60,6 +67,95 @@ const resolveDisplayContext = (
   return "commandants";
 };
 
+function ContinuousSlideCard({
+  item,
+  type,
+  onSelect,
+  isLightMode,
+}: {
+  item: Personnel | DistinguishedVisit;
+  type: "personnel" | "visit";
+  onSelect: (item: Personnel | DistinguishedVisit) => void;
+  isLightMode: boolean;
+}) {
+  const rawUrl = item.imageUrl;
+  const imageUrl = useResolvedMediaUrl(rawUrl);
+
+  const isVisit = type === "visit";
+  const title = isVisit
+    ? (item as DistinguishedVisit).title
+    : (item as Personnel).rank;
+  const name = isVisit
+    ? (item as DistinguishedVisit).name
+    : (item as Personnel).name;
+  const subtitle = isVisit
+    ? (item as DistinguishedVisit).country
+    : (item as Personnel).service;
+  const details = isVisit
+    ? (item as DistinguishedVisit).date
+    : `${(item as Personnel).periodStart} - ${(item as Personnel).periodEnd}`;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(item)}
+      className={`group relative w-[280px] sm:w-[320px] md:w-[360px] lg:w-[400px] shrink-0 rounded-2xl p-4 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${
+        isLightMode
+          ? "bg-white/95 border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.12)]"
+          : "bg-card/92 border border-primary/30 shadow-[0_14px_44px_rgba(2,6,23,0.46)]"
+      }`}
+      aria-label={`${isVisit ? "Visit" : "Staff"} card for ${name}`}
+    >
+      {!isLightMode && (
+        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[linear-gradient(140deg,hsl(var(--primary)/0.14),transparent_34%,transparent_66%,hsl(var(--primary)/0.09))]" />
+      )}
+
+      <div
+        className={`relative mb-4 h-[300px] sm:h-[340px] md:h-[380px] overflow-hidden rounded-lg border transition-colors ${
+          isLightMode
+            ? "bg-slate-50 border-slate-100"
+            : "bg-muted/40 border-primary/20"
+        }`}
+      >
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={`${title} ${name}`}
+            className={`h-full w-full ${isVisit ? "object-cover" : "object-cover object-top"} transition-transform duration-500 group-hover:scale-[1.03]`}
+            loading="eager"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-primary/45">
+            <Shield className="h-10 w-10" />
+          </div>
+        )}
+      </div>
+      <p className="text-[11px] uppercase tracking-[0.2em] text-primary/85 font-semibold">
+        {isVisit ? "Distinguished Visit" : "Staff Officer"}
+      </p>
+      <h3
+        className={`mt-1 line-clamp-2 text-base sm:text-lg font-bold ${isLightMode ? "text-slate-900" : "text-foreground"}`}
+      >
+        {title ? `${title} ` : ""}
+        {name}
+      </h3>
+      <p
+        className={`mt-2 text-xs uppercase tracking-[0.12em] ${isLightMode ? "text-slate-500" : "text-muted-foreground"}`}
+      >
+        {subtitle}
+      </p>
+      <p
+        className={`mt-1 text-xs ${isLightMode ? "text-slate-400" : "text-muted-foreground"}`}
+      >
+        {details}
+      </p>
+      <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-primary/80 font-semibold">
+        Tap to open full details
+      </p>
+    </button>
+  );
+}
+
 export function AutoRotationDisplay({
   personnel,
   visits,
@@ -86,6 +182,8 @@ export function AutoRotationDisplay({
   );
   const prefersReducedMotion = useReducedMotion();
   const { settings: cinematicSettings } = useCinematicExperienceSettings();
+  const { themeMode } = useThemeMode();
+  const isLightMode = themeMode.startsWith("outdoor");
 
   const audioAssignments = useAudioStore((s) => s.assignments);
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -93,6 +191,9 @@ export function AutoRotationDisplay({
   const interactionHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const fdcScrollRef = useRef<HTMLDivElement | null>(null);
+  const fdcAutoPauseUntilRef = useRef(0);
+  const fdcNavRafRef = useRef<number | null>(null);
   const lastForcedStepNonceRef = useRef<number>(0);
   const touchStartXRef = useRef<number | null>(null);
   const isTransitioningRef = useRef(false);
@@ -188,6 +289,101 @@ export function AutoRotationDisplay({
       .map((commandant) => ({ type: "commandant" as const, commandant }));
   }, [activeCategory, activeView, personnel, visits, commandants]);
 
+  const isContinuousMode =
+    isActive &&
+    activeCategory !== null &&
+    displayContext !== "commandants" &&
+    slides.length > 0;
+
+  const personnelSlides = useMemo(
+    () =>
+      slides.filter(
+        (entry): entry is Extract<Slide, { type: "personnel" }> =>
+          entry.type === "personnel",
+      ),
+    [slides],
+  );
+
+  const visitSlides = useMemo(
+    () =>
+      slides.filter(
+        (entry): entry is Extract<Slide, { type: "visit" }> =>
+          entry.type === "visit",
+      ),
+    [slides],
+  );
+
+  const continuousItems = useMemo(() => {
+    if (activeView === "visits") return visitSlides.map((s) => s.visit);
+    return personnelSlides.map((s) => s.person);
+  }, [activeView, visitSlides, personnelSlides]);
+
+  const loopedContinuousItems = useMemo(() => {
+    if (continuousItems.length === 0) return [];
+    if (continuousItems.length <= 2)
+      return [
+        ...continuousItems,
+        ...continuousItems,
+        ...continuousItems,
+        ...continuousItems,
+      ]; // More clones for very few items
+    return [...continuousItems, ...continuousItems, ...continuousItems];
+  }, [continuousItems]);
+
+  const normalizeFdcLoopPosition = useCallback(() => {
+    const container = fdcScrollRef.current;
+    if (!container || continuousItems.length <= 1) return;
+
+    const segmentWidth = container.scrollWidth / 3;
+
+    while (container.scrollLeft >= segmentWidth * 2) {
+      container.scrollLeft -= segmentWidth;
+    }
+
+    while (container.scrollLeft < segmentWidth) {
+      container.scrollLeft += segmentWidth;
+    }
+  }, [continuousItems.length]);
+
+  const nudgeFdcTrack = useCallback(
+    (dir: "left" | "right") => {
+      const container = fdcScrollRef.current;
+      if (!container) return;
+
+      normalizeFdcLoopPosition();
+      fdcAutoPauseUntilRef.current = performance.now() + 900;
+
+      if (fdcNavRafRef.current) {
+        window.cancelAnimationFrame(fdcNavRafRef.current);
+        fdcNavRafRef.current = null;
+      }
+
+      const delta = dir === "left" ? -340 : 340;
+      const start = container.scrollLeft;
+      const end = start + delta;
+      const durationMs = 420;
+      const startAt = performance.now();
+      const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+      const step = (now: number) => {
+        const progress = Math.min(1, (now - startAt) / durationMs);
+        const eased = easeOutCubic(progress);
+
+        container.scrollLeft = start + (end - start) * eased;
+        normalizeFdcLoopPosition();
+
+        if (progress < 1) {
+          fdcNavRafRef.current = window.requestAnimationFrame(step);
+        } else {
+          fdcNavRafRef.current = null;
+        }
+      };
+
+      fdcNavRafRef.current = window.requestAnimationFrame(step);
+    },
+    [normalizeFdcLoopPosition],
+  );
+
   const revealControls = useCallback(() => {
     setShowNavControls(true);
     if (navTimerRef.current) clearTimeout(navTimerRef.current);
@@ -199,8 +395,7 @@ export function AutoRotationDisplay({
       if (slides.length <= 1 || isTransitioningRef.current) return;
       const previousIndex = currentIndex;
       const forwardIndex = (previousIndex + 1) % slides.length;
-      const backwardIndex =
-        (previousIndex - 1 + slides.length) % slides.length;
+      const backwardIndex = (previousIndex - 1 + slides.length) % slides.length;
       transitionDirectionRef.current =
         nextIndex === backwardIndex
           ? -1
@@ -220,14 +415,30 @@ export function AutoRotationDisplay({
       const nextSlide = slides[nextIndex];
       const durationMs =
         nextSlide?.type === "commandant"
-          ? Math.max(900, Math.min(1800, Math.round((baseDurationMs + cinematicSettings.commandantDurationMs) / 2)))
-          : Math.max(650, Math.min(1400, Math.round((baseDurationMs + cinematicSettings.imageDurationMs) / 2)));
-      
+          ? Math.max(
+              900,
+              Math.min(
+                1800,
+                Math.round(
+                  (baseDurationMs + cinematicSettings.commandantDurationMs) / 2,
+                ),
+              ),
+            )
+          : Math.max(
+              650,
+              Math.min(
+                1400,
+                Math.round(
+                  (baseDurationMs + cinematicSettings.imageDurationMs) / 2,
+                ),
+              ),
+            );
+
       if (nextTransition === "pro-slider") {
         setTransitionType(nextTransition);
         setCurrentIndex(nextIndex);
         transitionStepRef.current += 1;
-        
+
         setTimeout(() => {
           isTransitioningRef.current = false;
         }, durationMs);
@@ -271,22 +482,109 @@ export function AutoRotationDisplay({
 
   const handleManualAdvance = useCallback(() => {
     revealControls();
+    if (isContinuousMode) {
+      registerInteraction();
+      nudgeFdcTrack("right");
+      return;
+    }
     transitionTo((currentIndex + 1) % slides.length, true);
-  }, [currentIndex, revealControls, slides.length, transitionTo]);
+  }, [
+    currentIndex,
+    isContinuousMode,
+    nudgeFdcTrack,
+    registerInteraction,
+    revealControls,
+    slides.length,
+    transitionTo,
+  ]);
 
   const handleManualRetreat = useCallback(() => {
     revealControls();
+    if (isContinuousMode) {
+      registerInteraction();
+      nudgeFdcTrack("left");
+      return;
+    }
     transitionTo((currentIndex - 1 + slides.length) % slides.length, true);
-  }, [currentIndex, revealControls, slides.length, transitionTo]);
+  }, [
+    currentIndex,
+    isContinuousMode,
+    nudgeFdcTrack,
+    registerInteraction,
+    revealControls,
+    slides.length,
+    transitionTo,
+  ]);
 
   useEffect(() => {
-    if (!isActive || isPaused) return;
+    if (!isActive || isPaused || isContinuousMode) return;
     const interval = setInterval(
       advance,
       Math.round(contextTiming.slideDurationMs * 1.2),
     );
     return () => clearInterval(interval);
-  }, [isActive, isPaused, advance, contextTiming.slideDurationMs]);
+  }, [
+    isActive,
+    isPaused,
+    isContinuousMode,
+    advance,
+    contextTiming.slideDurationMs,
+  ]);
+
+  useEffect(() => {
+    const container = fdcScrollRef.current;
+    if (!container || !isContinuousMode || continuousItems.length === 0) return;
+
+    // Use total scroll width to position in middle third
+    const segmentWidth = container.scrollWidth / 3;
+    // But this depends on items being rendered. We might need a small delay or use layoutEffect
+    if (container.scrollLeft < 10) {
+      container.scrollLeft = segmentWidth;
+    }
+  }, [continuousItems.length, isContinuousMode]);
+
+  useEffect(() => {
+    const container = fdcScrollRef.current;
+    if (!container || !isContinuousMode || continuousItems.length === 0) return;
+
+    if (prefersReducedMotion) return;
+
+    let rafId = 0;
+    let last = performance.now();
+    const speedPxPerMs = 0.045;
+
+    const tick = (now: number) => {
+      const elapsed = now - last;
+      last = now;
+
+      if (!isPaused) {
+        if (now < fdcAutoPauseUntilRef.current) {
+          rafId = window.requestAnimationFrame(tick);
+          return;
+        }
+
+        container.scrollLeft += elapsed * speedPxPerMs;
+        normalizeFdcLoopPosition();
+      }
+
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    rafId = window.requestAnimationFrame(tick);
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      if (fdcNavRafRef.current) {
+        window.cancelAnimationFrame(fdcNavRafRef.current);
+        fdcNavRafRef.current = null;
+      }
+    };
+  }, [
+    continuousItems.length,
+    isContinuousMode,
+    isPaused,
+    normalizeFdcLoopPosition,
+    prefersReducedMotion,
+  ]);
 
   useEffect(() => {
     if (!forcedControl) return;
@@ -497,7 +795,11 @@ export function AutoRotationDisplay({
           setCurrentIndex(0);
           setDisplayActive(true);
         }}
-        className="flex items-center gap-2 px-4 py-2 gold-border rounded text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all duration-200 active:scale-[0.97]"
+        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-all duration-200 active:scale-[0.97] ${
+          isLightMode
+            ? "border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300 shadow-sm"
+            : "gold-border text-muted-foreground hover:text-foreground hover:bg-muted/40"
+        }`}
       >
         <Monitor className="h-4 w-4 text-primary" />
         <span>
@@ -591,27 +893,23 @@ export function AutoRotationDisplay({
           <motion.div
             aria-hidden="true"
             className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-primary/20 to-transparent"
-            animate={
-              prefersReducedMotion
-                ? undefined
-                : { x: ["-10%", "360%"] }
-            }
+            animate={prefersReducedMotion ? undefined : { x: ["-10%", "360%"] }}
             transition={
               prefersReducedMotion
                 ? undefined
-                : cinematicTransition(2.8, { repeat: Infinity, repeatDelay: 2.4 })
+                : cinematicTransition(2.8, {
+                    repeat: Infinity,
+                    repeatDelay: 2.4,
+                  })
             }
           />
-          {effectiveSettings.commandantLayout === 'split' ? (
-            <CommandantSplitHero 
-              commandant={slide.commandant} 
-              isAutoDisplay 
-            />
+          {effectiveSettings.commandantLayout === "split" ? (
+            <CommandantSplitHero commandant={slide.commandant} isAutoDisplay />
           ) : (
-            <CommandantHero 
-              commandant={slide.commandant} 
-              compactDescription 
-              isAutoDisplay 
+            <CommandantHero
+              commandant={slide.commandant}
+              compactDescription
+              isAutoDisplay
             />
           )}
         </motion.button>
@@ -626,9 +924,9 @@ export function AutoRotationDisplay({
           whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
           transition={cinematicTransition(0.24)}
         >
-          <UnifiedAutoCard 
-            type="personnel" 
-            data={slide.person} 
+          <UnifiedAutoCard
+            type="personnel"
+            data={slide.person}
             id={`p-${slide.person.id}`}
           />
         </motion.button>
@@ -643,14 +941,87 @@ export function AutoRotationDisplay({
           whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
           transition={cinematicTransition(0.24)}
         >
-          <UnifiedAutoCard 
-            type="visit" 
-            data={slide.visit} 
+          <UnifiedAutoCard
+            type="visit"
+            data={slide.visit}
             id={`v-${slide.visit.id}`}
           />
         </motion.button>
       )}
     </>
+  );
+
+  const getSectionTitle = () => {
+    if (activeView === "visits") return "Distinguished Visits / Honours";
+    if (activeCategory === "FDC")
+      return "Distinguished Fellows of the Defence College";
+    if (activeCategory === "FWC")
+      return "Distinguished Fellows of the War College";
+    if (activeCategory === "Directing Staff")
+      return "Chronicle of Directing Staff";
+    if (activeCategory === "Allied") return "International Allied Officers";
+    return "Staff Roll";
+  };
+
+  const getSectionSubtitle = () => {
+    if (activeView === "visits") return "Ceremonial Visits & Honours";
+    if (activeCategory === "FDC") return "FDC Staff Roll";
+    if (activeCategory === "FWC") return "FWC Staff Roll";
+    if (activeCategory === "Directing Staff") return "Directing Staff Roll";
+    if (activeCategory === "Allied") return "Allied Officers Roll";
+    return "Staff Roll";
+  };
+
+  const renderedContinuousContent = (
+    <motion.div
+      className="relative mx-auto flex h-full w-full max-w-[1900px] flex-col justify-center"
+      initial={prefersReducedMotion ? undefined : { opacity: 0, y: 20 }}
+      animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
+      transition={cinematicTransition(0.6)}
+    >
+      <div className="mb-4 sm:mb-6 px-1 sm:px-2">
+        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-primary/85">
+          {getSectionTitle()}
+        </p>
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mt-1">
+          {getSectionSubtitle()}
+        </h2>
+        <p className="mt-2 text-[11px] sm:text-xs uppercase tracking-[0.14em] text-muted-foreground">
+          Continuous motion display. Select any card for full details.
+        </p>
+      </div>
+
+      <div
+        ref={fdcScrollRef}
+        className="relative flex gap-4 sm:gap-5 overflow-x-auto pb-3 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)]"
+        onMouseEnter={() =>
+          (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
+        }
+        onMouseLeave={() =>
+          (fdcAutoPauseUntilRef.current = performance.now() + 180)
+        }
+        onFocus={() =>
+          (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
+        }
+        onBlur={() => (fdcAutoPauseUntilRef.current = performance.now() + 180)}
+      >
+        {loopedContinuousItems.map((item, i) => {
+          const isPersonnel = "category" in item;
+          return (
+            <ContinuousSlideCard
+              key={`${item.id}-${i}`}
+              item={item}
+              type={isPersonnel ? "personnel" : "visit"}
+              isLightMode={isLightMode}
+              onSelect={(item) => {
+                if (isPersonnel) setSelectedPerson(item as Personnel);
+                else setSelectedVisit(item as DistinguishedVisit);
+              }}
+            />
+          );
+        })}
+      </div>
+    </motion.div>
   );
 
   return (
@@ -749,86 +1120,110 @@ export function AutoRotationDisplay({
           className={`${slide.type === "commandant" ? "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl h-full min-h-0 flex flex-col" : "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl"} relative w-full max-h-full transition-all ease-out will-change-transform ${slide.type === "commandant" ? "" : "-translate-y-2 sm:-translate-y-3 md:-translate-y-4"} ${getTransitionClasses()}`}
           style={{ transitionDuration: `${currentTransitionDuration}ms` }}
         >
-          {slideImageUrl && (
-            <motion.div
-              aria-hidden="true"
-              className="absolute inset-0 -z-10 rounded-xl overflow-hidden"
-              initial={{ opacity: 0.12, scale: isPortraitSlide ? 1 : 1.03, x: 0, y: 0 }}
-              animate={
-                prefersReducedMotion
-                  ? { opacity: 0.24, scale: isPortraitSlide ? 1.01 : 1.03 }
-                  : {
-                      opacity: [0.2, 0.32, 0.22],
-                      scale: isPortraitSlide
-                        ? [1, 1.03, 1.01]
-                        : [1.04, 1.08, 1.05],
-                      x: isPortraitSlide
-                        ? [0, 10, -6, 0]
-                        : [0, 16, -10, 0],
-                      y: isPortraitSlide
-                        ? [0, -6, 4, 0]
-                        : [0, -8, 6, 0],
-                    }
-              }
-              transition={cinematicTransition(14, { repeat: Infinity, repeatType: "mirror" })}
-              style={{ willChange: "transform" }}
-            >
-              <img
-                src={slideImageUrl}
-                alt=""
-                className={`h-full w-full ${isPortraitSlide ? "object-contain object-top" : "object-cover"} blur-[2.5px]`}
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/76 via-slate-950/68 to-slate-950/82" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,hsl(var(--primary)/0.22)_0%,transparent_40%),radial-gradient(circle_at_85%_78%,hsl(var(--primary)/0.16)_0%,transparent_44%)]" />
-            </motion.div>
-          )}
-          {transitionType === "pro-slider" ? (
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={`${slide.type}-${currentIndex}`}
-                custom={transitionDirectionRef.current}
-                variants={layeredSlideVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={cinematicTransition(
-                  slide.type === "commandant"
-                    ? Math.max(0.9, Math.min(1.8, cinematicSettings.commandantDurationMs / 1000))
-                    : Math.max(0.65, Math.min(1.4, cinematicSettings.imageDurationMs / 1000)),
-                )}
-                className={
-                  slide.type === "commandant"
-                    ? "flex min-h-0 flex-1 flex-col"
-                    : undefined
-                }
-                style={{ willChange: "transform" }}
-              >
-                {renderSlideContent()}
-              </motion.div>
-            </AnimatePresence>
-          ) : slide.type === "commandant" ? (
-            <div className="flex min-h-0 flex-1 flex-col">
-              {renderSlideContent()}
-            </div>
+          {isContinuousMode && continuousItems.length > 0 ? (
+            renderedContinuousContent
           ) : (
-            renderSlideContent()
+            <>
+              {slideImageUrl && (
+                <motion.div
+                  aria-hidden="true"
+                  className="absolute inset-0 -z-10 rounded-xl overflow-hidden"
+                  initial={{
+                    opacity: 0.12,
+                    scale: isPortraitSlide ? 1 : 1.03,
+                    x: 0,
+                    y: 0,
+                  }}
+                  animate={
+                    prefersReducedMotion
+                      ? { opacity: 0.24, scale: isPortraitSlide ? 1.01 : 1.03 }
+                      : {
+                          opacity: [0.2, 0.32, 0.22],
+                          scale: isPortraitSlide
+                            ? [1, 1.03, 1.01]
+                            : [1.04, 1.08, 1.05],
+                          x: isPortraitSlide ? [0, 10, -6, 0] : [0, 16, -10, 0],
+                          y: isPortraitSlide ? [0, -6, 4, 0] : [0, -8, 6, 0],
+                        }
+                  }
+                  transition={cinematicTransition(14, {
+                    repeat: Infinity,
+                    repeatType: "mirror",
+                  })}
+                  style={{ willChange: "transform" }}
+                >
+                  <img
+                    src={slideImageUrl}
+                    alt=""
+                    className={`h-full w-full ${isPortraitSlide ? "object-contain object-top" : "object-cover"} blur-[2.5px]`}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-slate-950/76 via-slate-950/68 to-slate-950/82" />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,hsl(var(--primary)/0.22)_0%,transparent_40%),radial-gradient(circle_at_85%_78%,hsl(var(--primary)/0.16)_0%,transparent_44%)]" />
+                </motion.div>
+              )}
+              {transitionType === "pro-slider" ? (
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={`${slide.type}-${currentIndex}`}
+                    custom={transitionDirectionRef.current}
+                    variants={layeredSlideVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={cinematicTransition(
+                      slide.type === "commandant"
+                        ? Math.max(
+                            0.9,
+                            Math.min(
+                              1.8,
+                              cinematicSettings.commandantDurationMs / 1000,
+                            ),
+                          )
+                        : Math.max(
+                            0.65,
+                            Math.min(
+                              1.4,
+                              cinematicSettings.imageDurationMs / 1000,
+                            ),
+                          ),
+                    )}
+                    className={
+                      slide.type === "commandant"
+                        ? "flex min-h-0 flex-1 flex-col"
+                        : undefined
+                    }
+                    style={{ willChange: "transform" }}
+                  >
+                    {renderSlideContent()}
+                  </motion.div>
+                </AnimatePresence>
+              ) : slide.type === "commandant" ? (
+                <div className="flex min-h-0 flex-1 flex-col">
+                  {renderSlideContent()}
+                </div>
+              ) : (
+                renderSlideContent()
+              )}
+            </>
           )}
         </div>
       </div>
 
       {/* Progress dots */}
-      <div className="flex justify-center gap-1.5 pb-6">
-        {slides.map((_, i) => (
-          <div
-            key={i}
-            className={`h-1 rounded-full transition-all duration-500 ${
-              i === currentIndex
-                ? "w-6 bg-primary"
-                : "w-1.5 bg-muted-foreground/30"
-            }`}
-          />
-        ))}
-      </div>
+      {!isContinuousMode && (
+        <div className="flex justify-center gap-1.5 pb-6">
+          {slides.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1 rounded-full transition-all duration-500 ${
+                i === currentIndex
+                  ? "w-6 bg-primary"
+                  : "w-1.5 bg-muted-foreground/30"
+              }`}
+            />
+          ))}
+        </div>
+      )}
 
       {selectedPerson && (
         <ProfileModal
@@ -843,7 +1238,11 @@ export function AutoRotationDisplay({
             {/* Close Button Header */}
             <div className="sticky top-0 z-[80] w-full bg-[#020817]/80 backdrop-blur-md border-b border-white/10 px-6 py-4 flex justify-between items-center shadow-lg">
               <div className="flex items-center gap-3">
-                <img src={ndcCrest} alt="Logo" className="h-8 w-8 object-contain" />
+                <img
+                  src={ndcCrest}
+                  alt="Logo"
+                  className="h-8 w-8 object-contain"
+                />
                 <span className="text-white font-serif tracking-widest uppercase text-sm font-semibold">
                   Officer Profile : {selectedCommandant.name}
                 </span>

@@ -3,6 +3,7 @@ import { Shield, Star } from "lucide-react";
 import { Commandant } from "@/types/domain";
 import ndcCrest from "/images/ndc-crest.png";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
+import { useThemeMode } from "@/hooks/useThemeMode";
 
 interface CommandantHeroProps {
   commandant?: Commandant;
@@ -15,6 +16,8 @@ export function CommandantHero({
   isAutoDisplay = false,
 }: CommandantHeroProps & { isAutoDisplay?: boolean }) {
   const [visible, setVisible] = useState(false);
+  const { themeMode } = useThemeMode();
+  const isLightMode = themeMode.startsWith("outdoor");
   const isCompact = compactDescription;
 
   useEffect(() => {
@@ -36,7 +39,7 @@ export function CommandantHero({
 
   if (isAutoDisplay) {
     return (
-      <section className="relative w-full h-full min-h-0 max-h-full flex flex-col items-stretch overflow-hidden bg-white text-slate-900 border border-slate-200">
+      <section className={`relative w-full h-full min-h-0 max-h-full flex flex-col items-stretch overflow-hidden border ${isLightMode ? "bg-white text-slate-900 border-slate-200" : "bg-background text-foreground border-border"}`}>
         {/* Top Defence Colors Strip */}
         <div className="absolute top-0 inset-x-0 h-[8px] flex z-30">
           <div className="flex-1 bg-[#002060]" title="Navy" />
@@ -46,8 +49,10 @@ export function CommandantHero({
 
         {/* Background elements */}
         <div className="absolute inset-0 z-0 opacity-40">
-          <div className="absolute inset-0 bg-white" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:3vw_3vw]" />
+          <div className={`absolute inset-0 ${isLightMode ? "bg-white" : "bg-background"}`} />
+          {!isLightMode && (
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:3vw_3vw]" />
+          )}
         </div>
 
         {/* NDC Logos in corners */}
@@ -65,16 +70,16 @@ export function CommandantHero({
             <div className="p-[0.25rem] sm:p-[0.35vh] bg-[#FFD700] shadow-2xl transition-transform duration-500 w-fit max-w-full">
               <div className="p-[0.25rem] sm:p-[0.35vh] bg-white">
                 <div className="p-[0.15rem] sm:p-[0.25vh] bg-[#FFD700]">
-                  <div className="relative mx-auto aspect-[3/4] h-[min(50vh,70dvh)] w-auto max-w-[min(90vw,420px)] bg-slate-100 shadow-inner overflow-hidden md:h-[min(70vh,80dvh)]">
+                  <div className={`relative mx-auto aspect-[3/4] h-[min(50vh,70dvh)] w-auto max-w-[min(90vw,420px)] bg-slate-100 shadow-inner overflow-hidden md:h-[min(70vh,80dvh)] ${isLightMode ? "bg-slate-50" : "bg-muted/20"}`}>
                     {commandantImageUrl ? (
                       <img
                         src={commandantImageUrl}
                         alt={name}
-                        className="w-full h-full object-contain object-top bg-slate-100"
+                        className="w-full h-full object-contain object-top"
                         loading="eager"
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
                         <Shield className="h-[15%] w-auto opacity-20" />
                       </div>
                     )}
@@ -120,7 +125,7 @@ export function CommandantHero({
             
         {/* Sequence Number Indicator */}
           <div className="absolute bottom-[2.2%] right-[3.5vw] z-40">
-            <div className="bg-white text-black text-[clamp(7px,1.1vh,14px)] font-bold px-[max(6px,1.1vw)] py-[max(2px,0.26vh)] border border-slate-400 shadow-md">
+            <div className={`text-[clamp(7px,1.1vh,14px)] font-bold px-[max(6px,1.1vw)] py-[max(2px,0.26vh)] border shadow-md ${isLightMode ? "bg-white text-black border-slate-400" : "bg-background text-foreground border-border"}`}>
               c-{commandant?.id ?? "0"}
            </div>
         </div>
@@ -137,7 +142,11 @@ export function CommandantHero({
 
   return (
     <section
-      className={`relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(0,0,0,0.15)] ${isCurrent ? "commandant-hero-current" : ""} ${isCompact ? "mb-0" : "mb-8"} transition-all duration-500 group`}
+      className={`relative overflow-hidden rounded-2xl transition-all duration-500 group ${
+        isLightMode 
+          ? "bg-white border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)]"
+          : "bg-card border border-primary/20 shadow-xl"
+      } ${isCurrent ? "commandant-hero-current" : ""} ${isCompact ? "mb-0" : "mb-8"}`}
     >
       {/* Top Defence Colors Strip */}
       <div className="absolute top-0 inset-x-0 h-[8px] flex z-30">
@@ -147,7 +156,9 @@ export function CommandantHero({
       </div>
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:42px_42px]" />
+        {!isLightMode && (
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:42px_42px]" />
+        )}
       </div>
 
       <div
@@ -187,36 +198,34 @@ export function CommandantHero({
         >
           {/* Identity Plate Style Header */}
           <div className="inline-flex items-center justify-center md:justify-start gap-2 mb-4">
-            <div className="h-px w-8 bg-[#002060]/30" />
-            <span className="text-[10px] uppercase tracking-[0.25em] text-[#002060] font-bold">
+            <div className={`h-px w-8 ${isLightMode ? "bg-[#002060]/30" : "bg-blue-400/30"}`} />
+            <span className={`text-[10px] uppercase tracking-[0.25em] font-bold ${isLightMode ? "text-[#002060]" : "text-blue-300"}`}>
               {isCurrent ? "Current Commandant" : "Past Commandant"}
             </span>
-            <div className="h-px w-8 bg-[#002060]/30" />
+            <div className={`h-px w-8 ${isLightMode ? "bg-[#002060]/30" : "bg-blue-400/30"}`} />
           </div>
 
           <h2
-            className={`${isCompact ? "text-3xl md:text-[2.4rem]" : "text-4xl md:text-[3.2rem]"} font-bold mb-2 leading-tight text-[#002060] uppercase tracking-tight`}
+            className={`${isCompact ? "text-3xl md:text-[2.4rem]" : "text-4xl md:text-[3.2rem]"} font-bold mb-2 leading-tight uppercase tracking-tight ${isLightMode ? "text-[#002060]" : "text-white drop-shadow-md"}`}
           >
             {name}
           </h2>
 
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 mb-5">
-             <span className="px-3 py-1 bg-[#002060] text-white text-[11px] font-bold uppercase tracking-[0.2em]">
+             <span className={`px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] ${isLightMode ? "bg-[#002060] text-white" : "bg-blue-900/40 text-blue-100 border border-blue-500/30"}`}>
                 {tenureLabel}
              </span>
           </div>
 
           <p
-            className={`${isCompact ? "text-sm md:text-base mb-4" : "text-base md:text-xl mb-6"} text-[#FF0000] font-bold tracking-[0.1em] uppercase border-l-4 border-[#FF0000] pl-4 italic`}
+            className={`${isCompact ? "text-sm md:text-base mb-4" : "text-base md:text-xl mb-6"} font-bold tracking-[0.1em] uppercase border-l-4 pl-4 italic ${isLightMode ? "text-[#FF0000] border-[#FF0000]" : "text-red-400 border-red-500/80"}`}
           >
             {titleText}
           </p>
 
           <div className="relative">
             <p
-              className={`${isCompact ? "text-sm md:text-[15px]" : "text-sm md:text-base"} text-slate-700 leading-relaxed max-w-3xl transition-all duration-700 ease-out delay-300 font-medium ${
-                visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-              }`}
+              className={`${isCompact ? "text-sm md:text-[15px]" : "text-sm md:text-base"} ${isLightMode ? "text-slate-700 font-medium" : "text-slate-300 font-normal"} leading-relaxed max-w-3xl transition-all duration-700 ease-out delay-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
               style={
                 compactDescription
                   ? {

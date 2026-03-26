@@ -2,6 +2,7 @@ import { Shield } from "lucide-react";
 import { Personnel, DistinguishedVisit } from "@/types/domain";
 import ndcCrest from "/images/ndc-crest.png";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
+import { useThemeMode } from "@/hooks/useThemeMode";
 
 interface UnifiedAutoCardProps {
   type: "personnel" | "visit";
@@ -11,12 +12,8 @@ interface UnifiedAutoCardProps {
 
 export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
   const imageUrl = useResolvedMediaUrl(data.imageUrl);
-
-  // Unified theme colors
-  const NAVY = "#002060";
-  const ARMY = "#FF0000";
-  const AIRFORCE = "#00B0F0";
-  const GOLD = "#FFD700";
+  const { themeMode } = useThemeMode();
+  const isLightMode = themeMode.startsWith("outdoor");
 
   const isPersonnel = type === "personnel";
   const person = data as Personnel;
@@ -31,7 +28,13 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
   const citation = isPersonnel ? person.citation : visit.description;
 
   return (
-    <section className="relative w-full h-full min-h-[320px] flex flex-col items-center justify-center overflow-hidden bg-white text-slate-900 border border-slate-200">
+    <section
+      className={`relative w-full h-full min-h-[320px] flex flex-col items-center justify-center overflow-hidden border ${
+        isLightMode
+          ? "bg-white text-slate-900 border-slate-200"
+          : "bg-background text-foreground border-border"
+      }`}
+    >
       {/* Top Defence Colors Strip */}
       <div className="absolute top-0 inset-x-0 h-[3%] min-h-[10px] flex z-30">
         <div className="flex-1 bg-[#002060]" title="Navy" />
@@ -41,8 +44,10 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
 
       {/* Background elements */}
       <div className="absolute inset-0 z-0 opacity-40">
-        <div className="absolute inset-0 bg-white" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:3vw_3vw]" />
+        <div className={`absolute inset-0 ${isLightMode ? "bg-white" : "bg-background"}`} />
+        {!isLightMode && (
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:3vw_3vw]" />
+        )}
       </div>
 
       {/* NDC Logos in corners */}
@@ -60,9 +65,17 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
           <div className="p-[max(2px,0.24vh)] bg-[#FFD700] shadow-2xl transition-transform duration-500">
             <div className="p-[max(2px,0.24vh)] bg-white">
               <div className="p-[max(1px,0.2vh)] bg-[#FFD700]">
-                <div className="relative aspect-[4/5] h-[clamp(220px,54dvh,560px)] sm:h-[clamp(260px,56dvh,600px)] md:h-[clamp(280px,58dvh,640px)] w-auto max-h-[62dvh] bg-slate-100 overflow-hidden shadow-inner">
+                <div
+                  className={`relative aspect-[4/5] h-[clamp(220px,54dvh,560px)] sm:h-[clamp(260px,56dvh,600px)] md:h-[clamp(280px,58dvh,640px)] w-auto max-h-[62dvh] overflow-hidden shadow-inner ${
+                    isLightMode ? "bg-slate-100" : "bg-muted/30"
+                  }`}
+                >
                   {imageUrl ? (
-                    <div className="w-full h-full p-[max(4px,0.55vh)] bg-slate-100">
+                    <div
+                      className={`w-full h-full p-[max(4px,0.55vh)] ${
+                        isLightMode ? "bg-slate-100" : "bg-muted/20"
+                      }`}
+                    >
                       <img
                         src={imageUrl}
                         alt={mainName}
@@ -71,7 +84,13 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
                       />
                     </div>
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
+                    <div
+                      className={`w-full h-full flex flex-col items-center justify-center ${
+                        isLightMode
+                          ? "text-slate-300 bg-slate-50"
+                          : "text-slate-500 bg-muted/20"
+                      }`}
+                    >
                       <Shield className="h-[15%] w-auto opacity-20" />
                     </div>
                   )}
@@ -113,7 +132,7 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
         {/* Sequence Number Indicator */}
         {id && (
           <div className="absolute bottom-[2%] right-[4vw] z-40">
-             <div className="bg-white text-black text-[clamp(7px,1.2vh,14px)] font-bold px-[1.5vw] py-[0.3vh] border border-slate-400 shadow-md">
+             <div className={`text-[clamp(7px,1.2vh,14px)] font-bold px-[1.5vw] py-[0.3vh] border shadow-md ${isLightMode ? "bg-white text-black border-slate-400" : "bg-background text-foreground border-border"}`}>
                 {id}
              </div>
           </div>
