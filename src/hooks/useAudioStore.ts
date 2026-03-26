@@ -29,6 +29,9 @@ export interface AudioAssignments {
   allied_officers: string | null;
 }
 
+const AUDIO_LOCAL_KEY_PREFIX = 'audio_';
+const AUDIO_CACHE_KEY_PREFIX = 'audio_cache_';
+
 interface AudioState {
   tracks: AudioTrack[];
   assignments: AudioAssignments;
@@ -209,12 +212,32 @@ export async function getAudioUrl(id: string): Promise<string | null> {
     const track = useAudioStore.getState().tracks.find(t => t.id === id);
     const normalizedTrack = track ? normalizeStoredTrack(track) : null;
 
-    if (normalizedTrack?.source === 'supabase' && normalizedTrack.bucketPath) {
-      const remoteUrl = await getSupabaseAudioUrl(normalizedTrack.bucketPath);
-      if (remoteUrl) return remoteUrl;
+    const cachedBuffer = await get(`${AUDIO_CACHE_KEY_PREFIX}${id}`);
+    if (cachedBuffer) {
+      return URL.createObjectURL(new Blob([cachedBuffer]));
     }
 
-    const buffer = await get(`audio_${id}`);
+    if (normalizedTrack?.source === 'supabase' && normalizedTrack.bucketPath) {
+      const remoteUrl = await getSupabaseAudioUrl(normalizedTrack.bucketPath);
+      if (remoteUrl) {
+        try {
+          const response = await fetch(remoteUrl, { cache: 'force-cache' });
+          if (response.ok) {
+            const arrayBuffer = await response.arrayBuffer();
+            if (arrayBuffer.byteLength > 0) {
+              await set(`${AUDIO_CACHE_KEY_PREFIX}${id}`, arrayBuffer);
+              return URL.createObjectURL(new Blob([arrayBuffer]));
+            }
+          }
+        } catch {
+          // Keep playback available even if caching fails.
+        }
+
+        return remoteUrl;
+      }
+    }
+
+    const buffer = await get(`${AUDIO_LOCAL_KEY_PREFIX}${id}`);
     if (!buffer) return null;
 
     const blob = new Blob([buffer]);

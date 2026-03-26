@@ -253,9 +253,9 @@ export function BootSequence({
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950 overflow-hidden transition-all duration-[1500ms] ease-in-out ${isEnteringArchive ? "opacity-0 scale-[1.15] blur-md brightness-150 pointer-events-none" : "opacity-100 scale-100 blur-none brightness-100"}`}
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#001233] overflow-hidden transition-all duration-[1500ms] ease-in-out ${isEnteringArchive ? "opacity-0 scale-[1.15] blur-md brightness-150 pointer-events-none" : "opacity-100 scale-100 blur-none brightness-100"}`}
     >
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.2),rgba(2,6,23,0.96)_48%,rgba(2,6,23,1)_100%)]" />
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,rgba(0,176,240,0.16),rgba(0,18,51,0.95)_48%,rgba(0,32,96,1)_100%)]" />
 
       <div
         className="absolute inset-0 z-0 opacity-20 pointer-events-none"
@@ -279,15 +279,31 @@ export function BootSequence({
       </div>
 
       {bootStage === "preboot" && (
+        <div className="pointer-events-none absolute top-0 inset-x-0 h-[8px] flex z-30">
+          <div className="flex-1 bg-[#002060]" />
+          <div className="flex-1 bg-[#FF0000]" />
+          <div className="flex-1 bg-[#00B0F0]" />
+        </div>
+      )}
+
+      {bootStage === "preboot" && (
+        <div className="pointer-events-none absolute bottom-0 inset-x-0 h-[8px] flex z-30">
+          <div className="flex-1 bg-[#002060]" />
+          <div className="flex-1 bg-[#FF0000]" />
+          <div className="flex-1 bg-[#00B0F0]" />
+        </div>
+      )}
+
+      {bootStage === "preboot" && (
         <div
           className={`absolute top-3 left-3 right-3 md:top-5 md:left-6 md:right-6 z-20 transition-all duration-700 ${step >= 1 ? "opacity-100" : "opacity-0"}`}
         >
-          <div className="flex items-center justify-between gap-3 text-[10px] md:text-xs font-mono uppercase tracking-[0.18em] bg-slate-900/72 border border-white/20 px-3 py-2 rounded-md backdrop-blur-sm text-white/90">
+          <div className="flex items-center justify-between gap-3 text-[10px] md:text-xs font-mono uppercase tracking-[0.18em] bg-[#002060]/88 border border-[#FFD700]/45 px-3 py-2 rounded-md backdrop-blur-sm text-white/90 shadow-[0_12px_28px_rgba(0,0,0,0.3)]">
             <span>Classification: Restricted</span>
-            <span className="hidden md:inline text-primary">
+            <span className="hidden md:inline text-[#FFD700]">
               Operation: Sentinel Archive
             </span>
-            <span>UTC: {utcLabel}</span>
+            <span className="text-[#FFD700]">UTC: {utcLabel}</span>
           </div>
         </div>
       )}
@@ -301,23 +317,28 @@ export function BootSequence({
             <img
               src={ndcCrest}
               alt="NDC Crest"
-              className="w-16 h-16 md:w-24 md:h-24 mb-2 md:mb-4 drop-shadow-[0_0_15px_hsl(var(--primary)/0.4)] object-contain"
+              className="w-16 h-16 md:w-24 md:h-24 mb-2 md:mb-4 drop-shadow-[0_0_18px_rgba(255,215,0,0.45)] object-contain"
             />
 
-            <h1 className="text-xl md:text-3xl lg:text-4xl font-serif text-white tracking-[0.08em] md:tracking-[0.18em] uppercase text-center w-full relative pb-3 md:pb-4 drop-shadow-md leading-tight">
-              NATIONAL DEFENCE COLLEGE NIGERIA
-              {/* Animated Gold Underline */}
-              <div
-                className="absolute bottom-0 left-0 h-[2px] bg-primary transition-all ease-in-out shadow-[0_0_10px_theme('colors.primary.DEFAULT')]"
-                style={{
-                  width: step >= 1 ? "100%" : "0%",
-                  transitionDuration: "1200ms",
-                }}
-              />
-            </h1>
+            <div className="w-full max-w-4xl">
+              <div className="h-[3px] w-full bg-[#FF0000]" />
+              <div className="bg-[#002060] px-4 py-3 md:px-6 md:py-4 text-center shadow-[0_16px_42px_rgba(0,0,0,0.35)] border-x border-[#FFD700]/35">
+                <h1 className="text-xl md:text-3xl lg:text-4xl font-serif text-[#FFD700] tracking-[0.08em] md:tracking-[0.18em] uppercase text-center w-full relative leading-tight">
+                  NATIONAL DEFENCE COLLEGE NIGERIA
+                </h1>
+                <div
+                  className="mx-auto mt-2 h-[2px] bg-[#FFD700] transition-all ease-in-out shadow-[0_0_12px_rgba(255,215,0,0.55)]"
+                  style={{
+                    width: step >= 1 ? "100%" : "0%",
+                    transitionDuration: "1200ms",
+                  }}
+                />
+              </div>
+              <div className="h-[3px] w-full bg-[#FF0000]" />
+            </div>
 
             <h2
-              className={`mt-2 md:mt-3 text-sm md:text-lg text-primary tracking-[0.08em] md:tracking-[0.12em] uppercase font-sans font-light transition-all duration-1000 ease-in-out ${step >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
+              className={`mt-2 md:mt-3 text-sm md:text-lg text-[#FFD700] tracking-[0.08em] md:tracking-[0.12em] uppercase font-sans font-light transition-all duration-1000 ease-in-out ${step >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
             >
               System Initialization
             </h2>
@@ -330,10 +351,10 @@ export function BootSequence({
               <div
                 className={`transition-all duration-1000 delay-300 ease-out flex w-[clamp(120px,24vw,188px)] flex-col items-center shrink-0 justify-center ${step >= 3 ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
               >
-                <div className="relative w-full rounded-xl border border-white/20 bg-slate-900/75 backdrop-blur-md p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)] flex flex-col">
-                  <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120%_100%_at_0%_0%,hsl(var(--primary)/0.2),transparent_58%)] rounded-xl" />
+                <div className="relative w-full rounded-xl border border-[#FFD700]/35 bg-[#002060]/82 backdrop-blur-md p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)] flex flex-col">
+                  <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120%_100%_at_0%_0%,rgba(0,176,240,0.24),transparent_58%)] rounded-xl" />
                   <div
-                    className={`relative z-10 w-[clamp(84px,20vw,144px)] h-[clamp(84px,20vw,144px)] mx-auto rounded-full overflow-hidden border-2 border-primary/45 bg-slate-950 transition-all duration-700 ${portraitVisible ? "opacity-100 [transform:perspective(1000px)_rotateY(0deg)_translateX(0px)_scale(1)]" : "opacity-0 [transform:perspective(1000px)_rotateY(76deg)_translateX(-26px)_scale(0.94)]"}`}
+                    className={`relative z-10 w-[clamp(84px,20vw,144px)] h-[clamp(84px,20vw,144px)] mx-auto rounded-full overflow-hidden border-2 border-[#FFD700]/75 bg-[#001233] transition-all duration-700 ${portraitVisible ? "opacity-100 [transform:perspective(1000px)_rotateY(0deg)_translateX(0px)_scale(1)]" : "opacity-0 [transform:perspective(1000px)_rotateY(76deg)_translateX(-26px)_scale(0.94)]"}`}
                     style={{ transformOrigin: "left center" }}
                   >
                     {currentPortrait?.imageUrl ? (
@@ -369,7 +390,7 @@ export function BootSequence({
                     <p className="text-[9px] md:text-[11px] font-bold text-white tracking-wide uppercase leading-tight">
                       {currentPortrait?.name ?? currentCommandant.name}
                     </p>
-                    <p className="text-[8px] text-primary mt-0.5 uppercase tracking-wide truncate">
+                    <p className="text-[8px] text-[#FFD700] mt-0.5 uppercase tracking-wide truncate">
                       {currentPortrait?.rankOrTitle ?? currentCommandant.title}
                     </p>
                     <p className="text-[8px] text-white/72 mt-0.5 uppercase tracking-wide">
@@ -411,10 +432,10 @@ export function BootSequence({
                       ? "Authorizing Command"
                       : "Archive Commandant Sequence"}
                   </p>
-                  <p className="text-[9px] md:text-[11px] font-bold text-white tracking-wide uppercase drop-shadow-[0_0_5px_hsl(var(--primary)/0.45)]">
+                  <p className="text-[9px] md:text-[11px] font-bold text-white tracking-wide uppercase drop-shadow-[0_0_5px_rgba(255,215,0,0.45)]">
                     {currentPortrait?.name ?? currentCommandant.name}
                   </p>
-                  <p className="text-[7px] md:text-[8px] text-primary mt-0.5 uppercase tracking-wide truncate">
+                  <p className="text-[7px] md:text-[8px] text-[#FFD700] mt-0.5 uppercase tracking-wide truncate">
                     {currentPortrait?.rankOrTitle ?? currentCommandant.title}
                   </p>
                 </div>
@@ -424,22 +445,24 @@ export function BootSequence({
           </div>
 
           {/* Boot progress indicator (kept low and minimal for a formal look) */}
-          <div className="w-full max-w-3xl min-h-[72px] flex flex-col items-center justify-center shrink-0 gap-2 bg-slate-950/65 backdrop-blur-sm rounded-lg px-2 py-2 border border-white/10 mt-auto">
-            <div className="w-full h-2 bg-slate-800/80 border border-white/15 rounded overflow-hidden">
+          <div className="w-full max-w-3xl min-h-[72px] flex flex-col items-center justify-center shrink-0 gap-2 bg-[#002060]/86 backdrop-blur-sm rounded-lg px-2 py-2 border border-[#FFD700]/35 mt-auto shadow-[0_16px_36px_rgba(0,0,0,0.32)]">
+            <div className="h-[2px] w-full bg-[#FF0000]" />
+            <div className="w-full h-2 bg-[#001233]/80 border border-[#FFD700]/30 rounded overflow-hidden">
               <div
-                className="h-full bg-primary/85 transition-all duration-700"
+                className="h-full bg-[linear-gradient(90deg,#00B0F0_0%,#FFD700_100%)] transition-all duration-700"
                 style={{ width: `${progress}%` }}
               />
             </div>
             <div className="flex items-center justify-between w-full text-[10px] md:text-xs font-mono uppercase tracking-[0.12em] text-white/78">
-              <span>Loading {progress}%</span>
-              <span>{statusLabel}</span>
+              <span className="text-[#FFD700]">Loading {progress}%</span>
+              <span className="text-white/90">{statusLabel}</span>
             </div>
             <div
-              className={`text-base md:text-lg font-mono text-primary font-semibold tracking-[0.12em] md:tracking-[0.2em] transition-all duration-700 ease-out origin-center ${step >= 7 ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+              className={`text-base md:text-lg font-mono text-[#FFD700] font-semibold tracking-[0.12em] md:tracking-[0.2em] transition-all duration-700 ease-out origin-center ${step >= 7 ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
             >
               ARCHIVE READY
             </div>
+            <div className="h-[2px] w-full bg-[#FF0000]" />
           </div>
         </div>
       )}

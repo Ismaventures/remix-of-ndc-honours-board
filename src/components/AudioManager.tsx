@@ -16,6 +16,52 @@ export function AudioManager() {
   const activeRef = useRef<1 | 2>(1); // keeps track of which audio element is playing the current track
   
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryCountRef = useRef(0);
+
+  const clearBlobUrl = (audio: HTMLAudioElement) => {
+    const src = audio.src;
+    if (src?.startsWith('blob:')) {
+      URL.revokeObjectURL(src);
+    }
+  };
+
+  const setAudioSource = (audio: HTMLAudioElement, nextSrc: string | null) => {
+    clearBlobUrl(audio);
+    audio.pause();
+    audio.src = nextSrc ?? '';
+    audio.preload = 'auto';
+    audio.loop = Boolean(nextSrc);
+  };
+
+  const attemptRecovery = (audio: HTMLAudioElement) => {
+    if (!audio.src || retryCountRef.current >= 4) return;
+
+    retryCountRef.current += 1;
+    const retryDelayMs = Math.min(2800, 500 * retryCountRef.current);
+    const resumeAt = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = setTimeout(() => {
+      audio.load();
+      const resumePlayback = () => {
+        try {
+          if (resumeAt > 1) audio.currentTime = Math.max(0, resumeAt - 0.35);
+        } catch {
+          // Browser may block setting currentTime until metadata is ready.
+        }
+        void audio.play().catch(() => {
+          // Recovery will retry via stalled/error listeners.
+        });
+      };
+
+      if (audio.readyState < HTMLMediaElement.HAVE_METADATA) {
+        audio.addEventListener('loadedmetadata', resumePlayback, { once: true });
+      } else {
+        resumePlayback();
+      }
+    }, retryDelayMs);
+  };
 
   useEffect(() => {
     void loadTracks();
@@ -37,6 +83,11 @@ export function AudioManager() {
       }
 
       const nextUrl = targetId ? await getAudioUrl(targetId) : null;
+      if (targetId && !nextUrl) {
+        // Keep existing audio running if the new track could not be resolved.
+        return;
+      }
+
       setCurrentId(targetId);
 
       const fadeDuration = 1500;
@@ -50,9 +101,9 @@ export function AudioManager() {
       const inAudio = activeRef.current === 1 ? a2 : a1;
       
       if (nextUrl) {
-        inAudio.src = nextUrl;
+        setAudioSource(inAudio, nextUrl);
         inAudio.volume = 0;
-        inAudio.loop = true;
+        retryCountRef.current = 0;
         inAudio.play().catch(() => console.log("Playback prevented by browser"));
       }
 
@@ -74,8 +125,7 @@ export function AudioManager() {
 
         if (currentStep >= steps) {
           clearInterval(fadeInterval);
-          outAudio.pause();
-          outAudio.src = '';
+          setAudioSource(outAudio, null);
           if (nextUrl) {
               inAudio.volume = nextVolume;
           }
@@ -94,6 +144,51 @@ export function AudioManager() {
          activeAudio.volume = isMuted ? 0 : masterVolume;
      }
   }, [masterVolume, isMuted, currentId]);
+
+  useEffect(() => {
+    const a1 = audio1Ref.current;
+    const a2 = audio2Ref.current;
+    if (!a1 || !a2) return;
+
+    const onHealthyPlayback = () => {
+      retryCountRef.current = 0;
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+    };
+
+    const onRecoverableIssue = (event: Event) => {
+      const audio = event.currentTarget as HTMLAudioElement;
+      attemptRecovery(audio);
+    };
+
+    [a1, a2].forEach((audio) => {
+      audio.addEventListener('playing', onHealthyPlayback);
+      audio.addEventListener('canplay', onHealthyPlayback);
+      audio.addEventListener('stalled', onRecoverableIssue);
+      audio.addEventListener('waiting', onRecoverableIssue);
+      audio.addEventListener('error', onRecoverableIssue);
+    });
+
+    return () => {
+      [a1, a2].forEach((audio) => {
+        audio.removeEventListener('playing', onHealthyPlayback);
+        audio.removeEventListener('canplay', onHealthyPlayback);
+        audio.removeEventListener('stalled', onRecoverableIssue);
+        audio.removeEventListener('waiting', onRecoverableIssue);
+        audio.removeEventListener('error', onRecoverableIssue);
+      });
+
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+
+      clearBlobUrl(a1);
+      clearBlobUrl(a2);
+    };
+  }, []);
 
   return (
     <>
