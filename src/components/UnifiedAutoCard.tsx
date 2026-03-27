@@ -61,25 +61,29 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
       {/* Main Content Container */}
       <div className="relative z-10 flex flex-col items-center w-full h-full max-w-[min(96vw,980px)] sm:max-w-[min(95vw,1050px)] md:max-w-[min(92vw,1120px)] mx-auto justify-center py-[max(10px,1.4vh)] gap-[max(8px,1.1vh)] md:gap-[2vh]">
         {/* Portrait with Yellow/Gold frame */}
-        <div className="relative w-full flex-1 flex justify-center items-stretch min-h-0 overflow-hidden mt-2 mb-2 md:mt-4 md:mb-4">
-          <div className="p-[max(3px,0.4vh)] bg-[#FFD700] shadow-2xl transition-transform duration-500 flex flex-col w-full h-full max-w-[max(400px,65vw)] mx-auto">
-            <div className="p-[max(3px,0.4vh)] bg-white flex flex-col w-full h-full">
-              <div className="p-[max(2px,0.3vh)] bg-[#FFD700] flex flex-col w-full h-full">
+        <div className="relative w-full flex justify-center items-center flex-shrink min-h-0 overflow-hidden">
+          <div className="p-[max(2px,0.24vh)] bg-[#FFD700] shadow-2xl transition-transform duration-500">
+            <div className="p-[max(2px,0.24vh)] bg-white">
+              <div className="p-[max(1px,0.2vh)] bg-[#FFD700]">
                 <div
-                  className={`relative w-full h-full overflow-hidden shadow-inner flex-1 ${
+                  className={`relative aspect-[4/5] ${
+                    isPersonnel
+                      ? "h-[clamp(280px,62dvh,700px)] sm:h-[clamp(300px,64dvh,740px)] md:h-[clamp(320px,66dvh,780px)] max-h-[72dvh]"
+                      : "h-[clamp(220px,54dvh,560px)] sm:h-[clamp(260px,56dvh,600px)] md:h-[clamp(280px,58dvh,640px)] max-h-[62dvh]"
+                  } w-auto overflow-hidden shadow-inner ${
                     isLightMode ? "bg-slate-100" : "bg-muted/30"
                   }`}
                 >
                   {imageUrl ? (
                     <div
-                      className={`w-full h-full ${isPersonnel ? "p-0" : "p-[max(4px,0.55vh)]"} ${
+                      className={`w-full h-full ${isPersonnel ? "p-[max(2px,0.3vh)]" : "p-[max(4px,0.55vh)]"} ${
                         isLightMode ? "bg-slate-100" : "bg-muted/20"
                       }`}
                     >
                       <img
                         src={imageUrl}
                         alt={mainName}
-                        className={`w-full h-full ${isPersonnel ? "object-cover object-top scale-[1.08]" : "object-contain object-center"}`}
+                        className={`w-full h-full ${isPersonnel ? "object-contain object-top" : "object-contain object-center"}`}
                         loading="eager"
                       />
                     </div>

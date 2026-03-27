@@ -112,7 +112,7 @@ const Index = () => {
     useCommandantsStore();
   const audioTracks = useAudioStore((state) => state.tracks);
 
-  const currentCommandant = commandants.find((c) => c.isCurrent);
+  const currentCommandant = commandants.find((c) => c.isCurrent) ?? commandants[0] ?? null;
   const activeCategory = SECTION_CATEGORIES[view] ?? null;
   const activeView =
     view === "visits"

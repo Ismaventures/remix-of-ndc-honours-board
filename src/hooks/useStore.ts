@@ -186,6 +186,10 @@ function loadFromStorage<T>(key: string, fallback: T): T {
   } catch { return fallback; }
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function usePersonnelStore() {
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
 
@@ -295,23 +299,48 @@ export function useCommandantsStore() {
       setCommandants(cachedRows.map(mapRowToCommandant));
     }
 
-    const loadCommandants = async () => {
-      const { data, error } = await supabase
+    const fetchCommandants = async (): Promise<CommandantRow[]> => {
+      const ordered = await supabase
         .from('commandants')
         .select('*')
         .order('tenure_start', { ascending: false });
 
-      if (error) {
-        console.error('Failed to load commandants from Supabase:', error.message);
-        if (!cachedRows) {
-          setCommandants([]);
-        }
-        return;
+      if (!ordered.error) {
+        return (ordered.data as CommandantRow[] | null) ?? [];
       }
 
-      const rows = (data as CommandantRow[] | null) ?? [];
-      writeCollectionCache(COMMANDANTS_CACHE_KEY, rows);
-      setCommandants(rows.map(mapRowToCommandant));
+      // Fallback query keeps data visible even if ordering fails on a deployment.
+      const fallback = await supabase.from('commandants').select('*');
+      if (fallback.error) {
+        throw fallback.error;
+      }
+
+      return (fallback.data as CommandantRow[] | null) ?? [];
+    };
+
+    const loadCommandants = async () => {
+      const retryDelays = [0, 250, 900];
+
+      for (let attempt = 0; attempt < retryDelays.length; attempt += 1) {
+        if (retryDelays[attempt] > 0) {
+          await wait(retryDelays[attempt]);
+        }
+
+        try {
+          const rows = await fetchCommandants();
+          writeCollectionCache(COMMANDANTS_CACHE_KEY, rows);
+          setCommandants(rows.map(mapRowToCommandant));
+          return;
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : 'Unknown commandants fetch error';
+          console.error('Failed to load commandants from Supabase:', message);
+        }
+      }
+
+      if (!cachedRows) {
+        setCommandants([]);
+      }
     };
 
     void loadCommandants();
