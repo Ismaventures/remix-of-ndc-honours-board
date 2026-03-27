@@ -161,14 +161,14 @@ function ContinuousSlideCard({
 
       <div
         className={`relative z-10 mb-1 sm:mb-1.5 flex min-h-0 items-center justify-center ${
-          isVisit ? "flex-[1.6]" : "flex-[3.1]"
+          isVisit ? "flex-[1.6]" : isCommandant ? "flex-[4.1]" : "flex-[3.4]"
         }`}
       >
         <div className="p-[2px] bg-[#FFD700] shadow-xl">
           <div className="p-[2px] bg-white">
             <div className="p-[1px] bg-[#FFD700]">
               <div
-                className={`auto-scroll-image-frame relative h-full ${isVisit ? "max-h-[clamp(240px,44dvh,500px)]" : isCommandant ? "max-h-[clamp(420px,66dvh,760px)]" : "max-h-[clamp(330px,56dvh,620px)]"} aspect-[4/5] overflow-hidden ${
+                className={`auto-scroll-image-frame relative ${isVisit ? "h-full max-h-[clamp(240px,44dvh,500px)] aspect-[4/5]" : isCommandant ? "w-[220px] h-[260px] sm:w-[250px] sm:h-[300px] md:w-[280px] md:h-[340px] lg:w-[320px] lg:h-[390px]" : "h-full max-h-[clamp(360px,60dvh,680px)] aspect-[4/5]"} overflow-hidden ${
                   isLightMode ? "bg-slate-100" : "bg-slate-900"
                 }`}
               >
@@ -176,7 +176,7 @@ function ContinuousSlideCard({
                   <img
                     src={imageUrl}
                     alt={`${safeTitle} ${safeName}`}
-                    className={`h-full w-full ${isVisit ? "object-cover" : "object-cover object-top"} transition-transform duration-500 group-hover:scale-[1.015]`}
+                    className={`h-full w-full ${isVisit ? "object-cover" : isCommandant ? "object-cover object-[50%_20%] scale-[1.08]" : "object-cover object-top"} transition-transform duration-500 group-hover:scale-[1.015]`}
                     loading="eager"
                   />
                 ) : (
