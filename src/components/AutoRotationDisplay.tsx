@@ -135,7 +135,7 @@ function ContinuousSlideCard({
     <button
       type="button"
       onClick={() => onSelect(item as any)}
-      className={`auto-scroll-card group relative ${isCommandant ? "w-[min(92vw,520px)] sm:w-[min(78vw,520px)] md:w-[min(64vw,520px)] lg:w-[520px] h-[clamp(420px,64dvh,700px)] sm:h-[clamp(440px,68dvh,740px)]" : "w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] h-[clamp(360px,58dvh,620px)] sm:h-[clamp(390px,62dvh,660px)]"} self-stretch shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
+      className={`auto-scroll-card group relative ${isCommandant ? "w-[min(92vw,560px)] sm:w-[min(82vw,560px)] md:w-[min(68vw,560px)] lg:w-[560px] h-[clamp(480px,76dvh,900px)] sm:h-[clamp(520px,80dvh,960px)]" : "w-[min(90vw,480px)] sm:w-[min(76vw,480px)] md:w-[min(62vw,480px)] lg:w-[480px] h-[clamp(440px,72dvh,820px)] sm:h-[clamp(480px,76dvh,880px)]"} self-stretch shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
           ? "bg-white border border-[#002060]/20 shadow-[0_12px_36px_rgba(0,32,96,0.14)]"
           : "bg-slate-950/90 border border-[#FFD700]/25 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
@@ -160,15 +160,15 @@ function ContinuousSlideCard({
       </div>
 
       <div
-        className={`relative z-10 mb-1 sm:mb-1.5 flex min-h-0 items-center justify-center ${
-          isVisit ? "flex-[1.6]" : "flex-[3.9]"
+        className={`relative z-10 space-y-0 flex-1 min-h-0 w-full mb-1 sm:mb-1.5 flex flex-col justify-center ${
+          isVisit ? "flex-[1.6]" : "flex-[4.5]"
         }`}
       >
-        <div className="p-[2px] bg-[#FFD700] shadow-xl">
-          <div className="p-[2px] bg-white">
-            <div className="p-[1px] bg-[#FFD700]">
+        <div className="w-full h-full p-[2px] bg-[#FFD700] shadow-xl flex flex-col">
+          <div className="w-full h-full p-[2px] bg-white flex flex-col">
+            <div className="w-full h-full p-[1px] bg-[#FFD700] flex flex-col">
               <div
-                className={`auto-scroll-image-frame relative h-full ${isVisit ? "max-h-[clamp(240px,44dvh,500px)]" : isCommandant ? "max-h-[clamp(560px,84dvh,980px)]" : "max-h-[clamp(460px,74dvh,860px)]"} aspect-[4/5] overflow-hidden ${
+                className={`auto-scroll-image-frame relative w-full h-full flex-1 overflow-hidden ${
                   isLightMode ? "bg-slate-100" : "bg-slate-900"
                 }`}
               >
