@@ -132,7 +132,7 @@ const mapRowToVisit = (row: VisitRow): DistinguishedVisit => ({
   decoration: row.decoration ?? undefined,
 });
 
-const COLLECTION_CACHE_TTL_MS = 72 * 60 * 60 * 1000;
+const COLLECTION_CACHE_TTL_MS = 73 * 60 * 60 * 1000;
 const PERSONNEL_CACHE_KEY = 'ndc_cache_personnel_v1';
 const COMMANDANTS_CACHE_KEY = 'ndc_cache_commandants_v1';
 const VISITS_CACHE_KEY = 'ndc_cache_visits_v1';
@@ -153,9 +153,10 @@ function readCollectionCache<T>(key: string): T[] | null {
       return null;
     }
 
+    // Keep last-known-good data available even when stale so screens can
+    // still render in poor/no network conditions. Fresh data will overwrite it.
     if (Date.now() - parsed.cachedAt > COLLECTION_CACHE_TTL_MS) {
-      localStorage.removeItem(key);
-      return null;
+      return parsed.rows;
     }
 
     return parsed.rows;

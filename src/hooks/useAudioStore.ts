@@ -31,7 +31,7 @@ export interface AudioAssignments {
 
 const AUDIO_LOCAL_KEY_PREFIX = 'audio_';
 const AUDIO_CACHE_KEY_PREFIX = 'audio_cache_';
-const AUDIO_CACHE_TTL_MS = 72 * 60 * 60 * 1000;
+const AUDIO_CACHE_TTL_MS = 73 * 60 * 60 * 1000;
 
 interface AudioCacheEntry {
   buffer: ArrayBuffer;
@@ -238,11 +238,14 @@ export async function getAudioUrl(id: string): Promise<string | null> {
 
     const sourceKey = normalizedTrack?.bucketPath ?? `local:${id}`;
     const cachedValue = await get<unknown>(`${AUDIO_CACHE_KEY_PREFIX}${id}`);
-    if (isAudioCacheEntry(cachedValue) && isFreshAudioCache(cachedValue, sourceKey)) {
+    if (isAudioCacheEntry(cachedValue) && cachedValue.sourceKey === sourceKey) {
+      if (!isFreshAudioCache(cachedValue, sourceKey)) {
+        void prefetchAudioTrack(id);
+      }
       return URL.createObjectURL(new Blob([cachedValue.buffer]));
     }
 
-    if (cachedValue) {
+    if (cachedValue && !isAudioCacheEntry(cachedValue)) {
       await del(`${AUDIO_CACHE_KEY_PREFIX}${id}`);
     }
 
@@ -275,9 +278,11 @@ export async function prefetchAudioTrack(id: string): Promise<void> {
     const sourceKey = normalizedTrack.bucketPath ?? `local:${id}`;
     const cacheKey = `${AUDIO_CACHE_KEY_PREFIX}${id}`;
     const cachedValue = await get<unknown>(cacheKey);
-    if (isAudioCacheEntry(cachedValue) && isFreshAudioCache(cachedValue, sourceKey)) return;
+    if (isAudioCacheEntry(cachedValue) && cachedValue.sourceKey === sourceKey && isFreshAudioCache(cachedValue, sourceKey)) {
+      return;
+    }
 
-    if (cachedValue) {
+    if (cachedValue && (!isAudioCacheEntry(cachedValue) || (isAudioCacheEntry(cachedValue) && cachedValue.sourceKey !== sourceKey))) {
       await del(cacheKey);
     }
 

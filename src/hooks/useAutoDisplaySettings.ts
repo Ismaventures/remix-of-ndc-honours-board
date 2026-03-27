@@ -301,6 +301,52 @@ function sanitizeSettings(input: Partial<AutoDisplaySettings> | null | undefined
   };
 }
 
+function mergeSettingsPatch(
+  base: AutoDisplaySettings,
+  patch: Partial<AutoDisplaySettings> | null | undefined,
+): AutoDisplaySettings {
+  if (!patch) return base;
+
+  return {
+    ...base,
+    ...patch,
+    global: patch.global ? { ...base.global, ...patch.global } : base.global,
+    byContext: patch.byContext
+      ? {
+          ...base.byContext,
+          ...patch.byContext,
+        }
+      : base.byContext,
+    transitionSequence: Array.isArray(patch.transitionSequence)
+      ? patch.transitionSequence
+      : base.transitionSequence,
+    transitionSequenceByContext: patch.transitionSequenceByContext
+      ? {
+          ...base.transitionSequenceByContext,
+          ...patch.transitionSequenceByContext,
+        }
+      : base.transitionSequenceByContext,
+    appliedTransitionByContext: patch.appliedTransitionByContext
+      ? {
+          ...base.appliedTransitionByContext,
+          ...patch.appliedTransitionByContext,
+        }
+      : base.appliedTransitionByContext,
+    transitionDurationByTypeMs: patch.transitionDurationByTypeMs
+      ? {
+          ...base.transitionDurationByTypeMs,
+          ...patch.transitionDurationByTypeMs,
+        }
+      : base.transitionDurationByTypeMs,
+    transitionCueByType: patch.transitionCueByType
+      ? {
+          ...base.transitionCueByType,
+          ...patch.transitionCueByType,
+        }
+      : base.transitionCueByType,
+  };
+}
+
 function loadSettings(): AutoDisplaySettings {
   try {
     const override = readAutoDisplayOverride();
@@ -326,9 +372,11 @@ export function useAutoDisplaySettings() {
       if (hasDeviceOverrides()) return;
       const remote = await loadUiSetting<Partial<AutoDisplaySettings>>(SUPABASE_SETTING_KEY);
       if (!mounted || !remote) return;
-      const merged = sanitizeSettings(remote);
-      setSettingsState(merged);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      setSettingsState(current => {
+        const merged = sanitizeSettings(mergeSettingsPatch(current, remote));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        return merged;
+      });
     };
 
     void syncFromSupabase();
@@ -404,7 +452,7 @@ export function useAutoDisplaySettings() {
   };
 
   const importSettings = (candidate: Partial<AutoDisplaySettings>) => {
-    const merged = sanitizeSettings(candidate);
+    const merged = sanitizeSettings(mergeSettingsPatch(settings, candidate));
     write(merged);
   };
 

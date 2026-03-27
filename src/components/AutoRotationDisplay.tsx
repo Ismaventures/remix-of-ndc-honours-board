@@ -344,7 +344,8 @@ export function AutoRotationDisplay({
     isActive &&
     activeCategory !== null &&
     displayContext !== "commandants" &&
-    slides.length > 0;
+    slides.length > 0 &&
+    !useAppliedTransitionOnly;
 
   const personnelSlides = useMemo(
     () =>
@@ -979,6 +980,26 @@ export function AutoRotationDisplay({
         return fadeState === "in"
           ? "opacity-100 scale-100 blur-0"
           : "opacity-0 scale-[0.90] blur-[10px]";
+      case "barracks-reveal":
+        return fadeState === "in"
+          ? "opacity-100 translate-x-0 scale-100 blur-0"
+          : "opacity-0 -translate-x-20 scale-[0.96] blur-[8px]";
+      case "salute-flash":
+        return fadeState === "in"
+          ? "opacity-100 scale-100 blur-0"
+          : "opacity-0 scale-[1.03] blur-[6px]";
+      case "parade-sweep":
+        return fadeState === "in"
+          ? "opacity-100 translate-x-0 scale-100 blur-0"
+          : "opacity-0 translate-x-20 scale-[0.97] blur-[8px]";
+      case "mission-brief":
+        return fadeState === "in"
+          ? "opacity-100 scale-100 blur-0"
+          : "opacity-0 scale-[0.985] blur-[10px]";
+      case "runway-sweep":
+        return fadeState === "in"
+          ? "opacity-100 translate-x-0 scale-100 blur-0"
+          : "opacity-0 -translate-x-14 scale-[0.98] blur-[7px]";
       case "pro-slider":
         return "opacity-100"; // Handled by framer-motion AnimatePresence
       case "fade-zoom":

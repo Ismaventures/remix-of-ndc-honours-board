@@ -3,7 +3,7 @@ import { del, get, set } from 'idb-keyval';
 const MEDIA_KEY_PREFIX = 'media_';
 const MEDIA_URL_PREFIX = 'idb-media://';
 const REMOTE_MEDIA_KEY_PREFIX = 'remote_media_';
-export const REMOTE_MEDIA_CACHE_TTL_MS = 72 * 60 * 60 * 1000;
+export const REMOTE_MEDIA_CACHE_TTL_MS = 73 * 60 * 60 * 1000;
 
 interface StoredMedia {
   buffer: ArrayBuffer;
@@ -76,9 +76,15 @@ async function resolveRemoteMediaRefToObjectUrl(ref: string): Promise<string> {
     return URL.createObjectURL(new Blob([cached.buffer], { type: cached.type || 'application/octet-stream' }));
   }
 
-  if (cached) {
-    await del(key);
+  if (cached?.sourceUrl === absoluteUrl) {
+    // Serve stale cache first for resilient rendering, then refresh best-effort.
+    if (!isRemoteMediaFresh(cached.cachedAt)) {
+      void fetchAndPersistRemoteMedia(absoluteUrl);
+    }
+    return URL.createObjectURL(new Blob([cached.buffer], { type: cached.type || 'application/octet-stream' }));
   }
+
+  if (cached) await del(key);
 
   const refreshed = await fetchAndPersistRemoteMedia(absoluteUrl);
   if (!refreshed) return ref;
@@ -104,8 +110,7 @@ export async function prefetchMediaReferences(refs: Array<string | null | undefi
     const key = toRemoteMediaKey(absoluteUrl);
     const cached = await get<StoredRemoteMedia>(key);
     if (cached?.sourceUrl === absoluteUrl && isRemoteMediaFresh(cached.cachedAt)) return;
-
-    if (cached) {
+    if (cached && cached.sourceUrl !== absoluteUrl) {
       await del(key);
     }
 
