@@ -16,6 +16,7 @@ export function AdvancedAudioAdmin() {
   const [editName, setEditName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const previewPlayTokenRef = useRef(0);
 
   useEffect(() => {
     loadTracks();
@@ -24,15 +25,39 @@ export function AdvancedAudioAdmin() {
   // Load physical URLs for previewing tracks locally
   useEffect(() => {
     const loadUrls = async () => {
+      const entries = await Promise.all(
+        tracks.map(async (track) => {
+          const url = await getAudioUrl(track.id);
+          return [track.id, url] as const;
+        }),
+      );
+
       const urls: Record<string, string> = {};
-      for (const track of tracks) {
-        const url = await getAudioUrl(track.id);
-        if (url) urls[track.id] = url;
+      for (const [id, url] of entries) {
+        if (url) urls[id] = url;
       }
-      setAudioUrls(urls);
+
+      setAudioUrls((previous) => {
+        Object.values(previous).forEach((oldUrl) => {
+          if (oldUrl.startsWith('blob:') && !Object.values(urls).includes(oldUrl)) {
+            URL.revokeObjectURL(oldUrl);
+          }
+        });
+        return urls;
+      });
     };
-    loadUrls();
+    void loadUrls();
   }, [tracks]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(audioUrls).forEach((url) => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [audioUrls]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
@@ -58,15 +83,39 @@ export function AdvancedAudioAdmin() {
     }
   };
 
-  const handlePlayPreview = (id: string, url: string) => {
+  const handlePlayPreview = async (id: string, url?: string) => {
+    if (!url) {
+      setUploadStatus('Audio preview unavailable. Re-upload or wait for sync.');
+      setTimeout(() => setUploadStatus(null), 2500);
+      return;
+    }
+
+    const token = Date.now();
+    previewPlayTokenRef.current = token;
+
     if (playingId === id) {
       previewAudioRef.current?.pause();
       setPlayingId(null);
     } else {
-      if (previewAudioRef.current) {
-        previewAudioRef.current.src = url;
-        previewAudioRef.current.play();
-        setPlayingId(id);
+      const audio = previewAudioRef.current;
+      if (!audio) return;
+
+      audio.pause();
+      audio.src = url;
+      audio.currentTime = 0;
+
+      try {
+        await audio.play();
+        if (previewPlayTokenRef.current === token) {
+          setPlayingId(id);
+        }
+      } catch (error) {
+        const isAbort =
+          error instanceof DOMException && error.name === 'AbortError';
+        if (!isAbort) {
+          setUploadStatus('Unable to play preview in this browser state.');
+          setTimeout(() => setUploadStatus(null), 2500);
+        }
       }
     }
   };
@@ -145,6 +194,7 @@ export function AdvancedAudioAdmin() {
                            size="icon"
                            variant="ghost"
                            className="w-8 h-8 rounded-full bg-accent/50 text-primary hover:bg-primary hover:text-primary-foreground shrink-0"
+                          disabled={!audioUrls[track.id]}
                            onClick={() => handlePlayPreview(track.id, audioUrls[track.id])}
                         >
                            {playingId === track.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}

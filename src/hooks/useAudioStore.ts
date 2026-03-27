@@ -31,6 +31,28 @@ export interface AudioAssignments {
 
 const AUDIO_LOCAL_KEY_PREFIX = 'audio_';
 const AUDIO_CACHE_KEY_PREFIX = 'audio_cache_';
+const AUDIO_CACHE_TTL_MS = 72 * 60 * 60 * 1000;
+
+interface AudioCacheEntry {
+  buffer: ArrayBuffer;
+  cachedAt: number;
+  sourceKey: string;
+}
+
+function isAudioCacheEntry(value: unknown): value is AudioCacheEntry {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<AudioCacheEntry>;
+  return (
+    candidate.buffer instanceof ArrayBuffer &&
+    typeof candidate.cachedAt === 'number' &&
+    typeof candidate.sourceKey === 'string'
+  );
+}
+
+function isFreshAudioCache(entry: AudioCacheEntry, sourceKey: string): boolean {
+  if (entry.sourceKey !== sourceKey) return false;
+  return Date.now() - entry.cachedAt <= AUDIO_CACHE_TTL_MS;
+}
 
 interface AudioState {
   tracks: AudioTrack[];
@@ -152,6 +174,8 @@ export const useAudioStore = create<AudioState>()(
           await del(`audio_${id}`);
         }
 
+        await del(`${AUDIO_CACHE_KEY_PREFIX}${id}`);
+
         setStore(state => {
           const newAssignments = { ...state.assignments };
           (Object.keys(newAssignments) as Array<keyof AudioAssignments>).forEach(key => {
@@ -212,27 +236,21 @@ export async function getAudioUrl(id: string): Promise<string | null> {
     const track = useAudioStore.getState().tracks.find(t => t.id === id);
     const normalizedTrack = track ? normalizeStoredTrack(track) : null;
 
-    const cachedBuffer = await get(`${AUDIO_CACHE_KEY_PREFIX}${id}`);
-    if (cachedBuffer) {
-      return URL.createObjectURL(new Blob([cachedBuffer]));
+    const sourceKey = normalizedTrack?.bucketPath ?? `local:${id}`;
+    const cachedValue = await get<unknown>(`${AUDIO_CACHE_KEY_PREFIX}${id}`);
+    if (isAudioCacheEntry(cachedValue) && isFreshAudioCache(cachedValue, sourceKey)) {
+      return URL.createObjectURL(new Blob([cachedValue.buffer]));
+    }
+
+    if (cachedValue) {
+      await del(`${AUDIO_CACHE_KEY_PREFIX}${id}`);
     }
 
     if (normalizedTrack?.source === 'supabase' && normalizedTrack.bucketPath) {
       const remoteUrl = await getSupabaseAudioUrl(normalizedTrack.bucketPath);
       if (remoteUrl) {
-        try {
-          const response = await fetch(remoteUrl, { cache: 'force-cache' });
-          if (response.ok) {
-            const arrayBuffer = await response.arrayBuffer();
-            if (arrayBuffer.byteLength > 0) {
-              await set(`${AUDIO_CACHE_KEY_PREFIX}${id}`, arrayBuffer);
-              return URL.createObjectURL(new Blob([arrayBuffer]));
-            }
-          }
-        } catch {
-          // Keep playback available even if caching fails.
-        }
-
+        // Return stream URL immediately for fastest start, cache in background.
+        void prefetchAudioTrack(id);
         return remoteUrl;
       }
     }
@@ -245,5 +263,42 @@ export async function getAudioUrl(id: string): Promise<string | null> {
   } catch (error) {
     console.error('Failed to resolve audio URL', error);
     return null;
+  }
+}
+
+export async function prefetchAudioTrack(id: string): Promise<void> {
+  try {
+    const track = useAudioStore.getState().tracks.find(t => t.id === id);
+    const normalizedTrack = track ? normalizeStoredTrack(track) : null;
+    if (!normalizedTrack) return;
+
+    const sourceKey = normalizedTrack.bucketPath ?? `local:${id}`;
+    const cacheKey = `${AUDIO_CACHE_KEY_PREFIX}${id}`;
+    const cachedValue = await get<unknown>(cacheKey);
+    if (isAudioCacheEntry(cachedValue) && isFreshAudioCache(cachedValue, sourceKey)) return;
+
+    if (cachedValue) {
+      await del(cacheKey);
+    }
+
+    if (normalizedTrack.source !== 'supabase' || !normalizedTrack.bucketPath) return;
+
+    const remoteUrl = await getSupabaseAudioUrl(normalizedTrack.bucketPath);
+    if (!remoteUrl) return;
+
+    const response = await fetch(remoteUrl, { cache: 'force-cache' });
+    if (!response.ok) return;
+
+    const arrayBuffer = await response.arrayBuffer();
+    if (arrayBuffer.byteLength > 0) {
+      const payload: AudioCacheEntry = {
+        buffer: arrayBuffer,
+        cachedAt: Date.now(),
+        sourceKey,
+      };
+      await set(cacheKey, payload);
+    }
+  } catch {
+    // Prefetch is best-effort and should not interrupt normal playback.
   }
 }

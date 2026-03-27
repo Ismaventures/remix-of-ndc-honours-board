@@ -30,12 +30,14 @@ import {
 } from "@/lib/deviceOverrideSettings";
 import { Category, Commandant } from "@/types/domain";
 import { supabase } from "@/lib/supabaseClient";
+import { prefetchMediaReferences } from "@/lib/persistentMedia";
+import { prefetchAudioTrack, useAudioStore } from "@/hooks/useAudioStore";
 
 const SECTION_TITLES: Record<string, string> = {
   fwc: "Distinguished Fellows of the War College (FWC)",
   fdc: "Distinguished Fellows of the Defence College (FDC)",
-  directing: "Chronicle of Directing Staff",
-  allied: "Allied Officers",
+  directing: "Chronicles of Directing Staff (Directing Staff)",
+  allied: "International Allied Officers (Allied)",
 };
 
 const SECTION_CATEGORIES: Record<string, Category> = {
@@ -108,6 +110,7 @@ const Index = () => {
   const { visits, addVisit, updateVisit, deleteVisit } = useVisitsStore();
   const { commandants, addCommandant, updateCommandant, deleteCommandant } =
     useCommandantsStore();
+  const audioTracks = useAudioStore((state) => state.tracks);
 
   const currentCommandant = commandants.find((c) => c.isCurrent);
   const activeCategory = SECTION_CATEGORIES[view] ?? null;
@@ -126,6 +129,22 @@ const Index = () => {
   }, [adminEmail]);
 
   const showLockScreen = deviceClosed || (siteClosed && !isSuperAdmin);
+
+  useEffect(() => {
+    const mediaRefs = [
+      ...personnel.map((entry) => entry.imageUrl),
+      ...visits.map((entry) => entry.imageUrl),
+      ...commandants.map((entry) => entry.imageUrl),
+    ];
+
+    if (mediaRefs.length === 0) return;
+    void prefetchMediaReferences(mediaRefs);
+  }, [personnel, visits, commandants]);
+
+  useEffect(() => {
+    if (audioTracks.length === 0) return;
+    void Promise.allSettled(audioTracks.map((track) => prefetchAudioTrack(track.id)));
+  }, [audioTracks]);
 
   const applyGlobalSiteAction = (
     action: GlobalSiteAction,
@@ -597,6 +616,7 @@ const Index = () => {
             <div className={`${autoDisplayActive ? "bg-transparent border-none p-0 rounded-none shadow-none" : "app-shell-frame rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8"}`}>
               <div className={`${autoDisplayActive ? "fixed top-4 right-4 z-[100]" : "flex justify-end mb-3 sm:mb-4"}`}>
                 <AutoRotationDisplay
+                  key={view}
                   personnel={personnel}
                   visits={visits}
                   commandants={commandants}

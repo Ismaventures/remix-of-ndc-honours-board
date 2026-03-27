@@ -14,9 +14,11 @@ import {
   AutoDisplayTiming,
   AutoDisplayTransitionType,
   DEFAULT_AUTO_DISPLAY_SETTINGS,
+  TRANSITION_CUE_TYPES,
   TRANSITION_TYPES,
 } from '@/hooks/useAutoDisplaySettings';
 import { useCinematicExperienceSettings } from '@/hooks/useCinematicExperienceSettings';
+import { playTransitionCue } from '@/lib/transitionCues';
 
 interface AdminPanelProps {
   personnel: Personnel[];
@@ -165,10 +167,30 @@ const TRANSITION_USAGE_GUIDES: Record<AutoDisplayTransitionType, { bestFor: stri
     bestFor: 'Cinematic storytelling with layered depth, Ken Burns image motion, and synchronized audio cues.',
     tip: 'Best for commandant archives and hero-led displays where authority and prestige are critical.',
   },
+  'barracks-reveal': {
+    bestFor: 'Hard tactical reveals where incoming content should feel forceful and operational.',
+    tip: 'Pair with metal-clank cue and medium-fast timings for impact.',
+  },
+  'salute-flash': {
+    bestFor: 'Ceremonial highlights and honour moments with fast visual emphasis.',
+    tip: 'Use on short feature cycles or category intros for prestige accents.',
+  },
+  'parade-sweep': {
+    bestFor: 'Patriotic, tri-service transitions that signal national and institutional identity.',
+    tip: 'Best when paired with drum-style cue and moderate duration.',
+  },
+  'mission-brief': {
+    bestFor: 'Intelligence and briefing-themed sequences in technical or archival views.',
+    tip: 'Combine with scan cue and slightly longer transitions for readability.',
+  },
+  'runway-sweep': {
+    bestFor: 'Aviation and mobility-themed transitions with directional momentum.',
+    tip: 'Use sweep cue and keep durations around 800-1200ms for smooth energy.',
+  },
 };
 
 type GuideTargetTab = 'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices';
-type GuideTargetPanel = 'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'cinematic' | 'actions';
+type GuideTargetPanel = 'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'soundPairing' | 'guide' | 'cinematic' | 'actions';
 
 const FEATURE_GUIDE_SECTIONS: Array<{
   id: string;
@@ -323,7 +345,7 @@ export function AdminPanel({
   const [previewNonce, setPreviewNonce] = useState(0);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewContextLabel, setPreviewContextLabel] = useState('Global');
-  const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'guide' | 'cinematic' | 'actions' | 'commandantLayout'>('boot');
+  const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'soundPairing' | 'guide' | 'cinematic' | 'actions' | 'commandantLayout'>('boot');
   const [guideFlowActive, setGuideFlowActive] = useState(false);
   const [guideNextSectionId, setGuideNextSectionId] = useState<string | null>(null);
   const {
@@ -636,6 +658,16 @@ export function AdminPanel({
         return 'animate-[preview-ndc-scatter_900ms_ease-out_forwards]';
       case 'pro-slider':
         return 'animate-[preview-pro-slider_900ms_cubic-bezier(0.22,1,0.36,1)_forwards]';
+      case 'barracks-reveal':
+        return 'animate-[preview-slide-left_900ms_ease-out_forwards]';
+      case 'salute-flash':
+        return 'animate-[preview-fade-zoom_900ms_ease-out_forwards]';
+      case 'parade-sweep':
+        return 'animate-[preview-slide-right_900ms_ease-out_forwards]';
+      case 'mission-brief':
+        return 'animate-[preview-blur-in_900ms_ease-out_forwards]';
+      case 'runway-sweep':
+        return 'animate-[preview-slide-left_900ms_ease-out_forwards]';
       case 'fade-zoom':
       default:
         return 'animate-[preview-fade-zoom_900ms_ease-out_forwards]';
@@ -1653,6 +1685,46 @@ export function AdminPanel({
                           <div className="flex items-center justify-between"><label className="text-[11px] text-foreground">{transition.label}</label><span className="text-[11px] text-muted-foreground">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span></div>
                           <input type="range" min={250} max={3000} step={50} value={autoDisplayDraft.transitionDurationByTypeMs[transition.id]} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, transitionDurationByTypeMs: { ...prev.transitionDurationByTypeMs, [transition.id]: Number(e.target.value) } }))} className="w-full" />
                           <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Preview</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button onClick={() => setActiveTransitionPanel('soundPairing')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Transition Sound Pairing</span>
+                </button>
+                {activeTransitionPanel === 'soundPairing' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                    <p className="text-xs text-muted-foreground mb-3">Assign a cue sound profile to each transition. These cues play at transition start in auto display.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {TRANSITION_TYPES.map((transition) => (
+                        <div key={`cue-${transition.id}`} className="space-y-1.5 rounded border border-primary/10 p-2">
+                          <label className="text-[11px] text-foreground font-medium">{transition.label}</label>
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={autoDisplayDraft.transitionCueByType[transition.id]}
+                              onChange={e => setAutoDisplayDraft(prev => ({
+                                ...prev,
+                                transitionCueByType: {
+                                  ...prev.transitionCueByType,
+                                  [transition.id]: e.target.value as (typeof TRANSITION_CUE_TYPES)[number]['id'],
+                                },
+                              }))}
+                              className="w-full bg-background border border-primary/20 rounded-md px-2 py-1.5 text-xs text-foreground"
+                            >
+                              {TRANSITION_CUE_TYPES.map(cue => (
+                                <option key={`cue-opt-${transition.id}-${cue.id}`} value={cue.id}>{cue.label}</option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => playTransitionCue(autoDisplayDraft.transitionCueByType[transition.id], true)}
+                              className="px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                            >
+                              Test
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>

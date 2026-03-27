@@ -16,7 +16,12 @@ export type AutoDisplayTransitionType =
   | 'skew-lift'
   | 'scale-rise'
   | 'ndc-scatter'
-  | 'pro-slider';
+  | 'pro-slider'
+  | 'barracks-reveal'
+  | 'salute-flash'
+  | 'parade-sweep'
+  | 'mission-brief'
+  | 'runway-sweep';
 
 export type AutoDisplayContextKey =
   | 'commandants'
@@ -27,6 +32,15 @@ export type AutoDisplayContextKey =
   | 'Allied';
 
 export type CommandantLayoutType = 'standard' | 'split';
+
+export type TransitionCueType =
+  | 'none'
+  | 'whoosh'
+  | 'clank'
+  | 'flash'
+  | 'drum'
+  | 'scan'
+  | 'sweep';
 
 export interface AutoDisplayTiming {
   slideDurationMs: number;
@@ -40,6 +54,7 @@ export interface AutoDisplaySettings {
   transitionSequenceByContext: Record<AutoDisplayContextKey, AutoDisplayTransitionType[]>;
   appliedTransitionByContext: Record<AutoDisplayContextKey, AutoDisplayTransitionType | null>;
   transitionDurationByTypeMs: Record<AutoDisplayTransitionType, number>;
+  transitionCueByType: Record<AutoDisplayTransitionType, TransitionCueType>;
   commandantLayout?: CommandantLayoutType;
 }
 
@@ -61,7 +76,44 @@ export const TRANSITION_TYPES: Array<{ id: AutoDisplayTransitionType; label: str
   { id: 'scale-rise', label: 'Scale Rise' },
   { id: 'ndc-scatter', label: 'Scattered NDC Logo' },
   { id: 'pro-slider', label: 'Pro Slider (Framer)' },
+  { id: 'barracks-reveal', label: 'Barracks Reveal' },
+  { id: 'salute-flash', label: 'Salute Flash' },
+  { id: 'parade-sweep', label: 'Parade Sweep' },
+  { id: 'mission-brief', label: 'Mission Brief' },
+  { id: 'runway-sweep', label: 'Runway Sweep' },
 ];
+
+export const TRANSITION_CUE_TYPES: Array<{ id: TransitionCueType; label: string }> = [
+  { id: 'none', label: 'No Cue' },
+  { id: 'whoosh', label: 'Whoosh' },
+  { id: 'clank', label: 'Metal Clank' },
+  { id: 'flash', label: 'Flash Hit' },
+  { id: 'drum', label: 'Drum Strike' },
+  { id: 'scan', label: 'Scan Pulse' },
+  { id: 'sweep', label: 'Searchlight Sweep' },
+];
+
+export const DEFAULT_TRANSITION_CUE_BY_TYPE: Record<AutoDisplayTransitionType, TransitionCueType> = {
+  'fade-zoom': 'whoosh',
+  'slide-up': 'whoosh',
+  'slide-left': 'whoosh',
+  'slide-right': 'whoosh',
+  'slide-down': 'whoosh',
+  'zoom-out': 'whoosh',
+  'flip-x': 'clank',
+  'flip-y': 'clank',
+  'rotate-in': 'whoosh',
+  'blur-in': 'scan',
+  'skew-lift': 'scan',
+  'scale-rise': 'whoosh',
+  'ndc-scatter': 'flash',
+  'pro-slider': 'sweep',
+  'barracks-reveal': 'clank',
+  'salute-flash': 'flash',
+  'parade-sweep': 'drum',
+  'mission-brief': 'scan',
+  'runway-sweep': 'sweep',
+};
 
 export const AUTO_DISPLAY_CONTEXTS: Array<{ key: AutoDisplayContextKey; label: string }> = [
   { key: 'commandants', label: 'Commandants' },
@@ -99,6 +151,11 @@ export const DEFAULT_AUTO_DISPLAY_SETTINGS: AutoDisplaySettings = {
     'blur-in',
     'skew-lift',
     'scale-rise',
+    'barracks-reveal',
+    'salute-flash',
+    'parade-sweep',
+    'mission-brief',
+    'runway-sweep',
   ],
   transitionSequenceByContext: {
     commandants: [
@@ -149,7 +206,13 @@ export const DEFAULT_AUTO_DISPLAY_SETTINGS: AutoDisplaySettings = {
     'scale-rise': 520,
     'ndc-scatter': 2500,
     'pro-slider': 800,
+    'barracks-reveal': 1100,
+    'salute-flash': 900,
+    'parade-sweep': 1200,
+    'mission-brief': 1000,
+    'runway-sweep': 1000,
   },
+  transitionCueByType: DEFAULT_TRANSITION_CUE_BY_TYPE,
   commandantLayout: 'standard',
 };
 
@@ -157,6 +220,9 @@ const clamp = (value: number, min: number, max: number) => Math.max(min, Math.mi
 
 const isTransitionType = (value: unknown): value is AutoDisplayTransitionType =>
   typeof value === 'string' && TRANSITION_TYPES.some(item => item.id === value);
+
+const isTransitionCueType = (value: unknown): value is TransitionCueType =>
+  typeof value === 'string' && TRANSITION_CUE_TYPES.some(item => item.id === value);
 
 function sanitizeTiming(input: Partial<AutoDisplayTiming> | null | undefined, fallback: AutoDisplayTiming): AutoDisplayTiming {
   const slideDuration = Number(input?.slideDurationMs);
@@ -211,6 +277,14 @@ function sanitizeSettings(input: Partial<AutoDisplaySettings> | null | undefined
     return acc;
   }, {} as Record<AutoDisplayTransitionType, number>);
 
+  const transitionCueByType = TRANSITION_TYPES.reduce<Record<AutoDisplayTransitionType, TransitionCueType>>((acc, transition) => {
+    const raw = input?.transitionCueByType?.[transition.id];
+    acc[transition.id] = isTransitionCueType(raw)
+      ? raw
+      : DEFAULT_TRANSITION_CUE_BY_TYPE[transition.id];
+    return acc;
+  }, {} as Record<AutoDisplayTransitionType, TransitionCueType>);
+
   const commandantLayout = (input?.commandantLayout === 'split' || input?.commandantLayout === 'standard') 
     ? input.commandantLayout 
     : DEFAULT_AUTO_DISPLAY_SETTINGS.commandantLayout;
@@ -222,6 +296,7 @@ function sanitizeSettings(input: Partial<AutoDisplaySettings> | null | undefined
     transitionSequenceByContext,
     appliedTransitionByContext,
     transitionDurationByTypeMs,
+    transitionCueByType,
     commandantLayout,
   };
 }

@@ -18,7 +18,7 @@ import { CommandantSplitHero } from "./CommandantSplitHero";
 import { UnifiedAutoCard } from "./UnifiedAutoCard";
 import { ProfileModal } from "./ProfileModal";
 import ndcCrest from "/images/ndc-crest.png";
-import { useAudioStore } from "@/hooks/useAudioStore";
+import { prefetchAudioTrack, useAudioStore } from "@/hooks/useAudioStore";
 import { playAudioTrack } from "@/components/AudioManager";
 import {
   AutoDisplayContextKey,
@@ -27,6 +27,11 @@ import {
   DEFAULT_AUTO_DISPLAY_SETTINGS,
 } from "@/hooks/useAutoDisplaySettings";
 import { NdcScatteredTransition } from "./NdcScatteredTransition";
+import { BarracksRevealTransition } from "./BarracksRevealTransition";
+import { SaluteFlashTransition } from "./SaluteFlashTransition";
+import { ParadeSweepTransition } from "./ParadeSweepTransition";
+import { MissionBriefTransition } from "./MissionBriefTransition";
+import { RunwaySweepTransition } from "./RunwaySweepTransition";
 import { useSliderControl } from "@/hooks/useSliderControl";
 import { useThemeMode } from "@/hooks/useThemeMode";
 import {
@@ -35,6 +40,7 @@ import {
   textStaggerContainer,
   textStaggerItem,
 } from "@/lib/cinematicMotion";
+import { playTransitionCue } from "@/lib/transitionCues";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
 import { useCinematicExperienceSettings } from "@/hooks/useCinematicExperienceSettings";
 
@@ -122,7 +128,7 @@ function ContinuousSlideCard({
     <button
       type="button"
       onClick={() => onSelect(item)}
-      className={`auto-scroll-card group relative w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] self-start shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${
+      className={`auto-scroll-card group relative w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] h-[clamp(360px,58dvh,620px)] sm:h-[clamp(390px,62dvh,660px)] self-stretch shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
           ? "bg-white border border-[#002060]/20 shadow-[0_12px_36px_rgba(0,32,96,0.14)]"
           : "bg-slate-950/90 border border-[#FFD700]/25 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
@@ -146,12 +152,12 @@ function ContinuousSlideCard({
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
-      <div className="relative z-10 mb-2.5 sm:mb-3 flex justify-center">
+      <div className="relative z-10 mb-1 sm:mb-1.5 flex flex-[1.6] min-h-0 items-center justify-center">
         <div className="p-[2px] bg-[#FFD700] shadow-xl">
           <div className="p-[2px] bg-white">
             <div className="p-[1px] bg-[#FFD700]">
               <div
-                className={`auto-scroll-image-frame relative h-[clamp(132px,23dvh,205px)] sm:h-[clamp(148px,25dvh,230px)] md:h-[clamp(165px,27dvh,250px)] aspect-[4/5] overflow-hidden ${
+                className={`auto-scroll-image-frame relative h-full ${isVisit ? "max-h-[clamp(240px,44dvh,500px)]" : "max-h-[clamp(300px,54dvh,620px)]"} aspect-[4/5] overflow-hidden ${
                   isLightMode ? "bg-slate-100" : "bg-slate-900"
                 }`}
               >
@@ -243,6 +249,7 @@ export function AutoRotationDisplay({
   const interactionHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const activationAudioPrimedRef = useRef(false);
   const fdcScrollRef = useRef<HTMLDivElement | null>(null);
   const fdcAutoPauseUntilRef = useRef(0);
   const fdcNavRafRef = useRef<number | null>(null);
@@ -251,6 +258,7 @@ export function AutoRotationDisplay({
   const isTransitioningRef = useRef(false);
   const transitionStepRef = useRef(0);
   const transitionDirectionRef = useRef<1 | -1>(1);
+  const lastTransitionCueAtRef = useRef(0);
   const { isPaused, registerInteraction } = useSliderControl({
     resumeAfterMs: 4200,
   });
@@ -312,23 +320,14 @@ export function AutoRotationDisplay({
         .sort((a, b) => a.seniorityOrder - b.seniorityOrder)
         .slice(0, 12)
         .map((person) => ({ type: "personnel" as const, person }));
-
-      return categoryPersonnel.length > 0
-        ? categoryPersonnel
-        : commandants
-            .slice(0, 1)
-            .map((commandant) => ({ type: "commandant" as const, commandant }));
+      return categoryPersonnel;
     }
 
     if (activeView === "visits") {
       const visitSlides = visits
         .slice(0, 12)
         .map((visit) => ({ type: "visit" as const, visit }));
-      return visitSlides.length > 0
-        ? visitSlides
-        : commandants
-            .slice(0, 1)
-            .map((commandant) => ({ type: "commandant" as const, commandant }));
+      return visitSlides;
     }
 
     return commandants
@@ -463,6 +462,18 @@ export function AutoRotationDisplay({
 
       const nextTransition =
         sequence[transitionStepRef.current % sequence.length] ?? "fade-zoom";
+
+      const cue =
+        effectiveSettings.transitionCueByType?.[nextTransition] ?? "none";
+      const now = Date.now();
+      if (
+        cue !== "none" &&
+        now - lastTransitionCueAtRef.current >= cinematicSettings.whooshCooldownMs
+      ) {
+        playTransitionCue(cue, !isMuted);
+        lastTransitionCueAtRef.current = now;
+      }
+
       const baseDurationMs = getTransitionDurationMs(nextTransition);
       const nextSlide = slides[nextIndex];
       const durationMs =
@@ -520,7 +531,10 @@ export function AutoRotationDisplay({
       sequence,
       slides,
       cinematicSettings.commandantDurationMs,
+      cinematicSettings.whooshCooldownMs,
       cinematicSettings.imageDurationMs,
+      effectiveSettings.transitionCueByType,
+      isMuted,
     ],
   );
 
@@ -733,6 +747,12 @@ export function AutoRotationDisplay({
     }
   }, [slides.length, currentIndex]);
 
+  useEffect(() => {
+    if (!isActive) return;
+    if (slides.length > 0) return;
+    setDisplayActive(false);
+  }, [isActive, setDisplayActive, slides.length]);
+
   const resolveTrackIdForSlide = useCallback(
     (slideCandidate?: Slide) => {
       let trackId = audioAssignments.globalAuto;
@@ -773,10 +793,39 @@ export function AutoRotationDisplay({
   );
 
   useEffect(() => {
+    if (slides.length === 0) return;
+    const initialTrackId = resolveTrackIdForSlide(slides[0]);
+    if (initialTrackId) {
+      void prefetchAudioTrack(initialTrackId);
+    }
+
+    const firstSlide = slides[0];
+    if (!firstSlide) return;
+
+    const imageUrl =
+      firstSlide.type === "commandant"
+        ? firstSlide.commandant.imageUrl
+        : firstSlide.type === "personnel"
+          ? firstSlide.person.imageUrl
+          : firstSlide.visit.imageUrl;
+
+    if (imageUrl) {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = imageUrl;
+    }
+  }, [resolveTrackIdForSlide, slides]);
+
+  useEffect(() => {
     if (isActive) {
       const trackId = resolveTrackIdForSlide(slides[currentIndex]);
+      if (activationAudioPrimedRef.current) {
+        activationAudioPrimedRef.current = false;
+        return;
+      }
       playAudioTrack(trackId);
     } else {
+      activationAudioPrimedRef.current = false;
       playAudioTrack(null); // Stop audio when exiting auto mode
     }
   }, [isActive, currentIndex, resolveTrackIdForSlide, slides]);
@@ -841,21 +890,26 @@ export function AutoRotationDisplay({
     return (
       <button
         onClick={() => {
+          if (slides.length === 0) {
+            return;
+          }
           const initialTrackId = resolveTrackIdForSlide(slides[0]);
           if (isMuted) {
             setMuted(false);
           }
-          playAudioTrack(initialTrackId);
+          activationAudioPrimedRef.current = true;
+          playAudioTrack(initialTrackId, false, true);
           setTransitionType(sequence[0] ?? "fade-zoom");
           transitionStepRef.current = 0;
           setCurrentIndex(0);
           setDisplayActive(true);
         }}
-        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-all duration-200 active:scale-[0.97] ${
+        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-all duration-200 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed ${
           isLightMode
             ? "border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300 shadow-sm"
             : "gold-border text-muted-foreground hover:text-foreground hover:bg-muted/40"
         }`}
+        disabled={slides.length === 0}
       >
         <Monitor className="h-4 w-4 text-primary" />
         <span>
@@ -1008,34 +1062,51 @@ export function AutoRotationDisplay({
   );
 
   const getSectionTitle = () => {
-    if (activeView === "visits") return "Distinguished Visits / Honours";
-    if (activeCategory === "FDC")
-      return "Distinguished Fellows of the Defence College";
-    if (activeCategory === "FWC")
-      return "Distinguished Fellows of the War College";
-    if (activeCategory === "Directing Staff")
-      return "Chronicle of Directing Staff";
-    if (activeCategory === "Allied") return "International Allied Officers";
-    return "Staff Roll";
+    if (activeCategory || activeView === "visits") {
+      return "Chronicles of Directing Staff";
+    }
+    return "Commandants' Chronicle";
   };
 
   const getSectionSubtitle = () => {
-    if (activeView === "visits") return "Ceremonial Visits & Honours";
-    if (activeCategory === "FDC") return "FDC Staff Roll";
-    if (activeCategory === "FWC") return "FWC Staff Roll";
-    if (activeCategory === "Directing Staff") return "Directing Staff Roll";
-    if (activeCategory === "Allied") return "Allied Officers Roll";
-    return "Staff Roll";
+    if (activeView === "visits") return "Distinguished Visits and Honours";
+    if (activeCategory === "FDC") return "Distinguished Fellows of the Defence College (FDC)";
+    if (activeCategory === "FWC") return "Distinguished Fellows of the War College (FWC)";
+    if (activeCategory === "Directing Staff") return "Chronicles of Directing Staff (Directing Staff)";
+    if (activeCategory === "Allied") return "International Allied Officers (Allied)";
+    return "Commandants' Honour Roll";
   };
+
+  const getSectionDescriptor = () => {
+    if (activeView === "visits") {
+      return "Gallery of distinguished state and military engagements in the NDC chronicle.";
+    }
+    if (activeCategory === "FDC") {
+      return "Gallery of Distinguished Fellows of the Defence College within the Directing Staff chronicle.";
+    }
+    if (activeCategory === "FWC") {
+      return "Gallery of Distinguished Fellows of the War College within the Directing Staff chronicle.";
+    }
+    if (activeCategory === "Directing Staff") {
+      return "Gallery of Directing Staff officers documenting NDC instructional and command heritage.";
+    }
+    if (activeCategory === "Allied") {
+      return "Gallery of allied officers and partner-nation representation in the Directing Staff chronicle.";
+    }
+    return "Leadership succession archive of commandants and institutional milestones.";
+  };
+
+  const sectionSubtitle = getSectionSubtitle();
+  const sectionDescriptor = getSectionDescriptor();
 
   const renderedContinuousContent = (
     <motion.div
-      className="relative mx-auto flex h-full min-h-0 w-full max-w-[1900px] flex-col justify-center"
+      className="relative mx-auto flex h-full min-h-0 w-full max-w-[1900px] flex-col justify-start"
       initial={prefersReducedMotion ? undefined : { opacity: 0, y: 20 }}
       animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
       transition={cinematicTransition(0.6)}
     >
-      <div className="auto-scroll-heading mb-2 sm:mb-3 px-1 sm:px-2 shrink-0">
+      <div className="auto-scroll-heading mb-1.5 sm:mb-2 px-1 sm:px-2 shrink-0">
         <div className="overflow-hidden rounded-xl border border-[#002060]/20 bg-card/90 backdrop-blur">
           <div className="h-[6px] flex">
             <div className="flex-1 bg-[#002060]" />
@@ -1047,12 +1118,30 @@ export function AutoRotationDisplay({
             <p className="auto-scroll-heading-title text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90">
               {getSectionTitle()}
             </p>
-            <h2 className="auto-scroll-heading-subtitle mt-1 text-base sm:text-xl md:text-2xl font-bold uppercase tracking-[0.03em] text-[#FFD700] leading-tight">
-              {getSectionSubtitle()}
-            </h2>
-            <p className="mt-1 text-[9px] sm:text-[10px] uppercase tracking-[0.12em] text-white/90">
-              Continuous motion display. Select any card for full details.
-            </p>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.h2
+                key={`subtitle-${sectionSubtitle}`}
+                className="auto-scroll-heading-subtitle mt-1 text-base sm:text-xl md:text-2xl font-bold uppercase tracking-[0.03em] text-[#FFD700] leading-tight"
+                initial={{ opacity: 0, y: 10, filter: "blur(2px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -8, filter: "blur(2px)" }}
+                transition={cinematicTransition(0.42)}
+              >
+                {sectionSubtitle}
+              </motion.h2>
+            </AnimatePresence>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.p
+                key={`descriptor-${sectionDescriptor}`}
+                className="mt-1 text-[9px] sm:text-[10px] tracking-[0.08em] text-white/90"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={cinematicTransition(0.48, { delay: 0.08 })}
+              >
+                {sectionDescriptor}
+              </motion.p>
+            </AnimatePresence>
           </div>
           <div className="h-[2px] w-full bg-[#FF0000]" />
         </div>
@@ -1060,7 +1149,7 @@ export function AutoRotationDisplay({
 
       <div
         ref={fdcScrollRef}
-        className="relative flex min-h-0 items-center gap-3 sm:gap-5 overflow-x-auto pb-1 sm:pb-2 pr-1 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]"
+        className="relative flex h-full min-h-0 items-stretch gap-3 sm:gap-5 overflow-x-auto pb-0.5 sm:pb-1 pr-1 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]"
         onMouseEnter={() =>
           (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
         }
@@ -1104,9 +1193,16 @@ export function AutoRotationDisplay({
       }}
       tabIndex={0}
     >
-      {/* Cinematic Transition Overlay */}
-      {transitionType === "ndc-scatter" && fadeState === "out" && (
-        <NdcScatteredTransition durationMs={currentTransitionDuration} />
+      {/* Cinematic Transition Overlay: NDC scatter and new military/action transitions */}
+      {fadeState === "out" && (
+        {
+          'ndc-scatter': <NdcScatteredTransition durationMs={currentTransitionDuration} />,
+          'barracks-reveal': <BarracksRevealTransition durationMs={currentTransitionDuration} />,
+          'salute-flash': <SaluteFlashTransition durationMs={currentTransitionDuration} />,
+          'parade-sweep': <ParadeSweepTransition durationMs={currentTransitionDuration} />,
+          'mission-brief': <MissionBriefTransition durationMs={currentTransitionDuration} />,
+          'runway-sweep': <RunwaySweepTransition durationMs={currentTransitionDuration} />,
+        }[transitionType] || null
       )}
 
       {/* Controls bar */}
@@ -1142,13 +1238,13 @@ export function AutoRotationDisplay({
         </div>
       )}
 
-      {/* Exit — own row so slide content never sits under the control */}
+      {/* Exit control row */}
       {isActive && (
-        <header className="relative z-[100] flex shrink-0 items-center justify-end gap-3 border-b border-border/60 bg-background/90 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-md sm:px-6 sm:pb-4">
+        <header className="relative z-[100] flex shrink-0 items-center justify-end gap-2 border-b border-border/60 bg-background/90 px-3 py-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md sm:px-4 sm:py-3">
           <button
             type="button"
             onClick={() => setDisplayActive(false)}
-            className="rounded-full border border-primary/25 bg-card/90 px-4 py-2 text-xs font-bold uppercase tracking-widest text-foreground shadow-md transition-colors hover:border-primary/40 hover:bg-card"
+            className="rounded-full border border-primary/25 bg-card/90 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-widest text-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-card"
           >
             Exit Display
           </button>
@@ -1157,7 +1253,7 @@ export function AutoRotationDisplay({
 
       {/* Slide content */}
       <div
-        className={`flex-1 min-h-0 flex items-center justify-center overflow-hidden px-3 sm:px-5 md:px-8 ${isContinuousMode ? "py-2 sm:py-3 md:py-3" : isActive ? "py-4 sm:py-5 md:py-6" : "pt-2 sm:pt-4 md:pt-6 pb-8 sm:pb-10 md:pb-12"}`}
+        className={`flex-1 min-h-0 flex items-center justify-center overflow-hidden px-2 sm:px-4 md:px-6 ${isContinuousMode ? "py-1 sm:py-1.5 md:py-2" : isActive ? "py-2 sm:py-3 md:py-4" : "pt-2 sm:pt-4 md:pt-6 pb-8 sm:pb-10 md:pb-12"}`}
       >
         <div
           className={`absolute top-20 md:top-24 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ${showInteractionHint ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}`}
@@ -1184,7 +1280,7 @@ export function AutoRotationDisplay({
         </button>
 
         <div
-          className={`${slide.type === "commandant" || isContinuousMode ? "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl h-full min-h-0 flex flex-col" : "max-w-5xl xl:max-w-6xl 2xl:max-w-7xl"} relative w-full max-h-full transition-all ease-out will-change-transform ${slide.type === "commandant" || isContinuousMode ? "" : "-translate-y-2 sm:-translate-y-3 md:-translate-y-4"} ${getTransitionClasses()}`}
+          className={`${slide.type === "commandant" || isContinuousMode ? "max-w-6xl xl:max-w-7xl 2xl:max-w-[1800px] h-full min-h-0 flex flex-col" : "max-w-6xl xl:max-w-7xl 2xl:max-w-[1800px]"} relative w-full max-h-full transition-all ease-out will-change-transform ${slide.type === "commandant" || isContinuousMode ? "" : "-translate-y-1 sm:-translate-y-2 md:-translate-y-3"} ${getTransitionClasses()}`}
           style={{ transitionDuration: `${currentTransitionDuration}ms` }}
         >
           {isContinuousMode && continuousItems.length > 0 ? (

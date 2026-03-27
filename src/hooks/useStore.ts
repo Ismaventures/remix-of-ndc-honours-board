@@ -132,6 +132,52 @@ const mapRowToVisit = (row: VisitRow): DistinguishedVisit => ({
   decoration: row.decoration ?? undefined,
 });
 
+const COLLECTION_CACHE_TTL_MS = 72 * 60 * 60 * 1000;
+const PERSONNEL_CACHE_KEY = 'ndc_cache_personnel_v1';
+const COMMANDANTS_CACHE_KEY = 'ndc_cache_commandants_v1';
+const VISITS_CACHE_KEY = 'ndc_cache_visits_v1';
+
+interface CollectionCache<T> {
+  cachedAt: number;
+  rows: T[];
+}
+
+function readCollectionCache<T>(key: string): T[] | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as CollectionCache<T>;
+    if (!parsed || !Array.isArray(parsed.rows) || typeof parsed.cachedAt !== 'number') {
+      localStorage.removeItem(key);
+      return null;
+    }
+
+    if (Date.now() - parsed.cachedAt > COLLECTION_CACHE_TTL_MS) {
+      localStorage.removeItem(key);
+      return null;
+    }
+
+    return parsed.rows;
+  } catch {
+    localStorage.removeItem(key);
+    return null;
+  }
+}
+
+function writeCollectionCache<T>(key: string, rows: T[]): void {
+  try {
+    const payload: CollectionCache<T> = {
+      cachedAt: Date.now(),
+      rows,
+    };
+
+    localStorage.setItem(key, JSON.stringify(payload));
+  } catch {
+    // Best-effort cache write.
+  }
+}
+
 function loadFromStorage<T>(key: string, fallback: T): T {
   try {
     const stored = localStorage.getItem(key);
@@ -143,6 +189,11 @@ export function usePersonnelStore() {
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
 
   useEffect(() => {
+    const cachedRows = readCollectionCache<PersonnelRow>(PERSONNEL_CACHE_KEY);
+    if (cachedRows) {
+      setPersonnel(cachedRows.map(mapRowToPersonnel));
+    }
+
     const loadPersonnel = async () => {
       const { data, error } = await supabase
         .from('personnel')
@@ -151,11 +202,15 @@ export function usePersonnelStore() {
 
       if (error) {
         console.error('Failed to load personnel from Supabase:', error.message);
-        setPersonnel([]);
+        if (!cachedRows) {
+          setPersonnel([]);
+        }
         return;
       }
 
-      setPersonnel((data as PersonnelRow[] | null)?.map(mapRowToPersonnel) ?? []);
+      const rows = (data as PersonnelRow[] | null) ?? [];
+      writeCollectionCache(PERSONNEL_CACHE_KEY, rows);
+      setPersonnel(rows.map(mapRowToPersonnel));
     };
 
     void loadPersonnel();
@@ -163,7 +218,11 @@ export function usePersonnelStore() {
 
   const addPersonnel = useCallback((p: Omit<Personnel, 'id'>) => {
     const newPersonnel: Personnel = { ...p, id: `p-${Date.now()}` };
-    setPersonnel(prev => [...prev, newPersonnel]);
+    setPersonnel(prev => {
+      const next = [...prev, newPersonnel];
+      writeCollectionCache(PERSONNEL_CACHE_KEY, next.map(mapPersonnelToRow));
+      return next;
+    });
 
     void supabase
       .from('personnel')
@@ -176,7 +235,11 @@ export function usePersonnelStore() {
   }, []);
 
   const updatePersonnel = useCallback((id: string, data: Partial<Personnel>) => {
-    setPersonnel(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+    setPersonnel(prev => {
+      const next = prev.map(p => (p.id === id ? { ...p, ...data } : p));
+      writeCollectionCache(PERSONNEL_CACHE_KEY, next.map(mapPersonnelToRow));
+      return next;
+    });
 
     const payload: Partial<PersonnelRow> = {};
     if (data.name !== undefined) payload.name = data.name;
@@ -202,7 +265,11 @@ export function usePersonnelStore() {
   }, []);
 
   const deletePersonnel = useCallback((id: string) => {
-    setPersonnel(prev => prev.filter(p => p.id !== id));
+    setPersonnel(prev => {
+      const next = prev.filter(p => p.id !== id);
+      writeCollectionCache(PERSONNEL_CACHE_KEY, next.map(mapPersonnelToRow));
+      return next;
+    });
 
     void supabase
       .from('personnel')
@@ -222,6 +289,11 @@ export function useCommandantsStore() {
   const [commandants, setCommandants] = useState<Commandant[]>([]);
 
   useEffect(() => {
+    const cachedRows = readCollectionCache<CommandantRow>(COMMANDANTS_CACHE_KEY);
+    if (cachedRows) {
+      setCommandants(cachedRows.map(mapRowToCommandant));
+    }
+
     const loadCommandants = async () => {
       const { data, error } = await supabase
         .from('commandants')
@@ -230,11 +302,15 @@ export function useCommandantsStore() {
 
       if (error) {
         console.error('Failed to load commandants from Supabase:', error.message);
-        setCommandants([]);
+        if (!cachedRows) {
+          setCommandants([]);
+        }
         return;
       }
 
-      setCommandants((data as CommandantRow[] | null)?.map(mapRowToCommandant) ?? []);
+      const rows = (data as CommandantRow[] | null) ?? [];
+      writeCollectionCache(COMMANDANTS_CACHE_KEY, rows);
+      setCommandants(rows.map(mapRowToCommandant));
     };
 
     void loadCommandants();
@@ -242,7 +318,11 @@ export function useCommandantsStore() {
 
   const addCommandant = useCallback((c: Omit<Commandant, 'id'>) => {
     const newCommandant: Commandant = { ...c, id: `c-${Date.now()}` };
-    setCommandants(prev => [...prev, newCommandant]);
+    setCommandants(prev => {
+      const next = [...prev, newCommandant];
+      writeCollectionCache(COMMANDANTS_CACHE_KEY, next.map(mapCommandantToRow));
+      return next;
+    });
 
     void supabase
       .from('commandants')
@@ -255,7 +335,11 @@ export function useCommandantsStore() {
   }, []);
 
   const updateCommandant = useCallback((id: string, data: Partial<Commandant>) => {
-    setCommandants(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
+    setCommandants(prev => {
+      const next = prev.map(c => (c.id === id ? { ...c, ...data } : c));
+      writeCollectionCache(COMMANDANTS_CACHE_KEY, next.map(mapCommandantToRow));
+      return next;
+    });
 
     const payload: Partial<CommandantRow> = {};
     if (data.name !== undefined) payload.name = data.name;
@@ -279,7 +363,11 @@ export function useCommandantsStore() {
   }, []);
 
   const deleteCommandant = useCallback((id: string) => {
-    setCommandants(prev => prev.filter(c => c.id !== id));
+    setCommandants(prev => {
+      const next = prev.filter(c => c.id !== id);
+      writeCollectionCache(COMMANDANTS_CACHE_KEY, next.map(mapCommandantToRow));
+      return next;
+    });
 
     void supabase
       .from('commandants')
@@ -299,6 +387,11 @@ export function useVisitsStore() {
   const [visits, setVisits] = useState<DistinguishedVisit[]>([]);
 
   useEffect(() => {
+    const cachedRows = readCollectionCache<VisitRow>(VISITS_CACHE_KEY);
+    if (cachedRows) {
+      setVisits(cachedRows.map(mapRowToVisit));
+    }
+
     const loadVisits = async () => {
       const { data, error } = await supabase
         .from('visits')
@@ -307,11 +400,15 @@ export function useVisitsStore() {
 
       if (error) {
         console.error('Failed to load visits from Supabase:', error.message);
-        setVisits([]);
+        if (!cachedRows) {
+          setVisits([]);
+        }
         return;
       }
 
-      setVisits((data as VisitRow[] | null)?.map(mapRowToVisit) ?? []);
+      const rows = (data as VisitRow[] | null) ?? [];
+      writeCollectionCache(VISITS_CACHE_KEY, rows);
+      setVisits(rows.map(mapRowToVisit));
     };
 
     void loadVisits();
@@ -319,7 +416,11 @@ export function useVisitsStore() {
 
   const addVisit = useCallback((v: Omit<DistinguishedVisit, 'id'>) => {
     const newVisit: DistinguishedVisit = { ...v, id: `v-${Date.now()}` };
-    setVisits(prev => [...prev, newVisit]);
+    setVisits(prev => {
+      const next = [...prev, newVisit];
+      writeCollectionCache(VISITS_CACHE_KEY, next.map(mapVisitToRow));
+      return next;
+    });
 
     void supabase
       .from('visits')
@@ -332,7 +433,11 @@ export function useVisitsStore() {
   }, []);
 
   const updateVisit = useCallback((id: string, data: Partial<DistinguishedVisit>) => {
-    setVisits(prev => prev.map(v => v.id === id ? { ...v, ...data } : v));
+    setVisits(prev => {
+      const next = prev.map(v => (v.id === id ? { ...v, ...data } : v));
+      writeCollectionCache(VISITS_CACHE_KEY, next.map(mapVisitToRow));
+      return next;
+    });
 
     const payload: Partial<VisitRow> = {};
     if (data.name !== undefined) payload.name = data.name;
@@ -355,7 +460,11 @@ export function useVisitsStore() {
   }, []);
 
   const deleteVisit = useCallback((id: string) => {
-    setVisits(prev => prev.filter(v => v.id !== id));
+    setVisits(prev => {
+      const next = prev.filter(v => v.id !== id);
+      writeCollectionCache(VISITS_CACHE_KEY, next.map(mapVisitToRow));
+      return next;
+    });
 
     void supabase
       .from('visits')

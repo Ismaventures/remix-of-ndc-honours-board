@@ -18,6 +18,9 @@ export function AudioManager() {
   const [currentId, setCurrentId] = useState<string | null>(null);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef(0);
+  const audioUnlockedRef = useRef(false);
+  const pendingResumeRef = useRef(false);
+  const commandTokenRef = useRef(0);
 
   const clearBlobUrl = (audio: HTMLAudioElement) => {
     const src = audio.src;
@@ -63,14 +66,37 @@ export function AudioManager() {
     }, retryDelayMs);
   };
 
+  const playIfAllowed = async (audio: HTMLAudioElement, userInitiated = false) => {
+    if (!audio.src) return false;
+
+    if (!audioUnlockedRef.current && !userInitiated) {
+      return false;
+    }
+
+    try {
+      await audio.play();
+      audioUnlockedRef.current = true;
+      pendingResumeRef.current = false;
+      return true;
+    } catch {
+      // Queue resume for next interaction; browsers can still reject when the
+      // call happens after async work even if triggered by a click handler.
+      pendingResumeRef.current = true;
+      return false;
+    }
+  };
+
   useEffect(() => {
     void loadTracks();
   }, [loadTracks]);
 
   useEffect(() => {
     const handleCommand = async (e: Event) => {
-      const customEvent = e as CustomEvent<{ targetId: string | null; preloader?: boolean }>;
-      const { targetId, preloader } = customEvent.detail;
+      commandTokenRef.current += 1;
+      const commandToken = commandTokenRef.current;
+
+      const customEvent = e as CustomEvent<{ targetId: string | null; preloader?: boolean; userInitiated?: boolean }>;
+      const { targetId, preloader, userInitiated = false } = customEvent.detail;
 
       const a1 = audio1Ref.current;
       const a2 = audio2Ref.current;
@@ -83,6 +109,10 @@ export function AudioManager() {
       }
 
       const nextUrl = targetId ? await getAudioUrl(targetId) : null;
+      if (commandToken !== commandTokenRef.current) {
+        return;
+      }
+
       if (targetId && !nextUrl) {
         // Keep existing audio running if the new track could not be resolved.
         return;
@@ -99,12 +129,23 @@ export function AudioManager() {
       // Crossfade logic
       const outAudio = activeRef.current === 1 ? a1 : a2;
       const inAudio = activeRef.current === 1 ? a2 : a1;
+      const hasOutgoingAudio = Boolean(outAudio.src) && !outAudio.paused;
+
+      if (nextUrl && !hasOutgoingAudio) {
+        setAudioSource(inAudio, nextUrl);
+        inAudio.volume = nextVolume;
+        retryCountRef.current = 0;
+        void playIfAllowed(inAudio, userInitiated);
+        activeRef.current = activeRef.current === 1 ? 2 : 1;
+        setAudioSource(outAudio, null);
+        return;
+      }
       
       if (nextUrl) {
         setAudioSource(inAudio, nextUrl);
         inAudio.volume = 0;
         retryCountRef.current = 0;
-        inAudio.play().catch(() => console.log("Playback prevented by browser"));
+        void playIfAllowed(inAudio, userInitiated);
       }
 
       activeRef.current = activeRef.current === 1 ? 2 : 1;
@@ -136,6 +177,27 @@ export function AudioManager() {
     customAudioThemeEvent.addEventListener('playTrack', handleCommand);
     return () => customAudioThemeEvent.removeEventListener('playTrack', handleCommand);
   }, [currentId, isMuted, masterVolume]);
+
+  useEffect(() => {
+    const unlockAudio = () => {
+      audioUnlockedRef.current = true;
+      const activeAudio =
+        activeRef.current === 1 ? audio1Ref.current : audio2Ref.current;
+      if ((pendingResumeRef.current || activeAudio?.paused) && activeAudio?.src) {
+        void playIfAllowed(activeAudio, true);
+      }
+    };
+
+    window.addEventListener('pointerdown', unlockAudio, { passive: true });
+    window.addEventListener('keydown', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, []);
 
   // Handle master volume changes
   useEffect(() => {
@@ -238,6 +300,6 @@ export function AudioManager() {
   );
 }
 
-export const playAudioTrack = (targetId: string | null, preloader = false) => {
-    customAudioThemeEvent.dispatchEvent(new CustomEvent('playTrack', { detail: { targetId, preloader } }));
+export const playAudioTrack = (targetId: string | null, preloader = false, userInitiated = false) => {
+  customAudioThemeEvent.dispatchEvent(new CustomEvent('playTrack', { detail: { targetId, preloader, userInitiated } }));
 };

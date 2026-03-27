@@ -145,20 +145,20 @@ function ArchiveProfileImage({ person }: { person: Personnel }) {
 
   if (!resolvedImageUrl) {
     return (
-      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg border-2 border-primary/20 bg-muted/40 shadow-inner flex items-center justify-center shrink-0 relative overflow-hidden group-hover:border-primary/50 transition-colors">
-        <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent" />
-        <User className="h-8 w-8 text-primary/40 group-hover:text-primary/70 transition-colors relative z-10" />
+      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg border-2 border-[#FFD700]/70 bg-[#002060]/10 shadow-inner flex items-center justify-center shrink-0 relative overflow-hidden group-hover:border-[#FFD700] transition-colors">
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#002060]/15 to-transparent" />
+        <User className="h-8 w-8 text-[#002060]/45 group-hover:text-[#002060]/75 transition-colors relative z-10" />
       </div>
     );
   }
 
   return (
     <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0">
-      <div className="absolute inset-0 bg-primary/20 rounded-lg blur-[2px] scale-105 group-hover:bg-primary/40 transition-colors" />
+      <div className="absolute inset-0 bg-[#002060]/20 rounded-lg blur-[2px] scale-105 group-hover:bg-[#002060]/35 transition-colors" />
       <img
         src={resolvedImageUrl}
         alt={person.name}
-        className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg border-2 border-primary/30 object-cover shadow-[0_4px_12px_rgba(0,0,0,0.3)] group-hover:border-primary/70 transition-colors z-10"
+        className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg border-2 border-[#FFD700]/70 object-cover shadow-[0_4px_12px_rgba(0,0,0,0.3)] group-hover:border-[#FFD700] transition-colors z-10"
       />
     </div>
   );
@@ -186,11 +186,34 @@ export function OrganogramView({
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8; // Adjust based on preferences
+  const [itemsPerPage, setItemsPerPage] = useState(12);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const updateItemsPerPage = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setItemsPerPage(6);
+        return;
+      }
+      if (width < 1024) {
+        setItemsPerPage(8);
+        return;
+      }
+      if (width < 1440) {
+        setItemsPerPage(12);
+        return;
+      }
+      setItemsPerPage(16);
+    };
+
+    updateItemsPerPage();
+    window.addEventListener("resize", updateItemsPerPage);
+    return () => window.removeEventListener("resize", updateItemsPerPage);
   }, []);
 
   useEffect(() => {
@@ -293,6 +316,16 @@ export function OrganogramView({
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
+  useEffect(() => {
+    if (totalPages === 0 && currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   const paginatedRecords = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filtered.slice(start, start + itemsPerPage);
@@ -316,18 +349,18 @@ export function OrganogramView({
             <ArrowLeft className="h-4 w-4 text-primary" />
           </button>
           <div>
-            <h2 className="text-2xl font-bold font-serif gold-text">{title}</h2>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1 min-h-[16px]">
+            <h2 className="text-2xl font-bold font-serif text-[#002060]">{title}</h2>
+            <p className="text-xs text-[#002060]/80 uppercase tracking-widest mt-1 min-h-[16px] font-semibold">
               Professional Archive List
             </p>
           </div>
         </div>
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">
+        <div className="text-xs uppercase tracking-widest text-[#002060]/80 font-semibold">
           {filtered.length} Records
         </div>
       </div>
 
-      <div className="mb-6 p-4 md:p-5 rounded-xl border border-primary/20 bg-card/60 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] space-y-4">
+      <div className="mb-6 p-4 md:p-5 rounded-xl border border-[#002060]/25 bg-[linear-gradient(140deg,rgba(0,32,96,0.06)_0%,rgba(255,255,255,0.92)_42%,rgba(0,176,240,0.08)_100%)] shadow-[inset_0_0_20px_rgba(0,32,96,0.12)] space-y-4">
         <div className="flex items-center justify-between gap-3">
           <p className="text-[11px] uppercase tracking-[0.22em] text-primary/90 font-semibold">
             Search and Filters
@@ -566,32 +599,47 @@ export function OrganogramView({
         </div>
       </div>
 
-      <div className="bg-card gold-border rounded-xl p-3 md:p-6 min-h-[520px] relative overflow-hidden flex flex-col shadow-[inset_0_1px_0_hsl(var(--gold-bright)/0.15),inset_0_0_40px_rgba(0,0,0,0.12),0_16px_45px_rgba(0,0,0,0.22)]">
-        <div className="absolute inset-0 pointer-events-none opacity-[0.1] bg-[linear-gradient(45deg,hsl(var(--foreground)/0.06)_25%,transparent_25%,transparent_75%,hsl(var(--foreground)/0.06)_75%),linear-gradient(45deg,hsl(var(--foreground)/0.06)_25%,transparent_25%,transparent_75%,hsl(var(--foreground)/0.06)_75%)] bg-[length:52px_52px] bg-[position:0_0,26px_26px]" />
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(140%_100%_at_50%_0%,hsl(var(--primary)/0.12),transparent_60%)]" />
+      <div className="rounded-xl p-3 md:p-6 min-h-[520px] relative overflow-hidden flex flex-col border border-[#002060]/30 bg-[linear-gradient(165deg,#f9fbff_0%,#eef3fb_55%,#e6f8ff_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7),inset_0_0_28px_rgba(0,32,96,0.08),0_16px_45px_rgba(0,0,0,0.16)]">
+        <div className="absolute top-0 inset-x-0 h-[7px] flex">
+          <div className="flex-1 bg-[#002060]" />
+          <div className="flex-1 bg-[#FF0000]" />
+          <div className="flex-1 bg-[#00B0F0]" />
+        </div>
+        <div className="absolute bottom-0 inset-x-0 h-[6px] flex">
+          <div className="flex-1 bg-[#002060]" />
+          <div className="flex-1 bg-[#FF0000]" />
+          <div className="flex-1 bg-[#00B0F0]" />
+        </div>
+        <div className="absolute inset-0 pointer-events-none opacity-[0.1] bg-[linear-gradient(45deg,rgba(0,32,96,0.06)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.06)_75%),linear-gradient(45deg,rgba(0,32,96,0.06)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.06)_75%)] bg-[length:52px_52px] bg-[position:0_0,26px_26px]" />
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(140%_100%_at_50%_0%,rgba(0,32,96,0.1),transparent_60%)]" />
         {filtered.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-5 flex-1 auto-rows-fr">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4 md:gap-5 flex-1 auto-rows-fr">
               {paginatedRecords.map((person, index) => (
                 <button
                   key={person.id}
                   onClick={() => setSelectedId(person.id)}
-                  className="group relative w-full h-full text-left rounded-xl border border-primary/22 bg-[linear-gradient(160deg,hsl(var(--card)/0.96),hsl(var(--card)/0.86))] p-4 sm:p-5 transition-all duration-300 hover:border-primary/55 hover:shadow-[0_12px_38px_hsl(var(--primary)/0.24)] overflow-hidden flex flex-col"
+                  className="group relative w-full h-full text-left rounded-xl border border-[#002060]/20 bg-white p-3.5 sm:p-4 transition-all duration-300 hover:border-[#00B0F0] hover:shadow-[0_12px_38px_rgba(0,32,96,0.22)] overflow-hidden flex flex-col"
                 >
+                  <div className="absolute top-0 inset-x-0 h-[6px] flex z-20">
+                    <div className="flex-1 bg-[#002060]" />
+                    <div className="flex-1 bg-[#FF0000]" />
+                    <div className="flex-1 bg-[#00B0F0]" />
+                  </div>
                   {/* Polished panel layers */}
-                  <div className="absolute inset-0 pointer-events-none opacity-[0.12] bg-[linear-gradient(45deg,hsl(var(--foreground)/0.08)_25%,transparent_25%,transparent_75%,hsl(var(--foreground)/0.08)_75%),linear-gradient(45deg,hsl(var(--foreground)/0.08)_25%,transparent_25%,transparent_75%,hsl(var(--foreground)/0.08)_75%)] bg-[length:34px_34px] bg-[position:0_0,17px_17px]" />
-                  <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120%_100%_at_0%_0%,hsl(var(--primary)/0.16),transparent_55%)]" />
+                  <div className="absolute inset-0 pointer-events-none opacity-[0.08] bg-[linear-gradient(45deg,rgba(0,32,96,0.08)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.08)_75%),linear-gradient(45deg,rgba(0,32,96,0.08)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.08)_75%)] bg-[length:34px_34px] bg-[position:0_0,17px_17px]" />
+                  <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120%_100%_at_0%_0%,rgba(0,176,240,0.14),transparent_55%)]" />
                   <div className="absolute inset-x-0 top-0 h-16 pointer-events-none bg-gradient-to-b from-white/[0.07] to-transparent" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/[0.05] to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00B0F0]/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
 
                   {/* Left accent strip */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary/40 to-primary/10 opacity-60 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-[#002060]/70 via-[#FF0000]/70 to-[#00B0F0]/70 opacity-80 group-hover:opacity-100 transition-opacity" />
 
                   <div className="relative z-10 flex items-center justify-between mb-3">
-                    <span className="text-sm font-bold opacity-65 text-muted-foreground group-hover:text-primary transition-colors">
+                    <span className="text-sm font-bold opacity-75 text-[#002060]/75 group-hover:text-[#002060] transition-colors">
                       #{(currentPage - 1) * itemsPerPage + index + 1}
                     </span>
-                    <span className="px-3 py-1.5 rounded-md border border-primary/35 bg-primary/12 text-primary font-bold shadow-[0_0_16px_hsl(var(--primary)/0.22)] whitespace-nowrap text-xs">
+                    <span className="px-3 py-1.5 rounded-md border border-[#002060]/35 bg-[#002060]/8 text-[#002060] font-bold shadow-[0_0_16px_rgba(0,32,96,0.18)] whitespace-nowrap text-xs">
                       {person.periodStart} - {person.periodEnd}
                     </span>
                   </div>
@@ -602,21 +650,21 @@ export function OrganogramView({
                     </div>
 
                     <div className="flex flex-col gap-2 min-w-0">
-                      <h4 className="text-lg sm:text-xl font-bold font-serif text-foreground leading-tight group-hover:text-primary transition-colors drop-shadow-sm flex items-center flex-wrap">
-                        <span className="text-primary/90 text-sm sm:text-base mr-2 uppercase tracking-widest font-sans">
+                      <h4 className="text-base sm:text-lg font-bold font-serif text-[#0f172a] leading-tight group-hover:text-[#002060] transition-colors drop-shadow-sm flex items-center flex-wrap">
+                        <span className="text-[#002060] text-[11px] sm:text-xs mr-2 uppercase tracking-widest font-sans">
                           {person.rank}
                         </span>
                         {person.name}
                       </h4>
-                      <p className="text-sm text-muted-foreground/90 leading-relaxed line-clamp-3 max-w-2xl">
+                      <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2 max-w-2xl">
                         {person.citation}
                       </p>
 
                       <div className="flex flex-wrap gap-2 pt-1">
-                        <span className="px-2.5 py-1 rounded border border-primary/20 bg-muted/40 text-muted-foreground font-medium uppercase tracking-wider text-[10px]">
+                        <span className="px-2.5 py-1 rounded border border-[#002060]/20 bg-[#002060]/5 text-[#002060]/80 font-semibold uppercase tracking-wider text-[10px]">
                           {person.service}
                         </span>
-                        <span className="px-2.5 py-1 rounded border border-primary/20 bg-muted/40 text-muted-foreground font-medium uppercase tracking-wider text-[10px]">
+                        <span className="px-2.5 py-1 rounded border border-[#00B0F0]/30 bg-[#00B0F0]/8 text-[#005f7e] font-semibold uppercase tracking-wider text-[10px]">
                           {person.category}
                         </span>
                       </div>
