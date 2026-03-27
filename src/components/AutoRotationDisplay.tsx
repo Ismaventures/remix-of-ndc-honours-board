@@ -135,7 +135,7 @@ function ContinuousSlideCard({
     <button
       type="button"
       onClick={() => onSelect(item as any)}
-      className={`auto-scroll-card group relative ${isCommandant ? "w-[min(92vw,520px)] sm:w-[min(78vw,520px)] md:w-[min(64vw,520px)] lg:w-[520px] h-[clamp(420px,64dvh,720px)] sm:h-[clamp(440px,68dvh,760px)]" : "w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] h-[clamp(360px,58dvh,640px)] sm:h-[clamp(390px,62dvh,680px)]"} self-stretch shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
+      className={`auto-scroll-card group relative ${isCommandant ? "commandant-auto-card w-[min(92vw,520px)] sm:w-[min(78vw,520px)] md:w-[min(64vw,520px)] lg:w-[520px] h-[clamp(420px,64dvh,720px)] sm:h-[clamp(440px,68dvh,760px)]" : "w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] h-[clamp(360px,58dvh,640px)] sm:h-[clamp(390px,62dvh,680px)]"} self-stretch shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
           ? "bg-white border border-[#002060]/20 shadow-[0_12px_36px_rgba(0,32,96,0.14)]"
           : "bg-slate-950/90 border border-[#FFD700]/25 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
@@ -168,16 +168,24 @@ function ContinuousSlideCard({
           <div className="p-[2px] bg-white">
             <div className="p-[1px] bg-[#FFD700]">
               <div
-                className={`auto-scroll-image-frame relative ${isCommandant ? "commandant-portrait-frame" : isVisit ? "" : "staff-portrait-frame"} ${isVisit ? "h-full max-h-[clamp(240px,44dvh,500px)] aspect-[4/5]" : isCommandant ? "w-[220px] h-[260px] sm:w-[250px] sm:h-[300px] md:w-[280px] md:h-[340px] lg:w-[320px] lg:h-[390px]" : "w-[180px] h-[230px] sm:w-[205px] sm:h-[260px] md:w-[230px] md:h-[295px] lg:w-[255px] lg:h-[330px]"} overflow-hidden ${
+                className={`auto-scroll-image-frame relative ${isCommandant ? "commandant-portrait-frame commandant-portrait-reel" : isVisit ? "" : "staff-portrait-frame"} ${isVisit ? "h-full max-h-[clamp(240px,44dvh,500px)] aspect-[4/5]" : isCommandant ? "w-[220px] h-[260px] sm:w-[250px] sm:h-[300px] md:w-[280px] md:h-[340px] lg:w-[320px] lg:h-[390px]" : "w-[180px] h-[230px] sm:w-[205px] sm:h-[260px] md:w-[230px] md:h-[295px] lg:w-[255px] lg:h-[330px]"} overflow-hidden ${
                   isLightMode ? "bg-slate-100" : "bg-slate-900"
                 }`}
               >
+                {isCommandant && (
+                  <>
+                    <div className="pointer-events-none absolute inset-0 z-[1] commandant-portrait-vignette" />
+                    <div className="pointer-events-none absolute inset-0 z-[2] commandant-portrait-glass" />
+                  </>
+                )}
                 {imageUrl ? (
                   <img
                     src={imageUrl}
                     alt={`${safeTitle} ${safeName}`}
                     className={`h-full w-full ${isVisit ? "object-cover" : isCommandant ? "object-contain object-center scale-[0.72]" : "object-contain object-center scale-[0.78]"} transition-transform duration-500 group-hover:scale-[1.015]`}
                     loading="eager"
+                    decoding="async"
+                    draggable={false}
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-primary/45">
@@ -1464,6 +1472,14 @@ export function AutoRotationDisplay({
                 </span>
               </button>
             </div>
+
+            <button
+              onClick={() => setSelectedCommandant(null)}
+              aria-label="Close commandant profile"
+              className="fixed right-3 top-20 z-[90] sm:right-6 sm:top-24 rounded-full border border-white/25 bg-[#020817]/85 px-3 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.16em] text-white/85 backdrop-blur hover:bg-white/10 hover:text-white transition-colors"
+            >
+              Close
+            </button>
 
             {/* Main Content */}
             <div className="w-full max-w-[1400px] px-3 sm:px-6 py-6 sm:py-12">

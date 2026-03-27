@@ -84,6 +84,7 @@ const Index = () => {
   const [selectedPastCommandant, setSelectedPastCommandant] =
     useState<Commandant | null>(null);
   const globalCommandRef = useRef<number | null>(null);
+  const previousViewBeforeCommandantProfileRef = useRef<ViewKey | null>(null);
 
   const [view, setView] = useState<ViewKey>("home");
 
@@ -129,6 +130,26 @@ const Index = () => {
   }, [adminEmail]);
 
   const showLockScreen = deviceClosed || (siteClosed && !isSuperAdmin);
+
+  const openPastCommandantProfile = (commandant: Commandant) => {
+    previousViewBeforeCommandantProfileRef.current = view;
+    setSelectedPastCommandant(commandant);
+  };
+
+  const closePastCommandantProfile = () => {
+    setSelectedPastCommandant(null);
+    setForcedProfileSelection((prev) => ({
+      id: null,
+      nonce: prev.nonce + 1,
+    }));
+
+    const previousView = previousViewBeforeCommandantProfileRef.current;
+    previousViewBeforeCommandantProfileRef.current = null;
+
+    if (previousView) {
+      setView(previousView);
+    }
+  };
 
   useEffect(() => {
     const mediaRefs = [
@@ -268,7 +289,7 @@ const Index = () => {
             enabled: false,
             nonce: prev.nonce + 1,
           }));
-          setSelectedPastCommandant(commandant);
+          openPastCommandantProfile(commandant);
         }
         return;
       }
@@ -297,11 +318,7 @@ const Index = () => {
     }
 
     if (commandType === "close-profile") {
-      setSelectedPastCommandant(null);
-      setForcedProfileSelection((prev) => ({
-        id: null,
-        nonce: prev.nonce + 1,
-      }));
+      closePastCommandantProfile();
       return;
     }
 
@@ -401,7 +418,7 @@ const Index = () => {
           <PastCommandants
             commandants={commandants}
             onSelectCommandant={(commandant) =>
-              setSelectedPastCommandant(commandant)
+              openPastCommandantProfile(commandant)
             }
           />
           <CategoryCards onSelect={setView} />
@@ -640,7 +657,7 @@ const Index = () => {
           <div className="max-w-5xl mx-auto">
             <div className="flex justify-end mb-4">
               <button
-                onClick={() => setSelectedPastCommandant(null)}
+                onClick={closePastCommandantProfile}
                 className="px-3 py-1.5 rounded text-xs bg-muted text-muted-foreground hover:text-foreground transition-colors"
               >
                 Close

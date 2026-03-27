@@ -15,15 +15,20 @@ export function CommandantHero({
   compactDescription = true,
   isAutoDisplay = false,
 }: CommandantHeroProps & { isAutoDisplay?: boolean }) {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(isAutoDisplay);
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith("outdoor");
   const isCompact = compactDescription;
 
   useEffect(() => {
+    if (isAutoDisplay) {
+      setVisible(true);
+      return;
+    }
+
     const timer = setTimeout(() => setVisible(true), 100);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isAutoDisplay]);
 
   const name = commandant?.name ?? "No commandant record available";
   const titleText =

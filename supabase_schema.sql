@@ -140,19 +140,19 @@ FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS ui_settings_own_read ON ui_settings;
 CREATE POLICY ui_settings_own_read ON ui_settings
-FOR SELECT USING (auth.uid() = user_id);
+FOR SELECT USING ((select auth.uid()) = user_id);
 
 DROP POLICY IF EXISTS device_clients_own_read ON device_clients;
 CREATE POLICY device_clients_own_read ON device_clients
-FOR SELECT USING (auth.uid() = user_id);
+FOR SELECT USING ((select auth.uid()) = user_id);
 
 DROP POLICY IF EXISTS device_control_commands_own_read ON device_control_commands;
 CREATE POLICY device_control_commands_own_read ON device_control_commands
-FOR SELECT USING (auth.uid() = user_id);
+FOR SELECT USING ((select auth.uid()) = user_id);
 
 DROP POLICY IF EXISTS super_admins_own_read ON super_admins;
 CREATE POLICY super_admins_own_read ON super_admins
-FOR SELECT USING (auth.uid() = user_id);
+FOR SELECT USING ((select auth.uid()) = user_id);
 
 DROP POLICY IF EXISTS global_site_control_public_read ON global_site_control;
 CREATE POLICY global_site_control_public_read ON global_site_control
@@ -160,52 +160,124 @@ FOR SELECT USING (true);
 
 -- Authenticated write policies
 DROP POLICY IF EXISTS commandants_auth_write ON commandants;
-CREATE POLICY commandants_auth_write ON commandants
-FOR ALL
-USING (auth.role() = 'authenticated')
-WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS commandants_auth_insert ON commandants;
+DROP POLICY IF EXISTS commandants_auth_update ON commandants;
+DROP POLICY IF EXISTS commandants_auth_delete ON commandants;
+CREATE POLICY commandants_auth_insert ON commandants
+FOR INSERT
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY commandants_auth_update ON commandants
+FOR UPDATE
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY commandants_auth_delete ON commandants
+FOR DELETE
+USING ((select auth.role()) = 'authenticated');
 
 DROP POLICY IF EXISTS personnel_auth_write ON personnel;
-CREATE POLICY personnel_auth_write ON personnel
-FOR ALL
-USING (auth.role() = 'authenticated')
-WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS personnel_auth_insert ON personnel;
+DROP POLICY IF EXISTS personnel_auth_update ON personnel;
+DROP POLICY IF EXISTS personnel_auth_delete ON personnel;
+CREATE POLICY personnel_auth_insert ON personnel
+FOR INSERT
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY personnel_auth_update ON personnel
+FOR UPDATE
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY personnel_auth_delete ON personnel
+FOR DELETE
+USING ((select auth.role()) = 'authenticated');
 
 DROP POLICY IF EXISTS visits_auth_write ON visits;
-CREATE POLICY visits_auth_write ON visits
-FOR ALL
-USING (auth.role() = 'authenticated')
-WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS visits_auth_insert ON visits;
+DROP POLICY IF EXISTS visits_auth_update ON visits;
+DROP POLICY IF EXISTS visits_auth_delete ON visits;
+CREATE POLICY visits_auth_insert ON visits
+FOR INSERT
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY visits_auth_update ON visits
+FOR UPDATE
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY visits_auth_delete ON visits
+FOR DELETE
+USING ((select auth.role()) = 'authenticated');
 
 DROP POLICY IF EXISTS audio_tracks_auth_write ON audio_tracks;
-CREATE POLICY audio_tracks_auth_write ON audio_tracks
-FOR ALL
-USING (auth.role() = 'authenticated')
-WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS audio_tracks_auth_insert ON audio_tracks;
+DROP POLICY IF EXISTS audio_tracks_auth_update ON audio_tracks;
+DROP POLICY IF EXISTS audio_tracks_auth_delete ON audio_tracks;
+CREATE POLICY audio_tracks_auth_insert ON audio_tracks
+FOR INSERT
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY audio_tracks_auth_update ON audio_tracks
+FOR UPDATE
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY audio_tracks_auth_delete ON audio_tracks
+FOR DELETE
+USING ((select auth.role()) = 'authenticated');
 
 DROP POLICY IF EXISTS audio_assignments_auth_write ON audio_assignments;
-CREATE POLICY audio_assignments_auth_write ON audio_assignments
-FOR ALL
-USING (auth.role() = 'authenticated')
-WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS audio_assignments_auth_insert ON audio_assignments;
+DROP POLICY IF EXISTS audio_assignments_auth_update ON audio_assignments;
+DROP POLICY IF EXISTS audio_assignments_auth_delete ON audio_assignments;
+CREATE POLICY audio_assignments_auth_insert ON audio_assignments
+FOR INSERT
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY audio_assignments_auth_update ON audio_assignments
+FOR UPDATE
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY audio_assignments_auth_delete ON audio_assignments
+FOR DELETE
+USING ((select auth.role()) = 'authenticated');
 
 DROP POLICY IF EXISTS ui_settings_own_write ON ui_settings;
-CREATE POLICY ui_settings_own_write ON ui_settings
-FOR ALL
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS ui_settings_own_insert ON ui_settings;
+DROP POLICY IF EXISTS ui_settings_own_update ON ui_settings;
+DROP POLICY IF EXISTS ui_settings_own_delete ON ui_settings;
+CREATE POLICY ui_settings_own_insert ON ui_settings
+FOR INSERT
+WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY ui_settings_own_update ON ui_settings
+FOR UPDATE
+USING ((select auth.uid()) = user_id)
+WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY ui_settings_own_delete ON ui_settings
+FOR DELETE
+USING ((select auth.uid()) = user_id);
 
 DROP POLICY IF EXISTS device_clients_own_write ON device_clients;
-CREATE POLICY device_clients_own_write ON device_clients
-FOR ALL
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS device_clients_own_insert ON device_clients;
+DROP POLICY IF EXISTS device_clients_own_update ON device_clients;
+DROP POLICY IF EXISTS device_clients_own_delete ON device_clients;
+CREATE POLICY device_clients_own_insert ON device_clients
+FOR INSERT
+WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY device_clients_own_update ON device_clients
+FOR UPDATE
+USING ((select auth.uid()) = user_id)
+WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY device_clients_own_delete ON device_clients
+FOR DELETE
+USING ((select auth.uid()) = user_id);
 
 DROP POLICY IF EXISTS device_control_commands_own_write ON device_control_commands;
-CREATE POLICY device_control_commands_own_write ON device_control_commands
-FOR ALL
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS device_control_commands_own_insert ON device_control_commands;
+DROP POLICY IF EXISTS device_control_commands_own_update ON device_control_commands;
+DROP POLICY IF EXISTS device_control_commands_own_delete ON device_control_commands;
+CREATE POLICY device_control_commands_own_insert ON device_control_commands
+FOR INSERT
+WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY device_control_commands_own_update ON device_control_commands
+FOR UPDATE
+USING ((select auth.uid()) = user_id)
+WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY device_control_commands_own_delete ON device_control_commands
+FOR DELETE
+USING ((select auth.uid()) = user_id);
 
 DROP POLICY IF EXISTS global_site_control_super_admin_insert ON global_site_control;
 CREATE POLICY global_site_control_super_admin_insert ON global_site_control
@@ -214,9 +286,9 @@ WITH CHECK (
   EXISTS (
     SELECT 1
     FROM super_admins
-    WHERE super_admins.user_id = auth.uid()
+    WHERE super_admins.user_id = (select auth.uid())
   )
-  AND issued_by = auth.uid()
+  AND issued_by = (select auth.uid())
 );
 
 -- Storage bucket: ndc-audio
@@ -231,7 +303,16 @@ FOR SELECT
 USING (bucket_id = 'ndc-audio');
 
 DROP POLICY IF EXISTS ndc_audio_auth_write ON storage.objects;
-CREATE POLICY ndc_audio_auth_write ON storage.objects
-FOR ALL
-USING (bucket_id = 'ndc-audio' AND auth.role() = 'authenticated')
-WITH CHECK (bucket_id = 'ndc-audio' AND auth.role() = 'authenticated');
+DROP POLICY IF EXISTS ndc_audio_auth_insert ON storage.objects;
+DROP POLICY IF EXISTS ndc_audio_auth_update ON storage.objects;
+DROP POLICY IF EXISTS ndc_audio_auth_delete ON storage.objects;
+CREATE POLICY ndc_audio_auth_insert ON storage.objects
+FOR INSERT
+WITH CHECK (bucket_id = 'ndc-audio' AND (select auth.role()) = 'authenticated');
+CREATE POLICY ndc_audio_auth_update ON storage.objects
+FOR UPDATE
+USING (bucket_id = 'ndc-audio' AND (select auth.role()) = 'authenticated')
+WITH CHECK (bucket_id = 'ndc-audio' AND (select auth.role()) = 'authenticated');
+CREATE POLICY ndc_audio_auth_delete ON storage.objects
+FOR DELETE
+USING (bucket_id = 'ndc-audio' AND (select auth.role()) = 'authenticated');
