@@ -134,6 +134,8 @@ const mapRowToVisit = (row: VisitRow): DistinguishedVisit => ({
 
 const COLLECTION_CACHE_TTL_MS = 73 * 60 * 60 * 1000;
 const COLLECTION_BACKGROUND_REFRESH_MS = 90 * 1000;
+const COMMANDANTS_BACKGROUND_REFRESH_MS = 8 * 60 * 1000;
+const COMMANDANTS_FETCH_PAGE_SIZE = 2;
 const PERSONNEL_CACHE_KEY = 'ndc_cache_personnel_v1';
 const COMMANDANTS_CACHE_KEY = 'ndc_cache_commandants_v1';
 const VISITS_CACHE_KEY = 'ndc_cache_visits_v1';
@@ -214,6 +216,36 @@ function loadFromStorage<T>(key: string, fallback: T): T {
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function formatSupabaseError(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (error && typeof error === 'object') {
+    const maybe = error as {
+      message?: unknown;
+      code?: unknown;
+      details?: unknown;
+      hint?: unknown;
+    };
+
+    const parts = [
+      typeof maybe.message === 'string' ? maybe.message : null,
+      typeof maybe.code === 'string' ? `code=${maybe.code}` : null,
+      typeof maybe.details === 'string' && maybe.details.length > 0
+        ? `details=${maybe.details}`
+        : null,
+      typeof maybe.hint === 'string' && maybe.hint.length > 0 ? `hint=${maybe.hint}` : null,
+    ].filter(Boolean);
+
+    if (parts.length > 0) {
+      return parts.join(' | ');
+    }
+  }
+
+  return 'Unknown Supabase error';
 }
 
 function applyRemoteRowsOrFallback<T>(
@@ -365,22 +397,31 @@ export function useCommandantsStore() {
     let inFlight = false;
 
     const fetchCommandants = async (): Promise<CommandantRow[]> => {
-      const ordered = await supabase
-        .from('commandants')
-        .select('*')
-        .order('tenure_start', { ascending: false });
+      // Full payload rows can be very large (for example base64 images), so we
+      // page reads to avoid Postgres statement timeouts on a single heavy query.
+      const rows: CommandantRow[] = [];
 
-      if (!ordered.error) {
-        return (ordered.data as CommandantRow[] | null) ?? [];
+      for (let from = 0; from < 400; from += COMMANDANTS_FETCH_PAGE_SIZE) {
+        const to = from + COMMANDANTS_FETCH_PAGE_SIZE - 1;
+        const page = await supabase
+          .from('commandants')
+          .select('*')
+          .order('tenure_start', { ascending: false })
+          .range(from, to);
+
+        if (page.error) {
+          throw page.error;
+        }
+
+        const pageRows = (page.data as CommandantRow[] | null) ?? [];
+        rows.push(...pageRows);
+
+        if (pageRows.length < COMMANDANTS_FETCH_PAGE_SIZE) {
+          break;
+        }
       }
 
-      // Fallback query keeps data visible even if ordering fails on a deployment.
-      const fallback = await supabase.from('commandants').select('*');
-      if (fallback.error) {
-        throw fallback.error;
-      }
-
-      return (fallback.data as CommandantRow[] | null) ?? [];
+      return rows;
     };
 
     const loadCommandants = async () => {
@@ -407,9 +448,7 @@ export function useCommandantsStore() {
           inFlight = false;
           return;
         } catch (error) {
-          const message =
-            error instanceof Error ? error.message : 'Unknown commandants fetch error';
-          console.error('Failed to load commandants from Supabase:', message);
+          console.error('Failed to load commandants from Supabase:', formatSupabaseError(error));
         }
       }
 
@@ -424,7 +463,7 @@ export function useCommandantsStore() {
 
     const interval = setInterval(() => {
       void loadCommandants();
-    }, COLLECTION_BACKGROUND_REFRESH_MS);
+    }, COMMANDANTS_BACKGROUND_REFRESH_MS);
 
     return () => {
       disposed = true;
