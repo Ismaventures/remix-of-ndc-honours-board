@@ -41,8 +41,8 @@ type CommandantRow = {
   title: string;
   tenure_start: number;
   tenure_end: number | null;
-  image_url: string | null;
-  description: string;
+  image_url?: string | null;
+  description?: string;
   decoration?: string | null;
   is_current: boolean;
 };
@@ -105,7 +105,7 @@ const mapRowToCommandant = (row: CommandantRow): Commandant => ({
   tenureStart: row.tenure_start,
   tenureEnd: row.tenure_end,
   imageUrl: row.image_url ?? undefined,
-  description: row.description,
+  description: row.description ?? '',
   decoration: row.decoration ?? undefined,
   isCurrent: row.is_current,
 });
@@ -397,15 +397,15 @@ export function useCommandantsStore() {
     let inFlight = false;
 
     const fetchCommandants = async (): Promise<CommandantRow[]> => {
-      // Full payload rows can be very large (for example base64 images), so we
-      // page reads to avoid Postgres statement timeouts on a single heavy query.
+      // Fetch lightweight fields first so commandant records remain available
+      // even if heavy columns (large image payloads) trigger DB timeouts.
       const rows: CommandantRow[] = [];
 
       for (let from = 0; from < 400; from += COMMANDANTS_FETCH_PAGE_SIZE) {
         const to = from + COMMANDANTS_FETCH_PAGE_SIZE - 1;
         const page = await supabase
           .from('commandants')
-          .select('*')
+          .select('id,name,title,tenure_start,tenure_end,is_current,decoration,image_url,description')
           .order('tenure_start', { ascending: false })
           .range(from, to);
 
@@ -424,6 +424,23 @@ export function useCommandantsStore() {
       return rows;
     };
 
+    const fetchCommandantsFallback = async (): Promise<CommandantRow[]> => {
+      const { data, error } = await supabase
+        .from('commandants')
+        .select('id,name,title,tenure_start,tenure_end,is_current,decoration')
+        .order('tenure_start', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return ((data as CommandantRow[] | null) ?? []).map((row) => ({
+        ...row,
+        image_url: null,
+        description: '',
+      }));
+    };
+
     const loadCommandants = async () => {
       if (inFlight || disposed) return;
       inFlight = true;
@@ -436,7 +453,17 @@ export function useCommandantsStore() {
         }
 
         try {
-          const rows = await fetchCommandants();
+          let rows: CommandantRow[] = [];
+          try {
+            rows = await fetchCommandants();
+          } catch (primaryError) {
+            console.error(
+              'Primary commandants fetch failed, falling back to lightweight fetch:',
+              formatSupabaseError(primaryError),
+            );
+            rows = await fetchCommandantsFallback();
+          }
+
           if (!disposed) {
             setCommandants((prev) => {
               const mergedRows = applyRemoteRowsOrFallback(rows, prev.map(mapCommandantToRow));
