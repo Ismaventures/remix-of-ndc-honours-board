@@ -79,32 +79,32 @@ function ContinuousSlideCard({
   onSelect,
   isLightMode,
 }: {
-  item: Personnel | DistinguishedVisit;
-  type: "personnel" | "visit";
-  onSelect: (item: Personnel | DistinguishedVisit) => void;
+  item: Personnel | DistinguishedVisit | Commandant;
+  type: "personnel" | "visit" | "commandant";
+  onSelect: (item: Personnel | DistinguishedVisit | Commandant) => void;
   isLightMode: boolean;
 }) {
   const rawUrl = item.imageUrl;
   const imageUrl = useResolvedMediaUrl(rawUrl);
 
   const isVisit = type === "visit";
+  const isCommandant = type === "commandant";
+  
   const title = (
-    isVisit
-      ? (item as DistinguishedVisit).title
-      : (item as Personnel).rank
+    isCommandant
+      ? (item as Commandant).title
+      : isVisit
+        ? (item as DistinguishedVisit).title
+        : (item as Personnel).rank
   )?.trim();
-  const name = (
-    isVisit
-      ? (item as DistinguishedVisit).name
-      : (item as Personnel).name
-  )?.trim();
-  const subtitle = isVisit
-    ? (item as DistinguishedVisit).country
-    : (item as Personnel).service;
-  const decoration = isVisit
-    ? (item as DistinguishedVisit).decoration
-    : (item as Personnel).decoration;
-  const safeTitle = title || (isVisit ? "Honoured Guest" : "Officer");
+  const name = item.name?.trim();
+  const subtitle = isCommandant
+    ? ((item as Commandant).isCurrent ? "Current Commandant" : "Past Commandant")
+    : isVisit
+      ? (item as DistinguishedVisit).country
+      : (item as Personnel).service;
+  const decoration = item.decoration;
+  const safeTitle = title || (isVisit ? "Honoured Guest" : isCommandant ? "Commandant" : "Officer");
   const safeName = name || "Name unavailable";
   const safeDecoration = decoration?.trim() || "";
 
@@ -115,6 +115,13 @@ function ContinuousSlideCard({
       return yearMatch?.[0] ?? (visitDate || "N/A");
     }
 
+    if (isCommandant) {
+      const cItem = item as Commandant;
+      if (cItem.tenureStart && cItem.tenureEnd) return `${cItem.tenureStart} - ${cItem.tenureEnd}`;
+      if (cItem.tenureStart) return `${cItem.tenureStart} - Present`;
+      return "N/A";
+    }
+
     const start = (item as Personnel).periodStart;
     const end = (item as Personnel).periodEnd;
 
@@ -122,18 +129,18 @@ function ContinuousSlideCard({
     if (start) return String(start);
     if (end) return String(end);
     return "N/A";
-  }, [isVisit, item]);
+  }, [isVisit, isCommandant, item]);
 
   return (
     <button
       type="button"
-      onClick={() => onSelect(item)}
-      className={`auto-scroll-card group relative w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] h-[clamp(360px,58dvh,620px)] sm:h-[clamp(390px,62dvh,660px)] self-stretch shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
+      onClick={() => onSelect(item as any)}
+      className={`auto-scroll-card group relative ${isCommandant ? "w-[min(92vw,520px)] sm:w-[min(78vw,520px)] md:w-[min(64vw,520px)] lg:w-[520px] h-[clamp(420px,64dvh,700px)] sm:h-[clamp(440px,68dvh,740px)]" : "w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] h-[clamp(360px,58dvh,620px)] sm:h-[clamp(390px,62dvh,660px)]"} self-stretch shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
           ? "bg-white border border-[#002060]/20 shadow-[0_12px_36px_rgba(0,32,96,0.14)]"
           : "bg-slate-950/90 border border-[#FFD700]/25 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
       }`}
-      aria-label={`${isVisit ? "Visit" : "Staff"} card for ${safeName}`}
+      aria-label={`${isCommandant ? "Commandant" : isVisit ? "Visit" : "Staff"} card for ${safeName}`}
     >
       <div className="pointer-events-none absolute top-0 inset-x-0 h-[7px] flex z-20">
         <div className="flex-1 bg-[#002060]" />
@@ -157,7 +164,7 @@ function ContinuousSlideCard({
           <div className="p-[2px] bg-white">
             <div className="p-[1px] bg-[#FFD700]">
               <div
-                className={`auto-scroll-image-frame relative h-full ${isVisit ? "max-h-[clamp(240px,44dvh,500px)]" : "max-h-[clamp(300px,54dvh,620px)]"} aspect-[4/5] overflow-hidden ${
+                className={`auto-scroll-image-frame relative h-full ${isVisit ? "max-h-[clamp(240px,44dvh,500px)]" : isCommandant ? "max-h-[clamp(380px,62dvh,760px)]" : "max-h-[clamp(300px,54dvh,620px)]"} ${isCommandant ? "aspect-[3/2]" : "aspect-[4/5]"} overflow-hidden ${
                   isLightMode ? "bg-slate-100" : "bg-slate-900"
                 }`}
               >
@@ -165,7 +172,7 @@ function ContinuousSlideCard({
                   <img
                     src={imageUrl}
                     alt={`${safeTitle} ${safeName}`}
-                    className={`h-full w-full ${isVisit ? "object-cover" : "object-contain object-top"} transition-transform duration-500 group-hover:scale-[1.015]`}
+                    className={`h-full w-full ${isVisit ? "object-cover" : isCommandant ? "object-contain object-center" : "object-contain object-top"} transition-transform duration-500 group-hover:scale-[1.015]`}
                     loading="eager"
                   />
                 ) : (
@@ -342,10 +349,12 @@ export function AutoRotationDisplay({
 
   const isContinuousMode =
     isActive &&
-    activeCategory !== null &&
-    displayContext !== "commandants" &&
     slides.length > 0 &&
-    !useAppliedTransitionOnly;
+    (
+      (activeCategory !== null && displayContext !== "commandants" && !useAppliedTransitionOnly) ||
+      appliedTransition === 'continuous-scroll' ||
+      sequence[0] === 'continuous-scroll'
+    );
 
   const personnelSlides = useMemo(
     () =>
@@ -365,10 +374,20 @@ export function AutoRotationDisplay({
     [slides],
   );
 
+  const commandantSlides = useMemo(
+    () =>
+      slides.filter(
+        (entry): entry is Extract<Slide, { type: "commandant" }> =>
+          entry.type === "commandant",
+      ),
+    [slides],
+  );
+
   const continuousItems = useMemo(() => {
     if (activeView === "visits") return visitSlides.map((s) => s.visit);
+    if (commandantSlides.length > 0) return commandantSlides.map((s) => s.commandant);
     return personnelSlides.map((s) => s.person);
-  }, [activeView, visitSlides, personnelSlides]);
+  }, [activeView, visitSlides, personnelSlides, commandantSlides]);
 
   const loopedContinuousItems = useMemo(() => {
     if (continuousItems.length === 0) return [];
@@ -1184,15 +1203,18 @@ export function AutoRotationDisplay({
       >
         {loopedContinuousItems.map((item, i) => {
           const isPersonnel = "category" in item;
+          const isCommandant = "isCurrent" in item;
+          const itemType = isCommandant ? "commandant" : isPersonnel ? "personnel" : "visit";
           return (
             <ContinuousSlideCard
               key={`${item.id}-${i}`}
-              item={item}
-              type={isPersonnel ? "personnel" : "visit"}
+              item={item as any}
+              type={itemType}
               isLightMode={isLightMode}
-              onSelect={(item) => {
-                if (isPersonnel) setSelectedPerson(item as Personnel);
-                else setSelectedVisit(item as DistinguishedVisit);
+              onSelect={(selected) => {
+                if (isCommandant) setSelectedCommandant(selected as Commandant);
+                else if (isPersonnel) setSelectedPerson(selected as Personnel);
+                else setSelectedVisit(selected as DistinguishedVisit);
               }}
             />
           );

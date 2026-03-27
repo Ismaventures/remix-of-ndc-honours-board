@@ -21,7 +21,8 @@ export type AutoDisplayTransitionType =
   | 'salute-flash'
   | 'parade-sweep'
   | 'mission-brief'
-  | 'runway-sweep';
+  | 'runway-sweep'
+  | 'continuous-scroll';
 
 export type AutoDisplayContextKey =
   | 'commandants'
@@ -81,6 +82,7 @@ export const TRANSITION_TYPES: Array<{ id: AutoDisplayTransitionType; label: str
   { id: 'parade-sweep', label: 'Parade Sweep' },
   { id: 'mission-brief', label: 'Mission Brief' },
   { id: 'runway-sweep', label: 'Runway Sweep' },
+  { id: 'continuous-scroll', label: 'Continuous Scroll' },
 ];
 
 export const TRANSITION_CUE_TYPES: Array<{ id: TransitionCueType; label: string }> = [
@@ -113,6 +115,7 @@ export const DEFAULT_TRANSITION_CUE_BY_TYPE: Record<AutoDisplayTransitionType, T
   'parade-sweep': 'drum',
   'mission-brief': 'scan',
   'runway-sweep': 'sweep',
+  'continuous-scroll': 'none',
 };
 
 export const AUTO_DISPLAY_CONTEXTS: Array<{ key: AutoDisplayContextKey; label: string }> = [

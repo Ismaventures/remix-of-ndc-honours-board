@@ -187,6 +187,10 @@ const TRANSITION_USAGE_GUIDES: Record<AutoDisplayTransitionType, { bestFor: stri
     bestFor: 'Aviation and mobility-themed transitions with directional momentum.',
     tip: 'Use sweep cue and keep durations around 800-1200ms for smooth energy.',
   },
+  'continuous-scroll': {
+    bestFor: 'Displaying multiple records smoothly like the FDC/FWC auto-scroll layout.',
+    tip: 'Perfect if you want to condense commandants into horizontally scrolling cards rather than full screen.',
+  },
 };
 
 type GuideTargetTab = 'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices';
@@ -668,6 +672,8 @@ export function AdminPanel({
         return 'animate-[preview-blur-in_900ms_ease-out_forwards]';
       case 'runway-sweep':
         return 'animate-[preview-slide-left_900ms_ease-out_forwards]';
+      case 'continuous-scroll':
+        return 'animate-[preview-slide-left_900ms_linear_infinite]';
       case 'fade-zoom':
       default:
         return 'animate-[preview-fade-zoom_900ms_ease-out_forwards]';
