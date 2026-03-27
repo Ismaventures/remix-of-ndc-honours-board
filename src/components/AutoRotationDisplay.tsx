@@ -161,14 +161,14 @@ function ContinuousSlideCard({
 
       <div
         className={`relative z-10 mb-1 sm:mb-1.5 flex min-h-0 items-center justify-center ${
-          isCommandant ? "flex-[3.9]" : "flex-[1.6]"
+          isVisit ? "flex-[1.6]" : "flex-[3.9]"
         }`}
       >
         <div className="p-[2px] bg-[#FFD700] shadow-xl">
           <div className="p-[2px] bg-white">
             <div className="p-[1px] bg-[#FFD700]">
               <div
-                className={`auto-scroll-image-frame relative h-full ${isVisit ? "max-h-[clamp(240px,44dvh,500px)]" : isCommandant ? "max-h-[clamp(560px,84dvh,980px)]" : "max-h-[clamp(300px,54dvh,620px)]"} aspect-[4/5] overflow-hidden ${
+                className={`auto-scroll-image-frame relative h-full ${isVisit ? "max-h-[clamp(240px,44dvh,500px)]" : isCommandant ? "max-h-[clamp(560px,84dvh,980px)]" : "max-h-[clamp(460px,74dvh,860px)]"} aspect-[4/5] overflow-hidden ${
                   isLightMode ? "bg-slate-100" : "bg-slate-900"
                 }`}
               >
@@ -176,7 +176,7 @@ function ContinuousSlideCard({
                   <img
                     src={imageUrl}
                     alt={`${safeTitle} ${safeName}`}
-                    className={`h-full w-full ${isVisit ? "object-cover" : isCommandant ? "object-cover object-top" : "object-contain object-top"} transition-transform duration-500 group-hover:scale-[1.015]`}
+                    className={`h-full w-full ${isVisit ? "object-cover" : "object-cover object-top"} transition-transform duration-500 group-hover:scale-[1.015]`}
                     loading="eager"
                   />
                 ) : (
@@ -194,7 +194,7 @@ function ContinuousSlideCard({
         <div className="h-[2px] w-full bg-[#FF0000]" />
         <div
           className={`auto-scroll-plate bg-[#002060] ${
-            isCommandant ? "px-2 py-1.5 sm:px-2.5 sm:py-2" : "px-2.5 py-2 sm:px-3 sm:py-2.5"
+            isVisit ? "px-2.5 py-2 sm:px-3 sm:py-2.5" : "px-2 py-1.5 sm:px-2.5 sm:py-2"
           } text-center shadow-xl`}
         >
           <p className="auto-scroll-title text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.13em] text-white/95 break-words leading-tight">

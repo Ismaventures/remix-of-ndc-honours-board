@@ -66,20 +66,24 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
             <div className="p-[max(2px,0.24vh)] bg-white">
               <div className="p-[max(1px,0.2vh)] bg-[#FFD700]">
                 <div
-                  className={`relative aspect-[4/5] h-[clamp(220px,54dvh,560px)] sm:h-[clamp(260px,56dvh,600px)] md:h-[clamp(280px,58dvh,640px)] w-auto max-h-[62dvh] overflow-hidden shadow-inner ${
+                  className={`relative aspect-[4/5] ${
+                    isPersonnel
+                      ? "h-[clamp(320px,72dvh,840px)] sm:h-[clamp(360px,74dvh,900px)] md:h-[clamp(380px,76dvh,960px)] max-h-[80dvh]"
+                      : "h-[clamp(220px,54dvh,560px)] sm:h-[clamp(260px,56dvh,600px)] md:h-[clamp(280px,58dvh,640px)] max-h-[62dvh]"
+                  } w-auto overflow-hidden shadow-inner ${
                     isLightMode ? "bg-slate-100" : "bg-muted/30"
                   }`}
                 >
                   {imageUrl ? (
                     <div
-                      className={`w-full h-full p-[max(4px,0.55vh)] ${
+                      className={`w-full h-full ${isPersonnel ? "p-0" : "p-[max(4px,0.55vh)]"} ${
                         isLightMode ? "bg-slate-100" : "bg-muted/20"
                       }`}
                     >
                       <img
                         src={imageUrl}
                         alt={mainName}
-                        className="w-full h-full object-contain object-center"
+                        className={`w-full h-full ${isPersonnel ? "object-cover object-top scale-[1.08]" : "object-contain object-center"}`}
                         loading="eager"
                       />
                     </div>
