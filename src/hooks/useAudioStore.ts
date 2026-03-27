@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { del, get, set } from 'idb-keyval';
+import { del, get, keys, set } from 'idb-keyval';
 import {
   deleteAudioFromSupabase,
   getSupabaseAudioUrl,
@@ -32,6 +32,9 @@ export interface AudioAssignments {
 const AUDIO_LOCAL_KEY_PREFIX = 'audio_';
 const AUDIO_CACHE_KEY_PREFIX = 'audio_cache_';
 const AUDIO_CACHE_TTL_MS = 73 * 60 * 60 * 1000;
+const AUDIO_CACHE_MAX_ENTRIES = 180;
+
+let audioCacheCleanupScheduled = false;
 
 interface AudioCacheEntry {
   buffer: ArrayBuffer;
@@ -52,6 +55,43 @@ function isAudioCacheEntry(value: unknown): value is AudioCacheEntry {
 function isFreshAudioCache(entry: AudioCacheEntry, sourceKey: string): boolean {
   if (entry.sourceKey !== sourceKey) return false;
   return Date.now() - entry.cachedAt <= AUDIO_CACHE_TTL_MS;
+}
+
+async function cleanupAudioCacheEntries(): Promise<void> {
+  try {
+    const allKeys = await keys();
+    const cacheKeys = allKeys.filter(
+      (entry): entry is string =>
+        typeof entry === 'string' && entry.startsWith(AUDIO_CACHE_KEY_PREFIX),
+    );
+
+    if (cacheKeys.length === 0) return;
+
+    const validEntries: Array<{ key: string; cachedAt: number }> = [];
+
+    for (const key of cacheKeys) {
+      const cached = await get<unknown>(key);
+      if (!isAudioCacheEntry(cached)) {
+        await del(key);
+        continue;
+      }
+
+      if (!isFreshAudioCache(cached, cached.sourceKey)) {
+        await del(key);
+        continue;
+      }
+
+      validEntries.push({ key, cachedAt: cached.cachedAt });
+    }
+
+    if (validEntries.length <= AUDIO_CACHE_MAX_ENTRIES) return;
+
+    validEntries.sort((a, b) => b.cachedAt - a.cachedAt);
+    const overflow = validEntries.slice(AUDIO_CACHE_MAX_ENTRIES);
+    await Promise.allSettled(overflow.map((entry) => del(entry.key)));
+  } catch {
+    // Best-effort cleanup.
+  }
 }
 
 interface AudioState {
@@ -92,6 +132,11 @@ export const useAudioStore = create<AudioState>()(
       isMuted: true,
 
       loadTracks: async () => {
+        if (!audioCacheCleanupScheduled) {
+          audioCacheCleanupScheduled = true;
+          void cleanupAudioCacheEntries();
+        }
+
         if (!isSupabaseAudioReady()) return;
 
         const [remoteTracks, remoteAssignments] = await Promise.all([

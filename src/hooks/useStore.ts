@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Personnel, DistinguishedVisit, Commandant } from '@/types/domain';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -133,9 +133,35 @@ const mapRowToVisit = (row: VisitRow): DistinguishedVisit => ({
 });
 
 const COLLECTION_CACHE_TTL_MS = 73 * 60 * 60 * 1000;
+const COLLECTION_BACKGROUND_REFRESH_MS = 90 * 1000;
 const PERSONNEL_CACHE_KEY = 'ndc_cache_personnel_v1';
 const COMMANDANTS_CACHE_KEY = 'ndc_cache_commandants_v1';
 const VISITS_CACHE_KEY = 'ndc_cache_visits_v1';
+const COLLECTION_CACHE_SCHEMA_KEY = 'ndc_cache_schema_version';
+const COLLECTION_CACHE_SCHEMA_VERSION = '2';
+
+const COLLECTION_CACHE_KEYS = [
+  PERSONNEL_CACHE_KEY,
+  COMMANDANTS_CACHE_KEY,
+  VISITS_CACHE_KEY,
+];
+
+let collectionCacheSchemaEnsured = false;
+
+function ensureCollectionCacheSchema(): void {
+  if (collectionCacheSchemaEnsured) return;
+  collectionCacheSchemaEnsured = true;
+
+  try {
+    const version = localStorage.getItem(COLLECTION_CACHE_SCHEMA_KEY);
+    if (version === COLLECTION_CACHE_SCHEMA_VERSION) return;
+
+    COLLECTION_CACHE_KEYS.forEach((key) => localStorage.removeItem(key));
+    localStorage.setItem(COLLECTION_CACHE_SCHEMA_KEY, COLLECTION_CACHE_SCHEMA_VERSION);
+  } catch {
+    // Best-effort schema alignment.
+  }
+}
 
 interface CollectionCache<T> {
   cachedAt: number;
@@ -190,16 +216,33 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function applyRemoteRowsOrFallback<T>(
+  remoteRows: T[],
+  existingRows: T[],
+): T[] {
+  if (remoteRows.length === 0 && existingRows.length > 0) {
+    return existingRows;
+  }
+  return remoteRows;
+}
+
 export function usePersonnelStore() {
-  const [personnel, setPersonnel] = useState<Personnel[]>([]);
+  const [personnel, setPersonnel] = useState<Personnel[]>(() => {
+    ensureCollectionCacheSchema();
+    const cachedRows = readCollectionCache<PersonnelRow>(PERSONNEL_CACHE_KEY);
+    return cachedRows ? cachedRows.map(mapRowToPersonnel) : [];
+  });
+
+  const personnelHasDataRef = useRef(personnel.length > 0);
 
   useEffect(() => {
-    const cachedRows = readCollectionCache<PersonnelRow>(PERSONNEL_CACHE_KEY);
-    if (cachedRows) {
-      setPersonnel(cachedRows.map(mapRowToPersonnel));
-    }
+    let disposed = false;
+    let inFlight = false;
 
     const loadPersonnel = async () => {
+      if (inFlight || disposed) return;
+      inFlight = true;
+
       const { data, error } = await supabase
         .from('personnel')
         .select('*')
@@ -207,18 +250,36 @@ export function usePersonnelStore() {
 
       if (error) {
         console.error('Failed to load personnel from Supabase:', error.message);
-        if (!cachedRows) {
+        if (!personnelHasDataRef.current && !disposed) {
           setPersonnel([]);
         }
+        inFlight = false;
         return;
       }
 
       const rows = (data as PersonnelRow[] | null) ?? [];
-      writeCollectionCache(PERSONNEL_CACHE_KEY, rows);
-      setPersonnel(rows.map(mapRowToPersonnel));
+      if (!disposed) {
+        setPersonnel((prev) => {
+          const mergedRows = applyRemoteRowsOrFallback(rows, prev.map(mapPersonnelToRow));
+          personnelHasDataRef.current = mergedRows.length > 0;
+          writeCollectionCache(PERSONNEL_CACHE_KEY, mergedRows);
+          return mergedRows.map(mapRowToPersonnel);
+        });
+      }
+
+      inFlight = false;
     };
 
     void loadPersonnel();
+
+    const interval = setInterval(() => {
+      void loadPersonnel();
+    }, COLLECTION_BACKGROUND_REFRESH_MS);
+
+    return () => {
+      disposed = true;
+      clearInterval(interval);
+    };
   }, []);
 
   const addPersonnel = useCallback((p: Omit<Personnel, 'id'>) => {
@@ -291,13 +352,17 @@ export function usePersonnelStore() {
 }
 
 export function useCommandantsStore() {
-  const [commandants, setCommandants] = useState<Commandant[]>([]);
+  const [commandants, setCommandants] = useState<Commandant[]>(() => {
+    ensureCollectionCacheSchema();
+    const cachedRows = readCollectionCache<CommandantRow>(COMMANDANTS_CACHE_KEY);
+    return cachedRows ? cachedRows.map(mapRowToCommandant) : [];
+  });
+
+  const commandantsHasDataRef = useRef(commandants.length > 0);
 
   useEffect(() => {
-    const cachedRows = readCollectionCache<CommandantRow>(COMMANDANTS_CACHE_KEY);
-    if (cachedRows) {
-      setCommandants(cachedRows.map(mapRowToCommandant));
-    }
+    let disposed = false;
+    let inFlight = false;
 
     const fetchCommandants = async (): Promise<CommandantRow[]> => {
       const ordered = await supabase
@@ -319,6 +384,9 @@ export function useCommandantsStore() {
     };
 
     const loadCommandants = async () => {
+      if (inFlight || disposed) return;
+      inFlight = true;
+
       const retryDelays = [0, 250, 900];
 
       for (let attempt = 0; attempt < retryDelays.length; attempt += 1) {
@@ -328,8 +396,15 @@ export function useCommandantsStore() {
 
         try {
           const rows = await fetchCommandants();
-          writeCollectionCache(COMMANDANTS_CACHE_KEY, rows);
-          setCommandants(rows.map(mapRowToCommandant));
+          if (!disposed) {
+            setCommandants((prev) => {
+              const mergedRows = applyRemoteRowsOrFallback(rows, prev.map(mapCommandantToRow));
+              commandantsHasDataRef.current = mergedRows.length > 0;
+              writeCollectionCache(COMMANDANTS_CACHE_KEY, mergedRows);
+              return mergedRows.map(mapRowToCommandant);
+            });
+          }
+          inFlight = false;
           return;
         } catch (error) {
           const message =
@@ -338,12 +413,23 @@ export function useCommandantsStore() {
         }
       }
 
-      if (!cachedRows) {
+      if (!commandantsHasDataRef.current && !disposed) {
         setCommandants([]);
       }
+
+      inFlight = false;
     };
 
     void loadCommandants();
+
+    const interval = setInterval(() => {
+      void loadCommandants();
+    }, COLLECTION_BACKGROUND_REFRESH_MS);
+
+    return () => {
+      disposed = true;
+      clearInterval(interval);
+    };
   }, []);
 
   const addCommandant = useCallback((c: Omit<Commandant, 'id'>) => {
@@ -414,15 +500,22 @@ export function useCommandantsStore() {
 }
 
 export function useVisitsStore() {
-  const [visits, setVisits] = useState<DistinguishedVisit[]>([]);
+  const [visits, setVisits] = useState<DistinguishedVisit[]>(() => {
+    ensureCollectionCacheSchema();
+    const cachedRows = readCollectionCache<VisitRow>(VISITS_CACHE_KEY);
+    return cachedRows ? cachedRows.map(mapRowToVisit) : [];
+  });
+
+  const visitsHasDataRef = useRef(visits.length > 0);
 
   useEffect(() => {
-    const cachedRows = readCollectionCache<VisitRow>(VISITS_CACHE_KEY);
-    if (cachedRows) {
-      setVisits(cachedRows.map(mapRowToVisit));
-    }
+    let disposed = false;
+    let inFlight = false;
 
     const loadVisits = async () => {
+      if (inFlight || disposed) return;
+      inFlight = true;
+
       const { data, error } = await supabase
         .from('visits')
         .select('*')
@@ -430,18 +523,36 @@ export function useVisitsStore() {
 
       if (error) {
         console.error('Failed to load visits from Supabase:', error.message);
-        if (!cachedRows) {
+        if (!visitsHasDataRef.current && !disposed) {
           setVisits([]);
         }
+        inFlight = false;
         return;
       }
 
       const rows = (data as VisitRow[] | null) ?? [];
-      writeCollectionCache(VISITS_CACHE_KEY, rows);
-      setVisits(rows.map(mapRowToVisit));
+      if (!disposed) {
+        setVisits((prev) => {
+          const mergedRows = applyRemoteRowsOrFallback(rows, prev.map(mapRowToVisit));
+          visitsHasDataRef.current = mergedRows.length > 0;
+          writeCollectionCache(VISITS_CACHE_KEY, mergedRows);
+          return mergedRows.map(mapRowToVisit);
+        });
+      }
+
+      inFlight = false;
     };
 
     void loadVisits();
+
+    const interval = setInterval(() => {
+      void loadVisits();
+    }, COLLECTION_BACKGROUND_REFRESH_MS);
+
+    return () => {
+      disposed = true;
+      clearInterval(interval);
+    };
   }, []);
 
   const addVisit = useCallback((v: Omit<DistinguishedVisit, 'id'>) => {

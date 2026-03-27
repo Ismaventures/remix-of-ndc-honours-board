@@ -186,8 +186,18 @@
     font-size: 1rem;
   }
 
-  .auto-scroll-card .auto-scroll-image-frame {
+  .auto-scroll-card .auto-scroll-image-frame:not(.commandant-portrait-frame):not(.staff-portrait-frame) {
     height: clamp(104px, 17dvh, 156px);
+  }
+
+  .auto-scroll-card .auto-scroll-image-frame.commandant-portrait-frame {
+    width: clamp(190px, 26vw, 320px);
+    height: clamp(230px, 32vw, 390px);
+  }
+
+  .auto-scroll-card .auto-scroll-image-frame.staff-portrait-frame {
+    width: clamp(160px, 22vw, 255px);
+    height: clamp(210px, 28vw, 330px);
   }
 }
 

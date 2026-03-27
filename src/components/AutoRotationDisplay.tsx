@@ -168,7 +168,7 @@ function ContinuousSlideCard({
           <div className="p-[2px] bg-white">
             <div className="p-[1px] bg-[#FFD700]">
               <div
-                className={`auto-scroll-image-frame relative ${isVisit ? "h-full max-h-[clamp(240px,44dvh,500px)] aspect-[4/5]" : isCommandant ? "w-[220px] h-[260px] sm:w-[250px] sm:h-[300px] md:w-[280px] md:h-[340px] lg:w-[320px] lg:h-[390px]" : "h-full max-h-[clamp(360px,60dvh,680px)] aspect-[4/5]"} overflow-hidden ${
+                className={`auto-scroll-image-frame relative ${isCommandant ? "commandant-portrait-frame" : isVisit ? "" : "staff-portrait-frame"} ${isVisit ? "h-full max-h-[clamp(240px,44dvh,500px)] aspect-[4/5]" : isCommandant ? "w-[220px] h-[260px] sm:w-[250px] sm:h-[300px] md:w-[280px] md:h-[340px] lg:w-[320px] lg:h-[390px]" : "w-[180px] h-[230px] sm:w-[205px] sm:h-[260px] md:w-[230px] md:h-[295px] lg:w-[255px] lg:h-[330px]"} overflow-hidden ${
                   isLightMode ? "bg-slate-100" : "bg-slate-900"
                 }`}
               >
@@ -176,7 +176,7 @@ function ContinuousSlideCard({
                   <img
                     src={imageUrl}
                     alt={`${safeTitle} ${safeName}`}
-                    className={`h-full w-full ${isVisit ? "object-cover" : isCommandant ? "object-cover object-[50%_20%] scale-[1.08]" : "object-cover object-top"} transition-transform duration-500 group-hover:scale-[1.015]`}
+                    className={`h-full w-full ${isVisit ? "object-cover" : isCommandant ? "object-contain object-center scale-[0.72]" : "object-contain object-center scale-[0.78]"} transition-transform duration-500 group-hover:scale-[1.015]`}
                     loading="eager"
                   />
                 ) : (

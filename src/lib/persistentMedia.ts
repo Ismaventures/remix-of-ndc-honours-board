@@ -1,9 +1,12 @@
-import { del, get, set } from 'idb-keyval';
+import { del, get, keys, set } from 'idb-keyval';
 
 const MEDIA_KEY_PREFIX = 'media_';
 const MEDIA_URL_PREFIX = 'idb-media://';
 const REMOTE_MEDIA_KEY_PREFIX = 'remote_media_';
 export const REMOTE_MEDIA_CACHE_TTL_MS = 73 * 60 * 60 * 1000;
+const REMOTE_MEDIA_MAX_ENTRIES = 600;
+
+let mediaCleanupScheduled = false;
 
 interface StoredMedia {
   buffer: ArrayBuffer;
@@ -41,6 +44,54 @@ function toRemoteMediaKey(url: string): string {
 
 function isRemoteMediaFresh(cachedAt: number): boolean {
   return Date.now() - cachedAt <= REMOTE_MEDIA_CACHE_TTL_MS;
+}
+
+function isStoredRemoteMedia(value: unknown): value is StoredRemoteMedia {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<StoredRemoteMedia>;
+  return (
+    candidate.buffer instanceof ArrayBuffer &&
+    typeof candidate.type === 'string' &&
+    typeof candidate.sourceUrl === 'string' &&
+    typeof candidate.cachedAt === 'number'
+  );
+}
+
+async function cleanupRemoteMediaCache(): Promise<void> {
+  try {
+    const allKeys = await keys();
+    const mediaKeys = allKeys.filter(
+      (entry): entry is string =>
+        typeof entry === 'string' && entry.startsWith(REMOTE_MEDIA_KEY_PREFIX),
+    );
+
+    if (mediaKeys.length === 0) return;
+
+    const validEntries: Array<{ key: string; cachedAt: number }> = [];
+
+    for (const key of mediaKeys) {
+      const cached = await get<unknown>(key);
+      if (!isStoredRemoteMedia(cached)) {
+        await del(key);
+        continue;
+      }
+
+      if (!isRemoteMediaFresh(cached.cachedAt)) {
+        await del(key);
+        continue;
+      }
+
+      validEntries.push({ key, cachedAt: cached.cachedAt });
+    }
+
+    if (validEntries.length <= REMOTE_MEDIA_MAX_ENTRIES) return;
+
+    validEntries.sort((a, b) => b.cachedAt - a.cachedAt);
+    const overflow = validEntries.slice(REMOTE_MEDIA_MAX_ENTRIES);
+    await Promise.allSettled(overflow.map((entry) => del(entry.key)));
+  } catch {
+    // Best-effort cleanup.
+  }
 }
 
 async function fetchAndPersistRemoteMedia(url: string): Promise<StoredRemoteMedia | null> {
@@ -93,6 +144,11 @@ async function resolveRemoteMediaRefToObjectUrl(ref: string): Promise<string> {
 }
 
 export async function prefetchMediaReferences(refs: Array<string | null | undefined>): Promise<void> {
+  if (!mediaCleanupScheduled) {
+    mediaCleanupScheduled = true;
+    void cleanupRemoteMediaCache();
+  }
+
   const uniqueRefs = Array.from(
     new Set(
       refs

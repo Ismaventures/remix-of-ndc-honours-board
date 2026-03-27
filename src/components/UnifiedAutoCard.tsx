@@ -68,7 +68,7 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
                 <div
                   className={`relative aspect-[4/5] ${
                     isPersonnel
-                      ? "h-[clamp(280px,62dvh,700px)] sm:h-[clamp(300px,64dvh,740px)] md:h-[clamp(320px,66dvh,780px)] max-h-[72dvh]"
+                      ? "h-[clamp(300px,66dvh,760px)] sm:h-[clamp(330px,68dvh,820px)] md:h-[clamp(360px,72dvh,900px)] max-h-[78dvh]"
                       : "h-[clamp(220px,54dvh,560px)] sm:h-[clamp(260px,56dvh,600px)] md:h-[clamp(280px,58dvh,640px)] max-h-[62dvh]"
                   } w-auto overflow-hidden shadow-inner ${
                     isLightMode ? "bg-slate-100" : "bg-muted/30"
