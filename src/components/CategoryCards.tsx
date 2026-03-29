@@ -24,6 +24,7 @@ const CARDS: {
   icon: React.ElementType;
   color: string;
   cardGradient: string;
+  accentGlow: string;
 }[] = [
   {
     key: "commandants",
@@ -32,6 +33,7 @@ const CARDS: {
     icon: Shield,
     color: "text-amber-600",
     cardGradient: "from-[#2f2508] via-[#3f3210] to-[#524117]",
+    accentGlow: "shadow-[0_0_0_1px_rgba(255,215,0,0.34),0_20px_46px_rgba(0,0,0,0.2)]",
   },
   {
     key: "fwc",
@@ -40,6 +42,7 @@ const CARDS: {
     icon: Shield,
     color: "text-blue-600",
     cardGradient: "from-[#0f2c4e] via-[#14365d] to-[#1a4373]",
+    accentGlow: "shadow-[0_0_0_1px_rgba(0,32,96,0.2),0_18px_42px_rgba(3,44,88,0.18)]",
   },
   {
     key: "fdc",
@@ -48,6 +51,7 @@ const CARDS: {
     icon: Award,
     color: "text-sky-600",
     cardGradient: "from-[#0e2d4a] via-[#133e66] to-[#195080]",
+    accentGlow: "shadow-[0_0_0_1px_rgba(0,176,240,0.2),0_18px_42px_rgba(0,83,120,0.2)]",
   },
   {
     key: "directing",
@@ -56,6 +60,7 @@ const CARDS: {
     icon: Users,
     color: "text-indigo-600",
     cardGradient: "from-[#1a365d] via-[#214373] to-[#2a528a]",
+    accentGlow: "shadow-[0_0_0_1px_rgba(0,32,96,0.2),0_18px_42px_rgba(33,67,115,0.18)]",
   },
   {
     key: "allied",
@@ -64,6 +69,7 @@ const CARDS: {
     icon: Globe,
     color: "text-cyan-600",
     cardGradient: "from-[#112f4f] via-[#19406b] to-[#205285]",
+    accentGlow: "shadow-[0_0_0_1px_rgba(0,176,240,0.2),0_18px_42px_rgba(19,64,107,0.2)]",
   },
   {
     key: "visits",
@@ -72,6 +78,7 @@ const CARDS: {
     icon: Star,
     color: "text-blue-500",
     cardGradient: "from-[#1d3455] via-[#264570] to-[#30578a]",
+    accentGlow: "shadow-[0_0_0_1px_rgba(0,32,96,0.2),0_18px_42px_rgba(38,69,112,0.2)]",
   },
   {
     key: "admin",
@@ -80,17 +87,59 @@ const CARDS: {
     icon: Settings,
     color: "text-slate-600",
     cardGradient: "from-[#2e3747] via-[#3a445d] to-[#475270]",
+    accentGlow: "shadow-[0_0_0_1px_rgba(71,82,112,0.24),0_18px_42px_rgba(24,35,53,0.2)]",
   },
 ];
+
+type CrestParticle = {
+  id: number;
+  left: number;
+  top: number;
+  size: number;
+  rotate: number;
+  transitionSec: number;
+};
+
+const randomInRange = (min: number, max: number) =>
+  min + Math.random() * (max - min);
+
+const createParticle = (id: number): CrestParticle => ({
+  id,
+  left: randomInRange(4, 96),
+  top: randomInRange(6, 94),
+  size: randomInRange(48, 128),
+  rotate: randomInRange(-25, 25),
+  transitionSec: randomInRange(5.5, 10.5),
+});
 
 export function CategoryCards({ onSelect }: CategoryCardsProps) {
   const [mounted, setMounted] = useState(false);
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith("outdoor");
+  const [scatteredCrests, setScatteredCrests] = useState<CrestParticle[]>(() =>
+    Array.from({ length: 16 }, (_, i) => createParticle(i)),
+  );
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 100);
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setScatteredCrests((current) =>
+        current.map((crest) => ({
+          ...crest,
+          left: randomInRange(2, 98),
+          top: randomInRange(4, 96),
+          size: randomInRange(50, 132),
+          rotate: randomInRange(-32, 32),
+          transitionSec: randomInRange(6, 11),
+        })),
+      );
+    }, 5200);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -108,19 +157,62 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
       <div
         className={`transition-all duration-1000 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
       >
-        <div className="w-full max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
-          {CARDS.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div key={card.key} className="p-1 h-full">
-                <button
-                  onClick={() => onSelect(card.key)}
-                  className={`relative w-full h-[clamp(220px,36vh,300px)] sm:h-[clamp(240px,34vh,310px)] lg:h-[clamp(260px,33vh,320px)] overflow-hidden rounded-2xl border text-left group transition-all duration-500 hover:-translate-y-2 flex flex-col justify-end ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                    isLightMode
-                      ? "bg-white border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-slate-200"
-                      : `bg-gradient-to-br ${card.cardGradient} border-white/10 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]`
-                  }`}
-                >
+        <div className="relative w-full max-w-6xl mx-auto rounded-[28px] border border-[#002060]/15 bg-[linear-gradient(165deg,#ffffff_0%,#f6f9ff_52%,#eff6ff_100%)] px-3 py-4 sm:px-4 sm:py-5 md:px-5 md:py-6 overflow-hidden shadow-[0_18px_48px_rgba(0,32,96,0.12)]">
+          <div className="pointer-events-none absolute inset-0 opacity-[0.06] bg-[linear-gradient(90deg,rgba(0,32,96,0.08)_1px,transparent_1px),linear-gradient(rgba(0,32,96,0.08)_1px,transparent_1px)] bg-[size:36px_36px]" />
+          <img
+            src={ndcCrest}
+            alt=""
+            className="pointer-events-none absolute -left-20 top-8 h-56 w-56 object-contain opacity-[0.06]"
+          />
+          <img
+            src={ndcCrest}
+            alt=""
+            className="pointer-events-none absolute -right-20 bottom-6 h-56 w-56 object-contain opacity-[0.06]"
+          />
+
+          <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden">
+            {scatteredCrests.map((crest) => (
+              <img
+                key={crest.id}
+                src={ndcCrest}
+                alt=""
+                className={`absolute object-contain ${isLightMode ? "opacity-[0.05]" : "opacity-[0.08] invert"}`}
+                style={{
+                  width: `${crest.size}px`,
+                  height: `${crest.size}px`,
+                  left: `${crest.left}%`,
+                  top: `${crest.top}%`,
+                  transform: `translate(-50%, -50%) rotate(${crest.rotate}deg)`,
+                  transition: `left ${crest.transitionSec}s ease-in-out, top ${crest.transitionSec}s ease-in-out, transform ${crest.transitionSec}s ease-in-out, width ${crest.transitionSec}s ease-in-out, height ${crest.transitionSec}s ease-in-out`,
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
+            {CARDS.map((card) => {
+              const Icon = card.icon;
+              return (
+                <div key={card.key} className="p-1 h-full">
+                  <button
+                    onClick={() => onSelect(card.key)}
+                    className={`relative w-full h-[clamp(220px,36vh,300px)] sm:h-[clamp(240px,34vh,310px)] lg:h-[clamp(260px,33vh,320px)] overflow-hidden rounded-2xl border text-left group transition-all duration-500 hover:-translate-y-2 flex flex-col justify-end ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${card.accentGlow} ${
+                      isLightMode
+                        ? "bg-[linear-gradient(160deg,#ffffff_0%,#f7faff_52%,#eef5ff_100%)] border-[#002060]/12 hover:shadow-[0_22px_44px_rgba(0,32,96,0.16)] hover:border-[#002060]/30"
+                        : `bg-gradient-to-br ${card.cardGradient} border-white/10 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]`
+                    }`}
+                  >
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-[7px] flex z-20">
+                      <div className="flex-1 bg-[#002060]" />
+                      <div className="flex-1 bg-[#FF0000]" />
+                      <div className="flex-1 bg-[#00B0F0]" />
+                    </div>
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[6px] flex z-20 opacity-90">
+                      <div className="flex-1 bg-[#002060]" />
+                      <div className="flex-1 bg-[#FF0000]" />
+                      <div className="flex-1 bg-[#00B0F0]" />
+                    </div>
+
                   {/* Gloss/Highlight Effect - Dark Mode Only */}
                   {!isLightMode && (
                     <>
@@ -133,7 +225,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                   <div
                     className={`absolute -right-16 -top-16 w-72 h-72 transition-all duration-700 pointer-events-none transform group-hover:scale-105 group-hover:rotate-6 ${
                       isLightMode
-                        ? "opacity-[0.03] group-hover:opacity-[0.06] filter grayscale"
+                        ? "opacity-[0.055] group-hover:opacity-[0.09] filter grayscale"
                         : "opacity-[0.08] group-hover:opacity-[0.14] filter grayscale invert"
                     }`}
                   >
@@ -225,12 +317,14 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                       />
                     </div>
                   </div>
-                </button>
-              </div>
-            );
-          })}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
+
     </section>
   );
 }
