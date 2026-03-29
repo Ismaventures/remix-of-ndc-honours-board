@@ -54,6 +54,7 @@ interface AutoRotationDisplayProps {
   forcedControl?: { enabled: boolean; nonce: number };
   forcedStep?: { direction: "next" | "prev"; nonce: number };
   onActiveChange?: (active: boolean) => void;
+  onStageComplete?: (context: AutoDisplayContextKey) => void;
 }
 
 type Slide =
@@ -95,8 +96,8 @@ function ContinuousSlideCard({
       ? (item as Commandant).title
       : isVisit
         ? (item as DistinguishedVisit).title
-        : (item as Personnel).rank
-  )?.trim();
+        : (item as Personnel).decoration
+  )?.trim() || "";
   const name = item.name?.trim();
   const subtitle = isCommandant
     ? ((item as Commandant).isCurrent ? "Current Commandant" : "Past Commandant")
@@ -104,7 +105,7 @@ function ContinuousSlideCard({
       ? (item as DistinguishedVisit).country
       : (item as Personnel).service;
   const decoration = item.decoration;
-  const safeTitle = title || (isVisit ? "Honoured Guest" : isCommandant ? "Commandant" : "Officer");
+  const imageAltTitle = title || (isVisit ? "Honoured Guest" : isCommandant ? "Commandant" : "Staff");
   const safeName = name || "Name unavailable";
   const safeDecoration = decoration?.trim() || "";
 
@@ -138,7 +139,7 @@ function ContinuousSlideCard({
       className={`auto-scroll-card group relative ${isCommandant ? "commandant-auto-card w-[min(92vw,520px)] sm:w-[min(78vw,520px)] md:w-[min(64vw,520px)] lg:w-[520px] h-[clamp(420px,64dvh,720px)] sm:h-[clamp(440px,68dvh,760px)]" : "w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] h-[clamp(360px,58dvh,640px)] sm:h-[clamp(390px,62dvh,680px)]"} self-stretch shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
           ? "bg-white border border-[#002060]/20 shadow-[0_12px_36px_rgba(0,32,96,0.14)]"
-          : "bg-slate-950/90 border border-[#FFD700]/25 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
+          : "bg-slate-950/90 border border-slate-500/35 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
       }`}
       aria-label={`${isCommandant ? "Commandant" : isVisit ? "Visit" : "Staff"} card for ${safeName}`}
     >
@@ -164,9 +165,9 @@ function ContinuousSlideCard({
           isVisit ? "flex-[1.6]" : isCommandant ? "flex-[4.1]" : "flex-[3.4]"
         }`}
       >
-        <div className="p-[2px] bg-[#FFD700] shadow-xl">
-          <div className="p-[2px] bg-white">
-            <div className="p-[1px] bg-[#FFD700]">
+        <div className="portrait-photo-mat rounded-sm p-[2px] shadow-xl">
+          <div className="rounded-[2px] bg-white p-[2px] shadow-inner">
+            <div className="portrait-photo-mat-inner rounded-[1px] bg-neutral-100/90 p-px">
               <div
                 className={`auto-scroll-image-frame relative ${isCommandant ? "commandant-portrait-frame commandant-portrait-reel" : isVisit ? "" : "staff-portrait-frame"} ${isVisit ? "h-full max-h-[clamp(240px,44dvh,500px)] aspect-[4/5]" : isCommandant ? "w-[220px] h-[260px] sm:w-[250px] sm:h-[300px] md:w-[280px] md:h-[340px] lg:w-[320px] lg:h-[390px]" : "w-[180px] h-[230px] sm:w-[205px] sm:h-[260px] md:w-[230px] md:h-[295px] lg:w-[255px] lg:h-[330px]"} overflow-hidden ${
                   isLightMode ? "bg-slate-100" : "bg-slate-900"
@@ -181,7 +182,7 @@ function ContinuousSlideCard({
                 {imageUrl ? (
                   <img
                     src={imageUrl}
-                    alt={`${safeTitle} ${safeName}`}
+                    alt={`${imageAltTitle} ${safeName}`}
                     className={`h-full w-full ${isVisit ? "object-cover" : isCommandant ? "object-contain object-center scale-[0.72]" : "object-contain object-center scale-[0.78]"} transition-transform duration-500 group-hover:scale-[1.015]`}
                     loading="eager"
                     decoding="async"
@@ -205,14 +206,16 @@ function ContinuousSlideCard({
             isVisit ? "px-2.5 py-2 sm:px-3 sm:py-2.5" : "px-2 py-1.5 sm:px-2.5 sm:py-2"
           } text-center shadow-xl`}
         >
-          <p className="auto-scroll-title text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.13em] text-white/95 break-words leading-tight">
-            {safeTitle}
-          </p>
-          <h3 className="auto-scroll-name mt-1 text-xs sm:text-sm font-bold leading-snug break-words text-[#FFD700]">
+          <h3 className="auto-scroll-name text-[clamp(0.7rem,1.9vw,1rem)] sm:text-[clamp(0.76rem,1.4vw,1.08rem)] font-extrabold leading-tight break-words [overflow-wrap:anywhere] text-[#FFD700] max-h-[3.3em] overflow-y-auto">
             {safeName}
           </h3>
-          {safeDecoration && (
-            <div className="mt-1.5 inline-flex max-w-full items-center justify-center rounded-md border border-[#FFD700]/70 bg-[linear-gradient(135deg,#FFF3B2_0%,#FFD700_40%,#C79A00_100%)] px-2 py-0.5 shadow-[0_0_16px_rgba(255,215,0,0.32)]">
+          {title && (
+            <p className="auto-scroll-title mt-1 text-[clamp(0.6rem,1.7vw,0.92rem)] sm:text-[clamp(0.65rem,1.2vw,0.96rem)] font-extrabold tracking-[0.06em] text-[#FF3B30] break-words [overflow-wrap:anywhere] leading-tight max-h-[3.8em] overflow-y-auto">
+              {title}
+            </p>
+          )}
+          {isCommandant && safeDecoration && (
+            <div className="mt-1.5 inline-flex max-w-full items-center justify-center rounded-md border border-white/35 bg-gradient-to-br from-neutral-50 via-white to-neutral-200/90 px-2 py-0.5 shadow-[0_2px_12px_rgba(0,0,0,0.12)]">
               <p className="text-[9px] sm:text-[10px] font-bold tracking-[0.07em] text-[#1f2937] break-words">
                 {safeDecoration}
               </p>
@@ -221,7 +224,7 @@ function ContinuousSlideCard({
           <p className="auto-scroll-meta mt-1 text-[10px] uppercase tracking-[0.1em] text-white/95 break-words leading-tight">
             {subtitle}
           </p>
-          <p className="auto-scroll-year mt-1 text-[10px] sm:text-[11px] text-[#FFD700] font-semibold tracking-[0.07em] uppercase leading-tight">
+          <p className="auto-scroll-year mt-1 text-[10px] sm:text-[11px] text-[#f0ebe3] font-semibold tracking-[0.07em] uppercase leading-tight">
             Year: {yearLabel}
           </p>
         </div>
@@ -245,6 +248,7 @@ export function AutoRotationDisplay({
   forcedControl,
   forcedStep,
   onActiveChange,
+  onStageComplete,
 }: AutoRotationDisplayProps) {
   const [isActive, setIsActive] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -278,6 +282,7 @@ export function AutoRotationDisplay({
   const fdcNavRafRef = useRef<number | null>(null);
   const lastForcedStepNonceRef = useRef<number>(0);
   const touchStartXRef = useRef<number | null>(null);
+  const stageCompleteFiredRef = useRef(false);
   const isTransitioningRef = useRef(false);
   const transitionStepRef = useRef(0);
   const transitionDirectionRef = useRef<1 | -1>(1);
@@ -575,8 +580,16 @@ export function AutoRotationDisplay({
   );
 
   const advance = useCallback(() => {
+    if (slides.length === 0) return;
+    if (currentIndex >= slides.length - 1) {
+      if (!stageCompleteFiredRef.current) {
+        stageCompleteFiredRef.current = true;
+        onStageComplete?.(displayContext);
+      }
+      return;
+    }
     transitionTo((currentIndex + 1) % slides.length);
-  }, [currentIndex, slides.length, transitionTo]);
+  }, [currentIndex, displayContext, onStageComplete, slides.length, transitionTo]);
 
   const retreat = useCallback(() => {
     transitionTo((currentIndex - 1 + slides.length) % slides.length);
@@ -738,7 +751,46 @@ export function AutoRotationDisplay({
 
   useEffect(() => {
     transitionStepRef.current = 0;
+    stageCompleteFiredRef.current = false;
   }, [displayContext, sequence]);
+
+  useEffect(() => {
+    if (!isActive) {
+      stageCompleteFiredRef.current = false;
+      return;
+    }
+
+    if (slides.length === 0 || stageCompleteFiredRef.current) return;
+
+    if (isContinuousMode) {
+      const durationMs = Math.max(
+        7000,
+        Math.round(slides.length * contextTiming.slideDurationMs),
+      );
+      const timer = setTimeout(() => {
+        if (stageCompleteFiredRef.current) return;
+        stageCompleteFiredRef.current = true;
+        onStageComplete?.(displayContext);
+      }, durationMs);
+      return () => clearTimeout(timer);
+    }
+
+    if (slides.length === 1) {
+      const timer = setTimeout(() => {
+        if (stageCompleteFiredRef.current) return;
+        stageCompleteFiredRef.current = true;
+        onStageComplete?.(displayContext);
+      }, Math.round(contextTiming.slideDurationMs * 1.2));
+      return () => clearTimeout(timer);
+    }
+  }, [
+    contextTiming.slideDurationMs,
+    displayContext,
+    isActive,
+    isContinuousMode,
+    onStageComplete,
+    slides.length,
+  ]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -1166,7 +1218,7 @@ export function AutoRotationDisplay({
             <AnimatePresence mode="wait" initial={false}>
               <motion.h2
                 key={`subtitle-${sectionSubtitle}`}
-                className="auto-scroll-heading-subtitle mt-1 text-base sm:text-xl md:text-2xl font-bold uppercase tracking-[0.03em] text-[#FFD700] leading-tight"
+                className="auto-scroll-heading-subtitle mt-1 text-base sm:text-xl md:text-2xl font-bold uppercase tracking-[0.03em] text-[#f5edd8] leading-tight"
                 initial={{ opacity: 0, y: 10, filter: "blur(2px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -8, filter: "blur(2px)" }}
@@ -1496,11 +1548,11 @@ export function AutoRotationDisplay({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                   <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Name</p>
-                    <p className="text-white mt-1">{selectedCommandant.name}</p>
+                    <p className="text-[#FFD700] font-extrabold mt-1 break-words [overflow-wrap:anywhere]">{selectedCommandant.name}</p>
                   </div>
                   <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Title</p>
-                    <p className="text-white mt-1">{selectedCommandant.title}</p>
+                    <p className="text-[#FF3B30] font-extrabold mt-1 break-words [overflow-wrap:anywhere]">{selectedCommandant.title}</p>
                   </div>
                   <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Tenure</p>
@@ -1512,7 +1564,7 @@ export function AutoRotationDisplay({
                   </div>
                   <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Decoration</p>
-                    <div className="mt-1 inline-flex max-w-full items-center rounded-md border border-[#FFD700]/80 bg-[linear-gradient(140deg,#FFF5BF_0%,#FFD700_45%,#C79600_100%)] px-2.5 py-1 shadow-[0_0_16px_rgba(255,215,0,0.33)]">
+                    <div className="mt-1 inline-flex max-w-full items-center rounded-md border border-white/35 bg-gradient-to-br from-neutral-50 via-white to-neutral-200/90 px-2.5 py-1 shadow-[0_2px_14px_rgba(0,0,0,0.18)]">
                       <p className="text-[#1f2937] font-bold tracking-[0.08em] break-words">{selectedCommandant.decoration || 'N/A'}</p>
                     </div>
                   </div>

@@ -50,8 +50,10 @@ interface AdminPanelProps {
   onResetAutoDisplaySettings: () => void;
   devices: DeviceClient[];
   currentDeviceId: string;
+  currentDeviceLabel: string;
   isSuperAdmin: boolean;
   onRefreshDevices: () => void;
+  onRenameCurrentDevice: (nextLabel: string) => Promise<boolean>;
   onSendDeviceView: (deviceIds: string[], view: DeviceControlView) => Promise<boolean>;
   onSendDeviceAutoDisplay: (deviceIds: string[], enabled: boolean) => Promise<boolean>;
   onSendDeviceCloseApp: (deviceIds: string[], reason: string) => Promise<boolean>;
@@ -75,7 +77,7 @@ interface AdminPanelProps {
 }
 
 const CATEGORIES: Category[] = ['FWC', 'FDC', 'Directing Staff', 'Allied'];
-const SERVICES: Service[] = ['Army', 'Navy', 'Air Force', 'Civilian', 'Foreign'];
+const SERVICES: Service[] = ['Nigerian Army', 'Nigerian Navy', 'Nigerian Air Force', 'Civilian', 'Foreign'];
 const MAX_MEDIA_SIZE_MB = 8;
 const THEME_OPTIONS: Array<{ mode: ThemeMode; label: string; description: string }> = [
   {
@@ -193,8 +195,55 @@ const TRANSITION_USAGE_GUIDES: Record<AutoDisplayTransitionType, { bestFor: stri
   },
 };
 
+const TRANSITION_GROUPS: Array<{
+  id: 'essential' | 'spatial' | 'cinematic' | 'ceremonial' | 'special';
+  label: string;
+  description: string;
+  items: AutoDisplayTransitionType[];
+}> = [
+  {
+    id: 'essential',
+    label: 'Essential Transitions',
+    description: 'Reliable defaults for most categories and day-to-day readability.',
+    items: ['fade-zoom', 'scale-rise', 'slide-up', 'slide-left', 'slide-right', 'slide-down', 'zoom-out'],
+  },
+  {
+    id: 'spatial',
+    label: 'Spatial & Perspective',
+    description: 'Depth and perspective effects for richer visual storytelling.',
+    items: ['flip-x', 'flip-y', 'rotate-in', 'blur-in', 'skew-lift'],
+  },
+  {
+    id: 'cinematic',
+    label: 'Cinematic Signature',
+    description: 'Premium motion styles for high-impact presentations.',
+    items: ['pro-slider', 'barracks-reveal', 'mission-brief', 'runway-sweep'],
+  },
+  {
+    id: 'ceremonial',
+    label: 'Ceremonial & Prestige',
+    description: 'Patriotic, honours-focused transitions for formal moments.',
+    items: ['salute-flash', 'parade-sweep', 'ndc-scatter'],
+  },
+  {
+    id: 'special',
+    label: 'Special Layout Behaviours',
+    description: 'Layout-oriented motion behaviour for continuous showcase flows.',
+    items: ['continuous-scroll'],
+  },
+];
+
+const getTransitionLabel = (id: AutoDisplayTransitionType) =>
+  TRANSITION_TYPES.find(item => item.id === id)?.label ?? id;
+
+const GROUPED_TRANSITIONS = TRANSITION_GROUPS.map(group => ({
+  ...group,
+  entries: group.items.map(itemId => ({ id: itemId, label: getTransitionLabel(itemId) })),
+}));
+
 type GuideTargetTab = 'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices';
 type GuideTargetPanel = 'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'soundPairing' | 'guide' | 'cinematic' | 'actions';
+type CommandantStatusFilter = 'all' | 'current' | 'past';
 
 const FEATURE_GUIDE_SECTIONS: Array<{
   id: string;
@@ -312,8 +361,10 @@ export function AdminPanel({
   onResetAutoDisplaySettings,
   devices,
   currentDeviceId,
+  currentDeviceLabel,
   isSuperAdmin,
   onRefreshDevices,
+  onRenameCurrentDevice,
   onSendDeviceView,
   onSendDeviceAutoDisplay,
   onSendDeviceCloseApp,
@@ -340,6 +391,16 @@ export function AdminPanel({
   const [personnelCategoryFilter, setPersonnelCategoryFilter] = useState<Category | 'All'>('All');
   const [personnelSearch, setPersonnelSearch] = useState('');
   const [selectedPersonnelId, setSelectedPersonnelId] = useState<string | null>(null);
+  const [selectedCommandantId, setSelectedCommandantId] = useState<string | null>(null);
+  const [commandantSearch, setCommandantSearch] = useState('');
+  const [commandantStatusFilter, setCommandantStatusFilter] = useState<CommandantStatusFilter>('all');
+  const [selectedCommandantIds, setSelectedCommandantIds] = useState<string[]>([]);
+  const [commandantBatchQueue, setCommandantBatchQueue] = useState<string[]>([]);
+  const [commandantBatchIndex, setCommandantBatchIndex] = useState(0);
+  const [featureTargetDeviceIds, setFeatureTargetDeviceIds] = useState<string[]>([]);
+  const [showOfflineFeatureDevices, setShowOfflineFeatureDevices] = useState(false);
+  const [featureApplyBusy, setFeatureApplyBusy] = useState(false);
+  const [featureApplyStatus, setFeatureApplyStatus] = useState<string | null>(null);
   const [sequenceContext, setSequenceContext] = useState<AutoDisplayContextKey>('commandants');
   const [settingsImportStatus, setSettingsImportStatus] = useState<string | null>(null);
   const [themeDraft, setThemeDraft] = useState<ThemeMode>(themeMode);
@@ -349,6 +410,7 @@ export function AdminPanel({
   const [previewNonce, setPreviewNonce] = useState(0);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewContextLabel, setPreviewContextLabel] = useState('Global');
+  const [showAdvancedTransitionPanels, setShowAdvancedTransitionPanels] = useState(false);
   const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'soundPairing' | 'guide' | 'cinematic' | 'actions' | 'commandantLayout'>('boot');
   const [guideFlowActive, setGuideFlowActive] = useState(false);
   const [guideNextSectionId, setGuideNextSectionId] = useState<string | null>(null);
@@ -408,6 +470,82 @@ export function AdminPanel({
     [personnel, selectedPersonnelId],
   );
 
+  const filteredCommandants = useMemo(() => {
+    const query = commandantSearch.trim().toLowerCase();
+    return commandants
+      .filter((entry) => {
+        if (commandantStatusFilter === 'current') return entry.isCurrent;
+        if (commandantStatusFilter === 'past') return !entry.isCurrent;
+        return true;
+      })
+      .filter((entry) => {
+        if (!query) return true;
+        return [
+          entry.name,
+          entry.title,
+          String(entry.tenureStart),
+          String(entry.tenureEnd ?? 'present'),
+          entry.description ?? '',
+          entry.decoration ?? '',
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(query);
+      })
+      .sort((a, b) => {
+        if (a.isCurrent && !b.isCurrent) return -1;
+        if (!a.isCurrent && b.isCurrent) return 1;
+        return (b.tenureStart ?? 0) - (a.tenureStart ?? 0);
+      });
+  }, [commandants, commandantSearch, commandantStatusFilter]);
+
+  const selectedCommandant = useMemo(
+    () => commandants.find(c => c.id === selectedCommandantId) ?? null,
+    [commandants, selectedCommandantId],
+  );
+
+  const featureTargetDevices = useMemo(() => {
+    const now = Date.now();
+    const byId = new Map<string, DeviceClient & { online: boolean }>();
+
+    for (const device of devices) {
+      const lastSeen = new Date(device.last_seen).getTime();
+      const online = Number.isFinite(lastSeen) && now - lastSeen < 45000;
+      const existing = byId.get(device.device_id);
+
+      if (!existing) {
+        byId.set(device.device_id, { ...device, online });
+        continue;
+      }
+
+      const existingTime = new Date(existing.last_seen).getTime();
+      if (!Number.isFinite(existingTime) || lastSeen > existingTime) {
+        byId.set(device.device_id, { ...device, online });
+      }
+    }
+
+    return Array.from(byId.values()).sort(
+      (a, b) => new Date(b.last_seen).getTime() - new Date(a.last_seen).getTime(),
+    );
+  }, [devices]);
+
+  const onlineFeatureTargetDevices = useMemo(
+    () => featureTargetDevices.filter(device => device.online),
+    [featureTargetDevices],
+  );
+
+  const offlineFeatureTargetDevices = useMemo(
+    () => featureTargetDevices.filter(device => !device.online),
+    [featureTargetDevices],
+  );
+
+  const visibleFeatureTargetDevices = useMemo(
+    () => (showOfflineFeatureDevices
+      ? [...onlineFeatureTargetDevices, ...offlineFeatureTargetDevices]
+      : onlineFeatureTargetDevices),
+    [showOfflineFeatureDevices, onlineFeatureTargetDevices, offlineFeatureTargetDevices],
+  );
+
   useEffect(() => {
     if (personnelCategoryFilter !== 'All' && !personnelCategories.includes(personnelCategoryFilter)) {
       setPersonnelCategoryFilter('All');
@@ -421,6 +559,26 @@ export function AdminPanel({
       setSelectedPersonnelId(null);
     }
   }, [personnel, selectedPersonnelId]);
+
+  useEffect(() => {
+    if (!selectedCommandantId) return;
+    const stillExists = commandants.some(c => c.id === selectedCommandantId);
+    if (!stillExists) {
+      setSelectedCommandantId(null);
+    }
+  }, [commandants, selectedCommandantId]);
+
+  useEffect(() => {
+    if (selectedCommandantIds.length === 0) return;
+    const validIds = new Set(commandants.map(c => c.id));
+    setSelectedCommandantIds(prev => prev.filter(id => validIds.has(id)));
+  }, [commandants, selectedCommandantIds.length]);
+
+  useEffect(() => {
+    if (featureTargetDeviceIds.length === 0) return;
+    const validIds = new Set(devices.map(d => d.device_id));
+    setFeatureTargetDeviceIds(prev => prev.filter(id => validIds.has(id)));
+  }, [devices, featureTargetDeviceIds.length]);
 
   const isThemeDirty = themeDraft !== themeMode;
   const isBootDirty =
@@ -570,6 +728,119 @@ export function AdminPanel({
 
   const applyThemeSettings = () => {
     onThemeModeChange(themeDraft);
+  };
+
+  const showFeatureApplyStatus = (message: string) => {
+    setFeatureApplyStatus(message);
+    window.setTimeout(() => {
+      setFeatureApplyStatus(null);
+    }, 2400);
+  };
+
+  const applyDraftToSelectedDevices = async () => {
+    if (featureTargetDeviceIds.length === 0) {
+      showFeatureApplyStatus('Select one or more devices first.');
+      return;
+    }
+
+    setFeatureApplyBusy(true);
+    const ok = await onSendDeviceApplyProfile(featureTargetDeviceIds, {
+      themeMode: themeDraft,
+      bootSequenceSettings: bootDraft,
+      autoDisplaySettings: autoDisplayDraft,
+    });
+    setFeatureApplyBusy(false);
+
+    showFeatureApplyStatus(ok ? 'Draft features sent to selected devices only.' : 'Could not push feature updates to selected devices.');
+  };
+
+  const toggleFeatureTargetDevice = (deviceId: string, enabled: boolean) => {
+    if (enabled) {
+      setFeatureTargetDeviceIds(prev => (prev.includes(deviceId) ? prev : [...prev, deviceId]));
+      return;
+    }
+    setFeatureTargetDeviceIds(prev => prev.filter(id => id !== deviceId));
+  };
+
+  const selectAllOnlineFeatureDevices = () => {
+    setFeatureTargetDeviceIds(onlineFeatureTargetDevices.map(d => d.device_id));
+  };
+
+  const clearFeatureDeviceSelection = () => {
+    setFeatureTargetDeviceIds([]);
+  };
+
+  const formatFeatureDeviceLastSeen = (iso: string) => {
+    const value = new Date(iso);
+    if (Number.isNaN(value.getTime())) return 'Unknown';
+    return value.toLocaleString();
+  };
+
+  const resetCommandantBatch = () => {
+    setCommandantBatchQueue([]);
+    setCommandantBatchIndex(0);
+  };
+
+  const openNextCommandantBatchItem = (nextIndex: number, queue: string[]) => {
+    const nextId = queue[nextIndex];
+    if (!nextId) {
+      resetCommandantBatch();
+      setShowFormC(false);
+      setEditingC(null);
+      showFeatureApplyStatus('Batch commandant update complete.');
+      return;
+    }
+
+    const nextRecord = commandants.find(item => item.id === nextId) ?? null;
+    if (!nextRecord) {
+      resetCommandantBatch();
+      setShowFormC(false);
+      setEditingC(null);
+      return;
+    }
+
+    setCommandantBatchIndex(nextIndex);
+    setEditingC(nextRecord);
+    setShowFormC(true);
+  };
+
+  const startCommandantBatchEdit = () => {
+    const queue = filteredCommandants
+      .map(item => item.id)
+      .filter(id => selectedCommandantIds.includes(id));
+
+    if (queue.length === 0) {
+      showFeatureApplyStatus('Select commandant records to batch edit.');
+      return;
+    }
+
+    setCommandantBatchQueue(queue);
+    setCommandantBatchIndex(0);
+
+    const first = commandants.find(item => item.id === queue[0]) ?? null;
+    setEditingC(first);
+    setShowFormC(true);
+  };
+
+  const openNextCommandantInBatch = () => {
+    if (commandantBatchQueue.length === 0) return;
+    openNextCommandantBatchItem(commandantBatchIndex + 1, commandantBatchQueue);
+  };
+
+  const toggleCommandantSelection = (commandantId: string, enabled: boolean) => {
+    if (enabled) {
+      setSelectedCommandantIds(prev => (prev.includes(commandantId) ? prev : [...prev, commandantId]));
+      return;
+    }
+    setSelectedCommandantIds(prev => prev.filter(id => id !== commandantId));
+  };
+
+  const selectAllVisibleCommandants = () => {
+    setSelectedCommandantIds(filteredCommandants.map(item => item.id));
+  };
+
+  const clearCommandantSelection = () => {
+    setSelectedCommandantIds([]);
   };
 
   const applyBootAndTransitionsSettings = () => {
@@ -758,13 +1029,29 @@ export function AdminPanel({
               Sign Out
             </button>
           )}
-          <div className="flex gap-2 p-1 bg-card/60 backdrop-blur-sm rounded-full border border-primary/15 overflow-x-auto max-w-[calc(100vw-120px)] lg:max-w-none">
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 mb-5">
+        <div className="surface-panel p-3 space-y-2">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Records</p>
+          <div className="flex flex-wrap gap-2">
             {tabBtn('personnel', 'Personnel')}
             {tabBtn('visits', 'Visits')}
             {tabBtn('commandants', 'Commandants')}
+          </div>
+        </div>
+        <div className="surface-panel p-3 space-y-2">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Experience & Media</p>
+          <div className="flex flex-wrap gap-2">
             {tabBtn('theme', 'Theme')}
             {tabBtn('transitions', 'Transitions')}
             {tabBtn('audio', 'Audio Settings')}
+          </div>
+        </div>
+        <div className="surface-panel p-3 space-y-2">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Control & Guidance</p>
+          <div className="flex flex-wrap gap-2">
             {tabBtn('devices', 'Devices')}
             {tabBtn('guide', 'Helper Guide')}
           </div>
@@ -1054,31 +1341,183 @@ export function AdminPanel({
         {tab === 'commandants' && (
           <div className="view-enter">
             {!showFormC && (
-              <div className="flex justify-end mb-4">
-                <button onClick={() => { setEditingC(null); setShowFormC(true); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
-                  <Plus className="h-4 w-4" /> Add Commandant
-                </button>
+              <div className="surface-panel p-4 mb-4">
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+                    <input
+                      type="text"
+                      value={commandantSearch}
+                      onChange={e => setCommandantSearch(e.target.value)}
+                      placeholder="Search by name, title, year, decoration, or bio"
+                      className="w-full lg:max-w-md bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                    />
+                    <select
+                      value={commandantStatusFilter}
+                      onChange={e => setCommandantStatusFilter(e.target.value as CommandantStatusFilter)}
+                      className="w-full sm:w-auto bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="current">Current Only</option>
+                      <option value="past">Past Only</option>
+                    </select>
+                    <button onClick={() => { setEditingC(null); resetCommandantBatch(); setShowFormC(true); }} className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
+                      <Plus className="h-4 w-4" /> Add Commandant
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={selectAllVisibleCommandants}
+                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                    >
+                      Select Visible
+                    </button>
+                    <button
+                      type="button"
+                      onClick={clearCommandantSelection}
+                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                    >
+                      Clear Selection
+                    </button>
+                    <button
+                      type="button"
+                      onClick={startCommandantBatchEdit}
+                      disabled={selectedCommandantIds.length === 0}
+                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Batch Edit Selected ({selectedCommandantIds.length})
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
             
             {showFormC ? (
-              <CommandantForm
-                initial={editingC}
-                onSave={(data) => {
-                  if (editingC) onUpdateCommandant(editingC.id, data);
-                  else onAddCommandant(data as Omit<Commandant, 'id'>);
-                  setShowFormC(false); setEditingC(null);
-                }}
-                onCancel={() => { setShowFormC(false); setEditingC(null); }}
-              />
+              <>
+                {commandantBatchQueue.length > 0 && (
+                  <div className="mb-3 rounded-lg border border-primary/20 bg-primary/10 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <p className="text-xs text-foreground">
+                      Batch edit in progress: {Math.min(commandantBatchIndex + 1, commandantBatchQueue.length)} of {commandantBatchQueue.length}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={openNextCommandantInBatch}
+                        className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                      >
+                        Skip To Next
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetCommandantBatch();
+                          setShowFormC(false);
+                          setEditingC(null);
+                        }}
+                        className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                      >
+                        Exit Batch
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <CommandantForm
+                  initial={editingC}
+                  onSave={(data) => {
+                    if (editingC) {
+                      onUpdateCommandant(editingC.id, data);
+                      if (commandantBatchQueue.length > 0) {
+                        const currentIdx = commandantBatchQueue.indexOf(editingC.id);
+                        if (currentIdx >= 0) {
+                          openNextCommandantBatchItem(currentIdx + 1, commandantBatchQueue);
+                          return;
+                        }
+                      }
+                    } else {
+                      onAddCommandant(data as Omit<Commandant, 'id'>);
+                    }
+                    resetCommandantBatch();
+                    setShowFormC(false);
+                    setEditingC(null);
+                  }}
+                  onCancel={() => {
+                    resetCommandantBatch();
+                    setShowFormC(false);
+                    setEditingC(null);
+                  }}
+                />
+              </>
             ) : commandants.length === 0 ? (
               <EmptyState message="No commandants on record." onAdd={() => setShowFormC(true)} />
+            ) : selectedCommandant ? (
+              <div className="surface-panel p-5 sm:p-6 view-enter">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Commandant Profile</p>
+                    <h4 className="text-lg sm:text-xl font-semibold text-foreground">{selectedCommandant.name}</h4>
+                    <p className="text-sm text-muted-foreground mt-1">{selectedCommandant.title} • {selectedCommandant.tenureStart} - {selectedCommandant.tenureEnd ?? 'Present'}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedCommandantId(null)}
+                      className="px-3 py-2 rounded-md border border-primary/20 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    >
+                      Back To List
+                    </button>
+                    <button
+                      onClick={() => { setEditingC(selectedCommandant); resetCommandantBatch(); setShowFormC(true); }}
+                      className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90"
+                    >
+                      Edit Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        onDeleteCommandant(selectedCommandant.id);
+                        setSelectedCommandantId(null);
+                      }}
+                      className="px-3 py-2 rounded-md border border-destructive/40 text-xs font-semibold text-destructive hover:bg-destructive/10"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Name</p>
+                    <p className="font-medium text-foreground mt-1">{selectedCommandant.name}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Title</p>
+                    <p className="font-medium text-foreground mt-1">{selectedCommandant.title}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tenure</p>
+                    <p className="font-medium text-foreground mt-1">{selectedCommandant.tenureStart} - {selectedCommandant.tenureEnd ?? 'Present'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</p>
+                    <p className="font-medium text-foreground mt-1">{selectedCommandant.isCurrent ? 'Current' : 'Past'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Biography</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.description || 'No bio available.'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Decoration</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.decoration || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="surface-panel overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-muted/40 text-primary text-xs uppercase tracking-wider border-b border-primary/10">
+                        <th className="px-4 py-4 text-left font-semibold">Select</th>
                         <th className="px-4 py-4 text-left font-semibold">Name</th>
                         <th className="px-4 py-4 text-left font-semibold">Tenure</th>
                         <th className="px-4 py-4 text-left font-semibold">Status</th>
@@ -1086,9 +1525,25 @@ export function AdminPanel({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-primary/5">
-                      {commandants.map(c => (
-                        <tr key={c.id} className="hover:bg-muted/30 transition-colors group">
-                          <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
+                      {filteredCommandants.map(c => (
+                        <tr key={c.id} className="hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => setSelectedCommandantId(c.id)}>
+                          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selectedCommandantIds.includes(c.id)}
+                              onChange={e => toggleCommandantSelection(c.id, e.target.checked)}
+                              aria-label={`Select ${c.name}`}
+                            />
+                          </td>
+                          <td className="px-4 py-3 font-medium text-foreground">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCommandantId(c.id)}
+                              className="text-left underline-offset-2 hover:underline"
+                            >
+                              {c.name}
+                            </button>
+                          </td>
                           <td className="px-4 py-3 text-muted-foreground">{c.tenureStart} – {c.tenureEnd ?? 'Present'}</td>
                           <td className="px-4 py-3">
                             {c.isCurrent ? (
@@ -1103,12 +1558,19 @@ export function AdminPanel({
                           </td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => { setEditingC(c); setShowFormC(true); }} className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"><Pencil className="h-4 w-4" /></button>
-                              <button onClick={() => onDeleteCommandant(c.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
+                              <button onClick={(e) => { e.stopPropagation(); setEditingC(c); resetCommandantBatch(); setShowFormC(true); }} className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"><Pencil className="h-4 w-4" /></button>
+                              <button onClick={(e) => { e.stopPropagation(); onDeleteCommandant(c.id); }} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
                             </div>
                           </td>
                         </tr>
                       ))}
+                      {filteredCommandants.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                            No commandant records match this filter.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1130,11 +1592,13 @@ export function AdminPanel({
               personnel={personnel}
               commandants={commandants}
               currentDeviceId={currentDeviceId}
+              currentDeviceLabel={currentDeviceLabel}
               isSuperAdmin={isSuperAdmin}
               currentThemeMode={themeMode}
               currentBootSettings={bootSequenceSettings}
               currentAutoDisplaySettings={autoDisplaySettings}
               onRefresh={onRefreshDevices}
+              onRenameCurrentDevice={onRenameCurrentDevice}
               onSendView={onSendDeviceView}
               onSendAutoDisplay={onSendDeviceAutoDisplay}
               onSendCloseApp={onSendDeviceCloseApp}
@@ -1247,12 +1711,20 @@ export function AdminPanel({
 
               <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
                 <h5 className="text-sm font-semibold text-foreground">Transition Types: Detailed Guide</h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                  {TRANSITION_TYPES.map(item => (
-                    <div key={`helper-${item.id}`} className="rounded-md border border-primary/10 p-3 bg-background/40">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-foreground">{item.label}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1">Best for: {TRANSITION_USAGE_GUIDES[item.id].bestFor}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1">How to use: {TRANSITION_USAGE_GUIDES[item.id].tip}</p>
+                <div className="space-y-4 mt-3">
+                  {GROUPED_TRANSITIONS.map(group => (
+                    <div key={`helper-group-${group.id}`} className="rounded-md border border-primary/10 p-3 bg-background/40">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-primary">{group.label}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                        {group.entries.map(item => (
+                          <div key={`helper-${item.id}`} className="rounded-md border border-primary/10 p-3 bg-background/50">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-foreground">{item.label}</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">Best for: {TRANSITION_USAGE_GUIDES[item.id].bestFor}</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">How to use: {TRANSITION_USAGE_GUIDES[item.id].tip}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1328,6 +1800,63 @@ export function AdminPanel({
                 </p>
               </div>
 
+              <div className="rounded-lg border border-primary/15 bg-card/60 p-4 mb-4">
+                <h5 className="text-sm font-semibold text-foreground">Transition Categories Overview</h5>
+                <p className="text-xs text-muted-foreground mt-1">All transition controls below are grouped by these categories for easier setup and review.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
+                  {GROUPED_TRANSITIONS.map(group => (
+                    <div key={`overview-${group.id}`} className="rounded border border-primary/10 bg-background/40 p-2">
+                      <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-primary/15 bg-card/60 p-4 mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <h5 className="text-sm font-semibold text-foreground">All Transitions At A Glance</h5>
+                    <p className="text-xs text-muted-foreground mt-1">Every transition is visible here with its timing and instant preview. No extra clicks needed.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvancedTransitionPanels(prev => !prev)}
+                    className="px-3 py-2 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                  >
+                    {showAdvancedTransitionPanels ? 'Hide Advanced Sections' : 'Show Advanced Sections'}
+                  </button>
+                </div>
+
+                <div className="space-y-3 mt-3">
+                  {GROUPED_TRANSITIONS.map(group => (
+                    <div key={`glance-${group.id}`} className="rounded border border-primary/10 bg-background/40 p-3">
+                      <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                      <div className="space-y-2 mt-2">
+                        {group.entries.map(transition => (
+                          <div key={`glance-row-${transition.id}`} className="rounded border border-primary/10 bg-card/40 px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div>
+                              <p className="text-xs font-semibold text-foreground">{transition.label}</p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => openTransitionPreview(transition.id, `${group.label} Preview`)}
+                              className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                            >
+                              Preview
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {showAdvancedTransitionPanels && (
               <div className="space-y-3 mt-3">
                 <button onClick={() => setActiveTransitionPanel('guide')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Transition Usage Guide</span>
@@ -1342,8 +1871,12 @@ export function AdminPanel({
                           onChange={e => setPreviewTransition(e.target.value as AutoDisplayTransitionType)}
                           className="w-full mt-1 bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground"
                         >
-                          {TRANSITION_TYPES.map(transition => (
-                            <option key={`guide-${transition.id}`} value={transition.id}>{transition.label}</option>
+                          {GROUPED_TRANSITIONS.map(group => (
+                            <optgroup key={`guide-group-${group.id}`} label={group.label}>
+                              {group.entries.map(transition => (
+                                <option key={`guide-${transition.id}`} value={transition.id}>{transition.label}</option>
+                              ))}
+                            </optgroup>
                           ))}
                         </select>
                       </div>
@@ -1565,16 +2098,24 @@ export function AdminPanel({
                 </button>
                 {activeTransitionPanel === 'library' && (
                   <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {TRANSITION_TYPES.map(transition => {
-                        const enabled = autoDisplayDraft.transitionSequence.includes(transition.id);
-                        return (
-                          <label key={transition.id} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
-                            <span className="text-foreground">{transition.label}</span>
-                            <input type="checkbox" checked={enabled} onChange={e => toggleTransitionInSequence(transition.id, e.target.checked)} />
-                          </label>
-                        );
-                      })}
+                    <div className="space-y-4">
+                      {GROUPED_TRANSITIONS.map(group => (
+                        <div key={`library-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
+                          <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                          <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                            {group.entries.map(transition => {
+                              const enabled = autoDisplayDraft.transitionSequence.includes(transition.id);
+                              return (
+                                <label key={transition.id} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
+                                  <span className="text-foreground">{transition.label}</span>
+                                  <input type="checkbox" checked={enabled} onChange={e => toggleTransitionInSequence(transition.id, e.target.checked)} />
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -1608,17 +2149,24 @@ export function AdminPanel({
                       </select>
                     </div>
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {TRANSITION_TYPES.map(transition => {
-                          const activeSequence = autoDisplayDraft.transitionSequenceByContext[sequenceContext] ?? autoDisplayDraft.transitionSequence;
-                          const enabled = activeSequence.includes(transition.id);
-                          return (
-                            <label key={`${sequenceContext}-${transition.id}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
-                              <span className="text-foreground">{transition.label}</span>
-                              <input type="checkbox" checked={enabled} onChange={e => toggleTransitionInContextSequence(sequenceContext, transition.id, e.target.checked)} />
-                            </label>
-                          );
-                        })}
+                      <div className="space-y-3">
+                        {GROUPED_TRANSITIONS.map(group => (
+                          <div key={`${sequenceContext}-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
+                            <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                              {group.entries.map(transition => {
+                                const activeSequence = autoDisplayDraft.transitionSequenceByContext[sequenceContext] ?? autoDisplayDraft.transitionSequence;
+                                const enabled = activeSequence.includes(transition.id);
+                                return (
+                                  <label key={`${sequenceContext}-${transition.id}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
+                                    <span className="text-foreground">{transition.label}</span>
+                                    <input type="checkbox" checked={enabled} onChange={e => toggleTransitionInContextSequence(sequenceContext, transition.id, e.target.checked)} />
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                       <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                         {(autoDisplayDraft.transitionSequenceByContext[sequenceContext] ?? autoDisplayDraft.transitionSequence).map((transition, index) => {
@@ -1668,7 +2216,13 @@ export function AdminPanel({
                           className="w-full mt-1 bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground"
                         >
                           <option value="sequence">Use Sequence</option>
-                          {TRANSITION_TYPES.map(transition => <option key={`applied-${transition.id}`} value={transition.id}>{transition.label}</option>)}
+                          {GROUPED_TRANSITIONS.map(group => (
+                            <optgroup key={`applied-group-${group.id}`} label={group.label}>
+                              {group.entries.map(transition => (
+                                <option key={`applied-${transition.id}`} value={transition.id}>{transition.label}</option>
+                              ))}
+                            </optgroup>
+                          ))}
                         </select>
                       </div>
                       <button type="button" onClick={() => {
@@ -1685,12 +2239,19 @@ export function AdminPanel({
                 </button>
                 {activeTransitionPanel === 'durations' && (
                   <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {TRANSITION_TYPES.map(transition => (
-                        <div key={transition.id} className="space-y-1.5 rounded border border-primary/10 p-2">
-                          <div className="flex items-center justify-between"><label className="text-[11px] text-foreground">{transition.label}</label><span className="text-[11px] text-muted-foreground">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span></div>
-                          <input type="range" min={250} max={3000} step={50} value={autoDisplayDraft.transitionDurationByTypeMs[transition.id]} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, transitionDurationByTypeMs: { ...prev.transitionDurationByTypeMs, [transition.id]: Number(e.target.value) } }))} className="w-full" />
-                          <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Preview</button>
+                    <div className="space-y-4">
+                      {GROUPED_TRANSITIONS.map(group => (
+                        <div key={`duration-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
+                          <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                            {group.entries.map(transition => (
+                              <div key={transition.id} className="space-y-1.5 rounded border border-primary/10 p-2">
+                                <div className="flex items-center justify-between"><label className="text-[11px] text-foreground">{transition.label}</label><span className="text-[11px] text-muted-foreground">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span></div>
+                                <input type="range" min={250} max={3000} step={50} value={autoDisplayDraft.transitionDurationByTypeMs[transition.id]} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, transitionDurationByTypeMs: { ...prev.transitionDurationByTypeMs, [transition.id]: Number(e.target.value) } }))} className="w-full" />
+                                <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Preview</button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1703,33 +2264,40 @@ export function AdminPanel({
                 {activeTransitionPanel === 'soundPairing' && (
                   <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
                     <p className="text-xs text-muted-foreground mb-3">Assign a cue sound profile to each transition. These cues play at transition start in auto display.</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {TRANSITION_TYPES.map((transition) => (
-                        <div key={`cue-${transition.id}`} className="space-y-1.5 rounded border border-primary/10 p-2">
-                          <label className="text-[11px] text-foreground font-medium">{transition.label}</label>
-                          <div className="flex items-center gap-2">
-                            <select
-                              value={autoDisplayDraft.transitionCueByType[transition.id]}
-                              onChange={e => setAutoDisplayDraft(prev => ({
-                                ...prev,
-                                transitionCueByType: {
-                                  ...prev.transitionCueByType,
-                                  [transition.id]: e.target.value as (typeof TRANSITION_CUE_TYPES)[number]['id'],
-                                },
-                              }))}
-                              className="w-full bg-background border border-primary/20 rounded-md px-2 py-1.5 text-xs text-foreground"
-                            >
-                              {TRANSITION_CUE_TYPES.map(cue => (
-                                <option key={`cue-opt-${transition.id}-${cue.id}`} value={cue.id}>{cue.label}</option>
-                              ))}
-                            </select>
-                            <button
-                              type="button"
-                              onClick={() => playTransitionCue(autoDisplayDraft.transitionCueByType[transition.id], true)}
-                              className="px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
-                            >
-                              Test
-                            </button>
+                    <div className="space-y-4">
+                      {GROUPED_TRANSITIONS.map(group => (
+                        <div key={`cue-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
+                          <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                            {group.entries.map((transition) => (
+                              <div key={`cue-${transition.id}`} className="space-y-1.5 rounded border border-primary/10 p-2">
+                                <label className="text-[11px] text-foreground font-medium">{transition.label}</label>
+                                <div className="flex items-center gap-2">
+                                  <select
+                                    value={autoDisplayDraft.transitionCueByType[transition.id]}
+                                    onChange={e => setAutoDisplayDraft(prev => ({
+                                      ...prev,
+                                      transitionCueByType: {
+                                        ...prev.transitionCueByType,
+                                        [transition.id]: e.target.value as (typeof TRANSITION_CUE_TYPES)[number]['id'],
+                                      },
+                                    }))}
+                                    className="w-full bg-background border border-primary/20 rounded-md px-2 py-1.5 text-xs text-foreground"
+                                  >
+                                    {TRANSITION_CUE_TYPES.map(cue => (
+                                      <option key={`cue-opt-${transition.id}-${cue.id}`} value={cue.id}>{cue.label}</option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    type="button"
+                                    onClick={() => playTransitionCue(autoDisplayDraft.transitionCueByType[transition.id], true)}
+                                    className="px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                                  >
+                                    Test
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       ))}
@@ -1808,6 +2376,7 @@ export function AdminPanel({
                 )}
                 {settingsImportStatus && <p className="text-xs text-primary mt-3">{settingsImportStatus}</p>}
               </div>
+              )}
 
               {previewModalOpen && (
                 <div className="fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center px-4">
@@ -1865,7 +2434,7 @@ function PersonnelForm({ initial, onSave, onCancel }: {
     name: initial?.name || '',
     rank: initial?.rank || '',
     category: initial?.category || 'FWC' as Category,
-    service: initial?.service || 'Army' as Service,
+    service: initial?.service || 'Nigerian Army' as Service,
     periodStart: initial?.periodStart || 2020,
     periodEnd: initial?.periodEnd || 2022,
     citation: initial?.citation || 'Recognized for outstanding contributions to strategic leadership and national defence development.',

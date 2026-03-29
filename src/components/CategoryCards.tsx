@@ -5,6 +5,7 @@ import { useThemeMode } from "@/hooks/useThemeMode";
 
 export type ViewKey =
   | "home"
+  | "commandants"
   | "fwc"
   | "fdc"
   | "directing"
@@ -24,6 +25,14 @@ const CARDS: {
   color: string;
   cardGradient: string;
 }[] = [
+  {
+    key: "commandants",
+    label: "Commandants",
+    subtitle: "Leadership Chronicle",
+    icon: Shield,
+    color: "text-amber-600",
+    cardGradient: "from-[#2f2508] via-[#3f3210] to-[#524117]",
+  },
   {
     key: "fwc",
     label: "Distinguished Fellows (FWC)",

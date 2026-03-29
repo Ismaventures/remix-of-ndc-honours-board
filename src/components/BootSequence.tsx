@@ -387,10 +387,10 @@ export function BootSequence({
                         ? "Current Commandant"
                         : "Commandants Sequence"}
                     </p>
-                    <p className="text-[9px] md:text-[11px] font-bold text-white tracking-wide uppercase leading-tight">
+                    <p className="text-[9px] md:text-[11px] font-extrabold text-[#FFD700] tracking-wide leading-tight break-words [overflow-wrap:anywhere] max-h-[2.9em] overflow-y-auto">
                       {currentPortrait?.name ?? currentCommandant.name}
                     </p>
-                    <p className="text-[8px] text-[#FFD700] mt-0.5 uppercase tracking-wide truncate">
+                    <p className="text-[8px] text-[#FF3B30] mt-0.5 tracking-wide break-words [overflow-wrap:anywhere] max-h-[3.2em] overflow-y-auto">
                       {currentPortrait?.rankOrTitle ?? currentCommandant.title}
                     </p>
                     <p className="text-[8px] text-white/72 mt-0.5 uppercase tracking-wide">
@@ -432,10 +432,10 @@ export function BootSequence({
                       ? "Authorizing Command"
                       : "Archive Commandant Sequence"}
                   </p>
-                  <p className="text-[9px] md:text-[11px] font-bold text-white tracking-wide uppercase drop-shadow-[0_0_5px_rgba(255,215,0,0.45)]">
+                  <p className="text-[9px] md:text-[11px] font-extrabold text-[#FFD700] tracking-wide drop-shadow-[0_0_5px_rgba(255,215,0,0.45)] break-words [overflow-wrap:anywhere] max-h-[2.9em] overflow-y-auto">
                     {currentPortrait?.name ?? currentCommandant.name}
                   </p>
-                  <p className="text-[7px] md:text-[8px] text-[#FFD700] mt-0.5 uppercase tracking-wide truncate">
+                  <p className="text-[7px] md:text-[8px] text-[#FF3B30] mt-0.5 tracking-wide break-words [overflow-wrap:anywhere] max-h-[3.2em] overflow-y-auto">
                     {currentPortrait?.rankOrTitle ?? currentCommandant.title}
                   </p>
                 </div>

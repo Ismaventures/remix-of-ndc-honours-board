@@ -15,6 +15,7 @@ import {
 interface PastCommandantsProps {
   commandants: Commandant[];
   onSelectCommandant?: (commandant: Commandant) => void;
+  includeCurrent?: boolean;
 }
 
 function CommandantAvatar({ src, alt }: { src?: string; alt: string }) {
@@ -36,6 +37,7 @@ function CommandantAvatar({ src, alt }: { src?: string; alt: string }) {
 export function PastCommandants({
   commandants,
   onSelectCommandant,
+  includeCurrent = false,
 }: PastCommandantsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoPauseUntilRef = useRef(0);
@@ -47,7 +49,7 @@ export function PastCommandants({
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith("outdoor");
 
-  const past = commandants.filter((c) => !c.isCurrent);
+  const past = includeCurrent ? commandants : commandants.filter((c) => !c.isCurrent);
   const loopedPast = useMemo(() => {
     if (past.length <= 1) return past;
     return [...past, ...past, ...past];

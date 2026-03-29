@@ -44,19 +44,23 @@ export function CommandantHero({
 
   if (isAutoDisplay) {
     return (
-      <section className={`relative w-full h-full min-h-0 max-h-full flex flex-col items-stretch overflow-hidden border ${isLightMode ? "bg-white text-slate-900 border-slate-200" : "bg-background text-foreground border-border"}`}>
+      <section className={`relative w-full h-full min-h-0 max-h-full flex flex-col items-stretch overflow-hidden border ${isLightMode ? "auto-display-studio-surface text-slate-900 border-slate-200/80" : "bg-background text-foreground border-border"}`}>
         {/* Top Defence Colors Strip */}
         <div className="absolute top-0 inset-x-0 h-[8px] flex z-30">
-          <div className="flex-1 bg-[#002060]" title="Navy" />
-          <div className="flex-1 bg-[#FF0000]" title="Army" />
-          <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
+          <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
+          <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
+          <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
         </div>
 
-        {/* Background elements */}
-        <div className="absolute inset-0 z-0 opacity-40">
-          <div className={`absolute inset-0 ${isLightMode ? "bg-white" : "bg-background"}`} />
-          {!isLightMode && (
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:3vw_3vw]" />
+        {/* Background: subtle paper grain (light) / grid (dark) */}
+        <div className={`absolute inset-0 z-0 ${isLightMode ? "opacity-100" : "opacity-40"}`}>
+          {isLightMode ? (
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:min(3.2vw,20px)_min(3.2vw,20px)] mix-blend-multiply opacity-[0.35]" />
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-background" />
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:3vw_3vw]" />
+            </>
           )}
         </div>
 
@@ -72,9 +76,9 @@ export function CommandantHero({
         <div className="relative z-10 mx-auto flex w-full max-w-[min(96vw,1400px)] flex-1 min-h-0 flex-col items-center justify-center gap-5 px-4 pb-6 pt-[max(4rem,12%)] sm:gap-6 sm:px-5 sm:pb-7 sm:pt-[max(4.25rem,11%)] md:flex-row md:items-center md:justify-center md:gap-7 md:px-7 md:py-7 lg:gap-8">
           {/* Portrait with Yellow/Gold frame — flex-shrink-0 so the info plate never overlaps a squashed portrait */}
           <div className="relative flex w-full flex-shrink-0 items-center justify-center md:max-w-[42%] md:w-auto lg:max-w-[40%]">
-            <div className="p-[0.25rem] sm:p-[0.35vh] bg-[#FFD700] shadow-2xl transition-transform duration-500 w-fit max-w-full">
-              <div className="p-[0.25rem] sm:p-[0.35vh] bg-white">
-                <div className="p-[0.15rem] sm:p-[0.25vh] bg-[#FFD700]">
+            <div className="portrait-photo-mat rounded-sm p-[3px] sm:p-[4px] shadow-2xl transition-transform duration-500 w-fit max-w-full">
+              <div className="rounded-[3px] bg-white p-[2px] sm:p-[3px] shadow-inner">
+                <div className="portrait-photo-mat-inner rounded-[2px] bg-neutral-100/90 p-[1px] sm:p-[2px]">
                   <div className={`relative mx-auto aspect-[3/4] h-[min(50vh,70dvh)] w-auto max-w-[min(90vw,420px)] bg-slate-100 shadow-inner overflow-hidden md:h-[min(70vh,80dvh)] ${isLightMode ? "bg-slate-50" : "bg-muted/20"}`}>
                     {commandantImageUrl ? (
                       <img
@@ -101,10 +105,10 @@ export function CommandantHero({
             {/* Main Info Bar */}
             <div className="bg-[#002060] w-full py-[max(8px,1.2vh)] md:py-[2.3vh] px-[3vw] sm:px-[4vw] flex flex-col items-center justify-center text-center shadow-2xl">
               <div className="flex flex-col items-center gap-[0.24vh] md:gap-[0.5vh] mb-[0.35vh] md:mb-[1vh]">
-                <h2 className="text-[clamp(0.92rem,2.9vh,4rem)] font-bold tracking-tight text-[#FFD700] uppercase drop-shadow-md leading-tight">
+                <h2 className="text-[clamp(0.84rem,2.2vh,2.2rem)] md:text-[clamp(1rem,2.8vh,3.2rem)] font-extrabold tracking-tight text-[#FFD700] drop-shadow-[0_0_10px_rgba(255,215,0,0.35)] leading-tight max-w-full break-words [overflow-wrap:anywhere] max-h-[4.4em] overflow-y-auto">
                   {name}
                 </h2>
-                <span className="text-[clamp(0.46rem,1.4vh,1.5rem)] font-medium text-white/95 tracking-[0.18em] sm:tracking-widest uppercase italic border-t border-white/10 pt-[0.2vh] mt-[0.2vh]">
+                <span className="text-[clamp(0.56rem,1.5vh,1.2rem)] md:text-[clamp(0.62rem,1.6vh,1.35rem)] font-extrabold text-[#FF3B30] tracking-[0.07em] italic border-t border-white/10 pt-[0.2vh] mt-[0.2vh] max-w-full break-words [overflow-wrap:anywhere] max-h-[4em] overflow-y-auto">
                   {titleText}
                 </span>
               </div>
@@ -114,11 +118,11 @@ export function CommandantHero({
                   {isCurrent ? "Current Commandant" : "Past Commandant"}
                 </p>
                 <div className="flex flex-col items-center gap-1 md:gap-2 mt-1 md:mt-2">
-                  <p className="text-[clamp(0.5rem,1.5vh,1.4rem)] font-semibold text-[#FFD700] tracking-[0.12em] sm:tracking-[0.15em] uppercase bg-white/5 px-2.5 py-0.5 md:px-4 md:py-1 rounded">
+                  <p className="text-[clamp(0.5rem,1.5vh,1.4rem)] font-semibold text-[#ebe6dc] tracking-[0.12em] sm:tracking-[0.15em] uppercase bg-white/5 px-2.5 py-0.5 md:px-4 md:py-1 rounded">
                     {tenureLabel}
                   </p>
                 </div>
-                <p className="text-[clamp(0.58rem,1.8vh,1.8rem)] font-bold text-[#FFD700] tracking-[0.15em] sm:tracking-[0.25em] uppercase mt-1.5 md:mt-4">
+                <p className="text-[clamp(0.58rem,1.8vh,1.8rem)] font-bold text-[#e8e2d6] tracking-[0.15em] sm:tracking-[0.25em] uppercase mt-1.5 md:mt-4">
                   National Defence College
                 </p>
               </div>
@@ -137,9 +141,9 @@ export function CommandantHero({
 
         {/* Bottom Defence Colors Strip */}
           <div className="absolute bottom-0 inset-x-0 h-[8px] flex z-30">
-          <div className="flex-1 bg-[#002060]" title="Navy" />
-          <div className="flex-1 bg-[#FF0000]" title="Army" />
-          <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
+          <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
+          <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
+          <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
         </div>
       </section>
     );
@@ -155,9 +159,9 @@ export function CommandantHero({
     >
       {/* Top Defence Colors Strip */}
       <div className="absolute top-0 inset-x-0 h-[8px] flex z-30">
-        <div className="flex-1 bg-[#002060]" title="Navy" />
-        <div className="flex-1 bg-[#FF0000]" title="Army" />
-        <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
+        <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
+        <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
+        <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
       </div>
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
@@ -211,7 +215,7 @@ export function CommandantHero({
           </div>
 
           <h2
-            className={`${isCompact ? "text-3xl md:text-[2.4rem]" : "text-4xl md:text-[3.2rem]"} font-bold mb-2 leading-tight uppercase tracking-tight ${isLightMode ? "text-[#002060]" : "text-white drop-shadow-md"}`}
+            className={`${isCompact ? "text-[clamp(1.1rem,3.1vh,2.2rem)] md:text-[2.3rem]" : "text-[clamp(1.35rem,3.4vh,2.6rem)] md:text-[3rem]"} font-extrabold mb-2 leading-tight tracking-tight text-[#FFD700] drop-shadow-[0_0_10px_rgba(255,215,0,0.28)] max-w-full break-words [overflow-wrap:anywhere] max-h-[4.6em] overflow-y-auto`}
           >
             {name}
           </h2>
@@ -223,7 +227,7 @@ export function CommandantHero({
           </div>
 
           <p
-            className={`${isCompact ? "text-sm md:text-base mb-4" : "text-base md:text-xl mb-6"} font-bold tracking-[0.1em] uppercase border-l-4 pl-4 italic ${isLightMode ? "text-[#FF0000] border-[#FF0000]" : "text-red-400 border-red-500/80"}`}
+            className={`${isCompact ? "text-[clamp(0.76rem,1.9vh,1.04rem)] md:text-[1.02rem] mb-4" : "text-[clamp(0.88rem,2.1vh,1.2rem)] md:text-[1.3rem] mb-6"} font-extrabold tracking-[0.06em] border-l-4 pl-4 italic text-[#FF3B30] border-[#FF3B30] max-w-full break-words [overflow-wrap:anywhere] max-h-[5.2em] overflow-y-auto`}
           >
             {titleText}
           </p>
@@ -250,10 +254,11 @@ export function CommandantHero({
 
       {/* Bottom Defence Colors Strip */}
       <div className="absolute bottom-0 inset-x-0 h-[6px] flex z-30">
-        <div className="flex-1 bg-[#002060]" title="Navy" />
-        <div className="flex-1 bg-[#FF0000]" title="Army" />
-        <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
+        <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
+        <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
+        <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
       </div>
     </section>
   );
 }
+

@@ -53,6 +53,7 @@ export interface AutoDisplaySettings {
   byContext: Record<AutoDisplayContextKey, AutoDisplayTiming>;
   transitionSequence: AutoDisplayTransitionType[];
   transitionSequenceByContext: Record<AutoDisplayContextKey, AutoDisplayTransitionType[]>;
+  nextContextByContext: Record<AutoDisplayContextKey, AutoDisplayContextKey | null>;
   appliedTransitionByContext: Record<AutoDisplayContextKey, AutoDisplayTransitionType | null>;
   transitionDurationByTypeMs: Record<AutoDisplayTransitionType, number>;
   transitionCueByType: Record<AutoDisplayTransitionType, TransitionCueType>;
@@ -186,6 +187,14 @@ export const DEFAULT_AUTO_DISPLAY_SETTINGS: AutoDisplaySettings = {
       'flip-x', 'flip-y', 'rotate-in', 'blur-in', 'skew-lift', 'scale-rise',
     ],
   },
+  nextContextByContext: {
+    commandants: null,
+    visits: null,
+    FWC: null,
+    FDC: null,
+    'Directing Staff': null,
+    Allied: null,
+  },
   appliedTransitionByContext: {
     commandants: null,
     visits: null,
@@ -214,6 +223,7 @@ export const DEFAULT_AUTO_DISPLAY_SETTINGS: AutoDisplaySettings = {
     'parade-sweep': 1200,
     'mission-brief': 1000,
     'runway-sweep': 1000,
+    'continuous-scroll': 1200,
   },
   transitionCueByType: DEFAULT_TRANSITION_CUE_BY_TYPE,
   commandantLayout: 'standard',
@@ -266,6 +276,16 @@ function sanitizeSettings(input: Partial<AutoDisplaySettings> | null | undefined
     return acc;
   }, {} as Record<AutoDisplayContextKey, AutoDisplayTransitionType[]>);
 
+  const nextContextByContext = AUTO_DISPLAY_CONTEXTS.reduce<Record<AutoDisplayContextKey, AutoDisplayContextKey | null>>((acc, context) => {
+    const raw = input?.nextContextByContext?.[context.key];
+    if (typeof raw === 'string' && AUTO_DISPLAY_CONTEXTS.some(item => item.key === raw)) {
+      acc[context.key] = raw as AutoDisplayContextKey;
+      return acc;
+    }
+    acc[context.key] = null;
+    return acc;
+  }, {} as Record<AutoDisplayContextKey, AutoDisplayContextKey | null>);
+
   const appliedTransitionByContext = AUTO_DISPLAY_CONTEXTS.reduce<Record<AutoDisplayContextKey, AutoDisplayTransitionType | null>>((acc, context) => {
     const raw = input?.appliedTransitionByContext?.[context.key];
     acc[context.key] = isTransitionType(raw) ? raw : null;
@@ -297,6 +317,7 @@ function sanitizeSettings(input: Partial<AutoDisplaySettings> | null | undefined
     byContext,
     transitionSequence,
     transitionSequenceByContext,
+    nextContextByContext,
     appliedTransitionByContext,
     transitionDurationByTypeMs,
     transitionCueByType,
@@ -329,6 +350,12 @@ function mergeSettingsPatch(
           ...patch.transitionSequenceByContext,
         }
       : base.transitionSequenceByContext,
+    nextContextByContext: patch.nextContextByContext
+      ? {
+          ...base.nextContextByContext,
+          ...patch.nextContextByContext,
+        }
+      : base.nextContextByContext,
     appliedTransitionByContext: patch.appliedTransitionByContext
       ? {
           ...base.appliedTransitionByContext,
@@ -446,6 +473,17 @@ export function useAutoDisplaySettings() {
     write(merged);
   };
 
+  const setNextContext = (context: AutoDisplayContextKey, nextContext: AutoDisplayContextKey | null) => {
+    const merged = sanitizeSettings({
+      ...settings,
+      nextContextByContext: {
+        ...settings.nextContextByContext,
+        [context]: nextContext,
+      },
+    });
+    write(merged);
+  };
+
   const setCommandantLayout = (layout: 'standard' | 'split') => {
     const merged = sanitizeSettings({
       ...settings,
@@ -469,6 +507,7 @@ export function useAutoDisplaySettings() {
       setTransitionDuration,
       setTransitionSequence,
       setContextTransitionSequence,
+      setNextContext,
       setCommandantLayout,
       importSettings,
       resetSettings,

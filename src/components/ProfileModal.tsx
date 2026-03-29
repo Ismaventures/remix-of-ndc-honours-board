@@ -52,9 +52,9 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
       >
         {/* Top Defence Colors Strip */}
         <div className="h-[10px] w-full flex shrink-0">
-          <div className="flex-1 bg-[#002060]" title="Navy" />
-          <div className="flex-1 bg-[#FF0000]" title="Army" />
-          <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
+          <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
+          <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
+          <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
         </div>
 
         <div className={`flex items-center justify-between px-8 py-5 border-b ${isLightMode ? "border-slate-100 bg-slate-50/50" : "border-primary/20 bg-muted/20"}`}>
@@ -187,12 +187,13 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
 
         {/* Bottom Defence Colors Strip */}
         <div className="h-[8px] w-full flex shrink-0">
-          <div className="flex-1 bg-[#002060]" title="Navy" />
-          <div className="flex-1 bg-[#FF0000]" title="Army" />
-          <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
+          <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
+          <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
+          <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
         </div>
       </div>
     </div>,
     document.body,
   );
 }
+

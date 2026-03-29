@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { CommandantHero } from "@/components/CommandantHero";
 import { PastCommandants } from "@/components/PastCommandants";
@@ -19,6 +20,8 @@ import { useThemeMode } from "@/hooks/useThemeMode";
 import type { ThemeMode } from "@/hooks/useThemeMode";
 import { useBootSequenceSettings } from "@/hooks/useBootSequenceSettings";
 import { useAutoDisplaySettings } from "@/hooks/useAutoDisplaySettings";
+import { AUTO_DISPLAY_CONTEXTS } from "@/hooks/useAutoDisplaySettings";
+import type { AutoDisplayContextKey } from "@/hooks/useAutoDisplaySettings";
 import {
   DeviceControlCommandType,
   DeviceControlView,
@@ -87,6 +90,7 @@ const Index = () => {
   const previousViewBeforeCommandantProfileRef = useRef<ViewKey | null>(null);
 
   const [view, setView] = useState<ViewKey>("home");
+  const [showStageConfig, setShowStageConfig] = useState(false);
 
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
   const {
@@ -101,6 +105,7 @@ const Index = () => {
     setTransitionDuration: setAutoDisplayTransitionDuration,
     setTransitionSequence: setAutoDisplayTransitionSequence,
     setContextTransitionSequence: setAutoDisplayContextTransitionSequence,
+    setNextContext: setAutoDisplayNextContext,
     setCommandantLayout: setAutoDisplayCommandantLayout,
     importSettings: importAutoDisplaySettings,
     resetSettings: resetAutoDisplaySettings,
@@ -109,11 +114,18 @@ const Index = () => {
   const { personnel, addPersonnel, updatePersonnel, deletePersonnel } =
     usePersonnelStore();
   const { visits, addVisit, updateVisit, deleteVisit } = useVisitsStore();
-  const { commandants, addCommandant, updateCommandant, deleteCommandant } =
+  const {
+    commandants,
+    isCommandantsLoading,
+    addCommandant,
+    updateCommandant,
+    deleteCommandant,
+  } =
     useCommandantsStore();
   const audioTracks = useAudioStore((state) => state.tracks);
+  const currentCommandant =
+    commandants.find((c) => c.isCurrent) ?? commandants[0] ?? null;
 
-  const currentCommandant = commandants.find((c) => c.isCurrent) ?? commandants[0] ?? null;
   const activeCategory = SECTION_CATEGORIES[view] ?? null;
   const activeView =
     view === "visits"
@@ -123,6 +135,63 @@ const Index = () => {
         : view === "admin"
           ? "admin"
           : "category";
+
+  const stageConfigContext: AutoDisplayContextKey | null = useMemo(() => {
+    if (view === "commandants") return "commandants";
+    if (activeCategory === "FWC") return "FWC";
+    if (activeCategory === "FDC") return "FDC";
+    if (activeCategory === "Directing Staff") return "Directing Staff";
+    if (activeCategory === "Allied") return "Allied";
+    return null;
+  }, [view, activeCategory]);
+
+  const canConfigureStage = stageConfigContext !== null;
+  const currentStageTiming =
+    stageConfigContext !== null
+      ? autoDisplaySettings.byContext[stageConfigContext]
+      : null;
+
+  const updateStageTiming = (
+    field: "slideDurationMs" | "transitionDurationMs",
+    rawValue: number,
+  ) => {
+    if (!stageConfigContext || !Number.isFinite(rawValue)) return;
+
+    const clamped =
+      field === "slideDurationMs"
+        ? Math.max(3000, Math.min(30000, Math.round(rawValue)))
+        : Math.max(250, Math.min(2600, Math.round(rawValue)));
+
+    setAutoDisplayContextTiming(stageConfigContext, { [field]: clamped });
+  };
+
+  const contextToView = (context: AutoDisplayContextKey): ViewKey => {
+    if (context === "commandants") return "commandants";
+    if (context === "visits") return "visits";
+    if (context === "FWC") return "fwc";
+    if (context === "FDC") return "fdc";
+    if (context === "Directing Staff") return "directing";
+    return "allied";
+  };
+
+  const handleAutoDisplayStageComplete = (context: AutoDisplayContextKey) => {
+    const nextContext = autoDisplaySettings.nextContextByContext?.[context] ?? null;
+    if (!nextContext || nextContext === context) {
+      setAutoDisplayActive(false);
+      return;
+    }
+
+    const nextView = contextToView(nextContext);
+    setView(nextView);
+    setForcedAutoDisplay((prev) => ({
+      enabled: true,
+      nonce: prev.nonce + 1,
+    }));
+  };
+
+  useEffect(() => {
+    setShowStageConfig(false);
+  }, [view]);
 
   const isSuperAdmin = useMemo(() => {
     if (!adminEmail) return false;
@@ -341,7 +410,14 @@ const Index = () => {
     }
   };
 
-  const { devices, deviceId, refreshDevices, sendCommandToDevices } =
+  const {
+    devices,
+    deviceId,
+    deviceLabel,
+    refreshDevices,
+    renameCurrentDevice,
+    sendCommandToDevices,
+  } =
     useDeviceControl({
       currentView: view,
       autoDisplayEnabled: autoDisplayActive,
@@ -414,15 +490,60 @@ const Index = () => {
     if (view === "home") {
       return (
         <>
-          <CommandantHero commandant={currentCommandant} />
+          <CategoryCards onSelect={setView} />
+        </>
+      );
+    }
+
+    if (view === "commandants") {
+      if (isCommandantsLoading) {
+        return (
+          <section className="rounded-xl border border-primary/20 bg-card/70 px-4 py-6 md:px-6 md:py-8 animate-pulse">
+            <div className="mx-auto w-full max-w-5xl space-y-4">
+              <div className="h-4 w-40 rounded bg-primary/20" />
+              <div className="h-10 w-4/5 rounded bg-primary/20" />
+              <div className="h-6 w-3/5 rounded bg-primary/15" />
+              <div className="h-24 w-full rounded bg-primary/10" />
+            </div>
+          </section>
+        );
+      }
+
+      if (commandants.length === 0) {
+        return (
+          <section className="rounded-xl border border-primary/25 bg-card/70 px-4 py-6 md:px-6 md:py-8 text-center">
+            <p className="text-sm md:text-base font-semibold text-foreground">No commandant record is available yet.</p>
+            <p className="mt-1 text-xs md:text-sm text-muted-foreground">Add a commandant record in Admin to populate this section.</p>
+          </section>
+        );
+      }
+
+      return (
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <button
+              onClick={() => setView("home")}
+              className="px-3 py-1.5 rounded border border-primary/25 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/10 transition-colors"
+            >
+              Previous
+            </button>
+          </div>
+
+          {currentCommandant && (
+            <CommandantHero
+              commandant={currentCommandant}
+              compactDescription={false}
+            />
+          )}
+
           <PastCommandants
             commandants={commandants}
+            includeCurrent
             onSelectCommandant={(commandant) =>
               openPastCommandantProfile(commandant)
             }
           />
-          <CategoryCards onSelect={setView} />
-        </>
+        </section>
       );
     }
 
@@ -480,10 +601,12 @@ const Index = () => {
           onResetAutoDisplaySettings={resetAutoDisplaySettings}
           devices={devices}
           currentDeviceId={deviceId}
+          currentDeviceLabel={deviceLabel}
           isSuperAdmin={isSuperAdmin}
           onRefreshDevices={() => {
             void refreshDevices();
           }}
+          onRenameCurrentDevice={renameCurrentDevice}
           onSendDeviceView={async (deviceIds, targetView) => {
             return sendCommandToDevices(deviceIds, "set-view", {
               view: targetView as DeviceControlView,
@@ -632,6 +755,130 @@ const Index = () => {
           <div className={`${autoDisplayActive ? "w-screen h-screen max-w-none p-0" : "max-w-[1840px] px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8"} mx-auto relative z-10`}>
             <div className={`${autoDisplayActive ? "bg-transparent border-none p-0 rounded-none shadow-none" : "app-shell-frame rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8"}`}>
               <div className={`${autoDisplayActive ? "fixed top-4 right-4 z-[100]" : "flex justify-end mb-3 sm:mb-4"}`}>
+                <div className="relative flex items-center gap-2">
+                  {canConfigureStage && !autoDisplayActive && currentStageTiming && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setShowStageConfig((prev) => !prev)}
+                        aria-label="Configure auto-scroll stage"
+                        title="Configure auto-scroll stage"
+                        className="h-9 w-9 rounded-md border border-primary/25 bg-card/80 text-primary hover:bg-primary/10 transition-colors inline-flex items-center justify-center"
+                      >
+                        <SlidersHorizontal className="h-4 w-4" />
+                      </button>
+
+                      {showStageConfig && (
+                        <div className="absolute right-0 top-11 z-[120] w-[280px] rounded-xl border border-primary/20 bg-card/95 p-3 shadow-xl backdrop-blur-sm">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-[11px] uppercase tracking-[0.16em] text-primary/90 font-semibold">
+                                Auto-Scroll Stage
+                              </p>
+                              <p className="mt-1 text-[11px] text-muted-foreground">
+                                Tune this page timing.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowStageConfig(false)}
+                              className="h-7 rounded-md border border-primary/20 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+                            >
+                              Close
+                            </button>
+                          </div>
+
+                          <div className="mt-3 space-y-3">
+                            <div>
+                              <label className="text-xs font-semibold text-foreground">
+                                Next Slide Delay (seconds)
+                              </label>
+                              <div className="mt-1 flex items-center gap-2">
+                                <input
+                                  type="range"
+                                  min={3}
+                                  max={30}
+                                  step={1}
+                                  value={Math.round(currentStageTiming.slideDurationMs / 1000)}
+                                  onChange={(e) =>
+                                    updateStageTiming(
+                                      "slideDurationMs",
+                                      Number(e.target.value) * 1000,
+                                    )
+                                  }
+                                  className="w-full"
+                                />
+                                <span className="w-10 text-right text-xs text-muted-foreground">
+                                  {Math.round(currentStageTiming.slideDurationMs / 1000)}s
+                                </span>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-semibold text-foreground">
+                                Transition Stage (milliseconds)
+                              </label>
+                              <div className="mt-1 flex items-center gap-2">
+                                <input
+                                  type="range"
+                                  min={250}
+                                  max={2600}
+                                  step={50}
+                                  value={currentStageTiming.transitionDurationMs}
+                                  onChange={(e) =>
+                                    updateStageTiming(
+                                      "transitionDurationMs",
+                                      Number(e.target.value),
+                                    )
+                                  }
+                                  className="w-full"
+                                />
+                                <span className="w-14 text-right text-xs text-muted-foreground">
+                                  {currentStageTiming.transitionDurationMs}ms
+                                </span>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-semibold text-foreground inline-flex items-center gap-1">
+                                <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
+                                Next Auto Display Stage
+                              </label>
+                              <select
+                                value={
+                                  autoDisplaySettings.nextContextByContext?.[
+                                    stageConfigContext
+                                  ] ?? ""
+                                }
+                                onChange={(e) => {
+                                  const value = e.target.value as
+                                    | AutoDisplayContextKey
+                                    | "";
+                                  setAutoDisplayNextContext(
+                                    stageConfigContext,
+                                    value === "" ? null : value,
+                                  );
+                                }}
+                                className="mt-1 h-9 w-full rounded-md border border-primary/20 bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                              >
+                                <option value="">Stop After This Stage</option>
+                                {AUTO_DISPLAY_CONTEXTS.map((ctx) => (
+                                  <option
+                                    key={ctx.key}
+                                    value={ctx.key}
+                                    disabled={ctx.key === stageConfigContext}
+                                  >
+                                    {ctx.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
                 <AutoRotationDisplay
                   key={view}
                   personnel={personnel}
@@ -643,7 +890,9 @@ const Index = () => {
                   forcedControl={forcedAutoDisplay}
                   forcedStep={forcedSlideStep}
                   onActiveChange={setAutoDisplayActive}
+                  onStageComplete={handleAutoDisplayStageComplete}
                 />
+                </div>
               </div>
 
               {!autoDisplayActive && renderContent()}

@@ -27,9 +27,9 @@ function normalizeCategory(value: string): Personnel['category'] {
 
 function normalizeService(value: string): Personnel['service'] {
   const key = value.trim().toLowerCase();
-  if (key === 'army') return 'Army';
-  if (key === 'navy') return 'Navy';
-  if (key === 'air force') return 'Air Force';
+  if (key === 'army' || key === 'nigerian army') return 'Nigerian Army';
+  if (key === 'navy' || key === 'nigerian navy') return 'Nigerian Navy';
+  if (key === 'air force' || key === 'airforce' || key === 'nigerian air force') return 'Nigerian Air Force';
   if (key === 'civilian' || key === 'academic') return 'Civilian';
   if (key === 'foreign service' || key === 'foreign') return 'Foreign';
   return 'Civilian';
@@ -134,7 +134,7 @@ const mapRowToVisit = (row: VisitRow): DistinguishedVisit => ({
 
 const COLLECTION_CACHE_TTL_MS = 73 * 60 * 60 * 1000;
 const COLLECTION_BACKGROUND_REFRESH_MS = 90 * 1000;
-const COMMANDANTS_BACKGROUND_REFRESH_MS = 8 * 60 * 1000;
+const COMMANDANTS_BACKGROUND_REFRESH_MS = 20 * 1000;
 const COMMANDANTS_FETCH_PAGE_SIZE = 2;
 const PERSONNEL_CACHE_KEY = 'ndc_cache_personnel_v1';
 const COMMANDANTS_CACHE_KEY = 'ndc_cache_commandants_v1';
@@ -389,6 +389,7 @@ export function useCommandantsStore() {
     const cachedRows = readCollectionCache<CommandantRow>(COMMANDANTS_CACHE_KEY);
     return cachedRows ? cachedRows.map(mapRowToCommandant) : [];
   });
+  const [isCommandantsLoading, setIsCommandantsLoading] = useState(commandants.length === 0);
 
   const commandantsHasDataRef = useRef(commandants.length > 0);
 
@@ -444,6 +445,9 @@ export function useCommandantsStore() {
     const loadCommandants = async () => {
       if (inFlight || disposed) return;
       inFlight = true;
+      if (!commandantsHasDataRef.current) {
+        setIsCommandantsLoading(true);
+      }
 
       const retryDelays = [0, 250, 900];
 
@@ -471,6 +475,7 @@ export function useCommandantsStore() {
               writeCollectionCache(COMMANDANTS_CACHE_KEY, mergedRows);
               return mergedRows.map(mapRowToCommandant);
             });
+            setIsCommandantsLoading(false);
           }
           inFlight = false;
           return;
@@ -482,6 +487,9 @@ export function useCommandantsStore() {
       if (!commandantsHasDataRef.current && !disposed) {
         setCommandants([]);
       }
+      if (!disposed) {
+        setIsCommandantsLoading(false);
+      }
 
       inFlight = false;
     };
@@ -492,9 +500,21 @@ export function useCommandantsStore() {
       void loadCommandants();
     }, COMMANDANTS_BACKGROUND_REFRESH_MS);
 
+    const commandantsChannel = supabase
+      .channel('ndc-commandants-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'commandants' },
+        () => {
+          void loadCommandants();
+        },
+      )
+      .subscribe();
+
     return () => {
       disposed = true;
       clearInterval(interval);
+      void supabase.removeChannel(commandantsChannel);
     };
   }, []);
 
@@ -562,7 +582,13 @@ export function useCommandantsStore() {
       });
   }, []);
 
-  return { commandants, addCommandant, updateCommandant, deleteCommandant };
+  return {
+    commandants,
+    isCommandantsLoading,
+    addCommandant,
+    updateCommandant,
+    deleteCommandant,
+  };
 }
 
 export function useVisitsStore() {

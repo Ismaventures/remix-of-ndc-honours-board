@@ -1,5 +1,12 @@
 export type Category = 'FWC' | 'FDC' | 'Directing Staff' | 'Allied' | 'fwc+' | 'fdc+' | 'Staff';
-export type Service = 'Army' | 'Navy' | 'Air Force' | 'Civilian' | 'Foreign' | 'Foreign Service' | 'Academic';
+export type Service =
+  | 'Nigerian Army'
+  | 'Nigerian Navy'
+  | 'Nigerian Air Force'
+  | 'Civilian'
+  | 'Foreign'
+  | 'Foreign Service'
+  | 'Academic';
 
 export interface Personnel {
   id: string;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Play, Pause, UserRound } from 'lucide-react';
 import { DeviceClient, DeviceControlView } from '@/hooks/useDeviceControl';
 import { ThemeMode } from '@/hooks/useThemeMode';
@@ -11,11 +11,13 @@ interface DeviceControlPanelProps {
   personnel: Personnel[];
   commandants: Commandant[];
   currentDeviceId: string;
+  currentDeviceLabel: string;
   isSuperAdmin: boolean;
   currentThemeMode: ThemeMode;
   currentBootSettings: BootSequenceSettings;
   currentAutoDisplaySettings: AutoDisplaySettings;
   onRefresh: () => void;
+  onRenameCurrentDevice: (nextLabel: string) => Promise<boolean>;
   onSendView: (deviceIds: string[], view: DeviceControlView) => Promise<boolean>;
   onSendAutoDisplay: (deviceIds: string[], enabled: boolean) => Promise<boolean>;
   onSendCloseApp: (deviceIds: string[], reason: string) => Promise<boolean>;
@@ -49,11 +51,13 @@ export function DeviceControlPanel({
   personnel,
   commandants,
   currentDeviceId,
+  currentDeviceLabel,
   isSuperAdmin,
   currentThemeMode,
   currentBootSettings,
   currentAutoDisplaySettings,
   onRefresh,
+  onRenameCurrentDevice,
   onSendView,
   onSendAutoDisplay,
   onSendCloseApp,
@@ -69,21 +73,57 @@ export function DeviceControlPanel({
 }: DeviceControlPanelProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [showOfflineDevices, setShowOfflineDevices] = useState(false);
   const [shutdownReason, setShutdownReason] = useState('Temporarily closed by super admin.');
   const [remoteView, setRemoteView] = useState<Exclude<DeviceControlView, 'home' | 'visits' | 'admin'>>('fwc');
   const [remotePersonId, setRemotePersonId] = useState('');
   const [remoteCommandantId, setRemoteCommandantId] = useState('');
+  const [renameDraft, setRenameDraft] = useState(currentDeviceLabel);
+  const [renameBusy, setRenameBusy] = useState(false);
+  const [renameStatus, setRenameStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    setRenameDraft(currentDeviceLabel);
+  }, [currentDeviceLabel]);
 
   const selectedCount = selectedIds.length;
 
-  const onlineDevices = useMemo(() => {
+  const normalizedDevices = useMemo(() => {
     const now = Date.now();
-    return devices.map(device => {
+    const byId = new Map<string, DeviceClient & { online: boolean }>();
+
+    for (const device of devices) {
       const lastSeen = new Date(device.last_seen).getTime();
       const online = Number.isFinite(lastSeen) && now - lastSeen < 45000;
-      return { ...device, online };
-    });
+      const existing = byId.get(device.device_id);
+
+      if (!existing) {
+        byId.set(device.device_id, { ...device, online });
+        continue;
+      }
+
+      const existingTime = new Date(existing.last_seen).getTime();
+      if (!Number.isFinite(existingTime) || lastSeen > existingTime) {
+        byId.set(device.device_id, { ...device, online });
+      }
+    }
+
+    return Array.from(byId.values()).sort(
+      (a, b) => new Date(b.last_seen).getTime() - new Date(a.last_seen).getTime(),
+    );
   }, [devices]);
+
+  const onlineDevices = useMemo(
+    () => normalizedDevices.filter(device => device.online),
+    [normalizedDevices],
+  );
+
+  const offlineDevices = useMemo(
+    () => normalizedDevices.filter(device => !device.online),
+    [normalizedDevices],
+  );
+
+  const visibleDevices = showOfflineDevices ? [...onlineDevices, ...offlineDevices] : onlineDevices;
 
   const remoteProfiles = useMemo(() => {
     const categoryMap: Record<Exclude<DeviceControlView, 'home' | 'visits' | 'admin'>, string> = {
@@ -124,6 +164,12 @@ export function DeviceControlPanel({
 
   const clearSelection = () => {
     setSelectedIds([]);
+  };
+
+  const formatLastSeen = (iso: string) => {
+    const value = new Date(iso);
+    if (Number.isNaN(value.getTime())) return 'Unknown';
+    return value.toLocaleString();
   };
 
   const sendView = async (view: DeviceControlView) => {
@@ -214,11 +260,42 @@ export function DeviceControlPanel({
     setBusy(false);
   };
 
+  const renameThisDevice = async () => {
+    setRenameBusy(true);
+    const ok = await onRenameCurrentDevice(renameDraft);
+    setRenameBusy(false);
+    setRenameStatus(ok ? 'Device name saved.' : 'Could not save device name.');
+    window.setTimeout(() => setRenameStatus(null), 2200);
+  };
+
   return (
     <div className="surface-panel p-5 md:p-6 space-y-4">
       <div>
         <h4 className="text-base font-semibold gold-text">Multi-Device Control</h4>
         <p className="text-xs text-muted-foreground mt-1">See every logged-in device and control multiple screens from this admin panel.</p>
+      </div>
+
+      <div className="rounded-lg border border-primary/15 bg-card/60 p-3 space-y-2">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">Name This Device</p>
+        <p className="text-[11px] text-muted-foreground">Set a clear name here. Other admins will see this exact label in the device list.</p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            value={renameDraft}
+            onChange={e => setRenameDraft(e.target.value)}
+            placeholder="e.g. Reception TV, Hall A Screen"
+            className="w-full px-3 py-2 rounded border border-primary/20 bg-background/80 text-xs text-foreground"
+          />
+          <button
+            type="button"
+            onClick={() => void renameThisDevice()}
+            disabled={renameBusy}
+            className="px-3 py-2 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50"
+          >
+            Save Name
+          </button>
+        </div>
+        <p className="text-[11px] text-muted-foreground">Current device ID: {currentDeviceId.slice(0, 8)}...</p>
+        {renameStatus && <p className="text-xs text-primary">{renameStatus}</p>}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -232,6 +309,34 @@ export function DeviceControlPanel({
           Clear
         </button>
         <span className="px-3 py-1.5 rounded border border-primary/15 text-[11px] uppercase tracking-wider text-muted-foreground">Selected: {selectedCount}</span>
+      </div>
+
+      <div className="rounded-lg border border-primary/15 bg-card/60 p-3 space-y-2">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">Device Visibility</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setShowOfflineDevices(false)}
+            className={`px-3 py-1.5 rounded border text-[11px] uppercase tracking-wider transition-colors ${
+              !showOfflineDevices
+                ? 'border-primary/40 bg-primary/10 text-primary'
+                : 'border-primary/20 text-muted-foreground hover:text-foreground hover:bg-muted/40'
+            }`}
+          >
+            Online Only ({onlineDevices.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowOfflineDevices(true)}
+            className={`px-3 py-1.5 rounded border text-[11px] uppercase tracking-wider transition-colors ${
+              showOfflineDevices
+                ? 'border-primary/40 bg-primary/10 text-primary'
+                : 'border-primary/20 text-muted-foreground hover:text-foreground hover:bg-muted/40'
+            }`}
+          >
+            Show Offline ({offlineDevices.length})
+          </button>
+        </div>
       </div>
 
       <div className="rounded-lg border border-primary/15 bg-card/60 p-3 space-y-3">
@@ -462,10 +567,11 @@ export function DeviceControlPanel({
                 <th className="px-3 py-3 text-left">Status</th>
                 <th className="px-3 py-3 text-left">Current View</th>
                 <th className="px-3 py-3 text-left">Auto Display</th>
+                {showOfflineDevices && <th className="px-3 py-3 text-left">Last Seen</th>}
               </tr>
             </thead>
             <tbody>
-              {onlineDevices.map(device => (
+              {visibleDevices.map(device => (
                 <tr key={device.device_id} className="border-b border-primary/5">
                   <td className="px-3 py-2">
                     <input
@@ -481,17 +587,24 @@ export function DeviceControlPanel({
                     </div>
                   </td>
                   <td className="px-3 py-2">
-                    <span className={`text-[10px] uppercase tracking-wider px-2 py-1 rounded ${device.online ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    <span className={`text-[10px] uppercase tracking-wider px-2 py-1 rounded ${device.online ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/35' : 'bg-muted text-muted-foreground border border-muted-foreground/20'}`}>
                       {device.online ? 'Online' : 'Offline'}
                     </span>
                   </td>
                   <td className="px-3 py-2 text-muted-foreground uppercase text-xs">{device.current_view}</td>
                   <td className="px-3 py-2 text-muted-foreground text-xs">{device.auto_display_enabled ? 'Running' : 'Stopped'}</td>
+                  {showOfflineDevices && (
+                    <td className="px-3 py-2 text-muted-foreground text-xs">{device.online ? '-' : formatLastSeen(device.last_seen)}</td>
+                  )}
                 </tr>
               ))}
-              {onlineDevices.length === 0 && (
+              {visibleDevices.length === 0 && (
                 <tr>
-                  <td className="px-3 py-4 text-muted-foreground text-xs" colSpan={5}>No devices found yet. Open the app on another logged-in device to see it here.</td>
+                  <td className="px-3 py-4 text-muted-foreground text-xs" colSpan={showOfflineDevices ? 6 : 5}>
+                    {showOfflineDevices
+                      ? 'No devices found yet. Open the app on another logged-in device to see it here.'
+                      : 'No online devices right now. Click Show Offline to view disconnected devices.'}
+                  </td>
                 </tr>
               )}
             </tbody>

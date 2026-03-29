@@ -35,10 +35,67 @@ interface UseDeviceControlOptions {
 }
 
 const isSupabaseConfigured = () => Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+const DEVICE_LABEL_STORAGE_KEY = 'ndc-device-label';
+
+const loadDeviceLabelFromStorage = (deviceId: string): string => {
+  try {
+    const key = `${DEVICE_LABEL_STORAGE_KEY}:${deviceId}`;
+    const stored = localStorage.getItem(key);
+    if (stored && stored.trim().length > 0) return stored.trim();
+  } catch {
+    // Ignore storage access errors and fallback to default label.
+  }
+  return getDefaultDeviceLabel(deviceId);
+};
+
+const saveDeviceLabelToStorage = (deviceId: string, label: string) => {
+  try {
+    const key = `${DEVICE_LABEL_STORAGE_KEY}:${deviceId}`;
+    localStorage.setItem(key, label);
+  } catch {
+    // Ignore storage access errors.
+  }
+};
 
 export function useDeviceControl({ currentView, autoDisplayEnabled, onCommand }: UseDeviceControlOptions) {
   const [deviceId] = useState<string>(() => getOrCreateDeviceId());
+  const [deviceLabel, setDeviceLabel] = useState<string>('');
   const [devices, setDevices] = useState<DeviceClient[]>([]);
+
+  useEffect(() => {
+    const initialLabel = loadDeviceLabelFromStorage(deviceId);
+    setDeviceLabel(initialLabel);
+    saveDeviceLabelToStorage(deviceId, initialLabel);
+  }, [deviceId]);
+
+  const renameCurrentDevice = useCallback(async (nextLabel: string) => {
+    const normalized = nextLabel.trim();
+    const resolvedLabel = normalized.length > 0 ? normalized : getDefaultDeviceLabel(deviceId);
+
+    setDeviceLabel(resolvedLabel);
+    saveDeviceLabelToStorage(deviceId, resolvedLabel);
+
+    if (!isSupabaseConfigured()) return false;
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.user) return false;
+
+    const { error } = await supabase
+      .from('device_clients')
+      .upsert({
+        device_id: deviceId,
+        user_id: session.user.id,
+        device_label: resolvedLabel,
+        current_view: currentView,
+        auto_display_enabled: autoDisplayEnabled,
+        last_seen: new Date().toISOString(),
+      }, { onConflict: 'device_id' });
+
+    return !error;
+  }, [autoDisplayEnabled, currentView, deviceId]);
 
   const heartbeat = useCallback(async () => {
     if (!isSupabaseConfigured()) return;
@@ -52,14 +109,14 @@ export function useDeviceControl({ currentView, autoDisplayEnabled, onCommand }:
     const payload = {
       device_id: deviceId,
       user_id: session.user.id,
-      device_label: getDefaultDeviceLabel(deviceId),
+      device_label: deviceLabel.trim() || getDefaultDeviceLabel(deviceId),
       current_view: currentView,
       auto_display_enabled: autoDisplayEnabled,
       last_seen: new Date().toISOString(),
     };
 
     await supabase.from('device_clients').upsert(payload, { onConflict: 'device_id' });
-  }, [autoDisplayEnabled, currentView, deviceId]);
+  }, [autoDisplayEnabled, currentView, deviceId, deviceLabel]);
 
   const refreshDevices = useCallback(async () => {
     if (!isSupabaseConfigured()) return;
@@ -79,8 +136,15 @@ export function useDeviceControl({ currentView, autoDisplayEnabled, onCommand }:
       .eq('user_id', session.user.id)
       .order('last_seen', { ascending: false });
 
-    setDevices((data ?? []) as DeviceClient[]);
-  }, []);
+    const resolved = (data ?? []) as DeviceClient[];
+    setDevices(resolved);
+
+    const ownDevice = resolved.find((entry) => entry.device_id === deviceId);
+    if (ownDevice?.device_label && ownDevice.device_label.trim().length > 0 && ownDevice.device_label !== deviceLabel) {
+      setDeviceLabel(ownDevice.device_label);
+      saveDeviceLabelToStorage(deviceId, ownDevice.device_label);
+    }
+  }, [deviceId, deviceLabel]);
 
   const sendCommandToDevices = useCallback(
     async (targetDeviceIds: string[], commandType: DeviceControlCommandType, payload: Record<string, unknown>) => {
@@ -177,10 +241,12 @@ export function useDeviceControl({ currentView, autoDisplayEnabled, onCommand }:
   return useMemo(
     () => ({
       deviceId,
+      deviceLabel,
       devices,
       refreshDevices,
+      renameCurrentDevice,
       sendCommandToDevices,
     }),
-    [deviceId, devices, refreshDevices, sendCommandToDevices]
+    [deviceId, deviceLabel, devices, refreshDevices, renameCurrentDevice, sendCommandToDevices]
   );
 }
