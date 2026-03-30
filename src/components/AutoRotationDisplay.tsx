@@ -146,7 +146,7 @@ function ContinuousSlideCard({
     <button
       type="button"
       onClick={() => onSelect(item as any)}
-      className={`auto-scroll-card group relative ${isCommandant ? "commandant-auto-card w-[min(92vw,520px)] sm:w-[min(78vw,520px)] md:w-[min(64vw,520px)] lg:w-[520px] h-[clamp(420px,64dvh,720px)] sm:h-[clamp(440px,68dvh,760px)]" : "w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] h-[clamp(360px,58dvh,640px)] sm:h-[clamp(390px,62dvh,680px)]"} self-stretch shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
+      className={`auto-scroll-card group relative ${isCommandant ? "commandant-auto-card w-[min(92vw,520px)] sm:w-[min(78vw,520px)] md:w-[min(64vw,520px)] lg:w-[520px] h-full" : "w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] h-full"} self-stretch shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
           ? "bg-white border border-[#002060]/20 shadow-[0_12px_36px_rgba(0,32,96,0.14)]"
           : "bg-slate-950/90 border border-slate-500/35 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
@@ -171,15 +171,13 @@ function ContinuousSlideCard({
       </div>
 
       <div
-        className={`relative z-10 mb-1 sm:mb-1.5 flex min-h-0 items-center justify-center ${
-          isVisit ? "flex-[1.6]" : isCommandant ? "flex-[4.1]" : "flex-[3.4]"
-        }`}
+        className={`relative z-10 mb-1 sm:mb-1.5 flex min-h-0 flex-1 items-center justify-center`}
       >
-        <div className="portrait-photo-mat rounded-sm p-[2px] shadow-xl">
-          <div className="rounded-[2px] bg-white p-[2px] shadow-inner">
-            <div className="portrait-photo-mat-inner rounded-[1px] bg-neutral-100/90 p-px">
+        <div className="portrait-photo-mat rounded-sm p-[2px] shadow-xl h-full w-full">
+          <div className="rounded-[2px] bg-white p-[2px] shadow-inner h-full w-full">
+            <div className="portrait-photo-mat-inner rounded-[1px] bg-neutral-100/90 p-px h-full w-full">
               <div
-                className={`auto-scroll-image-frame relative ${isCommandant ? "commandant-portrait-frame commandant-portrait-reel" : isVisit ? "" : "staff-portrait-frame"} ${isVisit ? "h-full max-h-[clamp(240px,44dvh,500px)] aspect-[4/5]" : isCommandant ? "w-[220px] h-[260px] sm:w-[250px] sm:h-[300px] md:w-[280px] md:h-[340px] lg:w-[320px] lg:h-[390px]" : "w-[180px] h-[230px] sm:w-[205px] sm:h-[260px] md:w-[230px] md:h-[295px] lg:w-[255px] lg:h-[330px]"} overflow-hidden ${
+                className={`auto-scroll-image-frame relative ${isCommandant ? "commandant-portrait-frame commandant-portrait-reel" : isVisit ? "" : "staff-portrait-frame"} h-full w-full overflow-hidden ${
                   isLightMode ? "bg-slate-100" : "bg-slate-900"
                 }`}
               >
@@ -193,7 +191,7 @@ function ContinuousSlideCard({
                   <img
                     src={imageUrl}
                     alt={`${imageAltTitle} ${safeName}`}
-                    className={`h-full w-full ${isVisit ? "object-cover" : isCommandant ? "object-contain object-center scale-[0.72]" : "object-contain object-center scale-[0.78]"} transition-transform duration-500 group-hover:scale-[1.015]`}
+                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
                     loading="eager"
                     decoding="async"
                     draggable={false}
@@ -213,35 +211,35 @@ function ContinuousSlideCard({
         <div className="h-[2px] w-full bg-[#FF0000]" />
         <div
           className={`auto-scroll-plate bg-[#002060] ${
-            isVisit ? "px-2.5 py-2 sm:px-3 sm:py-2.5" : "px-2 py-1.5 sm:px-2.5 sm:py-2"
+            isVisit ? "px-3 py-2.5 sm:px-4 sm:py-3" : "px-2.5 py-2 sm:px-3 sm:py-2.5"
           } text-center shadow-xl`}
         >
-          <h3 className="auto-scroll-name text-[clamp(0.7rem,1.9vw,1rem)] sm:text-[clamp(0.76rem,1.4vw,1.08rem)] font-extrabold leading-tight break-words [overflow-wrap:anywhere] text-[#FFD700] max-h-[3.3em] overflow-y-auto">
+          <h3 className="auto-scroll-name text-[clamp(1rem,2.8vw,1.4rem)] sm:text-[clamp(1.15rem,2.4vw,1.6rem)] font-extrabold leading-tight break-words [overflow-wrap:anywhere] text-[#FFD700] max-h-[3.3em] overflow-y-auto">
             {safeName}
           </h3>
           {title && (
-            <p className="auto-scroll-title mt-1 text-[clamp(0.6rem,1.7vw,0.92rem)] sm:text-[clamp(0.65rem,1.2vw,0.96rem)] font-extrabold tracking-[0.06em] text-[#FF3B30] break-words [overflow-wrap:anywhere] leading-tight max-h-[3.8em] overflow-y-auto">
+            <p className="auto-scroll-title mt-1.5 text-[clamp(0.85rem,2.2vw,1.15rem)] sm:text-[clamp(0.95rem,1.8vw,1.3rem)] font-extrabold tracking-[0.06em] text-[#FF3B30] break-words [overflow-wrap:anywhere] leading-tight max-h-[3.8em] overflow-y-auto">
               {title}
             </p>
           )}
           {isCommandant && safeDecoration && (
-            <div className="mt-1.5 inline-flex max-w-full items-center justify-center rounded-md border border-white/35 bg-gradient-to-br from-neutral-50 via-white to-neutral-200/90 px-2 py-0.5 shadow-[0_2px_12px_rgba(0,0,0,0.12)]">
-              <p className="text-[9px] sm:text-[10px] font-bold tracking-[0.07em] text-[#1f2937] break-words">
+            <div className="mt-2 inline-flex max-w-full items-center justify-center rounded-md border border-white/35 bg-gradient-to-br from-neutral-50 via-white to-neutral-200/90 px-2.5 py-1 shadow-[0_2px_12px_rgba(0,0,0,0.12)]">
+              <p className="text-[11px] sm:text-[13px] font-bold tracking-[0.07em] text-[#1f2937] break-words">
                 {safeDecoration}
               </p>
             </div>
           )}
-          <p className="auto-scroll-meta mt-1 text-[10px] uppercase tracking-[0.1em] text-white/95 break-words leading-tight">
+          <p className="auto-scroll-meta mt-1.5 text-[11px] sm:text-xs uppercase tracking-[0.1em] text-white/95 break-words leading-tight">
             {subtitle}
           </p>
-          <p className="auto-scroll-year mt-1 text-[10px] sm:text-[11px] text-[#f0ebe3] font-semibold tracking-[0.07em] uppercase leading-tight">
+          <p className="auto-scroll-year mt-1.5 text-xs sm:text-sm text-[#f0ebe3] font-semibold tracking-[0.07em] uppercase leading-tight">
             Year: {yearLabel}
           </p>
         </div>
         <div className="h-[2px] w-full bg-[#FF0000]" />
       </div>
 
-      <p className="relative z-10 mt-2 text-[9px] uppercase tracking-[0.16em] text-primary/80 font-semibold text-center">
+      <p className="relative z-10 mt-2.5 mb-1 sm:mt-3 text-[11px] sm:text-xs uppercase tracking-[0.16em] text-primary/80 font-semibold text-center">
         Tap to open full details
       </p>
     </button>
@@ -1201,7 +1199,7 @@ export function AutoRotationDisplay({
 
   const renderedContinuousContent = (
     <motion.div
-      className="relative mx-auto flex h-full min-h-0 w-full max-w-[1900px] flex-col justify-start"
+      className="relative mx-auto flex flex-1 h-full min-h-0 w-full max-w-[1900px] flex-col justify-start"
       initial={prefersReducedMotion ? undefined : { opacity: 0, y: 20 }}
       animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
       transition={cinematicTransition(0.6)}
@@ -1223,7 +1221,7 @@ export function AutoRotationDisplay({
             <AnimatePresence mode="wait" initial={false}>
               <motion.h2
                 key={`subtitle-${sectionSubtitle}`}
-                className="auto-scroll-heading-subtitle mx-auto mt-1 max-w-[96vw] sm:max-w-4xl text-[clamp(0.95rem,2.8vw,1.5rem)] sm:text-[clamp(1.05rem,2.1vw,1.8rem)] font-bold uppercase tracking-[0.02em] text-[#d4af37] drop-shadow-[0_0_6px_rgba(212,175,55,0.25)] leading-tight break-words"
+                className="auto-scroll-heading-subtitle mx-auto mt-1 max-w-[96vw] sm:max-w-5xl text-[clamp(1.2rem,3vw,1.8rem)] sm:text-[clamp(1.4rem,3vw,2.2rem)] md:text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold uppercase tracking-[0.02em] text-[#d4af37] drop-shadow-[0_0_6px_rgba(212,175,55,0.25)] leading-tight break-words"
                 initial={{ opacity: 0, y: 10, filter: "blur(2px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -8, filter: "blur(2px)" }}
@@ -1253,7 +1251,7 @@ export function AutoRotationDisplay({
 
       <div
         ref={fdcScrollRef}
-        className="relative flex h-full min-h-0 items-stretch gap-3 sm:gap-5 overflow-x-auto pb-0.5 sm:pb-1 pr-1 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]"
+        className="relative flex flex-1 min-h-0 items-stretch gap-3 sm:gap-5 overflow-x-auto pb-0 pr-1 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]"
         onMouseEnter={() =>
           (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
         }
@@ -1360,7 +1358,7 @@ export function AutoRotationDisplay({
 
       {/* Slide content */}
       <div
-        className={`flex-1 min-h-0 flex items-center justify-center overflow-hidden px-2 sm:px-4 md:px-6 ${isContinuousMode ? "py-1 sm:py-1.5 md:py-2" : isActive ? "py-2 sm:py-3 md:py-4" : "pt-2 sm:pt-4 md:pt-6 pb-8 sm:pb-10 md:pb-12"}`}
+        className={`flex-1 min-h-0 flex items-center justify-center overflow-hidden px-2 sm:px-4 md:px-6 ${isContinuousMode ? "py-0" : isActive ? "py-1 sm:py-2" : "pt-2 sm:pt-4 md:pt-6 pb-8 sm:pb-10 md:pb-12"}`}
       >
         <div
           className={`absolute top-20 md:top-24 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ${showInteractionHint ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}`}
@@ -1481,7 +1479,7 @@ export function AutoRotationDisplay({
 
       {/* Progress dots */}
       {!isContinuousMode && (
-        <div className="flex justify-center gap-1.5 pb-6">
+        <div className="flex justify-center gap-1.5 pb-2 shrink-0">
           {slides.map((_, i) => (
             <div
               key={i}
