@@ -316,3 +316,28 @@ WITH CHECK (bucket_id = 'ndc-audio' AND (select auth.role()) = 'authenticated');
 CREATE POLICY ndc_audio_auth_delete ON storage.objects
 FOR DELETE
 USING (bucket_id = 'ndc-audio' AND (select auth.role()) = 'authenticated');
+
+-- Storage bucket: ndc-media (images for commandants/personnel/visits)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('ndc-media', 'ndc-media', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage policies for ndc-media
+DROP POLICY IF EXISTS ndc_media_public_read ON storage.objects;
+CREATE POLICY ndc_media_public_read ON storage.objects
+FOR SELECT
+USING (bucket_id = 'ndc-media');
+
+DROP POLICY IF EXISTS ndc_media_auth_insert ON storage.objects;
+DROP POLICY IF EXISTS ndc_media_auth_update ON storage.objects;
+DROP POLICY IF EXISTS ndc_media_auth_delete ON storage.objects;
+CREATE POLICY ndc_media_auth_insert ON storage.objects
+FOR INSERT
+WITH CHECK (bucket_id = 'ndc-media' AND (select auth.role()) = 'authenticated');
+CREATE POLICY ndc_media_auth_update ON storage.objects
+FOR UPDATE
+USING (bucket_id = 'ndc-media' AND (select auth.role()) = 'authenticated')
+WITH CHECK (bucket_id = 'ndc-media' AND (select auth.role()) = 'authenticated');
+CREATE POLICY ndc_media_auth_delete ON storage.objects
+FOR DELETE
+USING (bucket_id = 'ndc-media' AND (select auth.role()) = 'authenticated');

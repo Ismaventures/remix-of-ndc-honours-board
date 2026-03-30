@@ -17,6 +17,11 @@ import {
   TRANSITION_CUE_TYPES,
   TRANSITION_TYPES,
 } from '@/hooks/useAutoDisplaySettings';
+import {
+  DEFAULT_IDLE_STAGE_SETTINGS,
+  IDLE_STAGE_DESIGNS,
+  IdleStageSettings,
+} from '@/hooks/useIdleStageSettings';
 import { useCinematicExperienceSettings } from '@/hooks/useCinematicExperienceSettings';
 import { playTransitionCue } from '@/lib/transitionCues';
 
@@ -48,6 +53,8 @@ interface AdminPanelProps {
   onAutoDisplayCommandantLayoutChange?: (layout: 'standard' | 'split') => void;
   onImportAutoDisplaySettings: (settings: Partial<AutoDisplaySettings>) => void;
   onResetAutoDisplaySettings: () => void;
+  idleStageSettings: IdleStageSettings;
+  onIdleStageSettingsChange: (settings: Partial<IdleStageSettings>) => void;
   devices: DeviceClient[];
   currentDeviceId: string;
   currentDeviceLabel: string;
@@ -66,6 +73,7 @@ interface AdminPanelProps {
     themeMode: ThemeMode;
     bootSequenceSettings: BootSequenceSettings;
     autoDisplaySettings: AutoDisplaySettings;
+    idleStageSettings: IdleStageSettings;
   }) => Promise<boolean>;
   onSendDeviceClearProfile: (deviceIds: string[]) => Promise<boolean>;
   onSendGlobalSiteClose: (reason: string) => Promise<boolean>;
@@ -329,21 +337,6 @@ const FEATURE_GUIDE_SECTIONS: Array<{
   },
 ];
 
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result);
-      } else {
-        reject(new Error('Failed to read file'));
-      }
-    };
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsDataURL(file);
-  });
-}
-
 export function AdminPanel({
   personnel, visits, commandants,
   onAddPersonnel, onUpdatePersonnel, onDeletePersonnel,
@@ -359,6 +352,8 @@ export function AdminPanel({
   onAutoDisplayContextTransitionSequenceChange,
   onImportAutoDisplaySettings,
   onResetAutoDisplaySettings,
+  idleStageSettings,
+  onIdleStageSettingsChange,
   devices,
   currentDeviceId,
   currentDeviceLabel,
@@ -406,12 +401,14 @@ export function AdminPanel({
   const [themeDraft, setThemeDraft] = useState<ThemeMode>(themeMode);
   const [bootDraft, setBootDraft] = useState<BootSequenceSettings>(bootSequenceSettings);
   const [autoDisplayDraft, setAutoDisplayDraft] = useState<AutoDisplaySettings>(autoDisplaySettings);
+  const [idleStageDraft, setIdleStageDraft] = useState<IdleStageSettings>(idleStageSettings);
   const [previewTransition, setPreviewTransition] = useState<AutoDisplayTransitionType>('fade-zoom');
   const [previewNonce, setPreviewNonce] = useState(0);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewContextLabel, setPreviewContextLabel] = useState('Global');
   const [showAdvancedTransitionPanels, setShowAdvancedTransitionPanels] = useState(false);
-  const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'soundPairing' | 'guide' | 'cinematic' | 'actions' | 'commandantLayout'>('boot');
+  const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'idle' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'soundPairing' | 'guide' | 'cinematic' | 'actions' | 'commandantLayout'>('boot');
+  const [activeDurationGroup, setActiveDurationGroup] = useState<string | null>(null);
   const [guideFlowActive, setGuideFlowActive] = useState(false);
   const [guideNextSectionId, setGuideNextSectionId] = useState<string | null>(null);
   const {
@@ -431,6 +428,10 @@ export function AdminPanel({
   useEffect(() => {
     setAutoDisplayDraft(autoDisplaySettings);
   }, [autoDisplaySettings]);
+
+  useEffect(() => {
+    setIdleStageDraft(idleStageSettings);
+  }, [idleStageSettings]);
 
   const personnelCategories = useMemo(() => {
     const discovered = Array.from(new Set(personnel.map(p => p.category)));
@@ -482,10 +483,21 @@ export function AdminPanel({
         if (!query) return true;
         return [
           entry.name,
+          entry.rank ?? '',
           entry.title,
+          entry.postNominals ?? '',
           String(entry.tenureStart),
           String(entry.tenureEnd ?? 'present'),
+          String(entry.yearsExperience ?? ''),
+          entry.bioSummary ?? '',
+          entry.biographyFull ?? '',
           entry.description ?? '',
+          (entry.education ?? []).join(' '),
+          (entry.training ?? []).join(' '),
+          (entry.pastAppointments ?? []).join(' '),
+          (entry.honours ?? []).join(' '),
+          entry.familyNote ?? '',
+          entry.impactStatement ?? '',
           entry.decoration ?? '',
         ]
           .join(' ')
@@ -585,6 +597,7 @@ export function AdminPanel({
     bootDraft.totalDurationMs !== bootSequenceSettings.totalDurationMs ||
     bootDraft.archiveTransitionMs !== bootSequenceSettings.archiveTransitionMs;
   const isAutoDisplayDirty = JSON.stringify(autoDisplayDraft) !== JSON.stringify(autoDisplaySettings);
+  const isIdleStageDirty = JSON.stringify(idleStageDraft) !== JSON.stringify(idleStageSettings);
 
   const toggleTransitionInSequence = (transition: AutoDisplayTransitionType, enabled: boolean) => {
     const current = autoDisplayDraft.transitionSequence;
@@ -670,6 +683,7 @@ export function AdminPanel({
       exportedAt: new Date().toISOString(),
       bootSequenceSettings,
       autoDisplaySettings,
+      idleStageSettings,
     };
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -689,6 +703,7 @@ export function AdminPanel({
       const parsed = JSON.parse(raw) as {
         bootSequenceSettings?: Partial<BootSequenceSettings>;
         autoDisplaySettings?: Partial<AutoDisplaySettings>;
+        idleStageSettings?: Partial<IdleStageSettings>;
       };
 
       if (parsed.bootSequenceSettings) {
@@ -716,6 +731,10 @@ export function AdminPanel({
             ...parsed.autoDisplaySettings.transitionSequenceByContext,
           },
         }));
+      }
+
+      if (parsed.idleStageSettings) {
+        setIdleStageDraft(prev => ({ ...prev, ...parsed.idleStageSettings }));
       }
 
       setSettingsImportStatus('Settings imported into preview. Click Apply & Save to publish.');
@@ -748,6 +767,7 @@ export function AdminPanel({
       themeMode: themeDraft,
       bootSequenceSettings: bootDraft,
       autoDisplaySettings: autoDisplayDraft,
+      idleStageSettings: idleStageDraft,
     });
     setFeatureApplyBusy(false);
 
@@ -846,6 +866,7 @@ export function AdminPanel({
   const applyBootAndTransitionsSettings = () => {
     onBootSequenceSettingsChange(bootDraft);
     onImportAutoDisplaySettings(autoDisplayDraft);
+    onIdleStageSettingsChange(idleStageDraft);
   };
 
   const applyCinematicPreset = () => {
@@ -1490,20 +1511,60 @@ export function AdminPanel({
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.name}</p>
                   </div>
                   <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank</p>
+                    <p className="font-medium text-foreground mt-1">{selectedCommandant.rank || 'N/A'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Title</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.title}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Post Nominals</p>
+                    <p className="font-medium text-foreground mt-1">{selectedCommandant.postNominals || 'N/A'}</p>
                   </div>
                   <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tenure</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.tenureStart} - {selectedCommandant.tenureEnd ?? 'Present'}</p>
                   </div>
                   <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Years Experience</p>
+                    <p className="font-medium text-foreground mt-1">{selectedCommandant.yearsExperience ?? 'N/A'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.isCurrent ? 'Current' : 'Past'}</p>
                   </div>
                   <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Summary</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.bioSummary || 'No summary available.'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Biography</p>
-                    <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.description || 'No bio available.'}</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.biographyFull || selectedCommandant.description || 'No bio available.'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Education</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.education ?? []).join(' | ') || 'N/A'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Training</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.training ?? []).join(' | ') || 'N/A'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Past Appointments</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.pastAppointments ?? []).join(' | ') || 'N/A'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Honours</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.honours ?? []).join(' | ') || 'N/A'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Family Note</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.familyNote || 'N/A'}</p>
+                  </div>
+                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Impact Statement</p>
+                    <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.impactStatement || 'N/A'}</p>
                   </div>
                   <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Decoration</p>
@@ -1597,6 +1658,7 @@ export function AdminPanel({
               currentThemeMode={themeMode}
               currentBootSettings={bootSequenceSettings}
               currentAutoDisplaySettings={autoDisplaySettings}
+              currentIdleStageSettings={idleStageSettings}
               onRefresh={onRefreshDevices}
               onRenameCurrentDevice={onRenameCurrentDevice}
               onSendView={onSendDeviceView}
@@ -2056,6 +2118,62 @@ export function AdminPanel({
                   </div>
                 )}
 
+                <button onClick={() => setActiveTransitionPanel('idle')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Idle Stage (Isolation Mode)</span>
+                </button>
+                {activeTransitionPanel === 'idle' && (
+                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 space-y-4">
+                    <div className="rounded border border-primary/10 p-3 bg-background/40 flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">Enable Idle Stage</p>
+                          <p className="text-xs text-muted-foreground mt-1">When no one interacts with the app, show a pre-boot style animated isolation screen.</p>
+                        </div>
+                        <label className="inline-flex items-center gap-2 text-xs text-foreground">
+                          <input
+                            type="checkbox"
+                            checked={idleStageDraft.enabled}
+                            onChange={e => setIdleStageDraft(prev => ({ ...prev, enabled: e.target.checked }))}
+                          />
+                          Active
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="rounded border border-primary/10 p-3 bg-background/40 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Idle Activation Delay</label>
+                        <span className="text-xs text-foreground">{Math.round(idleStageDraft.activationDelayMs / 1000)} sec</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={15}
+                        max={600}
+                        step={5}
+                        value={Math.round(idleStageDraft.activationDelayMs / 1000)}
+                        onChange={e => setIdleStageDraft(prev => ({ ...prev, activationDelayMs: Number(e.target.value) * 1000 }))}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div className="rounded border border-primary/10 p-3 bg-background/40 space-y-2">
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Idle Design Type</label>
+                      <select
+                        value={idleStageDraft.design}
+                        onChange={e => setIdleStageDraft(prev => ({ ...prev, design: e.target.value as IdleStageSettings['design'] }))}
+                        className="w-full bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground"
+                      >
+                        {IDLE_STAGE_DESIGNS.map(design => (
+                          <option key={design.id} value={design.id}>{design.label}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-muted-foreground">
+                        {IDLE_STAGE_DESIGNS.find(item => item.id === idleStageDraft.design)?.description}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <button onClick={() => setActiveTransitionPanel('globalTiming')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Global Timing</span>
                 </button>
@@ -2242,16 +2360,27 @@ export function AdminPanel({
                     <div className="space-y-4">
                       {GROUPED_TRANSITIONS.map(group => (
                         <div key={`duration-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
-                          <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                            {group.entries.map(transition => (
-                              <div key={transition.id} className="space-y-1.5 rounded border border-primary/10 p-2">
-                                <div className="flex items-center justify-between"><label className="text-[11px] text-foreground">{transition.label}</label><span className="text-[11px] text-muted-foreground">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span></div>
-                                <input type="range" min={250} max={3000} step={50} value={autoDisplayDraft.transitionDurationByTypeMs[transition.id]} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, transitionDurationByTypeMs: { ...prev.transitionDurationByTypeMs, [transition.id]: Number(e.target.value) } }))} className="w-full" />
-                                <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Preview</button>
-                              </div>
-                            ))}
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setActiveDurationGroup(prev => (prev === group.id ? null : group.id))}
+                            className="w-full flex items-center justify-between gap-3 text-left"
+                          >
+                            <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                              {activeDurationGroup === group.id ? 'Hide' : 'Show'}
+                            </span>
+                          </button>
+                          {activeDurationGroup === group.id && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                              {group.entries.map(transition => (
+                                <div key={transition.id} className="space-y-1.5 rounded border border-primary/10 p-2">
+                                  <div className="flex items-center justify-between"><label className="text-[11px] text-foreground">{transition.label}</label><span className="text-[11px] text-muted-foreground">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span></div>
+                                  <input type="range" min={250} max={3000} step={50} value={autoDisplayDraft.transitionDurationByTypeMs[transition.id]} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, transitionDurationByTypeMs: { ...prev.transitionDurationByTypeMs, [transition.id]: Number(e.target.value) } }))} className="w-full" />
+                                  <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Preview</button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -2359,6 +2488,7 @@ export function AdminPanel({
                         onClick={() => {
                           setBootDraft({ totalDurationMs: 11000, archiveTransitionMs: 600 });
                           setAutoDisplayDraft(DEFAULT_AUTO_DISPLAY_SETTINGS);
+                          setIdleStageDraft(DEFAULT_IDLE_STAGE_SETTINGS);
                         }}
                         className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
                       >
@@ -2366,7 +2496,7 @@ export function AdminPanel({
                       </button>
                       <button
                         onClick={applyBootAndTransitionsSettings}
-                        disabled={!isBootDirty && !isAutoDisplayDirty}
+                        disabled={!isBootDirty && !isAutoDisplayDirty && !isIdleStageDirty}
                         className="px-4 py-2 rounded-md text-sm font-medium border border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Apply & Save Transitions
@@ -2424,6 +2554,17 @@ export function AdminPanel({
 
 /* --- Forms --- */
 
+function isInlineDataImageUrl(value: string): boolean {
+  return value.trim().toLowerCase().startsWith('data:image/');
+}
+
+function parseMultilineEntries(value: string): string[] {
+  return value
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
 function PersonnelForm({ initial, onSave, onCancel }: {
   initial: Personnel | null;
   onSave: (data: Partial<Personnel>) => void;
@@ -2443,6 +2584,15 @@ function PersonnelForm({ initial, onSave, onCancel }: {
     seniorityOrder: initial?.seniorityOrder || 10,
   });
   const update = (key: string, value: string | number) => setForm(prev => ({ ...prev, [key]: value }));
+
+  const handleSave = () => {
+    if (isInlineDataImageUrl(form.imageUrl)) {
+      setUploadError('Base64 image URLs are disabled for performance. Upload a file or use a normal https URL.');
+      return;
+    }
+
+    onSave(form);
+  };
 
   const onUploadImage = async (file: File | null) => {
     if (!file) return;
@@ -2524,7 +2674,7 @@ function PersonnelForm({ initial, onSave, onCancel }: {
             )}
           </div>
           {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
-          <p className="text-[10px] text-muted-foreground">Stored locally in this browser for testing.</p>
+          <p className="text-[10px] text-muted-foreground">Stored locally with public fallback when cloud storage is configured.</p>
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Citation / Bio</label>
@@ -2537,7 +2687,7 @@ function PersonnelForm({ initial, onSave, onCancel }: {
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={() => onSave(form)} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
@@ -2562,6 +2712,15 @@ function VisitForm({ initial, onSave, onCancel }: {
   });
   const update = (key: string, value: string) => setForm(prev => ({ ...prev, [key]: value }));
 
+  const handleSave = () => {
+    if (isInlineDataImageUrl(form.imageUrl)) {
+      setUploadError('Base64 image URLs are disabled for performance. Upload a file or use a normal https URL.');
+      return;
+    }
+
+    onSave(form);
+  };
+
   const onUploadImage = async (file: File | null) => {
     if (!file) return;
     setUploadError(null);
@@ -2577,8 +2736,8 @@ function VisitForm({ initial, onSave, onCancel }: {
     }
 
     try {
-      const dataUrl = await fileToDataUrl(file);
-      update('imageUrl', dataUrl);
+      const mediaRef = await saveMediaFile(file);
+      update('imageUrl', mediaRef);
     } catch {
       setUploadError('Could not process the selected file.');
     }
@@ -2626,7 +2785,7 @@ function VisitForm({ initial, onSave, onCancel }: {
             )}
           </div>
           {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
-          <p className="text-[10px] text-muted-foreground">Stored locally in this browser for testing.</p>
+          <p className="text-[10px] text-muted-foreground">Stored locally with public fallback when cloud storage is configured.</p>
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Visit Description / Context</label>
@@ -2639,7 +2798,7 @@ function VisitForm({ initial, onSave, onCancel }: {
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={() => onSave(form)} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
@@ -2655,15 +2814,50 @@ function CommandantForm({ initial, onSave, onCancel }: {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: initial?.name || '',
+    rank: initial?.rank || '',
     title: initial?.title || 'Commandant',
+    postNominals: initial?.postNominals || '',
     tenureStart: initial?.tenureStart || 2020,
     tenureEnd: initial?.tenureEnd ?? '',
+    yearsExperience: initial?.yearsExperience ?? '',
     imageUrl: initial?.imageUrl || '',
+    bioSummary: initial?.bioSummary || '',
+    biographyFull: initial?.biographyFull || initial?.description || '',
+    educationText: (initial?.education || []).join('\n'),
+    trainingText: (initial?.training || []).join('\n'),
+    pastAppointmentsText: (initial?.pastAppointments || []).join('\n'),
+    honoursText: (initial?.honours || []).join('\n'),
+    familyNote: initial?.familyNote || '',
+    impactStatement: initial?.impactStatement || '',
     description: initial?.description || '',
     decoration: initial?.decoration || '',
     isCurrent: initial?.isCurrent || false,
   });
   const update = (key: string, value: string | number | boolean) => setForm(prev => ({ ...prev, [key]: value }));
+
+  const handleSave = () => {
+    if (isInlineDataImageUrl(form.imageUrl)) {
+      setUploadError('Base64 image URLs are disabled for performance. Upload a file or use a normal https URL.');
+      return;
+    }
+
+    const education = parseMultilineEntries(form.educationText);
+    const training = parseMultilineEntries(form.trainingText);
+    const pastAppointments = parseMultilineEntries(form.pastAppointmentsText);
+    const honours = parseMultilineEntries(form.honoursText);
+
+    onSave({
+      ...form,
+      tenureEnd: form.tenureEnd === '' ? null : form.tenureEnd as number,
+      yearsExperience: form.yearsExperience === '' ? undefined : Number(form.yearsExperience),
+      biographyFull: form.biographyFull,
+      description: form.biographyFull || form.description,
+      education,
+      training,
+      pastAppointments,
+      honours,
+    });
+  };
 
   const onUploadImage = async (file: File | null) => {
     if (!file) return;
@@ -2680,8 +2874,8 @@ function CommandantForm({ initial, onSave, onCancel }: {
     }
 
     try {
-      const dataUrl = await fileToDataUrl(file);
-      update('imageUrl', dataUrl);
+      const mediaRef = await saveMediaFile(file);
+      update('imageUrl', mediaRef);
     } catch {
       setUploadError('Could not process the selected file.');
     }
@@ -2703,8 +2897,16 @@ function CommandantForm({ initial, onSave, onCancel }: {
           <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Rank</label>
+          <input placeholder="Rear Admiral" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Title</label>
           <input placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Post Nominals</label>
+          <input placeholder="GSS psc(+) fdc(+) ..." value={form.postNominals} onChange={e => update('postNominals', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tenure Start</label>
@@ -2729,11 +2931,47 @@ function CommandantForm({ initial, onSave, onCancel }: {
             )}
           </div>
           {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
-          <p className="text-[10px] text-muted-foreground">Stored locally in this browser for testing.</p>
+          <p className="text-[10px] text-muted-foreground">Stored locally with public fallback when cloud storage is configured.</p>
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Biography / Description</label>
           <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Bio Summary (short)</label>
+          <textarea placeholder="Short profile summary used in compact profile cards" value={form.bioSummary} onChange={e => update('bioSummary', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Full Biography</label>
+          <textarea placeholder="Detailed biography for full profile view" value={form.biographyFull} onChange={e => update('biographyFull', e.target.value)} rows={6} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Years Experience</label>
+          <input type="number" min={0} placeholder="32" value={form.yearsExperience} onChange={e => update('yearsExperience', e.target.value ? parseInt(e.target.value, 10) : '')} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Education (one per line)</label>
+          <textarea placeholder="BSc...\nMSc..." value={form.educationText} onChange={e => update('educationText', e.target.value)} rows={3} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Training (one per line)</label>
+          <textarea placeholder="Chevening Scholar\nInternational Cyber Policy" value={form.trainingText} onChange={e => update('trainingText', e.target.value)} rows={3} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Past Appointments (one per line)</label>
+          <textarea placeholder="Deputy Chief ...\nDirector ..." value={form.pastAppointmentsText} onChange={e => update('pastAppointmentsText', e.target.value)} rows={4} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Honours (one per line)</label>
+          <textarea placeholder="GSS\npsc(+)" value={form.honoursText} onChange={e => update('honoursText', e.target.value)} rows={3} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Family Note</label>
+          <input placeholder="Married with children" value={form.familyNote} onChange={e => update('familyNote', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+        </div>
+        <div className="sm:col-span-2 space-y-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Impact Statement</label>
+          <textarea placeholder="Expected strategic impact statement" value={form.impactStatement} onChange={e => update('impactStatement', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
@@ -2752,7 +2990,7 @@ function CommandantForm({ initial, onSave, onCancel }: {
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={() => onSave({ ...form, tenureEnd: form.tenureEnd === '' ? null : form.tenureEnd as number })} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>

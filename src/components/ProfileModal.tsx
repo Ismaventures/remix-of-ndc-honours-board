@@ -16,6 +16,15 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
   const resolvedImageUrl = useResolvedMediaUrl(person.imageUrl);
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith("outdoor");
+  const normalizedRank = person.rank?.trim() || "";
+  const normalizedName = person.name?.trim() || "";
+  const hasRankPrefix =
+    normalizedRank.length > 0 &&
+    normalizedName.toLowerCase().startsWith(normalizedRank.toLowerCase());
+  const displayName =
+    normalizedRank.length > 0 && normalizedName.length > 0 && !hasRankPrefix
+      ? `${normalizedRank} ${normalizedName}`
+      : normalizedName || "Name unavailable";
 
   useEffect(() => {
     const timer = setTimeout(() => setDetailsVisible(true), 200);
@@ -106,7 +115,7 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
                 {person.rank}
               </div>
               <h4 className={`text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight uppercase tracking-tight ${isLightMode ? "text-[#002060]" : "text-foreground"}`}>
-                {person.name}
+                {displayName}
               </h4>
               {person.decoration && (
                 <div className="mb-4 inline-flex max-w-full self-center md:self-start items-center rounded-md border border-[#FFD700]/80 bg-[linear-gradient(140deg,#FFF5BF_0%,#FFD700_45%,#C79600_100%)] px-3 py-1.5 shadow-[0_0_18px_rgba(255,215,0,0.33)]">

@@ -7,10 +7,10 @@ interface PreBootVaultProps {
 }
 
 const MILITARY_BRANCHES = [
-  { id: "navy", src: "/images/navy logo.jpg", name: "Nigerian Navy", zoom: 1.34 },
-  { id: "army", src: "/Emblem_of_the_Nigerian_Army.svg.png", name: "Nigerian Army", zoom: 1.18 },
-  { id: "airforce", src: "/airforce.png", name: "Nigerian Air Force", zoom: 1.26 },
-  { id: "dhq", src: "/dhq logo.jpg", name: "Defence Headquarters", zoom: 1.32 }
+  { id: "navy", src: "/images/Badge_of_the_Nigerian_Navy.svg", name: "Nigerian Navy", zoom: 1 },
+  { id: "army", src: "/images/Emblem_of_the_Nigerian_Army.svg", name: "Nigerian Army", zoom: 1 },
+  { id: "airforce", src: "/Nigerian_Air_Force_emblem.svg.png", name: "Nigerian Air Force", zoom: 1 },
+  { id: "dhq", src: "/dhq logo.jpg", name: "Defence Headquarters", zoom: 1 }
 ];
 
 export const PreBootVault: React.FC<PreBootVaultProps> = ({ onComplete }) => {
@@ -57,8 +57,8 @@ export const PreBootVault: React.FC<PreBootVaultProps> = ({ onComplete }) => {
       {/* Massive Rotating Background Watermark */}
       <motion.div 
         className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none mix-blend-plus-lighter"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
+        animate={{ opacity: [0.2, 0.3, 0.2] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       >
         <AnimatePresence mode="popLayout">
           <motion.div
@@ -73,9 +73,9 @@ export const PreBootVault: React.FC<PreBootVaultProps> = ({ onComplete }) => {
               maskImage: 'radial-gradient(circle, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 70%)'
             }}
           >
-            <img 
-              src={currentBgLogo} 
-              className="w-full h-full object-cover" 
+            <img
+              src={currentBgLogo}
+              className="w-full h-full object-contain p-8 md:p-12"
               alt="background watermark"
             />
           </motion.div>
@@ -131,12 +131,12 @@ export const PreBootVault: React.FC<PreBootVaultProps> = ({ onComplete }) => {
                          animate={{ scale: isActivating ? 1.12 : isComplete ? 1 : 0.95 }}
                        >
                          <div className="absolute inset-[6px] md:inset-[8px] rounded-full overflow-hidden">
-                           <img 
-                              src={logo.src} 
-                              alt={logo.name} 
-                              className={`w-full h-full object-cover object-center transition-all duration-700 [clip-path:circle(50%_at_50%_50%)] ${isComplete ? '' : 'grayscale opacity-60'}`}
-                              style={{ transform: `scale(${logo.zoom})` }}
-                           />
+                          <img
+                            src={logo.src}
+                            alt={logo.name}
+                            className={`w-full h-full object-contain object-center transition-all duration-700 [clip-path:circle(50%_at_50%_50%)] ${isComplete ? '' : 'grayscale opacity-60'}`}
+                            style={{ transform: `scale(${logo.zoom})` }}
+                          />
                          </div>
                        </motion.div>
 

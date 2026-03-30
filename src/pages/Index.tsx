@@ -11,6 +11,7 @@ import { AdminLogin } from "@/components/AdminLogin";
 import { AutoRotationDisplay } from "@/components/AutoRotationDisplay";
 import { BootSequence } from "@/components/BootSequence";
 import { AudioManager } from "@/components/AudioManager";
+import { IdleStageOverlay } from "@/components/IdleStageOverlay";
 import {
   usePersonnelStore,
   useVisitsStore,
@@ -22,6 +23,7 @@ import { useBootSequenceSettings } from "@/hooks/useBootSequenceSettings";
 import { useAutoDisplaySettings } from "@/hooks/useAutoDisplaySettings";
 import { AUTO_DISPLAY_CONTEXTS } from "@/hooks/useAutoDisplaySettings";
 import type { AutoDisplayContextKey } from "@/hooks/useAutoDisplaySettings";
+import { useIdleStageSettings } from "@/hooks/useIdleStageSettings";
 import {
   DeviceControlCommandType,
   DeviceControlView,
@@ -63,6 +65,7 @@ type GlobalSiteAction = "close-site" | "open-site";
 
 const Index = () => {
   const [isBooting, setIsBooting] = useState(true);
+  const [idleStageActive, setIdleStageActive] = useState(false);
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
@@ -87,6 +90,7 @@ const Index = () => {
   const [selectedPastCommandant, setSelectedPastCommandant] =
     useState<Commandant | null>(null);
   const globalCommandRef = useRef<number | null>(null);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousViewBeforeCommandantProfileRef = useRef<ViewKey | null>(null);
 
   const [view, setView] = useState<ViewKey>("home");
@@ -110,6 +114,10 @@ const Index = () => {
     importSettings: importAutoDisplaySettings,
     resetSettings: resetAutoDisplaySettings,
   } = useAutoDisplaySettings();
+  const {
+    settings: idleStageSettings,
+    setSettings: setIdleStageSettings,
+  } = useIdleStageSettings();
 
   const { personnel, addPersonnel, updatePersonnel, deletePersonnel } =
     usePersonnelStore();
@@ -200,6 +208,66 @@ const Index = () => {
 
   const showLockScreen = deviceClosed || (siteClosed && !isSuperAdmin);
 
+  const idleTrackingEnabled =
+    idleStageSettings.enabled &&
+    !isBooting &&
+    !showLockScreen &&
+    !autoDisplayActive &&
+    view !== "admin" &&
+    !selectedPastCommandant;
+
+  useEffect(() => {
+    const clearIdleTimer = () => {
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+        idleTimerRef.current = null;
+      }
+    };
+
+    const scheduleIdleTimer = () => {
+      clearIdleTimer();
+      idleTimerRef.current = setTimeout(() => {
+        setIdleStageActive(true);
+      }, idleStageSettings.activationDelayMs);
+    };
+
+    const onActivity = () => {
+      if (idleStageActive) {
+        setIdleStageActive(false);
+      }
+      scheduleIdleTimer();
+    };
+
+    if (!idleTrackingEnabled) {
+      clearIdleTimer();
+      if (idleStageActive) {
+        setIdleStageActive(false);
+      }
+      return;
+    }
+
+    const events: Array<keyof WindowEventMap> = [
+      "pointerdown",
+      "pointermove",
+      "keydown",
+      "wheel",
+      "touchstart",
+    ];
+
+    for (const eventName of events) {
+      window.addEventListener(eventName, onActivity, { passive: true });
+    }
+
+    scheduleIdleTimer();
+
+    return () => {
+      clearIdleTimer();
+      for (const eventName of events) {
+        window.removeEventListener(eventName, onActivity);
+      }
+    };
+  }, [idleTrackingEnabled, idleStageSettings.activationDelayMs, idleStageActive]);
+
   const openPastCommandantProfile = (commandant: Commandant) => {
     previousViewBeforeCommandantProfileRef.current = view;
     setSelectedPastCommandant(commandant);
@@ -235,6 +303,55 @@ const Index = () => {
     if (audioTracks.length === 0) return;
     void Promise.allSettled(audioTracks.map((track) => prefetchAudioTrack(track.id)));
   }, [audioTracks]);
+
+  useEffect(() => {
+    let isCancelled = false;
+    let sentinel: WakeLockSentinel | null = null;
+
+    const requestWakeLock = async () => {
+      const wakeLockApi = (navigator as Navigator & {
+        wakeLock?: { request: (type: "screen") => Promise<WakeLockSentinel> };
+      }).wakeLock;
+
+      if (!wakeLockApi || document.visibilityState !== "visible") {
+        return;
+      }
+
+      try {
+        sentinel = await wakeLockApi.request("screen");
+        sentinel.addEventListener("release", () => {
+          if (!isCancelled && document.visibilityState === "visible") {
+            void requestWakeLock();
+          }
+        });
+      } catch {
+        // Some browsers or device policies may block wake lock requests.
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void requestWakeLock();
+        return;
+      }
+
+      if (sentinel) {
+        void sentinel.release();
+        sentinel = null;
+      }
+    };
+
+    void requestWakeLock();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      isCancelled = true;
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      if (sentinel) {
+        void sentinel.release();
+      }
+    };
+  }, []);
 
   const applyGlobalSiteAction = (
     action: GlobalSiteAction,
@@ -306,6 +423,7 @@ const Index = () => {
           : null;
       const bootPayload = payload.bootSequenceSettings;
       const autoDisplayPayload = payload.autoDisplaySettings;
+      const idleStagePayload = payload.idleStageSettings;
 
       saveDeviceOverrides({
         themeMode: remoteThemeMode ?? undefined,
@@ -316,6 +434,10 @@ const Index = () => {
         autoDisplaySettings:
           autoDisplayPayload && typeof autoDisplayPayload === "object"
             ? (autoDisplayPayload as Record<string, unknown>)
+            : undefined,
+        idleStageSettings:
+          idleStagePayload && typeof idleStagePayload === "object"
+            ? (idleStagePayload as Record<string, unknown>)
             : undefined,
       });
 
@@ -332,6 +454,12 @@ const Index = () => {
       if (autoDisplayPayload && typeof autoDisplayPayload === "object") {
         importAutoDisplaySettings(
           autoDisplayPayload as Parameters<typeof importAutoDisplaySettings>[0],
+        );
+      }
+
+      if (idleStagePayload && typeof idleStagePayload === "object") {
+        setIdleStageSettings(
+          idleStagePayload as Parameters<typeof setIdleStageSettings>[0],
         );
       }
       return;
@@ -398,6 +526,7 @@ const Index = () => {
           : "This screen was remotely closed by super admin.";
       setSiteClosedReason(reason);
       setDeviceClosed(true);
+      setIdleStageActive(false);
       setForcedAutoDisplay((prev) => ({
         enabled: false,
         nonce: prev.nonce + 1,
@@ -488,10 +617,77 @@ const Index = () => {
 
   const renderContent = () => {
     if (view === "home") {
+      const showCommandantShell = isCommandantsLoading || commandants.length > 0;
+
       return (
-        <>
+        <div className="space-y-6 md:space-y-8">
+          {showCommandantShell && (
+            <section className="space-y-4 rounded-2xl md:rounded-3xl bg-white/95 p-3 sm:p-4 md:p-5 shadow-[0_8px_18px_rgba(255,255,255,0.38)]">
+              <div className="h-[6px] overflow-hidden rounded-full flex">
+                <div className="flex-1 bg-[#002060]" />
+                <div className="flex-1 bg-[#FF0000]" />
+                <div className="flex-1 bg-[#00B0F0]" />
+              </div>
+
+              {isCommandantsLoading && (
+                <section className="rounded-xl border border-primary/20 bg-card/70 px-4 py-6 md:px-6 md:py-8 animate-pulse">
+                  <div className="mx-auto w-full max-w-5xl space-y-4">
+                    <div className="h-4 w-40 rounded bg-primary/20" />
+                    <div className="h-10 w-4/5 rounded bg-primary/20" />
+                    <div className="h-6 w-3/5 rounded bg-primary/15" />
+                    <div className="h-24 w-full rounded bg-primary/10" />
+                  </div>
+                </section>
+              )}
+
+              {!isCommandantsLoading && currentCommandant && (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openPastCommandantProfile(currentCommandant)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openPastCommandantProfile(currentCommandant);
+                    }
+                  }}
+                  className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 rounded-2xl"
+                  aria-label={`Open full biography for ${currentCommandant.name}`}
+                >
+                  <CommandantHero
+                    commandant={currentCommandant}
+                    compactDescription
+                  />
+                  <div className="px-4 pb-2 text-right">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-primary/85">
+                      Read full biography
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {!isCommandantsLoading && commandants.length > 0 && (
+                <div className="rounded-xl md:rounded-2xl border border-[#d8e1ee] bg-white p-2 sm:p-3 md:p-4 shadow-[0_4px_12px_rgba(255,255,255,0.35)]">
+                  <PastCommandants
+                    commandants={commandants}
+                    includeCurrent
+                    onSelectCommandant={(commandant) =>
+                      openPastCommandantProfile(commandant)
+                    }
+                  />
+                </div>
+              )}
+
+              <div className="h-[5px] overflow-hidden rounded-full flex opacity-95">
+                <div className="flex-1 bg-[#002060]" />
+                <div className="flex-1 bg-[#FF0000]" />
+                <div className="flex-1 bg-[#00B0F0]" />
+              </div>
+            </section>
+          )}
+
           <CategoryCards onSelect={setView} />
-        </>
+        </div>
       );
     }
 
@@ -599,6 +795,8 @@ const Index = () => {
           onAutoDisplayCommandantLayoutChange={setAutoDisplayCommandantLayout}
           onImportAutoDisplaySettings={importAutoDisplaySettings}
           onResetAutoDisplaySettings={resetAutoDisplaySettings}
+          idleStageSettings={idleStageSettings}
+          onIdleStageSettingsChange={setIdleStageSettings}
           devices={devices}
           currentDeviceId={deviceId}
           currentDeviceLabel={deviceLabel}
@@ -744,6 +942,13 @@ const Index = () => {
             </p>
           </div>
         </div>
+      )}
+
+      {idleStageActive && idleTrackingEnabled && (
+        <IdleStageOverlay
+          settings={idleStageSettings}
+          onExit={() => setIdleStageActive(false)}
+        />
       )}
 
       <div

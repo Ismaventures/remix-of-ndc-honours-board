@@ -25,11 +25,22 @@ export interface Personnel {
 export interface Commandant {
   id: string;
   name: string;
+  rank?: string;
   title: string;
+  postNominals?: string;
   tenureStart: number;
   tenureEnd: number | null;
+  yearsExperience?: number;
   imageUrl?: string;
   description: string;
+  bioSummary?: string;
+  biographyFull?: string;
+  education?: string[];
+  training?: string[];
+  pastAppointments?: string[];
+  honours?: string[];
+  familyNote?: string;
+  impactStatement?: string;
   decoration?: string;
   isCurrent: boolean;
 }

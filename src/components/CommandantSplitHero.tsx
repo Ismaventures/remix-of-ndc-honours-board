@@ -93,7 +93,7 @@ export function CommandantSplitHero({ commandant, isAutoDisplay = false }: Comma
           </div>
 
           {/* Name */}
-          <h2 className={`text-[clamp(1.2rem,3.5vh,3rem)] font-extrabold mb-[1vh] leading-tight tracking-tight text-[#FFD700] drop-shadow-[0_0_10px_rgba(255,215,0,0.3)] max-w-full break-words [overflow-wrap:anywhere] max-h-[4.8em] overflow-y-auto`}>
+          <h2 className={`text-[clamp(1.2rem,3.5vh,3rem)] font-extrabold mb-[1vh] leading-tight tracking-tight max-w-full break-words [overflow-wrap:anywhere] max-h-[4.8em] overflow-y-auto ${isLightMode ? "text-[#0f2a5f]" : "text-slate-100"}`}>
             {name}
           </h2>
 

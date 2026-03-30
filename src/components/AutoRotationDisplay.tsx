@@ -106,7 +106,17 @@ function ContinuousSlideCard({
       : (item as Personnel).service;
   const decoration = item.decoration;
   const imageAltTitle = title || (isVisit ? "Honoured Guest" : isCommandant ? "Commandant" : "Staff");
-  const safeName = name || "Name unavailable";
+  const personnelRank = !isVisit && !isCommandant ? (item as Personnel).rank?.trim() : "";
+  const hasRankPrefix = Boolean(
+    personnelRank &&
+      name &&
+      name.toLowerCase().startsWith(personnelRank.toLowerCase()),
+  );
+  const displayName =
+    !isVisit && !isCommandant && personnelRank && name && !hasRankPrefix
+      ? `${personnelRank} ${name}`
+      : name;
+  const safeName = displayName || "Name unavailable";
   const safeDecoration = decoration?.trim() || "";
 
   const yearLabel = useMemo(() => {
@@ -1170,10 +1180,7 @@ export function AutoRotationDisplay({
   );
 
   const getSectionTitle = () => {
-    if (activeCategory || activeView === "visits") {
-      return "";
-    }
-    return "Commandants' Chronicle";
+    return "";
   };
 
   const getSectionSubtitle = () => {
@@ -1182,13 +1189,11 @@ export function AutoRotationDisplay({
     if (activeCategory === "FWC") return "Distinguished Fellows of the War College (FWC)";
     if (activeCategory === "Directing Staff") return "Chronicles of Directing Staff (Directing Staff)";
     if (activeCategory === "Allied") return "International Allied Officers (Allied)";
-    return "Commandants' Honour Roll";
+    return "Chronicles of Past Commandants";
   };
 
   const getSectionDescriptor = () => {
-    if (activeView === "visits") return "";
-    if (activeCategory) return "";
-    return "Leadership succession archive of commandants and institutional milestones.";
+    return "";
   };
 
   const sectionSubtitle = getSectionSubtitle();
@@ -1211,14 +1216,14 @@ export function AutoRotationDisplay({
           <div className="h-[2px] w-full bg-[#FF0000]" />
           <div className="auto-scroll-heading-body bg-[#002060] px-3 py-2 sm:px-4 sm:py-2.5 text-center">
             {getSectionTitle() && (
-              <p className="auto-scroll-heading-title text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90">
+              <p className="auto-scroll-heading-title mx-auto max-w-[92vw] sm:max-w-4xl text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.16em] text-white/90 leading-snug break-words">
                 {getSectionTitle()}
               </p>
             )}
             <AnimatePresence mode="wait" initial={false}>
               <motion.h2
                 key={`subtitle-${sectionSubtitle}`}
-                className="auto-scroll-heading-subtitle mt-1 text-base sm:text-xl md:text-2xl font-bold uppercase tracking-[0.03em] text-[#f5edd8] leading-tight"
+                className="auto-scroll-heading-subtitle mx-auto mt-1 max-w-[96vw] sm:max-w-4xl text-[clamp(0.95rem,2.8vw,1.5rem)] sm:text-[clamp(1.05rem,2.1vw,1.8rem)] font-bold uppercase tracking-[0.02em] text-[#d4af37] drop-shadow-[0_0_6px_rgba(212,175,55,0.25)] leading-tight break-words"
                 initial={{ opacity: 0, y: 10, filter: "blur(2px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -8, filter: "blur(2px)" }}
@@ -1231,7 +1236,7 @@ export function AutoRotationDisplay({
               <AnimatePresence mode="wait" initial={false}>
                 <motion.p
                   key={`descriptor-${sectionDescriptor}`}
-                  className="mt-1 text-[9px] sm:text-[10px] tracking-[0.08em] text-white/90"
+                  className="mx-auto mt-1 max-w-[95vw] sm:max-w-3xl text-[10px] sm:text-[11px] tracking-[0.05em] leading-relaxed text-white/90"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}

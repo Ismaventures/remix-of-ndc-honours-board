@@ -1,10 +1,15 @@
 import { del, get, keys, set } from 'idb-keyval';
+import { supabase } from './supabaseClient';
 
 const MEDIA_KEY_PREFIX = 'media_';
 const MEDIA_URL_PREFIX = 'idb-media://';
+const MEDIA_FALLBACK_DELIMITER = '::';
+const MEDIA_BUCKET = import.meta.env.VITE_SUPABASE_MEDIA_BUCKET || 'ndc-media';
 const REMOTE_MEDIA_KEY_PREFIX = 'remote_media_';
 export const REMOTE_MEDIA_CACHE_TTL_MS = 73 * 60 * 60 * 1000;
 const REMOTE_MEDIA_MAX_ENTRIES = 600;
+const FREE_IMAGE_PROXY_BASE = 'https://images.weserv.nl/';
+const ENABLE_FREE_IMAGE_PROXY = import.meta.env.VITE_ENABLE_FREE_IMAGE_PROXY !== 'false';
 
 let mediaCleanupScheduled = false;
 
@@ -16,6 +21,11 @@ interface StoredMedia {
 interface StoredRemoteMedia extends StoredMedia {
   sourceUrl: string;
   cachedAt: number;
+}
+
+interface ParsedMediaRef {
+  localRef: string;
+  publicUrl: string | null;
 }
 
 function toAbsoluteHttpUrl(ref: string): string | null {
@@ -40,6 +50,74 @@ function hashRef(value: string): string {
 
 function toRemoteMediaKey(url: string): string {
   return `${REMOTE_MEDIA_KEY_PREFIX}${hashRef(url)}`;
+}
+
+function normalizeFilename(filename: string): string {
+  return filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+}
+
+function isSupabaseMediaReady(): boolean {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  return Boolean(url && key);
+}
+
+function parsePersistentMediaRef(ref: string): ParsedMediaRef | null {
+  if (!ref.startsWith(MEDIA_URL_PREFIX)) return null;
+
+  const [localRef, publicUrlRaw] = ref.split(MEDIA_FALLBACK_DELIMITER, 2);
+  const publicUrl = publicUrlRaw && toAbsoluteHttpUrl(publicUrlRaw) ? publicUrlRaw : null;
+  return { localRef, publicUrl };
+}
+
+function composePersistentMediaRef(localRef: string, publicUrl: string | null): string {
+  if (!publicUrl) return localRef;
+  return `${localRef}${MEDIA_FALLBACK_DELIMITER}${publicUrl}`;
+}
+
+async function uploadMediaToSupabase(id: string, file: File): Promise<string | null> {
+  if (!isSupabaseMediaReady()) return null;
+
+  const safeFilename = normalizeFilename(file.name || `${id}.bin`);
+  const path = `images/${id}-${safeFilename}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(MEDIA_BUCKET)
+    .upload(path, file, {
+      upsert: true,
+      contentType: file.type || 'application/octet-stream',
+      cacheControl: '31536000',
+    });
+
+  if (uploadError) {
+    console.error(`Supabase media upload failed (bucket: ${MEDIA_BUCKET}):`, uploadError.message);
+    return null;
+  }
+
+  const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+  return data?.publicUrl ?? null;
+}
+
+function toOptimizedRemoteImageUrl(url: string): string {
+  if (!ENABLE_FREE_IMAGE_PROXY) return url;
+
+  try {
+    const parsed = new URL(url);
+    const isSupabaseAsset = parsed.hostname.endsWith('.supabase.co');
+    if (!isSupabaseAsset) return url;
+
+    const proxyTarget = `${parsed.hostname}${parsed.pathname}${parsed.search}`;
+    const params = new URLSearchParams({
+      url: proxyTarget,
+      w: '1600',
+      q: '82',
+      output: 'webp',
+    });
+
+    return `${FREE_IMAGE_PROXY_BASE}?${params.toString()}`;
+  } catch {
+    return url;
+  }
 }
 
 function isRemoteMediaFresh(cachedAt: number): boolean {
@@ -120,24 +198,26 @@ async function resolveRemoteMediaRefToObjectUrl(ref: string): Promise<string> {
   const absoluteUrl = toAbsoluteHttpUrl(ref);
   if (!absoluteUrl) return ref;
 
-  const key = toRemoteMediaKey(absoluteUrl);
+  const requestUrl = toOptimizedRemoteImageUrl(absoluteUrl);
+
+  const key = toRemoteMediaKey(requestUrl);
   const cached = await get<StoredRemoteMedia>(key);
 
-  if (cached?.sourceUrl === absoluteUrl && isRemoteMediaFresh(cached.cachedAt)) {
+  if (cached?.sourceUrl === requestUrl && isRemoteMediaFresh(cached.cachedAt)) {
     return URL.createObjectURL(new Blob([cached.buffer], { type: cached.type || 'application/octet-stream' }));
   }
 
-  if (cached?.sourceUrl === absoluteUrl) {
+  if (cached?.sourceUrl === requestUrl) {
     // Serve stale cache first for resilient rendering, then refresh best-effort.
     if (!isRemoteMediaFresh(cached.cachedAt)) {
-      void fetchAndPersistRemoteMedia(absoluteUrl);
+      void fetchAndPersistRemoteMedia(requestUrl);
     }
     return URL.createObjectURL(new Blob([cached.buffer], { type: cached.type || 'application/octet-stream' }));
   }
 
   if (cached) await del(key);
 
-  const refreshed = await fetchAndPersistRemoteMedia(absoluteUrl);
+  const refreshed = await fetchAndPersistRemoteMedia(requestUrl);
   if (!refreshed) return ref;
 
   return URL.createObjectURL(new Blob([refreshed.buffer], { type: refreshed.type || 'application/octet-stream' }));
@@ -158,19 +238,40 @@ export async function prefetchMediaReferences(refs: Array<string | null | undefi
   );
 
   const warm = async (ref: string) => {
-    if (isPersistentMediaRef(ref)) return;
+    const parsedPersistentRef = parsePersistentMediaRef(ref);
+    if (parsedPersistentRef) {
+      if (!parsedPersistentRef.publicUrl) return;
+      const warmRef = parsedPersistentRef.publicUrl;
+
+      const absoluteUrl = toAbsoluteHttpUrl(warmRef);
+      if (!absoluteUrl) return;
+
+      const requestUrl = toOptimizedRemoteImageUrl(absoluteUrl);
+
+      const key = toRemoteMediaKey(requestUrl);
+      const cached = await get<StoredRemoteMedia>(key);
+      if (cached?.sourceUrl === requestUrl && isRemoteMediaFresh(cached.cachedAt)) return;
+      if (cached && cached.sourceUrl !== requestUrl) {
+        await del(key);
+      }
+
+      await fetchAndPersistRemoteMedia(requestUrl);
+      return;
+    }
 
     const absoluteUrl = toAbsoluteHttpUrl(ref);
     if (!absoluteUrl) return;
 
-    const key = toRemoteMediaKey(absoluteUrl);
+    const requestUrl = toOptimizedRemoteImageUrl(absoluteUrl);
+
+    const key = toRemoteMediaKey(requestUrl);
     const cached = await get<StoredRemoteMedia>(key);
-    if (cached?.sourceUrl === absoluteUrl && isRemoteMediaFresh(cached.cachedAt)) return;
-    if (cached && cached.sourceUrl !== absoluteUrl) {
+    if (cached?.sourceUrl === requestUrl && isRemoteMediaFresh(cached.cachedAt)) return;
+    if (cached && cached.sourceUrl !== requestUrl) {
       await del(key);
     }
 
-    await fetchAndPersistRemoteMedia(absoluteUrl);
+    await fetchAndPersistRemoteMedia(requestUrl);
   };
 
   for (let i = 0; i < uniqueRefs.length; i += 4) {
@@ -186,23 +287,29 @@ export function isPersistentMediaRef(value?: string | null): value is string {
 export async function saveMediaFile(file: File): Promise<string> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const buffer = await file.arrayBuffer();
+  const localRef = `${MEDIA_URL_PREFIX}${id}`;
 
   await set(`${MEDIA_KEY_PREFIX}${id}`, {
     buffer,
     type: file.type || 'application/octet-stream',
   } satisfies StoredMedia);
 
-  return `${MEDIA_URL_PREFIX}${id}`;
+  const publicUrl = await uploadMediaToSupabase(id, file);
+  return composePersistentMediaRef(localRef, publicUrl);
 }
 
 export async function resolveMediaRefToObjectUrl(ref: string): Promise<string | null> {
-  if (!isPersistentMediaRef(ref)) {
+  const parsedPersistentRef = parsePersistentMediaRef(ref);
+  if (!parsedPersistentRef) {
     return resolveRemoteMediaRefToObjectUrl(ref);
   }
 
-  const id = ref.slice(MEDIA_URL_PREFIX.length);
+  const id = parsedPersistentRef.localRef.slice(MEDIA_URL_PREFIX.length);
   const stored = await get<StoredMedia>(`${MEDIA_KEY_PREFIX}${id}`);
-  if (!stored) return null;
+  if (!stored) {
+    if (!parsedPersistentRef.publicUrl) return null;
+    return resolveRemoteMediaRefToObjectUrl(parsedPersistentRef.publicUrl);
+  }
 
   const blob = new Blob([stored.buffer], { type: stored.type || 'application/octet-stream' });
   return URL.createObjectURL(blob);

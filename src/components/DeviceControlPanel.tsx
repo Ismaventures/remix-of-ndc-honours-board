@@ -4,6 +4,7 @@ import { DeviceClient, DeviceControlView } from '@/hooks/useDeviceControl';
 import { ThemeMode } from '@/hooks/useThemeMode';
 import { BootSequenceSettings } from '@/hooks/useBootSequenceSettings';
 import { AutoDisplaySettings } from '@/hooks/useAutoDisplaySettings';
+import { IdleStageSettings } from '@/hooks/useIdleStageSettings';
 import { Commandant, Personnel } from '@/types/domain';
 
 interface DeviceControlPanelProps {
@@ -16,6 +17,7 @@ interface DeviceControlPanelProps {
   currentThemeMode: ThemeMode;
   currentBootSettings: BootSequenceSettings;
   currentAutoDisplaySettings: AutoDisplaySettings;
+  currentIdleStageSettings: IdleStageSettings;
   onRefresh: () => void;
   onRenameCurrentDevice: (nextLabel: string) => Promise<boolean>;
   onSendView: (deviceIds: string[], view: DeviceControlView) => Promise<boolean>;
@@ -30,6 +32,7 @@ interface DeviceControlPanelProps {
     themeMode: ThemeMode;
     bootSequenceSettings: BootSequenceSettings;
     autoDisplaySettings: AutoDisplaySettings;
+    idleStageSettings: IdleStageSettings;
   }) => Promise<boolean>;
   onSendClearProfile: (deviceIds: string[]) => Promise<boolean>;
   onSendGlobalClose: (reason: string) => Promise<boolean>;
@@ -56,6 +59,7 @@ export function DeviceControlPanel({
   currentThemeMode,
   currentBootSettings,
   currentAutoDisplaySettings,
+  currentIdleStageSettings,
   onRefresh,
   onRenameCurrentDevice,
   onSendView,
@@ -193,6 +197,7 @@ export function DeviceControlPanel({
       themeMode: currentThemeMode,
       bootSequenceSettings: currentBootSettings,
       autoDisplaySettings: currentAutoDisplaySettings,
+      idleStageSettings: currentIdleStageSettings,
     });
     setBusy(false);
   };

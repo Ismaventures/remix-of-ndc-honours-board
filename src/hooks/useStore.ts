@@ -38,11 +38,22 @@ function normalizeService(value: string): Personnel['service'] {
 type CommandantRow = {
   id: string;
   name: string;
+  rank?: string | null;
   title: string;
+  post_nominals?: string | null;
   tenure_start: number;
   tenure_end: number | null;
+  years_experience?: number | null;
   image_url?: string | null;
   description?: string;
+  bio_summary?: string | null;
+  biography_full?: string | null;
+  education?: string[] | null;
+  training?: string[] | null;
+  past_appointments?: string[] | null;
+  honours?: string[] | null;
+  family_note?: string | null;
+  impact_statement?: string | null;
   decoration?: string | null;
   is_current: boolean;
 };
@@ -86,14 +97,33 @@ const mapRowToPersonnel = (row: PersonnelRow): Personnel => ({
   seniorityOrder: row.seniority_order,
 });
 
+const normalizeStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+};
+
 const mapCommandantToRow = (c: Commandant): CommandantRow => ({
   id: c.id,
   name: c.name,
+  rank: c.rank ?? null,
   title: c.title,
+  post_nominals: c.postNominals ?? null,
   tenure_start: c.tenureStart,
   tenure_end: c.tenureEnd,
+  years_experience: c.yearsExperience ?? null,
   image_url: c.imageUrl ?? null,
   description: c.description,
+  bio_summary: c.bioSummary ?? null,
+  biography_full: c.biographyFull ?? null,
+  education: c.education ?? [],
+  training: c.training ?? [],
+  past_appointments: c.pastAppointments ?? [],
+  honours: c.honours ?? [],
+  family_note: c.familyNote ?? null,
+  impact_statement: c.impactStatement ?? null,
   decoration: c.decoration ?? null,
   is_current: c.isCurrent,
 });
@@ -101,11 +131,22 @@ const mapCommandantToRow = (c: Commandant): CommandantRow => ({
 const mapRowToCommandant = (row: CommandantRow): Commandant => ({
   id: row.id,
   name: row.name,
+  rank: row.rank ?? undefined,
   title: row.title,
+  postNominals: row.post_nominals ?? undefined,
   tenureStart: row.tenure_start,
   tenureEnd: row.tenure_end,
+  yearsExperience: row.years_experience ?? undefined,
   imageUrl: row.image_url ?? undefined,
   description: row.description ?? '',
+  bioSummary: row.bio_summary ?? undefined,
+  biographyFull: row.biography_full ?? undefined,
+  education: normalizeStringArray(row.education),
+  training: normalizeStringArray(row.training),
+  pastAppointments: normalizeStringArray(row.past_appointments),
+  honours: normalizeStringArray(row.honours),
+  familyNote: row.family_note ?? undefined,
+  impactStatement: row.impact_statement ?? undefined,
   decoration: row.decoration ?? undefined,
   isCurrent: row.is_current,
 });
@@ -135,12 +176,13 @@ const mapRowToVisit = (row: VisitRow): DistinguishedVisit => ({
 const COLLECTION_CACHE_TTL_MS = 73 * 60 * 60 * 1000;
 const COLLECTION_BACKGROUND_REFRESH_MS = 90 * 1000;
 const COMMANDANTS_BACKGROUND_REFRESH_MS = 20 * 1000;
+const ENABLE_COMMANDANTS_REALTIME = import.meta.env.VITE_ENABLE_COMMANDANTS_REALTIME === 'true';
 const COMMANDANTS_FETCH_PAGE_SIZE = 2;
 const PERSONNEL_CACHE_KEY = 'ndc_cache_personnel_v1';
 const COMMANDANTS_CACHE_KEY = 'ndc_cache_commandants_v1';
 const VISITS_CACHE_KEY = 'ndc_cache_visits_v1';
 const COLLECTION_CACHE_SCHEMA_KEY = 'ndc_cache_schema_version';
-const COLLECTION_CACHE_SCHEMA_VERSION = '2';
+const COLLECTION_CACHE_SCHEMA_VERSION = '3';
 
 const COLLECTION_CACHE_KEYS = [
   PERSONNEL_CACHE_KEY,
@@ -406,7 +448,7 @@ export function useCommandantsStore() {
         const to = from + COMMANDANTS_FETCH_PAGE_SIZE - 1;
         const page = await supabase
           .from('commandants')
-          .select('id,name,title,tenure_start,tenure_end,is_current,decoration,image_url,description')
+          .select('id,name,rank,title,post_nominals,tenure_start,tenure_end,years_experience,is_current,decoration,image_url,description,bio_summary,biography_full,education,training,past_appointments,honours,family_note,impact_statement')
           .order('tenure_start', { ascending: false })
           .range(from, to);
 
@@ -428,7 +470,7 @@ export function useCommandantsStore() {
     const fetchCommandantsFallback = async (): Promise<CommandantRow[]> => {
       const { data, error } = await supabase
         .from('commandants')
-        .select('id,name,title,tenure_start,tenure_end,is_current,decoration')
+        .select('id,name,rank,title,post_nominals,tenure_start,tenure_end,years_experience,is_current,decoration,description,image_url,bio_summary,biography_full,education,training,past_appointments,honours,family_note,impact_statement')
         .order('tenure_start', { ascending: false });
 
       if (error) {
@@ -437,8 +479,7 @@ export function useCommandantsStore() {
 
       return ((data as CommandantRow[] | null) ?? []).map((row) => ({
         ...row,
-        image_url: null,
-        description: '',
+        description: row.description ?? '',
       }));
     };
 
@@ -458,6 +499,7 @@ export function useCommandantsStore() {
 
         try {
           let rows: CommandantRow[] = [];
+          let usedFallbackFetch = false;
           try {
             rows = await fetchCommandants();
           } catch (primaryError) {
@@ -466,11 +508,29 @@ export function useCommandantsStore() {
               formatSupabaseError(primaryError),
             );
             rows = await fetchCommandantsFallback();
+            usedFallbackFetch = true;
           }
 
           if (!disposed) {
             setCommandants((prev) => {
-              const mergedRows = applyRemoteRowsOrFallback(rows, prev.map(mapCommandantToRow));
+              const prevRows = prev.map(mapCommandantToRow);
+              const rowsWithFallbackPreservation = usedFallbackFetch
+                ? rows.map((row) => {
+                    const previous = prevRows.find((entry) => entry.id === row.id);
+                    return {
+                      ...row,
+                      // Lightweight fallback does not fetch image_url; preserve existing value.
+                      image_url: row.image_url ?? previous?.image_url ?? null,
+                      // Preserve description if fallback row is empty but existing has content.
+                      description:
+                        row.description && row.description.trim().length > 0
+                          ? row.description
+                          : previous?.description ?? '',
+                    };
+                  })
+                : rows;
+
+              const mergedRows = applyRemoteRowsOrFallback(rowsWithFallbackPreservation, prevRows);
               commandantsHasDataRef.current = mergedRows.length > 0;
               writeCollectionCache(COMMANDANTS_CACHE_KEY, mergedRows);
               return mergedRows.map(mapRowToCommandant);
@@ -500,21 +560,25 @@ export function useCommandantsStore() {
       void loadCommandants();
     }, COMMANDANTS_BACKGROUND_REFRESH_MS);
 
-    const commandantsChannel = supabase
-      .channel('ndc-commandants-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'commandants' },
-        () => {
-          void loadCommandants();
-        },
-      )
-      .subscribe();
+    const commandantsChannel = ENABLE_COMMANDANTS_REALTIME
+      ? supabase
+          .channel('ndc-commandants-changes')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'commandants' },
+            () => {
+              void loadCommandants();
+            },
+          )
+          .subscribe()
+      : null;
 
     return () => {
       disposed = true;
       clearInterval(interval);
-      void supabase.removeChannel(commandantsChannel);
+      if (commandantsChannel) {
+        void supabase.removeChannel(commandantsChannel);
+      }
     };
   }, []);
 
@@ -545,11 +609,22 @@ export function useCommandantsStore() {
 
     const payload: Partial<CommandantRow> = {};
     if (data.name !== undefined) payload.name = data.name;
+    if (data.rank !== undefined) payload.rank = data.rank ?? null;
     if (data.title !== undefined) payload.title = data.title;
+    if (data.postNominals !== undefined) payload.post_nominals = data.postNominals ?? null;
     if (data.tenureStart !== undefined) payload.tenure_start = data.tenureStart;
     if (data.tenureEnd !== undefined) payload.tenure_end = data.tenureEnd;
+    if (data.yearsExperience !== undefined) payload.years_experience = data.yearsExperience ?? null;
     if (data.imageUrl !== undefined) payload.image_url = data.imageUrl ?? null;
     if (data.description !== undefined) payload.description = data.description;
+    if (data.bioSummary !== undefined) payload.bio_summary = data.bioSummary ?? null;
+    if (data.biographyFull !== undefined) payload.biography_full = data.biographyFull ?? null;
+    if (data.education !== undefined) payload.education = data.education;
+    if (data.training !== undefined) payload.training = data.training;
+    if (data.pastAppointments !== undefined) payload.past_appointments = data.pastAppointments;
+    if (data.honours !== undefined) payload.honours = data.honours;
+    if (data.familyNote !== undefined) payload.family_note = data.familyNote ?? null;
+    if (data.impactStatement !== undefined) payload.impact_statement = data.impactStatement ?? null;
     if (data.decoration !== undefined) payload.decoration = data.decoration ?? null;
     if (data.isCurrent !== undefined) payload.is_current = data.isCurrent;
 
