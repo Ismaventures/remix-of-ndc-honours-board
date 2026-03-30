@@ -252,9 +252,11 @@ export function CommandantHero({
                 className={`text-sm md:text-[15px] ${isLightMode ? "text-slate-700 font-medium" : "text-slate-300 font-normal"} leading-relaxed max-w-3xl transition-all duration-700 ease-out delay-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
                 style={{
                   display: "-webkit-box",
-                  WebkitBoxOrient: "vertical",
                   WebkitLineClamp: 10,
+                  WebkitBoxOrient: "vertical",
                   overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  wordWrap: "break-word"
                 }}
               >
                 {summaryText}
