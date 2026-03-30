@@ -23,6 +23,7 @@ export interface AudioTrack {
 export interface AudioAssignments {
   preloader: string | null;
   globalAuto: string | null;
+  idleStage: string | null;
   distinguished_fellows_fwc: string | null;
   distinguished_fellows_fdc: string | null;
   directing_staff: string | null;
@@ -123,6 +124,7 @@ export const useAudioStore = create<AudioState>()(
       assignments: {
         preloader: null,
         globalAuto: null,
+        idleStage: null,
         distinguished_fellows_fwc: null,
         distinguished_fellows_fdc: null,
         directing_staff: null,

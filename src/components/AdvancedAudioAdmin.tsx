@@ -225,6 +225,7 @@ export function AdvancedAudioAdmin() {
            <div className="space-y-3">
               <AssignmentSelector label="Preloader (Boot) Sequence" contextKey="preloader" />
               <AssignmentSelector label="Global Auto Display Mode" contextKey="globalAuto" />
+              <AssignmentSelector label="Idle Stage Background" contextKey="idleStage" />
               <AssignmentSelector label="FWC (Fellows) Context" contextKey="distinguished_fellows_fwc" />
               <AssignmentSelector label="FDC (Fellows) Context" contextKey="distinguished_fellows_fdc" />
               <AssignmentSelector label="Directing Staff Context" contextKey="directing_staff" />

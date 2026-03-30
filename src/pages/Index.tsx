@@ -10,7 +10,7 @@ import { AdminPanel } from "@/components/AdminPanel";
 import { AdminLogin } from "@/components/AdminLogin";
 import { AutoRotationDisplay } from "@/components/AutoRotationDisplay";
 import { BootSequence } from "@/components/BootSequence";
-import { AudioManager } from "@/components/AudioManager";
+import { AudioManager, playAudioTrack } from "@/components/AudioManager";
 import { IdleStageOverlay } from "@/components/IdleStageOverlay";
 import {
   usePersonnelStore,
@@ -131,6 +131,7 @@ const Index = () => {
   } =
     useCommandantsStore();
   const audioTracks = useAudioStore((state) => state.tracks);
+  const audioAssignments = useAudioStore((state) => state.assignments);
   const currentCommandant =
     commandants.find((c) => c.isCurrent) ?? commandants[0] ?? null;
 
@@ -303,6 +304,19 @@ const Index = () => {
     if (audioTracks.length === 0) return;
     void Promise.allSettled(audioTracks.map((track) => prefetchAudioTrack(track.id)));
   }, [audioTracks]);
+
+  useEffect(() => {
+    if (!idleStageActive || !idleTrackingEnabled) return;
+
+    const idleTrackId = audioAssignments.idleStage ?? null;
+    if (!idleTrackId) return;
+
+    playAudioTrack(idleTrackId, false, false, { fadeMs: 500 });
+
+    return () => {
+      playAudioTrack(null, false, false, { fadeMs: 260 });
+    };
+  }, [idleStageActive, idleTrackingEnabled, audioAssignments.idleStage]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -947,6 +961,7 @@ const Index = () => {
       {idleStageActive && idleTrackingEnabled && (
         <IdleStageOverlay
           settings={idleStageSettings}
+          commandants={commandants}
           onExit={() => setIdleStageActive(false)}
         />
       )}

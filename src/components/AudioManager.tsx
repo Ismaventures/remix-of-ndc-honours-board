@@ -95,8 +95,13 @@ export function AudioManager() {
       commandTokenRef.current += 1;
       const commandToken = commandTokenRef.current;
 
-      const customEvent = e as CustomEvent<{ targetId: string | null; preloader?: boolean; userInitiated?: boolean }>;
-      const { targetId, preloader, userInitiated = false } = customEvent.detail;
+      const customEvent = e as CustomEvent<{
+        targetId: string | null;
+        preloader?: boolean;
+        userInitiated?: boolean;
+        fadeMs?: number;
+      }>;
+      const { targetId, preloader, userInitiated = false, fadeMs } = customEvent.detail;
 
       const a1 = audio1Ref.current;
       const a2 = audio2Ref.current;
@@ -120,7 +125,7 @@ export function AudioManager() {
 
       setCurrentId(targetId);
 
-      const fadeDuration = 1500;
+      const fadeDuration = Math.max(120, Math.min(4000, Number.isFinite(fadeMs) ? Number(fadeMs) : 1500));
       const steps = 30;
       const stepTime = fadeDuration / steps;
       
@@ -300,6 +305,15 @@ export function AudioManager() {
   );
 }
 
-export const playAudioTrack = (targetId: string | null, preloader = false, userInitiated = false) => {
-  customAudioThemeEvent.dispatchEvent(new CustomEvent('playTrack', { detail: { targetId, preloader, userInitiated } }));
+export const playAudioTrack = (
+  targetId: string | null,
+  preloader = false,
+  userInitiated = false,
+  options?: { fadeMs?: number },
+) => {
+  customAudioThemeEvent.dispatchEvent(
+    new CustomEvent('playTrack', {
+      detail: { targetId, preloader, userInitiated, fadeMs: options?.fadeMs },
+    }),
+  );
 };

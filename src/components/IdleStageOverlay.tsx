@@ -1,10 +1,13 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ndcCrest from '/images/ndc-crest.png';
 import type { IdleStageSettings } from '@/hooks/useIdleStageSettings';
+import type { Commandant } from '@/types/domain';
+import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
 
 interface IdleStageOverlayProps {
   settings: IdleStageSettings;
+  commandants?: Commandant[];
   onExit: () => void;
 }
 
@@ -14,6 +17,132 @@ const BRANCH_LOGOS = [
   { id: 'airforce', src: '/Nigerian_Air_Force_emblem.svg.png', name: 'Nigerian Air Force', zoom: 1 },
   { id: 'dhq', src: '/dhq logo.jpg', name: 'Defence Headquarters', zoom: 1 },
 ];
+
+type ServiceBranch = 'navy' | 'army' | 'airforce' | 'dhq';
+
+const BRANCH_THEME: Record<
+  ServiceBranch,
+  { logo: string; badge: string; glow: string }
+> = {
+  navy: {
+    logo: '/images/Badge_of_the_Nigerian_Navy.svg',
+    badge: 'Nigerian Navy',
+    glow: 'from-[#0b2e75]/70 via-[#0ea5e9]/30 to-transparent',
+  },
+  army: {
+    logo: '/images/Emblem_of_the_Nigerian_Army.svg',
+    badge: 'Nigerian Army',
+    glow: 'from-[#8b1b1b]/65 via-[#f59e0b]/22 to-transparent',
+  },
+  airforce: {
+    logo: '/Nigerian_Air_Force_emblem.svg.png',
+    badge: 'Nigerian Air Force',
+    glow: 'from-[#0e3a8a]/65 via-[#38bdf8]/28 to-transparent',
+  },
+  dhq: {
+    logo: '/dhq logo.jpg',
+    badge: 'Defence Headquarters',
+    glow: 'from-[#0f172a]/70 via-[#d4af37]/22 to-transparent',
+  },
+};
+
+function inferCommandantBranch(commandant: Commandant): ServiceBranch {
+  const text = `${commandant.name} ${commandant.rank ?? ''} ${commandant.title ?? ''} ${commandant.description ?? ''}`.toLowerCase();
+
+  if (
+    text.includes('air force') ||
+    text.includes('air marshal') ||
+    text.includes('air vice marshal') ||
+    text.includes('group captain') ||
+    text.includes('wing commander')
+  ) {
+    return 'airforce';
+  }
+
+  if (
+    text.includes('navy') ||
+    text.includes('naval') ||
+    text.includes('admiral') ||
+    text.includes('commodore')
+  ) {
+    return 'navy';
+  }
+
+  if (
+    text.includes('army') ||
+    text.includes('brigadier') ||
+    text.includes('major general') ||
+    text.includes('lieutenant general') ||
+    text.includes('lt gen') ||
+    text.includes('colonel')
+  ) {
+    return 'army';
+  }
+
+  return 'dhq';
+}
+
+function IdleCommandantShowcase({ commandant }: { commandant: Commandant }) {
+  const imageUrl = useResolvedMediaUrl(commandant.imageUrl);
+  const branch = inferCommandantBranch(commandant);
+  const branchTheme = BRANCH_THEME[branch];
+  const tenureLabel = `${commandant.tenureStart}${commandant.tenureEnd ? ` - ${commandant.tenureEnd}` : ' - Present'}`;
+  const title = commandant.postNominals?.trim() || commandant.title || 'Commandant';
+
+  return (
+    <motion.div
+      className="absolute inset-0 z-20 pointer-events-none"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1.1, ease: 'easeInOut' }}
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br ${branchTheme.glow}`} />
+
+      <motion.img
+        src={branchTheme.logo}
+        alt={branchTheme.badge}
+        className="absolute left-[-8vw] top-1/2 h-[72vh] w-[72vh] max-h-[760px] max-w-[760px] -translate-y-1/2 object-contain opacity-[0.14] blur-[1px]"
+        animate={{ rotate: [0, 6, 0], scale: [1, 1.04, 1] }}
+        transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.img
+        src={branchTheme.logo}
+        alt={branchTheme.badge}
+        className="absolute right-[-10vw] top-1/2 h-[66vh] w-[66vh] max-h-[700px] max-w-[700px] -translate-y-1/2 object-contain opacity-[0.1] blur-[1px]"
+        animate={{ rotate: [0, -7, 0], scale: [1, 1.03, 1] }}
+        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      <div className="absolute inset-x-4 bottom-16 md:inset-x-8 md:bottom-14">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-[#f0d27844] bg-[#020817cc] px-4 py-3 backdrop-blur-xl shadow-[0_20px_70px_rgba(2,8,23,0.6)] md:px-6 md:py-4">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="h-16 w-12 overflow-hidden rounded-md border border-white/20 bg-slate-900/80 md:h-20 md:w-14">
+              {imageUrl ? (
+                <img src={imageUrl} alt={commandant.name} className="h-full w-full object-cover object-top" />
+              ) : (
+                <div className="h-full w-full bg-slate-800/90" />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-[#f4d36a] md:text-[11px]">
+                Commandant Archive Showcase - {branchTheme.badge}
+              </p>
+              <h3 className="mt-1 truncate text-sm font-bold text-white md:text-lg">{commandant.name}</h3>
+              <p className="truncate text-[11px] font-semibold italic text-[#ffb4a8] md:text-sm">{title}</p>
+            </div>
+
+            <div className="shrink-0 rounded-md border border-white/20 bg-white/5 px-3 py-1.5 text-right">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-white/70 md:text-[11px]">Tenure</p>
+              <p className="text-[11px] font-semibold text-white md:text-sm">{tenureLabel}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 const DESIGN_CLASS_MAP = {
   'orbital-command': {
@@ -78,9 +207,19 @@ const DESIGN_CLASS_MAP = {
   },
 } as const;
 
-export function IdleStageOverlay({ settings, onExit }: IdleStageOverlayProps) {
+export function IdleStageOverlay({ settings, commandants = [], onExit }: IdleStageOverlayProps) {
   const design = DESIGN_CLASS_MAP[settings.design] ?? DESIGN_CLASS_MAP['orbital-command'];
   const [activeCycleIndex, setActiveCycleIndex] = useState(0);
+
+  const commandantCycle = useMemo(() => {
+    const past = commandants.filter((entry) => !entry.isCurrent);
+    const source = past.length > 0 ? past : commandants;
+    return [...source].sort((a, b) => b.tenureStart - a.tenureStart);
+  }, [commandants]);
+
+  const activeCommandant = commandantCycle.length
+    ? commandantCycle[activeCycleIndex % commandantCycle.length]
+    : null;
 
   useEffect(() => {
     if (settings.design === 'preboot-sequence') {
@@ -90,6 +229,17 @@ export function IdleStageOverlay({ settings, onExit }: IdleStageOverlayProps) {
       return () => clearInterval(interval);
     }
   }, [settings.design]);
+
+  useEffect(() => {
+    if (settings.design === 'preboot-sequence') return;
+    if (commandantCycle.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setActiveCycleIndex((prev) => (prev + 1) % commandantCycle.length);
+    }, 6800);
+
+    return () => clearInterval(interval);
+  }, [settings.design, commandantCycle.length]);
 
   const cycleLogos = [...BRANCH_LOGOS, { id: 'ndc', src: ndcCrest, name: 'National Defence College' }];
   const currentPrebootLogo = cycleLogos[activeCycleIndex].src;
@@ -215,6 +365,12 @@ export function IdleStageOverlay({ settings, onExit }: IdleStageOverlayProps) {
             <div className="absolute left-1/2 top-1/2 h-1/2 w-1/2 origin-top-left bg-[conic-gradient(from_0deg,rgba(52,211,153,0.32),rgba(20,184,166,0.14)_35%,transparent_70%)]" />
           </motion.div>
         </>
+      )}
+
+      {settings.design !== 'preboot-sequence' && activeCommandant && (
+        <AnimatePresence mode="wait">
+          <IdleCommandantShowcase key={activeCommandant.id} commandant={activeCommandant} />
+        </AnimatePresence>
       )}
 
       {settings.design !== 'preboot-sequence' && (

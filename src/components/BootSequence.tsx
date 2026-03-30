@@ -16,6 +16,8 @@ export function BootSequence({
   onComplete?: () => void;
 }) {
   const assignments = useAudioStore((s) => s.assignments);
+  const tracks = useAudioStore((s) => s.tracks);
+  const loadTracks = useAudioStore((s) => s.loadTracks);
   const [showWelcomeGate, setShowWelcomeGate] = useState(false);
   const [isEnteringArchive, setIsEnteringArchive] = useState(false);
   const [bootStage, setBootStage] = useState<"service-intro" | "gate">(
@@ -40,10 +42,17 @@ export function BootSequence({
   }, []);
 
   useEffect(() => {
-    if (assignments.preloader) {
-      playAudioTrack(assignments.preloader, true);
-    }
-  }, [assignments.preloader]);
+    void loadTracks();
+  }, [loadTracks]);
+
+  useEffect(() => {
+    if (!assignments.preloader) return;
+
+    const hasTrack = tracks.some((track) => track.id === assignments.preloader);
+    if (!hasTrack) return;
+
+    playAudioTrack(assignments.preloader, true, false, { fadeMs: 420 });
+  }, [assignments.preloader, tracks]);
 
   return (
     <div
