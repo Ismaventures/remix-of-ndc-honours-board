@@ -205,6 +205,18 @@ const DESIGN_CLASS_MAP = {
     counterOrbitDurationSec: 40,
     watermarkOpacity: 'opacity-[0.04]',
   },
+  'commandant-honour-wall': {
+    shell: 'bg-[#030712]',
+    aura: 'bg-[radial-gradient(circle_at_20%_15%,rgba(15,40,95,0.42),transparent_42%),radial-gradient(circle_at_82%_72%,rgba(212,175,55,0.22),transparent_46%),radial-gradient(circle_at_center,rgba(2,18,48,0.94),rgba(2,6,16,1)_72%)]',
+    gridOpacity: 'opacity-[0.18]',
+    labelTone: 'text-[#f0d278]',
+    ringTone: 'border-[#c7d2fe33]',
+    innerRingTone: 'border-[#f0d27842]',
+    nodeTone: 'border-[#f5d575] shadow-[0_0_28px_rgba(245,213,117,0.3)]',
+    orbitDurationSec: 58,
+    counterOrbitDurationSec: 58,
+    watermarkOpacity: 'opacity-[0.07]',
+  },
 } as const;
 
 export function IdleStageOverlay({ settings, commandants = [], onExit }: IdleStageOverlayProps) {
@@ -367,7 +379,7 @@ export function IdleStageOverlay({ settings, commandants = [], onExit }: IdleSta
         </>
       )}
 
-      {settings.design !== 'preboot-sequence' && activeCommandant && (
+      {settings.design === 'commandant-honour-wall' && activeCommandant && (
         <AnimatePresence mode="wait">
           <IdleCommandantShowcase key={activeCommandant.id} commandant={activeCommandant} />
         </AnimatePresence>

@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { loadUiSetting, saveUiSetting } from '@/lib/uiSettingsStorage';
 import { hasDeviceOverrides, readIdleStageOverride } from '@/lib/deviceOverrideSettings';
 
-export type IdleStageDesignType = 'orbital-command' | 'flag-parade' | 'radar-grid' | 'preboot-sequence' | 'holographic-display';
+export type IdleStageDesignType =
+  | 'orbital-command'
+  | 'flag-parade'
+  | 'radar-grid'
+  | 'preboot-sequence'
+  | 'holographic-display'
+  | 'commandant-honour-wall';
 
 export interface IdleStageSettings {
   enabled: boolean;
@@ -38,6 +44,11 @@ export const IDLE_STAGE_DESIGNS: Array<{ id: IdleStageDesignType; label: string;
     id: 'holographic-display',
     label: 'Holographic Display',
     description: 'Futuristic floating holographic projections of the military branches with digital data streams.',
+  },
+  {
+    id: 'commandant-honour-wall',
+    label: 'Commandant Honour Wall',
+    description: 'Rotating past commandant profiles with service-themed military insignia and premium ceremonial ambience.',
   },
 ];
 
