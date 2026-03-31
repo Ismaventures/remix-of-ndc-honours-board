@@ -165,7 +165,7 @@ export function CommandantHero({
       </div>
 
       <div
-        className={`relative ${isCompact ? "grid items-center gap-6 md:gap-8 p-7 md:p-9 grid-cols-1 md:grid-cols-[1fr_240px]" : "grid items-start gap-8 md:gap-10 p-8 md:p-12 pt-14 grid-cols-1 md:grid-cols-[1fr_280px]"}`}
+        className={`relative ${isCompact ? "grid items-center gap-6 md:gap-8 p-5 md:p-7 grid-cols-1 md:grid-cols-[220px_1fr]" : "grid items-start gap-8 md:gap-10 p-8 md:p-12 pt-14 grid-cols-1 md:grid-cols-[1fr_280px]"}`}
       >
         <div
           className={`transition-all duration-700 ease-out ${
@@ -209,13 +209,13 @@ export function CommandantHero({
           </div>
 
           <h2
-            className={`${isCompact ? "text-3xl md:text-[2.4rem]" : "text-4xl md:text-[3.2rem]"} font-bold mb-2 leading-tight text-[#002060] uppercase tracking-tight`}
+            className={`${isCompact ? "text-2xl md:text-3xl" : "text-4xl md:text-[3.2rem]"} font-bold mb-2 leading-tight text-[#002060] uppercase tracking-tight`}
           >
             {name}
           </h2>
 
           <p
-            className={`${isCompact ? "text-sm md:text-base mb-4" : "text-base md:text-xl mb-6"} text-[#FF0000] font-bold tracking-[0.1em] uppercase border-l-4 border-[#FF0000] pl-4 italic`}
+            className={`${isCompact ? "text-xs md:text-sm mb-3" : "text-base md:text-xl mb-6"} text-[#FF0000] font-bold tracking-[0.08em] uppercase border-l-4 border-[#FF0000] pl-3 italic`}
           >
             {titleText}
           </p>
