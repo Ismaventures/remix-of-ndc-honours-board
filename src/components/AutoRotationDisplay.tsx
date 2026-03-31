@@ -90,27 +90,32 @@ function ContinuousSlideCard({
 
   const isVisit = type === "visit";
   const isCommandant = type === "commandant";
-  
-  const title = (
-    isCommandant
+
+  const title =
+    (isCommandant
       ? (item as Commandant).title
       : isVisit
         ? (item as DistinguishedVisit).title
         : (item as Personnel).decoration
-  )?.trim() || "";
+    )?.trim() || "";
   const name = item.name?.trim();
   const subtitle = isCommandant
-    ? ((item as Commandant).isCurrent ? "Current Commandant" : "Past Commandant")
+    ? (item as Commandant).isCurrent
+      ? "Current Commandant"
+      : "Past Commandant"
     : isVisit
       ? (item as DistinguishedVisit).country
       : (item as Personnel).service;
   const decoration = item.decoration;
-  const imageAltTitle = title || (isVisit ? "Honoured Guest" : isCommandant ? "Commandant" : "Staff");
-  const personnelRank = !isVisit && !isCommandant ? (item as Personnel).rank?.trim() : "";
+  const imageAltTitle =
+    title ||
+    (isVisit ? "Honoured Guest" : isCommandant ? "Commandant" : "Staff");
+  const personnelRank =
+    !isVisit && !isCommandant ? (item as Personnel).rank?.trim() : "";
   const hasRankPrefix = Boolean(
     personnelRank &&
-      name &&
-      name.toLowerCase().startsWith(personnelRank.toLowerCase()),
+    name &&
+    name.toLowerCase().startsWith(personnelRank.toLowerCase()),
   );
   const displayName =
     !isVisit && !isCommandant && personnelRank && name && !hasRankPrefix
@@ -128,7 +133,8 @@ function ContinuousSlideCard({
 
     if (isCommandant) {
       const cItem = item as Commandant;
-      if (cItem.tenureStart && cItem.tenureEnd) return `${cItem.tenureStart} - ${cItem.tenureEnd}`;
+      if (cItem.tenureStart && cItem.tenureEnd)
+        return `${cItem.tenureStart} - ${cItem.tenureEnd}`;
       if (cItem.tenureStart) return `${cItem.tenureStart} - Present`;
       return "N/A";
     }
@@ -146,7 +152,11 @@ function ContinuousSlideCard({
     <button
       type="button"
       onClick={() => onSelect(item as any)}
-      className={`auto-scroll-card group relative ${isCommandant ? "commandant-auto-card w-[88vw] sm:w-[48vw] md:w-[44vw] lg:w-[34vw] max-w-[480px]" : "w-[82vw] sm:w-[45vw] md:w-[40vw] lg:w-[30vw] max-w-[420px]"} self-center shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
+      className={`auto-scroll-card group relative ${
+        isCommandant
+          ? "commandant-auto-card w-[85vw] sm:w-[50vw] md:w-[45vw] lg:w-[35vw] xl:w-[28vw] max-w-[480px]"
+          : "w-[80vw] sm:w-[45vw] md:w-[40vw] lg:w-[30vw] xl:w-[24vw] max-w-[420px]"
+      } self-center h-[90%] sm:h-[94%] max-h-[85vh] shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
           ? "bg-white border border-[#002060]/20 shadow-[0_12px_36px_rgba(0,32,96,0.14)]"
           : "bg-slate-950/90 border border-slate-500/35 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
@@ -166,20 +176,20 @@ function ContinuousSlideCard({
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-0 opacity-40">
-        <div className={`absolute inset-0 ${isLightMode ? "bg-white" : "bg-slate-950"}`} />
+        <div
+          className={`absolute inset-0 ${isLightMode ? "bg-white" : "bg-slate-950"}`}
+        />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
-      <div
-        className={`relative z-10 mb-2 sm:mb-2.5 flex w-full aspect-[4/5] sm:aspect-[3/4] md:aspect-[4/5] items-center justify-center mx-auto`}
-      >
-        <div className="portrait-photo-mat rounded-sm p-[2px] shadow-xl h-full w-full">
-          <div className="rounded-[2px] bg-white p-[2px] shadow-inner h-full w-full">
-            <div className="portrait-photo-mat-inner rounded-[1px] bg-neutral-100/90 p-px h-full w-full">
+      <div className="relative z-10 mb-2 sm:mb-3 flex flex-col flex-1 min-h-0 w-full">
+        <div className="portrait-photo-mat rounded-sm p-[2px] shadow-xl flex flex-col flex-1 min-h-0 w-full">
+          <div className="rounded-[2px] bg-white p-[2px] shadow-inner flex flex-col flex-1 min-h-0 w-full">
+            <div className="portrait-photo-mat-inner rounded-[1px] bg-neutral-100/90 p-px flex flex-col flex-1 min-h-0 w-full">
               <div
-                className={`auto-scroll-image-frame relative ${isCommandant ? "commandant-portrait-frame commandant-portrait-reel" : isVisit ? "" : "staff-portrait-frame"} h-full w-full overflow-hidden ${
-                  isLightMode ? "bg-slate-100" : "bg-slate-900"
-                }`}
+                className={`auto-scroll-image-frame relative flex-1 min-h-0 overflow-hidden w-full ${
+                  isCommandant ? "commandant-portrait-frame commandant-portrait-reel" : isVisit ? "" : "staff-portrait-frame"
+                } ${isLightMode ? "bg-slate-100" : "bg-slate-900"}`}
               >
                 {isCommandant && (
                   <>
@@ -188,16 +198,30 @@ function ContinuousSlideCard({
                   </>
                 )}
                 {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt={`${imageAltTitle} ${safeName}`}
-                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
-                    loading="eager"
-                    decoding="async"
-                    draggable={false}
-                  />
+                  <>
+                    {/* Blurred Background Fallback to flawlessly fill empty space */}
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                      <img
+                        src={imageUrl}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover blur-2xl scale-[1.15] opacity-75"
+                        aria-hidden="true"
+                        loading="eager"
+                      />
+                      <div className={`absolute inset-0 ${isLightMode ? "bg-slate-100/30 backdrop-blur-[4px]" : "bg-black/50 backdrop-blur-[4px]"}`} />
+                    </div>
+                    {/* Primary Contained Formage */}
+                    <img
+                      src={imageUrl}
+                      alt={`${imageAltTitle} ${safeName}`}
+                      className="absolute inset-0 h-full w-full object-contain object-center transition-transform duration-500 group-hover:scale-[1.03]"
+                      loading="eager"
+                      decoding="async"
+                      draggable={false}
+                    />
+                  </>
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-primary/45">
+                  <div className="absolute inset-0 flex items-center justify-center text-primary/45">
                     <Shield className="h-10 w-10" />
                   </div>
                 )}
@@ -207,32 +231,49 @@ function ContinuousSlideCard({
         </div>
       </div>
 
-      <div className="relative z-10">
+      <div className="relative z-10 w-full" style={{ containerType: "inline-size" }}>
         <div className="h-[2px] w-full bg-[#FF0000]" />
         <div
           className={`auto-scroll-plate bg-[#002060] ${
-            isVisit ? "px-3 py-2.5 sm:px-4 sm:py-3" : "px-2.5 py-2 sm:px-3 sm:py-2.5"
-          } text-center shadow-xl`}
+            isVisit
+              ? "px-3 py-2.5 sm:px-4 sm:py-3"
+              : "px-2.5 py-2 sm:px-[0.8rem] sm:py-2.5"
+          } text-center shadow-xl flex flex-col items-center justify-center`}
         >
-          <h3 className="auto-scroll-name text-[clamp(1rem,2.8vw,1.4rem)] sm:text-[clamp(1.15rem,2.4vw,1.6rem)] font-extrabold leading-tight break-words [overflow-wrap:anywhere] text-[#FFD700] max-h-[3.3em] overflow-y-auto">
+          <h3 
+            className="auto-scroll-name font-extrabold leading-tight break-words [overflow-wrap:anywhere] text-[#FFD700] max-h-[3.3em] overflow-y-auto w-full"
+            style={{ fontSize: "clamp(1rem, 6.5cqi, 1.5rem)" }}
+          >
             {safeName}
           </h3>
           {title && (
-            <p className="auto-scroll-title mt-1.5 text-[clamp(0.85rem,2.2vw,1.15rem)] sm:text-[clamp(0.95rem,1.8vw,1.3rem)] font-extrabold tracking-[0.06em] text-[#FF3B30] break-words [overflow-wrap:anywhere] leading-tight max-h-[3.8em] overflow-y-auto">
+            <p 
+              className="auto-scroll-title mt-1.5 font-extrabold tracking-[0.06em] text-[#FF3B30] break-words [overflow-wrap:anywhere] leading-tight max-h-[3.8em] overflow-y-auto w-full"
+              style={{ fontSize: "clamp(0.85rem, 4.5cqi, 1.25rem)" }}
+            >
               {title}
             </p>
           )}
           {isCommandant && safeDecoration && (
             <div className="mt-2 inline-flex max-w-full items-center justify-center rounded-md border border-white/35 bg-gradient-to-br from-neutral-50 via-white to-neutral-200/90 px-2.5 py-1 shadow-[0_2px_12px_rgba(0,0,0,0.12)]">
-              <p className="text-[11px] sm:text-[13px] font-bold tracking-[0.07em] text-[#1f2937] break-words">
+              <p 
+                className="font-bold tracking-[0.07em] text-[#1f2937] break-words"
+                style={{ fontSize: "clamp(10px, 3.2cqi, 14px)" }}
+              >
                 {safeDecoration}
               </p>
             </div>
           )}
-          <p className="auto-scroll-meta mt-1.5 text-[11px] sm:text-xs uppercase tracking-[0.1em] text-white/95 break-words leading-tight">
+          <p 
+            className="auto-scroll-meta mt-1.5 uppercase tracking-[0.1em] text-white/95 break-words leading-tight w-full"
+            style={{ fontSize: "clamp(10px, 3cqi, 13px)" }}
+          >
             {subtitle}
           </p>
-          <p className="auto-scroll-year mt-1.5 text-xs sm:text-sm text-[#f0ebe3] font-semibold tracking-[0.07em] uppercase leading-tight">
+          <p 
+            className="auto-scroll-year mt-1.5 text-[#f0ebe3] font-semibold tracking-[0.07em] uppercase leading-tight w-full"
+            style={{ fontSize: "clamp(11px, 3.5cqi, 15px)" }}
+          >
             Year: {yearLabel}
           </p>
         </div>
@@ -379,11 +420,11 @@ export function AutoRotationDisplay({
   const isContinuousMode =
     isActive &&
     slides.length > 0 &&
-    (
-      (activeCategory !== null && displayContext !== "commandants" && !useAppliedTransitionOnly) ||
-      appliedTransition === 'continuous-scroll' ||
-      sequence[0] === 'continuous-scroll'
-    );
+    ((activeCategory !== null &&
+      displayContext !== "commandants" &&
+      !useAppliedTransitionOnly) ||
+      appliedTransition === "continuous-scroll" ||
+      sequence[0] === "continuous-scroll");
 
   const personnelSlides = useMemo(
     () =>
@@ -414,7 +455,8 @@ export function AutoRotationDisplay({
 
   const continuousItems = useMemo(() => {
     if (activeView === "visits") return visitSlides.map((s) => s.visit);
-    if (commandantSlides.length > 0) return commandantSlides.map((s) => s.commandant);
+    if (commandantSlides.length > 0)
+      return commandantSlides.map((s) => s.commandant);
     return personnelSlides.map((s) => s.person);
   }, [activeView, visitSlides, personnelSlides, commandantSlides]);
 
@@ -517,7 +559,8 @@ export function AutoRotationDisplay({
       const now = Date.now();
       if (
         cue !== "none" &&
-        now - lastTransitionCueAtRef.current >= cinematicSettings.whooshCooldownMs
+        now - lastTransitionCueAtRef.current >=
+          cinematicSettings.whooshCooldownMs
       ) {
         playTransitionCue(cue, !isMuted);
         lastTransitionCueAtRef.current = now;
@@ -597,7 +640,13 @@ export function AutoRotationDisplay({
       return;
     }
     transitionTo((currentIndex + 1) % slides.length);
-  }, [currentIndex, displayContext, onStageComplete, slides.length, transitionTo]);
+  }, [
+    currentIndex,
+    displayContext,
+    onStageComplete,
+    slides.length,
+    transitionTo,
+  ]);
 
   const retreat = useCallback(() => {
     transitionTo((currentIndex - 1 + slides.length) % slides.length);
@@ -784,11 +833,14 @@ export function AutoRotationDisplay({
     }
 
     if (slides.length === 1) {
-      const timer = setTimeout(() => {
-        if (stageCompleteFiredRef.current) return;
-        stageCompleteFiredRef.current = true;
-        onStageComplete?.(displayContext);
-      }, Math.round(contextTiming.slideDurationMs * 1.2));
+      const timer = setTimeout(
+        () => {
+          if (stageCompleteFiredRef.current) return;
+          stageCompleteFiredRef.current = true;
+          onStageComplete?.(displayContext);
+        },
+        Math.round(contextTiming.slideDurationMs * 1.2),
+      );
       return () => clearTimeout(timer);
     }
   }, [
@@ -853,7 +905,10 @@ export function AutoRotationDisplay({
     (slideCandidate?: Slide) => {
       let trackId = audioAssignments.globalAuto;
 
-      if (activeCategory === "FWC" && audioAssignments.distinguished_fellows_fwc) {
+      if (
+        activeCategory === "FWC" &&
+        audioAssignments.distinguished_fellows_fwc
+      ) {
         trackId = audioAssignments.distinguished_fellows_fwc;
       } else if (
         activeCategory === "FDC" &&
@@ -870,13 +925,22 @@ export function AutoRotationDisplay({
         audioAssignments.allied_officers
       ) {
         trackId = audioAssignments.allied_officers;
-      } else if (slideCandidate?.type === "personnel" && slideCandidate.person.category) {
+      } else if (
+        slideCandidate?.type === "personnel" &&
+        slideCandidate.person.category
+      ) {
         const cat = slideCandidate.person.category.toLowerCase();
         if (cat.includes("fwc") && audioAssignments.distinguished_fellows_fwc) {
           trackId = audioAssignments.distinguished_fellows_fwc;
-        } else if (cat.includes("fdc") && audioAssignments.distinguished_fellows_fdc) {
+        } else if (
+          cat.includes("fdc") &&
+          audioAssignments.distinguished_fellows_fdc
+        ) {
           trackId = audioAssignments.distinguished_fellows_fdc;
-        } else if (cat.includes("directing") && audioAssignments.directing_staff) {
+        } else if (
+          cat.includes("directing") &&
+          audioAssignments.directing_staff
+        ) {
           trackId = audioAssignments.directing_staff;
         } else if (cat.includes("allied") && audioAssignments.allied_officers) {
           trackId = audioAssignments.allied_officers;
@@ -1183,10 +1247,14 @@ export function AutoRotationDisplay({
 
   const getSectionSubtitle = () => {
     if (activeView === "visits") return "Distinguished Visits and Honours";
-    if (activeCategory === "FDC") return "Distinguished Fellows of the Defence College (FDC)";
-    if (activeCategory === "FWC") return "Distinguished Fellows of the War College (FWC)";
-    if (activeCategory === "Directing Staff") return "Chronicles of Directing Staff (Directing Staff)";
-    if (activeCategory === "Allied") return "International Allied Officers (Allied)";
+    if (activeCategory === "FDC")
+      return "Distinguished Fellows of the Defence College (FDC)";
+    if (activeCategory === "FWC")
+      return "Distinguished Fellows of the War College (FWC)";
+    if (activeCategory === "Directing Staff")
+      return "Chronicles of Directing Staff (Directing Staff)";
+    if (activeCategory === "Allied")
+      return "International Allied Officers (Allied)";
     return "Chronicles of Past Commandants";
   };
 
@@ -1251,7 +1319,7 @@ export function AutoRotationDisplay({
 
       <div
         ref={fdcScrollRef}
-        className="relative flex flex-1 min-h-0 items-center justify-start gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-6 pl-[3vw] pr-1 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]"
+        className="relative flex flex-1 min-h-0 items-center justify-start gap-4 sm:gap-6 overflow-x-auto pb-6 px-3 sm:px-6 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_3%,black_97%,transparent)]"
         onMouseEnter={() =>
           (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
         }
@@ -1266,7 +1334,11 @@ export function AutoRotationDisplay({
         {loopedContinuousItems.map((item, i) => {
           const isPersonnel = "category" in item;
           const isCommandant = "isCurrent" in item;
-          const itemType = isCommandant ? "commandant" : isPersonnel ? "personnel" : "visit";
+          const itemType = isCommandant
+            ? "commandant"
+            : isPersonnel
+              ? "personnel"
+              : "visit";
           return (
             <ContinuousSlideCard
               key={`${item.id}-${i}`}
@@ -1299,16 +1371,28 @@ export function AutoRotationDisplay({
       tabIndex={0}
     >
       {/* Cinematic Transition Overlay: NDC scatter and new military/action transitions */}
-      {fadeState === "out" && (
-        {
-          'ndc-scatter': <NdcScatteredTransition durationMs={currentTransitionDuration} />,
-          'barracks-reveal': <BarracksRevealTransition durationMs={currentTransitionDuration} />,
-          'salute-flash': <SaluteFlashTransition durationMs={currentTransitionDuration} />,
-          'parade-sweep': <ParadeSweepTransition durationMs={currentTransitionDuration} />,
-          'mission-brief': <MissionBriefTransition durationMs={currentTransitionDuration} />,
-          'runway-sweep': <RunwaySweepTransition durationMs={currentTransitionDuration} />,
-        }[transitionType] || null
-      )}
+      {fadeState === "out" &&
+        ({
+          "ndc-scatter": (
+            <NdcScatteredTransition durationMs={currentTransitionDuration} />
+          ),
+          "barracks-reveal": (
+            <BarracksRevealTransition durationMs={currentTransitionDuration} />
+          ),
+          "salute-flash": (
+            <SaluteFlashTransition durationMs={currentTransitionDuration} />
+          ),
+          "parade-sweep": (
+            <ParadeSweepTransition durationMs={currentTransitionDuration} />
+          ),
+          "mission-brief": (
+            <MissionBriefTransition durationMs={currentTransitionDuration} />
+          ),
+          "runway-sweep": (
+            <RunwaySweepTransition durationMs={currentTransitionDuration} />
+          ),
+        }[transitionType] ||
+          null)}
 
       {/* Controls bar */}
       {!isActive && (
@@ -1550,30 +1634,58 @@ export function AutoRotationDisplay({
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                   <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Name</p>
-                    <p className="text-[#FFD700] font-extrabold mt-1 break-words [overflow-wrap:anywhere]">{selectedCommandant.name}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">
+                      Name
+                    </p>
+                    <p className="text-[#FFD700] font-extrabold mt-1 break-words [overflow-wrap:anywhere]">
+                      {selectedCommandant.name}
+                    </p>
                   </div>
                   <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Title</p>
-                    <p className="text-[#FF3B30] font-extrabold mt-1 break-words [overflow-wrap:anywhere]">{selectedCommandant.title}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">
+                      Title
+                    </p>
+                    <p className="text-[#FF3B30] font-extrabold mt-1 break-words [overflow-wrap:anywhere]">
+                      {selectedCommandant.title}
+                    </p>
                   </div>
                   <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Tenure</p>
-                    <p className="text-white mt-1">{selectedCommandant.tenureStart} - {selectedCommandant.tenureEnd ?? 'Present'}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">
+                      Tenure
+                    </p>
+                    <p className="text-white mt-1">
+                      {selectedCommandant.tenureStart} -{" "}
+                      {selectedCommandant.tenureEnd ?? "Present"}
+                    </p>
                   </div>
                   <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Status</p>
-                    <p className="text-white mt-1">{selectedCommandant.isCurrent ? 'Current Commandant' : 'Past Commandant'}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">
+                      Status
+                    </p>
+                    <p className="text-white mt-1">
+                      {selectedCommandant.isCurrent
+                        ? "Current Commandant"
+                        : "Past Commandant"}
+                    </p>
                   </div>
                   <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Decoration</p>
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">
+                      Decoration
+                    </p>
                     <div className="mt-1 inline-flex max-w-full items-center rounded-md border border-white/35 bg-gradient-to-br from-neutral-50 via-white to-neutral-200/90 px-2.5 py-1 shadow-[0_2px_14px_rgba(0,0,0,0.18)]">
-                      <p className="text-[#1f2937] font-bold tracking-[0.08em] break-words">{selectedCommandant.decoration || 'N/A'}</p>
+                      <p className="text-[#1f2937] font-bold tracking-[0.08em] break-words">
+                        {selectedCommandant.decoration || "N/A"}
+                      </p>
                     </div>
                   </div>
                   <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Description</p>
-                    <p className="text-white/90 mt-1 leading-relaxed">{selectedCommandant.description || 'No description available.'}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">
+                      Description
+                    </p>
+                    <p className="text-white/90 mt-1 leading-relaxed">
+                      {selectedCommandant.description ||
+                        "No description available."}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1625,30 +1737,46 @@ export function AutoRotationDisplay({
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
               <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Name</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Name
+                </p>
                 <p className="text-foreground mt-1">{selectedVisit.name}</p>
               </div>
               <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Title</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Title
+                </p>
                 <p className="text-foreground mt-1">{selectedVisit.title}</p>
               </div>
               <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Country</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Country
+                </p>
                 <p className="text-foreground mt-1">{selectedVisit.country}</p>
               </div>
               <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Date</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Date
+                </p>
                 <p className="text-foreground mt-1">{selectedVisit.date}</p>
               </div>
               <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2 md:col-span-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Decoration</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Decoration
+                </p>
                 <div className="mt-1 inline-flex max-w-full items-center rounded-md border border-[#D4AF37]/80 bg-[linear-gradient(140deg,#FFF8CF_0%,#EBCB59_45%,#C49A2C_100%)] px-2.5 py-1 shadow-[0_0_14px_rgba(212,175,55,0.3)]">
-                  <p className="text-[#1f2937] font-bold tracking-[0.08em] break-words">{selectedVisit.decoration || 'N/A'}</p>
+                  <p className="text-[#1f2937] font-bold tracking-[0.08em] break-words">
+                    {selectedVisit.decoration || "N/A"}
+                  </p>
                 </div>
               </div>
               <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2 md:col-span-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Description</p>
-                <p className="text-foreground/90 mt-1 leading-relaxed">{selectedVisit.description || 'No description available.'}</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Description
+                </p>
+                <p className="text-foreground/90 mt-1 leading-relaxed">
+                  {selectedVisit.description || "No description available."}
+                </p>
               </div>
             </div>
           </div>

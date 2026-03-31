@@ -186,7 +186,10 @@
     font-size: 1rem;
   }
 
-
+  .auto-scroll-card .auto-scroll-image-frame {
+    aspect-ratio: 3 / 4;
+    height: auto;
+  }
 }
 
 @media (max-height: 700px) {
@@ -197,77 +200,10 @@
   .auto-scroll-card .auto-scroll-plate {
     padding: 0.45rem 0.55rem;
   }
-
-  .auto-scroll-card .auto-scroll-title {
-    font-size: 0.62rem;
-  }
-
-  .auto-scroll-card .auto-scroll-name {
-    font-size: 0.73rem;
-  }
-
-  .auto-scroll-card .auto-scroll-meta,
-  .auto-scroll-card .auto-scroll-year {
-    font-size: 0.58rem;
-  }
 }
 
-.auto-scroll-card.commandant-auto-card {
-  box-shadow:
-    0 18px 38px rgba(2, 6, 23, 0.34),
-    0 0 0 1px rgba(255, 215, 0, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  animation: commandant-card-presence 5.8s ease-in-out infinite;
-}
-
-.auto-scroll-card.commandant-auto-card::before {
-  content: "";
-  position: absolute;
-  inset: 12px;
-  border-radius: 0.9rem;
-  pointer-events: none;
-  border: 1px solid rgba(255, 215, 0, 0.28);
-  opacity: 0.85;
-}
-
-.auto-scroll-card.commandant-auto-card .commandant-portrait-reel {
-  background:
-    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.2), transparent 46%),
-    linear-gradient(180deg, rgba(13, 24, 42, 0.18), rgba(3, 7, 18, 0.56));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 215, 0, 0.2),
-    inset 0 22px 34px rgba(255, 255, 255, 0.07),
-    inset 0 -28px 36px rgba(2, 6, 23, 0.46);
-}
-
-.auto-scroll-card.commandant-auto-card .commandant-portrait-vignette {
-  background: radial-gradient(circle at 50% 46%, transparent 42%, rgba(0, 0, 0, 0.45) 100%);
-}
-
-.auto-scroll-card.commandant-auto-card .commandant-portrait-glass {
-  background:
-    linear-gradient(112deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0) 46%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(2, 6, 23, 0.16) 100%);
-  mix-blend-mode: soft-light;
-}
-
-@keyframes commandant-card-presence {
-  0%,
-  100% {
-    transform: translateY(0);
-    box-shadow:
-      0 18px 38px rgba(2, 6, 23, 0.34),
-      0 0 0 1px rgba(255, 215, 0, 0.24),
-      inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  }
-  50% {
-    transform: translateY(-2px);
-    box-shadow:
-      0 24px 44px rgba(2, 6, 23, 0.42),
-      0 0 0 1px rgba(255, 215, 0, 0.34),
-      0 0 24px rgba(255, 215, 0, 0.22),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
+.auto-scroll-card .auto-scroll-image-frame {
+  aspect-ratio: 3 / 4;
 }
 
 @layer utilities {
@@ -297,25 +233,6 @@
     box-shadow: 0 0 20px hsl(var(--gold) / 0.12);
   }
 
-  /* Physical photo-mat + gallery wall (replaces flat gold metal portrait frames) */
-  .portrait-photo-mat {
-    background: linear-gradient(145deg, #ffffff 0%, #f5f6f8 46%, #e8eaee 100%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.98),
-      0 12px 42px rgba(15, 23, 42, 0.12),
-      0 0 0 1px rgba(148, 163, 184, 0.38);
-  }
-
-  .portrait-photo-mat-inner {
-    box-shadow: inset 0 0 0 1px rgba(0, 32, 96, 0.11);
-  }
-
-  .auto-display-studio-surface {
-    background:
-      radial-gradient(ellipse 110% 60% at 50% 0%, rgba(255, 255, 255, 0.98) 0%, transparent 55%),
-      linear-gradient(180deg, #fcfcfd 0%, #f1f3f5 42%, #e6e9ed 100%);
-  }
-
   .section-divide {
     border-top: 1px solid hsl(var(--gold) / 0.15);
   }
@@ -338,12 +255,18 @@
   }
 
   :root[data-theme-mode="outdoor-tactical-light"] .command-center-bg {
-    background: hsl(var(--background));
-    background-image: radial-gradient(
-      circle at 50% 0%,
-      hsl(var(--primary) / 0.03),
-      transparent 70%
-    );
+    background:
+      radial-gradient(
+        150% 120% at 50% -10%,
+        hsl(var(--accent) / 0.2),
+        transparent 56%
+      ),
+      linear-gradient(
+        180deg,
+        hsl(var(--background)),
+        hsl(var(--muted)) 35%,
+        hsl(var(--background))
+      );
   }
 
   :root[data-theme-mode="outdoor-high-contrast-command"] .command-center-bg {
