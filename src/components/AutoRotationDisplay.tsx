@@ -146,7 +146,7 @@ function ContinuousSlideCard({
     <button
       type="button"
       onClick={() => onSelect(item as any)}
-      className={`auto-scroll-card group relative ${isCommandant ? "commandant-auto-card w-[min(92vw,520px)] sm:w-[min(78vw,520px)] md:w-[min(64vw,520px)] lg:w-[520px] h-full" : "w-[min(88vw,430px)] sm:w-[min(72vw,430px)] md:w-[min(58vw,430px)] lg:w-[430px] h-full"} self-stretch shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
+      className={`auto-scroll-card group relative ${isCommandant ? "commandant-auto-card w-[88vw] sm:w-[48vw] md:w-[44vw] lg:w-[34vw] max-w-[480px]" : "w-[82vw] sm:w-[45vw] md:w-[40vw] lg:w-[30vw] max-w-[420px]"} self-center shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
           ? "bg-white border border-[#002060]/20 shadow-[0_12px_36px_rgba(0,32,96,0.14)]"
           : "bg-slate-950/90 border border-slate-500/35 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
@@ -171,7 +171,7 @@ function ContinuousSlideCard({
       </div>
 
       <div
-        className={`relative z-10 mb-1 sm:mb-1.5 flex min-h-0 flex-1 items-center justify-center`}
+        className={`relative z-10 mb-2 sm:mb-2.5 flex w-full aspect-[4/5] sm:aspect-[3/4] md:aspect-[4/5] items-center justify-center mx-auto`}
       >
         <div className="portrait-photo-mat rounded-sm p-[2px] shadow-xl h-full w-full">
           <div className="rounded-[2px] bg-white p-[2px] shadow-inner h-full w-full">
@@ -1251,7 +1251,7 @@ export function AutoRotationDisplay({
 
       <div
         ref={fdcScrollRef}
-        className="relative flex flex-1 min-h-0 items-stretch gap-3 sm:gap-5 overflow-x-auto pb-0 pr-1 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]"
+        className="relative flex flex-1 min-h-0 items-center justify-start gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-6 pl-[3vw] pr-1 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]"
         onMouseEnter={() =>
           (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
         }
