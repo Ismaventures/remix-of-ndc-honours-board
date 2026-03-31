@@ -634,14 +634,17 @@ const Index = () => {
       const showCommandantShell = isCommandantsLoading || commandants.length > 0;
 
       return (
-        <div className="space-y-6 md:space-y-8">
+        <div className="space-y-8 md:space-y-10">
           {showCommandantShell && (
-            <section className="space-y-4 rounded-2xl md:rounded-3xl bg-white/95 p-3 sm:p-4 md:p-5 shadow-[0_8px_18px_rgba(255,255,255,0.38)]">
-              <div className="h-[6px] overflow-hidden rounded-full flex">
+            <section className="relative space-y-0 rounded-2xl md:rounded-3xl bg-white/95 overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
+              {/* Top defense strip */}
+              <div className="h-[7px] flex">
                 <div className="flex-1 bg-[#002060]" />
                 <div className="flex-1 bg-[#FF0000]" />
                 <div className="flex-1 bg-[#00B0F0]" />
               </div>
+
+              <div className="px-4 sm:px-5 md:px-6 py-5 sm:py-6 md:py-7 space-y-5">
 
               {isCommandantsLoading && (
                 <section className="rounded-xl border border-primary/20 bg-card/70 px-4 py-6 md:px-6 md:py-8 animate-pulse">
@@ -665,23 +668,24 @@ const Index = () => {
                       openPastCommandantProfile(currentCommandant);
                     }
                   }}
-                  className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 rounded-2xl"
+                  className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 rounded-2xl group transition-all duration-300 hover:shadow-[0_4px_20px_rgba(0,32,96,0.08)]"
                   aria-label={`Open full biography for ${currentCommandant.name}`}
                 >
                   <CommandantHero
                     commandant={currentCommandant}
                     compactDescription
                   />
-                  <div className="px-4 pb-2 text-right">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-primary/85">
+                  <div className="flex items-center justify-end px-4 pb-2 pt-3">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-primary/70 group-hover:text-primary transition-colors duration-300">
                       Read full biography
+                      <svg className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                     </span>
                   </div>
                 </div>
               )}
 
               {!isCommandantsLoading && commandants.length > 0 && (
-                <div className="rounded-xl md:rounded-2xl border border-[#d8e1ee] bg-white p-2 sm:p-3 md:p-4 shadow-[0_4px_12px_rgba(255,255,255,0.35)]">
+                <div className="rounded-xl md:rounded-2xl border border-[#d8e1ee]/80 bg-[#f8fafc] p-3 sm:p-4 md:p-5">
                   <PastCommandants
                     commandants={commandants}
                     includeCurrent
@@ -691,8 +695,10 @@ const Index = () => {
                   />
                 </div>
               )}
+              </div>
 
-              <div className="h-[5px] overflow-hidden rounded-full flex opacity-95">
+              {/* Bottom defense strip */}
+              <div className="h-[5px] flex">
                 <div className="flex-1 bg-[#002060]" />
                 <div className="flex-1 bg-[#FF0000]" />
                 <div className="flex-1 bg-[#00B0F0]" />
@@ -733,8 +739,9 @@ const Index = () => {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <button
               onClick={() => setView("home")}
-              className="px-3 py-1.5 rounded border border-primary/25 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/10 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-primary/25 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/10 transition-all duration-200 hover:border-primary/40"
             >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               Previous
             </button>
           </div>
@@ -945,13 +952,19 @@ const Index = () => {
       )}
 
       {showLockScreen && (
-        <div className="fixed inset-0 z-[120] bg-black/95 backdrop-blur flex items-center justify-center p-6">
-          <div className="max-w-xl w-full rounded-xl border border-destructive/40 bg-card/95 p-6 md:p-8 text-center space-y-3">
+        <div className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-md flex items-center justify-center p-6">
+          <div className="max-w-xl w-full rounded-2xl border border-destructive/30 bg-card/95 p-8 md:p-10 text-center space-y-4 shadow-[0_24px_60px_rgba(0,0,0,0.5)]">
+            <div className="mx-auto h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mb-2">
+              <svg className="h-6 w-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            </div>
             <h2 className="text-xl md:text-2xl font-bold font-serif text-destructive">
               Site Temporarily Closed
             </h2>
-            <p className="text-sm text-muted-foreground">{siteClosedReason}</p>
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            <p className="text-sm text-muted-foreground leading-relaxed">{siteClosedReason}</p>
+            <div className="ornament-divider pt-2">
+              <div className="ornament-divider-diamond !bg-destructive/30" />
+            </div>
+            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/70">
               Please contact an administrator for access restoration.
             </p>
           </div>
@@ -1122,13 +1135,14 @@ const Index = () => {
       </div>
 
       {selectedPastCommandant && (
-        <div className="fixed inset-0 z-[70] bg-background/85 backdrop-blur-sm p-4 md:p-8 overflow-y-auto">
-          <div className="max-w-5xl mx-auto">
+        <div className="fixed inset-0 z-[70] bg-background/85 backdrop-blur-sm p-4 md:p-8 overflow-y-auto modal-backdrop-enter">
+          <div className="max-w-5xl mx-auto modal-enter">
             <div className="flex justify-end mb-4">
               <button
                 onClick={closePastCommandantProfile}
-                className="px-3 py-1.5 rounded text-xs bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all duration-200 border border-transparent hover:border-border"
               >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 Close
               </button>
             </div>

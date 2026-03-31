@@ -744,4 +744,127 @@
       transform: scaleX(1.03);
     }
   }
+
+  /* ── Enhanced focus-visible for accessibility ── */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+    border-radius: var(--radius);
+  }
+
+  /* ── Custom scrollbar styling ── */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.25);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.4);
+  }
+
+  /* ── Decorative ornament divider ── */
+  .ornament-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 20rem;
+    margin: 0 auto;
+  }
+
+  .ornament-divider::before,
+  .ornament-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.35) 50%,
+      transparent
+    );
+  }
+
+  .ornament-divider-diamond {
+    width: 6px;
+    height: 6px;
+    transform: rotate(45deg);
+    background: hsl(var(--primary) / 0.5);
+    flex-shrink: 0;
+  }
+
+  /* ── Stagger reveal for card grids ── */
+  .stagger-reveal > * {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .stagger-reveal > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-reveal > *:nth-child(2) { animation-delay: 70ms; }
+  .stagger-reveal > *:nth-child(3) { animation-delay: 140ms; }
+  .stagger-reveal > *:nth-child(4) { animation-delay: 210ms; }
+  .stagger-reveal > *:nth-child(5) { animation-delay: 280ms; }
+  .stagger-reveal > *:nth-child(6) { animation-delay: 350ms; }
+  .stagger-reveal > *:nth-child(7) { animation-delay: 420ms; }
+
+  /* ── Subtle shine sweep on hover for header ── */
+  .header-shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header-shine::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      hsl(var(--primary) / 0.06),
+      transparent
+    );
+    transition: left 0.8s ease;
+    pointer-events: none;
+  }
+
+  .header-shine:hover::after {
+    left: 150%;
+  }
+
+  /* ── Section heading decorative underline ── */
+  .heading-accent {
+    position: relative;
+    display: inline-block;
+  }
+
+  .heading-accent::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.5) 30%,
+      hsl(var(--primary) / 0.5) 70%,
+      transparent
+    );
+    border-radius: 9999px;
+  }
 }

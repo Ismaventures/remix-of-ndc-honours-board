@@ -144,12 +144,14 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
 
   return (
     <section className="mb-8 sm:mb-10">
-      <div className="mb-6 flex flex-col items-center">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-serif text-foreground tracking-wider uppercase text-center mt-6 sm:mt-8">
+      <div className="mb-8 flex flex-col items-center">
+        <h2 className="heading-accent text-2xl sm:text-3xl lg:text-4xl font-bold font-serif text-foreground tracking-wider uppercase text-center mt-6 sm:mt-8">
           Chronicles of Directing Staff
         </h2>
-        <div className="h-1 w-24 bg-border mt-2 mb-2 rounded-full" />
-        <p className="text-xs sm:text-sm text-muted-foreground tracking-widest uppercase text-center">
+        <div className="ornament-divider mt-4 mb-2">
+          <div className="ornament-divider-diamond" />
+        </div>
+        <p className="text-xs sm:text-sm text-muted-foreground tracking-widest uppercase text-center mt-1">
           Select a category to view hierarchy
         </p>
       </div>
@@ -157,8 +159,8 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
       <div
         className={`transition-all duration-1000 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
       >
-        <div className="relative w-full max-w-6xl mx-auto rounded-[28px] border border-[#002060]/15 bg-[linear-gradient(165deg,#ffffff_0%,#f6f9ff_52%,#eff6ff_100%)] px-3 py-4 sm:px-4 sm:py-5 md:px-5 md:py-6 overflow-hidden shadow-[0_18px_48px_rgba(0,32,96,0.12)]">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.06] bg-[linear-gradient(90deg,rgba(0,32,96,0.08)_1px,transparent_1px),linear-gradient(rgba(0,32,96,0.08)_1px,transparent_1px)] bg-[size:36px_36px]" />
+        <div className="relative w-full max-w-6xl mx-auto rounded-[28px] border border-[#002060]/10 bg-[linear-gradient(165deg,#ffffff_0%,#f8faff_52%,#f0f5ff_100%)] px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-7 overflow-hidden shadow-[0_12px_40px_rgba(0,32,96,0.08),0_2px_8px_rgba(0,32,96,0.04)]">
+          <div className="pointer-events-none absolute inset-0 opacity-[0.04] bg-[linear-gradient(90deg,rgba(0,32,96,0.08)_1px,transparent_1px),linear-gradient(rgba(0,32,96,0.08)_1px,transparent_1px)] bg-[size:40px_40px]" />
           <img
             src={ndcCrest}
             alt=""
@@ -189,25 +191,27 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
             ))}
           </div>
 
-          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
+          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 stagger-reveal">
             {CARDS.map((card) => {
               const Icon = card.icon;
               return (
-                <div key={card.key} className="p-1 h-full">
+                <div key={card.key} className="p-1.5 h-full">
                   <button
                     onClick={() => onSelect(card.key)}
-                    className={`relative w-full h-[clamp(220px,36vh,300px)] sm:h-[clamp(240px,34vh,310px)] lg:h-[clamp(260px,33vh,320px)] overflow-hidden rounded-2xl border text-left group transition-all duration-500 hover:-translate-y-2 flex flex-col justify-end ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${card.accentGlow} ${
+                    className={`relative w-full h-[clamp(230px,36vh,310px)] sm:h-[clamp(250px,34vh,320px)] lg:h-[clamp(270px,33vh,330px)] overflow-hidden rounded-2xl border text-left group transition-all duration-500 hover:-translate-y-2.5 hover:scale-[1.012] flex flex-col justify-end ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${card.accentGlow} ${
                       isLightMode
-                        ? "bg-[linear-gradient(160deg,#ffffff_0%,#f7faff_52%,#eef5ff_100%)] border-[#002060]/12 hover:shadow-[0_22px_44px_rgba(0,32,96,0.16)] hover:border-[#002060]/30"
+                        ? "bg-[linear-gradient(160deg,#ffffff_0%,#f7faff_52%,#eef5ff_100%)] border-[#002060]/10 hover:shadow-[0_22px_48px_rgba(0,32,96,0.14)] hover:border-[#002060]/25"
                         : `bg-gradient-to-br ${card.cardGradient} border-white/10 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]`
                     }`}
                   >
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-[7px] flex z-20">
+                    {/* Top tri-service accent — refined thin line */}
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-[5px] flex z-20">
                       <div className="flex-1 bg-[#002060]" />
                       <div className="flex-1 bg-[#FF0000]" />
                       <div className="flex-1 bg-[#00B0F0]" />
                     </div>
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[6px] flex z-20 opacity-90">
+                    {/* Bottom tri-service accent */}
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[4px] flex z-20 opacity-80">
                       <div className="flex-1 bg-[#002060]" />
                       <div className="flex-1 bg-[#FF0000]" />
                       <div className="flex-1 bg-[#00B0F0]" />
@@ -236,33 +240,33 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                     />
                   </div>
 
-                  {/* Background Icon */}
+                  {/* Background Icon — slightly inset and more refined */}
                     <div
-                      className={`absolute top-4 right-4 sm:top-5 sm:right-5 transition-colors duration-500 transform group-hover:scale-110 group-hover:-rotate-3 will-change-transform ${
+                      className={`absolute top-6 right-5 sm:top-7 sm:right-6 transition-all duration-700 transform group-hover:scale-110 group-hover:-rotate-6 will-change-transform ${
                       isLightMode
-                        ? "text-slate-100 group-hover:text-slate-200"
-                        : "text-white/15 group-hover:text-white/25"
+                        ? "text-[#002060]/[0.05] group-hover:text-[#002060]/[0.08]"
+                        : "text-white/10 group-hover:text-white/20"
                     }`}
                   >
                     <Icon
-                        className="w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32"
-                      strokeWidth={1}
+                        className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28"
+                      strokeWidth={0.8}
                     />
                   </div>
 
                   <div
-                    className={`relative p-4 sm:p-6 z-10 w-full pt-10 sm:pt-14 ${
+                    className={`relative p-5 sm:p-6 z-10 w-full pt-12 sm:pt-16 ${
                       !isLightMode
-                        ? "bg-gradient-to-t from-black/80 via-black/40 to-transparent"
-                        : ""
+                        ? "bg-gradient-to-t from-black/85 via-black/45 to-transparent"
+                        : "bg-gradient-to-t from-white/90 via-white/40 to-transparent"
                     }`}
                   >
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-3 mb-4">
                       <div
-                        className={`w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-xl p-2.5 relative overflow-hidden backdrop-blur-sm ${
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-105 transition-all duration-500 shadow-lg p-2 relative overflow-hidden ${
                           isLightMode
-                            ? "bg-white border border-slate-100 shadow-slate-200/50"
-                            : "bg-black/25 border border-white/20"
+                            ? "bg-white border border-slate-200/80 shadow-slate-200/40"
+                            : "bg-black/30 border border-white/15 backdrop-blur-sm"
                         }`}
                       >
                         {!isLightMode && (
@@ -271,48 +275,49 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                         <img
                           src={ndcCrest}
                           alt="NDC Crest"
-                          className="w-full h-full object-contain relative z-10 drop-shadow-md"
+                          className="w-full h-full object-contain relative z-10 drop-shadow-sm"
                         />
                       </div>
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-inner backdrop-blur-sm ${
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
                           isLightMode
-                            ? "bg-slate-50 border border-slate-100"
-                            : "bg-white/10 border border-white/20"
+                            ? "bg-[#002060]/[0.06] border border-[#002060]/10"
+                            : "bg-white/[0.08] border border-white/15"
                         }`}
                       >
                         <Icon
-                          className={`h-5 w-5 ${isLightMode ? card.color : "text-white/95"}`}
+                          className={`h-4 w-4 ${isLightMode ? card.color : "text-white/90"}`}
                         />
                       </div>
                     </div>
                     <div>
                       <h3
-                        className={`text-lg sm:text-xl font-bold font-serif leading-tight mb-1.5 transition-colors tracking-tight ${
+                        className={`text-lg sm:text-xl font-bold font-serif leading-tight mb-1 transition-colors tracking-tight ${
                           isLightMode
-                            ? "text-slate-900 drop-shadow-none"
+                            ? "text-[#0f2a5f]"
                             : "text-white drop-shadow-md"
                         }`}
                       >
                         {card.label}
                       </h3>
                       <p
-                        className={`text-[11px] sm:text-xs tracking-widest uppercase font-medium ${
-                          isLightMode ? "text-slate-500" : "text-white/75"
+                        className={`text-[10px] sm:text-[11px] tracking-[0.16em] uppercase font-semibold ${
+                          isLightMode ? "text-slate-400" : "text-white/60"
                         }`}
                       >
                         {card.subtitle}
                       </p>
                     </div>
 
+                    {/* Hover reveal accent line */}
                     <div
-                      className={`h-[2px] w-full mt-5 overflow-hidden rounded-full ${isLightMode ? "bg-slate-100" : "bg-white/10"}`}
+                      className={`h-[2px] w-full mt-4 overflow-hidden rounded-full ${isLightMode ? "bg-[#002060]/[0.06]" : "bg-white/[0.08]"}`}
                     >
                       <div
-                        className={`h-full w-0 group-hover:w-full transition-all duration-1000 ease-in-out opacity-80 ${
+                        className={`h-full w-0 group-hover:w-full transition-all duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
                           isLightMode
-                            ? "bg-gradient-to-r from-slate-200 via-slate-400 to-slate-200"
-                            : "bg-gradient-to-r from-white/40 via-white/80 to-white/40"
+                            ? "bg-gradient-to-r from-transparent via-[#002060]/30 to-transparent"
+                            : "bg-gradient-to-r from-transparent via-white/60 to-transparent"
                         }`}
                       />
                     </div>
