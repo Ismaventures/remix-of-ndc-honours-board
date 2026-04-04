@@ -514,6 +514,40 @@
     }
   }
 
+  /* Profile slide transitions */
+  .profile-slide-left {
+    animation: profile-enter-from-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .profile-slide-right {
+    animation: profile-enter-from-left 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes profile-enter-from-right {
+    from {
+      opacity: 0;
+      transform: translateX(60px) scale(0.97);
+      filter: blur(2px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes profile-enter-from-left {
+    from {
+      opacity: 0;
+      transform: translateX(-60px) scale(0.97);
+      filter: blur(2px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      filter: blur(0);
+    }
+  }
+
   /* Profile modal entrance */
   .modal-enter {
     animation: modal-slide-down 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;

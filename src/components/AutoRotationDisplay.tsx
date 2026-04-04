@@ -309,6 +309,7 @@ export function AutoRotationDisplay({
   const [selectedPerson, setSelectedPerson] = useState<Personnel | null>(null);
   const [selectedCommandant, setSelectedCommandant] =
     useState<Commandant | null>(null);
+  const commandantSlideDir = useRef<'left' | 'right' | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<DistinguishedVisit | null>(
     null,
   );
@@ -451,6 +452,20 @@ export function AutoRotationDisplay({
           entry.type === "commandant",
       ),
     [slides],
+  );
+
+  const navigateCommandantProfile = useCallback(
+    (direction: "prev" | "next") => {
+      if (!selectedCommandant) return;
+      const list = commandants;
+      const idx = list.findIndex((c) => c.id === selectedCommandant.id);
+      if (idx === -1) return;
+      const nextIdx = direction === "next" ? idx + 1 : idx - 1;
+      if (nextIdx < 0 || nextIdx >= list.length) return;
+      commandantSlideDir.current = direction === "next" ? "left" : "right";
+      setSelectedCommandant(list[nextIdx]);
+    },
+    [selectedCommandant, commandants],
   );
 
   const continuousItems = useMemo(() => {
@@ -1585,28 +1600,32 @@ export function AutoRotationDisplay({
       )}
 
       {selectedCommandant && (
-        <div className="fixed inset-0 z-[70] bg-[#020817] p-0 overflow-y-auto overflow-x-hidden">
-          <div className="min-h-screen w-full flex flex-col items-center">
+        <div className="fixed inset-0 z-[70] bg-gradient-to-br from-[#000a1a] via-[#001030] to-[#000a1a] p-0 overflow-y-auto overflow-x-hidden">
+          {/* Subtle diagonal texture */}
+          <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]">
+            <div className="absolute inset-0 bg-[repeating-linear-gradient(135deg,transparent,transparent_40px,rgba(255,255,255,0.08)_40px,rgba(255,255,255,0.08)_41px)]" />
+          </div>
+          <div className="min-h-screen w-full flex flex-col items-center relative z-10">
             {/* Close Button Header */}
-            <div className="sticky top-0 z-[80] w-full bg-[#020817]/80 backdrop-blur-md border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center shadow-lg gap-3">
+            <div className="sticky top-0 z-[80] w-full bg-[#001030]/80 backdrop-blur-xl border-b border-[#FFD700]/10 px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center shadow-lg gap-3">
               <div className="flex items-center gap-3">
                 <img
                   src={ndcCrest}
                   alt="Logo"
                   className="h-8 w-8 object-contain"
                 />
-                <span className="text-white font-serif tracking-widest uppercase text-[11px] sm:text-sm font-semibold">
+                <span className="text-[#FFD700]/80 font-serif tracking-widest uppercase text-[11px] sm:text-sm font-semibold">
                   Officer Profile : {selectedCommandant.name}
                 </span>
               </div>
               <button
                 onClick={() => setSelectedCommandant(null)}
-                className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/20 transition-all duration-300"
+                className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 transition-all duration-300"
               >
-                <div className="w-5 h-5 flex items-center justify-center rounded-full bg-white/10 group-hover:bg-red-500/20 group-hover:text-red-400 transition-all">
-                  <span className="text-xs">✕</span>
+                <div className="w-5 h-5 flex items-center justify-center rounded-full bg-white/10 group-hover:bg-red-500/20 transition-all">
+                  <span className="text-xs text-white/60 group-hover:text-red-400">✕</span>
                 </div>
-                <span className="text-xs uppercase tracking-[0.2em] text-white/70 font-bold group-hover:text-white transition-colors">
+                <span className="text-xs uppercase tracking-[0.2em] text-white/50 font-bold group-hover:text-white/80 transition-colors">
                   Close Profile
                 </span>
               </button>
@@ -1615,80 +1634,77 @@ export function AutoRotationDisplay({
             <button
               onClick={() => setSelectedCommandant(null)}
               aria-label="Close commandant profile"
-              className="fixed right-3 top-20 z-[90] sm:right-6 sm:top-24 rounded-full border border-white/25 bg-[#020817]/85 px-3 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.16em] text-white/85 backdrop-blur hover:bg-white/10 hover:text-white transition-colors"
+              className="fixed right-3 top-20 z-[90] sm:right-6 sm:top-24 rounded-full border border-white/15 bg-[#001030]/85 px-3 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.16em] text-white/70 backdrop-blur hover:bg-white/10 hover:text-white transition-colors"
             >
               Close
             </button>
 
-            {/* Main Content */}
-            <div className="w-full max-w-[1400px] px-3 sm:px-6 py-6 sm:py-12">
-              <CommandantHero
-                commandant={selectedCommandant}
-                compactDescription={false}
-                isAutoDisplay={false}
-              />
+            {/* Main Content with slide animation */}
+            <div className="w-full max-w-[1400px] px-3 sm:px-6 py-6 sm:py-12 relative">
+              {/* Prev / Next navigation arrows */}
+              {(() => {
+                const idx = commandants.findIndex((c) => c.id === selectedCommandant.id);
+                const hasPrev = idx > 0;
+                const hasNext = idx >= 0 && idx < commandants.length - 1;
+                return (
+                  <>
+                    {hasPrev && (
+                      <button
+                        onClick={() => navigateCommandantProfile("prev")}
+                        aria-label="Previous commandant"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-11 h-11 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-[#FFD700]/20 hover:border-[#FFD700]/40 backdrop-blur-sm transition-all duration-300 group/nav"
+                      >
+                        <ChevronLeft className="h-5 w-5 text-[#FFD700]/60 group-hover/nav:text-[#FFD700] transition-colors" />
+                      </button>
+                    )}
+                    {hasNext && (
+                      <button
+                        onClick={() => navigateCommandantProfile("next")}
+                        aria-label="Next commandant"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-11 h-11 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-[#FFD700]/20 hover:border-[#FFD700]/40 backdrop-blur-sm transition-all duration-300 group/nav"
+                      >
+                        <ChevronRight className="h-5 w-5 text-[#FFD700]/60 group-hover/nav:text-[#FFD700] transition-colors" />
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
 
-              <div className="mt-6 rounded-xl border border-white/15 bg-white/5 p-5">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 font-semibold mb-3">
-                  Complete Commandant Details
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">
-                      Name
-                    </p>
-                    <p className="text-[#FFD700] font-extrabold mt-1 break-words [overflow-wrap:anywhere]">
-                      {selectedCommandant.name}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">
-                      Title
-                    </p>
-                    <p className="text-[#FF3B30] font-extrabold mt-1 break-words [overflow-wrap:anywhere]">
-                      {selectedCommandant.title}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">
-                      Tenure
-                    </p>
-                    <p className="text-white mt-1">
-                      {selectedCommandant.tenureStart} -{" "}
-                      {selectedCommandant.tenureEnd ?? "Present"}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">
-                      Status
-                    </p>
-                    <p className="text-white mt-1">
-                      {selectedCommandant.isCurrent
-                        ? "Current Commandant"
-                        : "Past Commandant"}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">
-                      Decoration
-                    </p>
-                    <div className="mt-1 inline-flex max-w-full items-center rounded-md border border-white/35 bg-gradient-to-br from-neutral-50 via-white to-neutral-200/90 px-2.5 py-1 shadow-[0_2px_14px_rgba(0,0,0,0.18)]">
-                      <p className="text-[#1f2937] font-bold tracking-[0.08em] break-words">
-                        {selectedCommandant.decoration || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">
-                      Description
-                    </p>
-                    <p className="text-white/90 mt-1 leading-relaxed">
-                      {selectedCommandant.description ||
-                        "No description available."}
-                    </p>
-                  </div>
-                </div>
+              <div
+                key={selectedCommandant.id}
+                className={commandantSlideDir.current === 'left' ? 'profile-slide-left' : commandantSlideDir.current === 'right' ? 'profile-slide-right' : ''}
+              >
+                <CommandantHero
+                  commandant={selectedCommandant}
+                  compactDescription={false}
+                  isAutoDisplay={false}
+                />
               </div>
+
+              {/* Profile counter */}
+              {(() => {
+                const idx = commandants.findIndex((c) => c.id === selectedCommandant.id);
+                if (idx === -1 || commandants.length <= 1) return null;
+                return (
+                  <div className="flex justify-center mt-6 gap-1.5">
+                    {commandants.map((c, i) => (
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          commandantSlideDir.current = i > idx ? 'left' : 'right';
+                          setSelectedCommandant(c);
+                        }}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          i === idx
+                            ? 'w-8 bg-[#FFD700]/80'
+                            : 'w-1.5 bg-white/20 hover:bg-white/40'
+                        }`}
+                        aria-label={`View ${c.name}`}
+                      />
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

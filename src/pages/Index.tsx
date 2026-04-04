@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { CommandantHero } from "@/components/CommandantHero";
 import { PastCommandants } from "@/components/PastCommandants";
@@ -89,6 +89,7 @@ const Index = () => {
   const [deviceClosed, setDeviceClosed] = useState(false);
   const [selectedPastCommandant, setSelectedPastCommandant] =
     useState<Commandant | null>(null);
+  const commandantSlideDir = useRef<'left' | 'right' | null>(null);
   const globalCommandRef = useRef<number | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousViewBeforeCommandantProfileRef = useRef<ViewKey | null>(null);
@@ -287,6 +288,16 @@ const Index = () => {
     if (previousView) {
       setView(previousView);
     }
+  };
+
+  const navigateCommandantProfile = (direction: "prev" | "next") => {
+    if (!selectedPastCommandant) return;
+    const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
+    if (idx === -1) return;
+    const nextIdx = direction === "next" ? idx + 1 : idx - 1;
+    if (nextIdx < 0 || nextIdx >= commandants.length) return;
+    commandantSlideDir.current = direction === "next" ? "left" : "right";
+    setSelectedPastCommandant(commandants[nextIdx]);
   };
 
   useEffect(() => {
@@ -1135,21 +1146,88 @@ const Index = () => {
       </div>
 
       {selectedPastCommandant && (
-        <div className="fixed inset-0 z-[70] bg-background/85 backdrop-blur-sm p-4 md:p-8 overflow-y-auto modal-backdrop-enter">
-          <div className="max-w-5xl mx-auto modal-enter">
+        <div className="fixed inset-0 z-[70] bg-gradient-to-br from-[#000a1a] via-[#001030] to-[#000a1a] p-0 overflow-y-auto modal-backdrop-enter">
+          {/* Subtle diagonal texture */}
+          <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]">
+            <div className="absolute inset-0 bg-[repeating-linear-gradient(135deg,transparent,transparent_40px,rgba(255,255,255,0.08)_40px,rgba(255,255,255,0.08)_41px)]" />
+          </div>
+          <div className="max-w-5xl mx-auto modal-enter relative z-10 px-4 md:px-8 py-6 md:py-10">
             <div className="flex justify-end mb-4">
               <button
                 onClick={closePastCommandantProfile}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all duration-200 border border-transparent hover:border-border"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all duration-200 border border-white/10"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 Close
               </button>
             </div>
-            <CommandantHero
-              commandant={selectedPastCommandant}
-              compactDescription={false}
-            />
+
+            {/* Profile container with prev/next navigation */}
+            <div className="relative">
+              {/* Prev / Next arrows */}
+              {(() => {
+                const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
+                const hasPrev = idx > 0;
+                const hasNext = idx >= 0 && idx < commandants.length - 1;
+                return (
+                  <>
+                    {hasPrev && (
+                      <button
+                        onClick={() => navigateCommandantProfile("prev")}
+                        aria-label="Previous commandant"
+                        className="absolute -left-2 md:-left-6 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-11 h-11 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-[#FFD700]/20 hover:border-[#FFD700]/40 backdrop-blur-sm transition-all duration-300 group/nav"
+                      >
+                        <ChevronLeft className="h-5 w-5 text-[#FFD700]/60 group-hover/nav:text-[#FFD700] transition-colors" />
+                      </button>
+                    )}
+                    {hasNext && (
+                      <button
+                        onClick={() => navigateCommandantProfile("next")}
+                        aria-label="Next commandant"
+                        className="absolute -right-2 md:-right-6 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-11 h-11 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-[#FFD700]/20 hover:border-[#FFD700]/40 backdrop-blur-sm transition-all duration-300 group/nav"
+                      >
+                        <ChevronRight className="h-5 w-5 text-[#FFD700]/60 group-hover/nav:text-[#FFD700] transition-colors" />
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
+
+              <div
+                key={selectedPastCommandant.id}
+                className={commandantSlideDir.current === 'left' ? 'profile-slide-left' : commandantSlideDir.current === 'right' ? 'profile-slide-right' : ''}
+              >
+                <CommandantHero
+                  commandant={selectedPastCommandant}
+                  compactDescription={false}
+                />
+              </div>
+
+              {/* Dot indicators */}
+              {(() => {
+                const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
+                if (idx === -1 || commandants.length <= 1) return null;
+                return (
+                  <div className="flex justify-center mt-6 gap-1.5">
+                    {commandants.map((c, i) => (
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          commandantSlideDir.current = i > idx ? 'left' : 'right';
+                          setSelectedPastCommandant(c);
+                        }}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          i === idx
+                            ? 'w-8 bg-[#FFD700]/80'
+                            : 'w-1.5 bg-white/20 hover:bg-white/40'
+                        }`}
+                        aria-label={`View ${c.name}`}
+                      />
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         </div>
       )}
