@@ -390,7 +390,7 @@ export function DeviceControlPanel({
           <button
             onClick={() => void sendSlideStep('prev')}
             disabled={busy || selectedCount === 0}
-            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary hover:bg-primary/10 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary hover:bg-primary/10 disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" />
             Swipe Left
@@ -398,7 +398,7 @@ export function DeviceControlPanel({
           <button
             onClick={() => void sendSlideStep('next')}
             disabled={busy || selectedCount === 0}
-            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary hover:bg-primary/10 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary hover:bg-primary/10 disabled:opacity-50"
           >
             Swipe Right
             <ChevronRight className="h-4 w-4" />
@@ -406,7 +406,7 @@ export function DeviceControlPanel({
           <button
             onClick={() => void sendAutoDisplay(true)}
             disabled={busy || selectedCount === 0}
-            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary hover:bg-primary/10 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary hover:bg-primary/10 disabled:opacity-50"
           >
             <Play className="h-4 w-4" />
             Start Auto
@@ -414,7 +414,7 @@ export function DeviceControlPanel({
           <button
             onClick={() => void sendAutoDisplay(false)}
             disabled={busy || selectedCount === 0}
-            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary hover:bg-primary/10 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-lg border border-primary/35 px-3 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary hover:bg-primary/10 disabled:opacity-50"
           >
             <Pause className="h-4 w-4" />
             Stop Auto

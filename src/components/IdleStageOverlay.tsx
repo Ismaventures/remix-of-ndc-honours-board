@@ -4,6 +4,7 @@ import ndcCrest from '/images/ndc-crest.png';
 import type { IdleStageSettings } from '@/hooks/useIdleStageSettings';
 import type { Commandant } from '@/types/domain';
 import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
+import { getCommandantDisplayTitle } from '@/lib/utils';
 
 interface IdleStageOverlayProps {
   settings: IdleStageSettings;
@@ -87,7 +88,7 @@ function IdleCommandantShowcase({ commandant }: { commandant: Commandant }) {
   const branch = inferCommandantBranch(commandant);
   const branchTheme = BRANCH_THEME[branch];
   const tenureLabel = `${commandant.tenureStart}${commandant.tenureEnd ? ` - ${commandant.tenureEnd}` : ' - Present'}`;
-  const title = commandant.postNominals?.trim() || commandant.title || 'Commandant';
+  const title = getCommandantDisplayTitle(commandant, 'Commandant');
 
   return (
     <motion.div

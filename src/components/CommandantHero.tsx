@@ -3,6 +3,7 @@ import { Shield, Star } from "lucide-react";
 import { Commandant } from "@/types/domain";
 import ndcCrest from "/images/ndc-crest.png";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
+import { getCommandantDisplayTitle } from "@/lib/utils";
 
 interface CommandantHeroProps {
   commandant?: Commandant;
@@ -23,8 +24,7 @@ export function CommandantHero({
   }, []);
 
   const name = commandant?.name ?? "No commandant record available";
-  const titleText =
-    commandant?.title ?? "Commandant record pending database data";
+  const titleText = getCommandantDisplayTitle(commandant);
   const description =
     commandant?.description ??
     "No commandant biography is currently available from the database.";
@@ -106,7 +106,7 @@ export function CommandantHero({
                 <h2 className="text-[clamp(0.92rem,2.9vh,4rem)] font-bold tracking-tight text-[#FFD700] uppercase drop-shadow-md leading-tight">
                   {name}
                 </h2>
-                <span className="text-[clamp(0.46rem,1.4vh,1.5rem)] font-medium text-white/95 tracking-[0.18em] sm:tracking-widest uppercase italic border-t border-white/10 pt-[0.2vh] mt-[0.2vh]">
+                <span className="text-[clamp(0.46rem,1.4vh,1.5rem)] font-medium text-white/95 tracking-[0.18em] sm:tracking-widest italic border-t border-white/10 pt-[0.2vh] mt-[0.2vh]">
                   {titleText}
                 </span>
               </div>
@@ -225,7 +225,7 @@ export function CommandantHero({
             </h2>
 
             {/* Credentials / title */}
-            <p className="text-sm sm:text-base md:text-lg font-bold tracking-[0.1em] uppercase text-[#FF4444] italic border-l-4 border-[#FFD700]/60 pl-4 mb-2 inline-block">
+            <p className="text-sm sm:text-base md:text-lg font-bold tracking-[0.1em] text-[#FF4444] italic border-l-4 border-[#FFD700]/60 pl-4 mb-2 inline-block">
               {titleText}
             </p>
 
@@ -417,7 +417,7 @@ export function CommandantHero({
             {name}
           </h2>
 
-          <p className="text-xs md:text-sm mb-3 text-[#FF0000] font-bold tracking-[0.08em] uppercase border-l-4 border-[#FF0000] pl-3 italic">
+          <p className="text-xs md:text-sm mb-3 text-[#FF0000] font-bold tracking-[0.08em] border-l-4 border-[#FF0000] pl-3 italic">
             {titleText}
           </p>
 

@@ -24,10 +24,16 @@ export interface AudioAssignments {
   preloader: string | null;
   globalAuto: string | null;
   idleStage: string | null;
+  tourBackground: string | null;
   distinguished_fellows_fwc: string | null;
   distinguished_fellows_fdc: string | null;
   directing_staff: string | null;
   allied_officers: string | null;
+  collection_history: string | null;
+  collection_state: string | null;
+  collection_regional: string | null;
+  collection_world: string | null;
+  collection_archives: string | null;
 }
 
 const AUDIO_LOCAL_KEY_PREFIX = 'audio_';
@@ -125,10 +131,16 @@ export const useAudioStore = create<AudioState>()(
         preloader: null,
         globalAuto: null,
         idleStage: null,
+        tourBackground: null,
         distinguished_fellows_fwc: null,
         distinguished_fellows_fdc: null,
         directing_staff: null,
         allied_officers: null,
+        collection_history: null,
+        collection_state: null,
+        collection_regional: null,
+        collection_world: null,
+        collection_archives: null,
       },
       masterVolume: 0.3,
       isMuted: true,

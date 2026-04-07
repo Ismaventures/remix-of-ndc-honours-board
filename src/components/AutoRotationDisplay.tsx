@@ -43,6 +43,7 @@ import {
 import { playTransitionCue } from "@/lib/transitionCues";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
 import { useCinematicExperienceSettings } from "@/hooks/useCinematicExperienceSettings";
+import { getCommandantDisplayTitle } from "@/lib/utils";
 
 interface AutoRotationDisplayProps {
   personnel: Personnel[];
@@ -93,7 +94,7 @@ function ContinuousSlideCard({
 
   const title =
     (isCommandant
-      ? (item as Commandant).title
+      ? getCommandantDisplayTitle(item as Commandant, "")
       : isVisit
         ? (item as DistinguishedVisit).title
         : (item as Personnel).decoration
@@ -280,7 +281,7 @@ function ContinuousSlideCard({
         <div className="h-[2px] w-full bg-[#FF0000]" />
       </div>
 
-      <p className="relative z-10 mt-2.5 mb-1 sm:mt-3 text-[11px] sm:text-xs uppercase tracking-[0.16em] text-primary/80 font-semibold text-center">
+      <p className="relative z-10 mt-2.5 mb-1 sm:mt-3 text-[11px] sm:text-xs uppercase tracking-[0.18em] text-primary/80 font-semibold text-center">
         Tap to open full details
       </p>
     </button>
@@ -1297,7 +1298,7 @@ export function AutoRotationDisplay({
           <div className="h-[2px] w-full bg-[#FF0000]" />
           <div className="auto-scroll-heading-body bg-[#002060] px-3 py-2 sm:px-4 sm:py-2.5 text-center">
             {getSectionTitle() && (
-              <p className="auto-scroll-heading-title mx-auto max-w-[92vw] sm:max-w-4xl text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.16em] text-white/90 leading-snug break-words">
+              <p className="auto-scroll-heading-title mx-auto max-w-[92vw] sm:max-w-4xl text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90 leading-snug break-words">
                 {getSectionTitle()}
               </p>
             )}
@@ -1634,7 +1635,7 @@ export function AutoRotationDisplay({
             <button
               onClick={() => setSelectedCommandant(null)}
               aria-label="Close commandant profile"
-              className="fixed right-3 top-20 z-[90] sm:right-6 sm:top-24 rounded-full border border-white/15 bg-[#001030]/85 px-3 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.16em] text-white/70 backdrop-blur hover:bg-white/10 hover:text-white transition-colors"
+              className="fixed right-3 top-20 z-[90] sm:right-6 sm:top-24 rounded-full border border-white/15 bg-[#001030]/85 px-3 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.18em] text-white/70 backdrop-blur hover:bg-white/10 hover:text-white transition-colors"
             >
               Close
             </button>

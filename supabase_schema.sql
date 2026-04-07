@@ -58,6 +58,73 @@ CREATE TABLE IF NOT EXISTS audio_assignments (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Table: museum_artifacts (tourable collection items and feature anchors)
+CREATE TABLE IF NOT EXISTS museum_artifacts (
+  id text PRIMARY KEY,
+  name text NOT NULL,
+  description text,
+  era text,
+  origin_label text,
+  strategic_significance text,
+  media_urls text[] NOT NULL DEFAULT '{}'::text[],
+  tags text[] NOT NULL DEFAULT '{}'::text[],
+  related_artifact_ids text[] NOT NULL DEFAULT '{}'::text[],
+  gallery_category text,
+  period_label text,
+  map_lat double precision,
+  map_lng double precision,
+  map_zoom integer,
+  linked_view text,
+  linked_record_id text,
+  is_published boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Table: museum_tours (high-level guided tour definitions)
+CREATE TABLE IF NOT EXISTS museum_tours (
+  id text PRIMARY KEY,
+  name text NOT NULL,
+  description text,
+  duration_estimate_min integer,
+  cover_image_url text,
+  theme text,
+  language_code text NOT NULL DEFAULT 'en-NG',
+  auto_mode_enabled boolean NOT NULL DEFAULT true,
+  display_order integer NOT NULL DEFAULT 0,
+  is_published boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Table: museum_tour_steps (ordered, narrated tour steps)
+CREATE TABLE IF NOT EXISTS museum_tour_steps (
+  id text PRIMARY KEY,
+  tour_id text NOT NULL REFERENCES museum_tours(id) ON DELETE CASCADE,
+  artifact_id text REFERENCES museum_artifacts(id) ON DELETE SET NULL,
+  step_order integer NOT NULL,
+  title text NOT NULL,
+  narration_text text,
+  narration_audio_track_id text REFERENCES audio_tracks(id) ON DELETE SET NULL,
+  audio_url text,
+  duration_sec integer,
+  auto_advance boolean NOT NULL DEFAULT true,
+  language_code text NOT NULL DEFAULT 'en-NG',
+  map_lat double precision,
+  map_lng double precision,
+  map_zoom integer,
+  linked_view text,
+  linked_record_id text,
+  is_published boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (tour_id, step_order)
+);
+
+CREATE INDEX IF NOT EXISTS museum_tours_display_order_idx ON museum_tours(display_order, is_published);
+CREATE INDEX IF NOT EXISTS museum_tour_steps_tour_order_idx ON museum_tour_steps(tour_id, step_order);
+CREATE INDEX IF NOT EXISTS museum_artifacts_publish_idx ON museum_artifacts(is_published, gallery_category);
+
 -- Table: ui_settings (per-auth-user persisted UI preferences)
 CREATE TABLE IF NOT EXISTS ui_settings (
   id bigserial PRIMARY KEY,
@@ -111,6 +178,9 @@ ALTER TABLE personnel ENABLE ROW LEVEL SECURITY;
 ALTER TABLE visits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audio_tracks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audio_assignments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE museum_artifacts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE museum_tours ENABLE ROW LEVEL SECURITY;
+ALTER TABLE museum_tour_steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ui_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE device_clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE device_control_commands ENABLE ROW LEVEL SECURITY;
@@ -136,6 +206,18 @@ FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS audio_assignments_public_read ON audio_assignments;
 CREATE POLICY audio_assignments_public_read ON audio_assignments
+FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS museum_artifacts_public_read ON museum_artifacts;
+CREATE POLICY museum_artifacts_public_read ON museum_artifacts
+FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS museum_tours_public_read ON museum_tours;
+CREATE POLICY museum_tours_public_read ON museum_tours
+FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS museum_tour_steps_public_read ON museum_tour_steps;
+CREATE POLICY museum_tour_steps_public_read ON museum_tour_steps
 FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS ui_settings_own_read ON ui_settings;
@@ -216,6 +298,48 @@ FOR UPDATE
 USING ((select auth.role()) = 'authenticated')
 WITH CHECK ((select auth.role()) = 'authenticated');
 CREATE POLICY audio_tracks_auth_delete ON audio_tracks
+FOR DELETE
+USING ((select auth.role()) = 'authenticated');
+
+DROP POLICY IF EXISTS museum_artifacts_auth_insert ON museum_artifacts;
+DROP POLICY IF EXISTS museum_artifacts_auth_update ON museum_artifacts;
+DROP POLICY IF EXISTS museum_artifacts_auth_delete ON museum_artifacts;
+CREATE POLICY museum_artifacts_auth_insert ON museum_artifacts
+FOR INSERT
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY museum_artifacts_auth_update ON museum_artifacts
+FOR UPDATE
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY museum_artifacts_auth_delete ON museum_artifacts
+FOR DELETE
+USING ((select auth.role()) = 'authenticated');
+
+DROP POLICY IF EXISTS museum_tours_auth_insert ON museum_tours;
+DROP POLICY IF EXISTS museum_tours_auth_update ON museum_tours;
+DROP POLICY IF EXISTS museum_tours_auth_delete ON museum_tours;
+CREATE POLICY museum_tours_auth_insert ON museum_tours
+FOR INSERT
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY museum_tours_auth_update ON museum_tours
+FOR UPDATE
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY museum_tours_auth_delete ON museum_tours
+FOR DELETE
+USING ((select auth.role()) = 'authenticated');
+
+DROP POLICY IF EXISTS museum_tour_steps_auth_insert ON museum_tour_steps;
+DROP POLICY IF EXISTS museum_tour_steps_auth_update ON museum_tour_steps;
+DROP POLICY IF EXISTS museum_tour_steps_auth_delete ON museum_tour_steps;
+CREATE POLICY museum_tour_steps_auth_insert ON museum_tour_steps
+FOR INSERT
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY museum_tour_steps_auth_update ON museum_tour_steps
+FOR UPDATE
+USING ((select auth.role()) = 'authenticated')
+WITH CHECK ((select auth.role()) = 'authenticated');
+CREATE POLICY museum_tour_steps_auth_delete ON museum_tour_steps
 FOR DELETE
 USING ((select auth.role()) = 'authenticated');
 

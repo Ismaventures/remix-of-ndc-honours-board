@@ -3,6 +3,11 @@ import { Plus, Pencil, Trash2, X, ArrowLeft } from 'lucide-react';
 import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/types/domain';
 import { AdvancedAudioAdmin } from './AdvancedAudioAdmin';
 import { DeviceControlPanel } from './DeviceControlPanel';
+import { MuseumArtifactMediaAdmin } from './MuseumArtifactMediaAdmin';
+import { DisplayFrameAdmin } from './DisplayFrameAdmin';
+import { TourNarrationAdmin } from './TourNarrationAdmin';
+import { MuseumContentAdmin } from './MuseumContentAdmin';
+import { MuseumAdmin } from './MuseumAdmin';
 import { saveMediaFile } from '@/lib/persistentMedia';
 import { ThemeMode } from '@/hooks/useThemeMode';
 import { BootSequenceSettings } from '@/hooks/useBootSequenceSettings';
@@ -249,7 +254,7 @@ const GROUPED_TRANSITIONS = TRANSITION_GROUPS.map(group => ({
   entries: group.items.map(itemId => ({ id: itemId, label: getTransitionLabel(itemId) })),
 }));
 
-type GuideTargetTab = 'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices';
+type GuideTargetTab = 'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices' | 'content';
 type GuideTargetPanel = 'boot' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'soundPairing' | 'guide' | 'cinematic' | 'actions';
 type CommandantStatusFilter = 'all' | 'current' | 'past';
 
@@ -376,7 +381,7 @@ export function AdminPanel({
   onBack,
   onSignOut,
 }: AdminPanelProps) {
-  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices' | 'guide'>('personnel');
+  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices' | 'guide' | 'content' | 'museum'>('personnel');
   const [editingP, setEditingP] = useState<Personnel | null>(null);
   const [editingV, setEditingV] = useState<DistinguishedVisit | null>(null);
   const [editingC, setEditingC] = useState<Commandant | null>(null);
@@ -1004,10 +1009,10 @@ export function AdminPanel({
   const tabBtn = (key: typeof tab, label: string) => (
     <button
       onClick={() => setTab(key)}
-      className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+      className={`px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
         tab === key
-          ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-100'
-          : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95'
+          ? 'bg-[#002060] text-white shadow-md shadow-[#002060]/20 scale-100 font-bold'
+          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 border border-gray-200 active:scale-95'
       }`}
     >
       {label}
@@ -1015,37 +1020,44 @@ export function AdminPanel({
   );
 
   const EmptyState = ({ message, onAdd }: { message: string, onAdd: () => void }) => (
-    <div className="flex flex-col items-center justify-center p-12 gold-border border-dashed rounded-xl bg-card/30 text-center view-enter">
-      <div className="w-16 h-16 rounded-full bg-muted/60 flex items-center justify-center mb-4">
-        <Plus className="h-8 w-8 text-primary/50" />
+    <div className="flex flex-col items-center justify-center p-12 border border-dashed border-gray-300 rounded-xl bg-gray-50 text-center view-enter">
+      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+        <Plus className="h-8 w-8 text-[#002060]/50" />
       </div>
-      <p className="text-muted-foreground mb-4">{message}</p>
-      <button onClick={onAdd} className="px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:bg-primary/90 transition-colors">
+      <p className="text-gray-500 mb-4">{message}</p>
+      <button onClick={onAdd} className="px-4 py-2 bg-[#002060] text-white rounded text-sm font-bold hover:bg-[#002060]/90 transition-colors">
         Add First Record
       </button>
     </div>
   );
 
   return (
-    <div className="page-enter-slide">
+    <div className="admin-light-theme page-enter-slide min-h-screen bg-white text-gray-900 -m-4 sm:-m-6 md:-m-8 p-4 sm:p-6 md:p-8 rounded-none">
+      {/* Tri-color accent strip */}
+      <div className="flex h-[5px] rounded-t-lg overflow-hidden mb-6">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#00B0F0]" />
+      </div>
+
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <button
             onClick={onBack}
-            className="p-2 rounded-full border border-primary/20 bg-card hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all active:scale-95 shadow-sm"
+            className="p-2 rounded-full border border-[#002060]/30 bg-[#002060]/10 hover:bg-[#002060]/20 text-[#002060] hover:text-[#002060] transition-all active:scale-95 shadow-sm"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div className="min-w-0">
-            <h2 className="text-xl sm:text-2xl font-bold font-serif gold-text leading-tight truncate">Admin Console</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">Manage records and system options</p>
+            <h2 className="text-xl sm:text-2xl font-bold font-serif text-[#002060] leading-tight truncate">Admin Console</h2>
+            <p className="text-sm text-gray-500 mt-0.5">Manage records and system options</p>
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onSignOut && (
             <button
               onClick={onSignOut}
-              className="px-3 py-2 rounded-full text-xs font-semibold tracking-wider uppercase border border-primary/30 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all"
+              className="px-3 py-2 rounded-full text-xs font-semibold tracking-wider uppercase border border-red-300 text-red-600 hover:text-red-700 hover:bg-red-50 transition-all"
             >
               Sign Out
             </button>
@@ -1053,25 +1065,27 @@ export function AdminPanel({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 mb-5">
-        <div className="surface-panel p-3 space-y-2">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Records</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mb-5">
+        <div className="rounded-2xl border border-[#002060]/20 bg-[#002060]/5 p-3 space-y-2">
+          <p className="text-[11px] uppercase tracking-wider text-[#002060]/70">Records</p>
           <div className="flex flex-wrap gap-2">
             {tabBtn('personnel', 'Personnel')}
             {tabBtn('visits', 'Visits')}
             {tabBtn('commandants', 'Commandants')}
+            {tabBtn('content', 'Museum Content')}
+            {tabBtn('museum', 'Museum')}
           </div>
         </div>
-        <div className="surface-panel p-3 space-y-2">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Experience & Media</p>
+        <div className="rounded-2xl border border-[#FF0000]/15 bg-[#FF0000]/5 p-3 space-y-2">
+          <p className="text-[11px] uppercase tracking-wider text-[#FF0000]/70">Experience & Media</p>
           <div className="flex flex-wrap gap-2">
             {tabBtn('theme', 'Theme')}
             {tabBtn('transitions', 'Transitions')}
             {tabBtn('audio', 'Audio Settings')}
           </div>
         </div>
-        <div className="surface-panel p-3 space-y-2">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Control & Guidance</p>
+        <div className="rounded-2xl border border-[#00B0F0]/15 bg-[#00B0F0]/5 p-3 space-y-2">
+          <p className="text-[11px] uppercase tracking-wider text-[#00B0F0]/70">Control & Guidance</p>
           <div className="flex flex-wrap gap-2">
             {tabBtn('devices', 'Devices')}
             {tabBtn('guide', 'Helper Guide')}
@@ -1120,7 +1134,7 @@ export function AdminPanel({
               <div className="surface-panel p-5 sm:p-6 view-enter">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Full Profile</p>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Full Profile</p>
                     <h4 className="text-lg sm:text-xl font-semibold text-foreground">{selectedPersonnel.name}</h4>
                     <p className="text-sm text-muted-foreground mt-1">{selectedPersonnel.rank} • {selectedPersonnel.category}</p>
                   </div>
@@ -1476,7 +1490,7 @@ export function AdminPanel({
               <div className="surface-panel p-5 sm:p-6 view-enter">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Commandant Profile</p>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Commandant Profile</p>
                     <h4 className="text-lg sm:text-xl font-semibold text-foreground">{selectedCommandant.name}</h4>
                     <p className="text-sm text-muted-foreground mt-1">{selectedCommandant.title} • {selectedCommandant.tenureStart} - {selectedCommandant.tenureEnd ?? 'Present'}</p>
                   </div>
@@ -1642,7 +1656,26 @@ export function AdminPanel({
 
         {tab === 'audio' && (
           <div className="view-enter">
-            <AdvancedAudioAdmin />
+            <div className="space-y-6">
+              <AdvancedAudioAdmin />
+              <TourNarrationAdmin
+                commandants={commandants}
+                personnel={personnel}
+                visits={visits}
+              />
+            </div>
+          </div>
+        )}
+
+        {tab === 'content' && (
+          <div className="view-enter">
+            <MuseumContentAdmin />
+          </div>
+        )}
+
+        {tab === 'museum' && (
+          <div className="view-enter">
+            <MuseumAdmin />
           </div>
         )}
 
@@ -1819,7 +1852,7 @@ export function AdminPanel({
                       }`}
                     >
                       {isActive && (
-                        <span className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] uppercase tracking-[0.14em] font-bold bg-[#002060] text-white border border-[#001846] shadow-sm">
+                        <span className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] uppercase tracking-[0.12em] font-bold bg-[#002060] text-white border border-[#001846] shadow-sm">
                           Active Mode
                         </span>
                       )}

@@ -45,7 +45,7 @@ export function AppHeader({ onHomeClick }: AppHeaderProps) {
           </h1>
           <div className="flex items-center gap-2">
             <div className={`h-px flex-1 max-w-8 ${isLightMode ? "bg-slate-300" : "bg-white/15"}`} />
-            <p className={`inline-flex w-fit max-w-full items-center rounded-sm px-2 py-0.5 text-[10px] sm:text-xs tracking-[0.14em] sm:tracking-[0.2em] uppercase truncate text-left font-semibold transition-colors duration-500 ${
+            <p className={`inline-flex w-fit max-w-full items-center rounded-sm px-2 py-0.5 text-[10px] sm:text-xs tracking-[0.12em] sm:tracking-[0.22em] uppercase truncate text-left font-semibold transition-colors duration-500 ${
               isLightMode 
                 ? "bg-slate-50 text-slate-500 border border-slate-200/80" 
                 : "bg-white/[0.06] text-white/80 border border-white/[0.08]"

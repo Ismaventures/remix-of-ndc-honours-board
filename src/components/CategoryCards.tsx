@@ -11,7 +11,11 @@ export type ViewKey =
   | "directing"
   | "allied"
   | "visits"
-  | "admin";
+  | "admin"
+  | "about-ndc"
+  | "museum-collections"
+  | "guided-tours"
+  | "hall-of-fame";
 
 interface CategoryCardsProps {
   onSelect: (key: ViewKey) => void;
@@ -301,7 +305,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                         {card.label}
                       </h3>
                       <p
-                        className={`text-[10px] sm:text-[11px] tracking-[0.16em] uppercase font-semibold ${
+                        className={`text-[10px] sm:text-[11px] tracking-[0.18em] uppercase font-semibold ${
                           isLightMode ? "text-slate-400" : "text-white/60"
                         }`}
                       >

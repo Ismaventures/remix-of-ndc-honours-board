@@ -3,6 +3,7 @@ import { Shield } from "lucide-react";
 import { Commandant } from "@/types/domain";
 import ndcCrest from "/images/ndc-crest.png";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
+import { getCommandantDisplayTitle } from "@/lib/utils";
 
 interface CommandantSplitHeroProps {
   commandant?: Commandant;
@@ -11,7 +12,7 @@ interface CommandantSplitHeroProps {
 
 export function CommandantSplitHero({ commandant, isAutoDisplay = false }: CommandantSplitHeroProps) {
   const name = commandant?.name ?? "No commandant record available";
-  const titleText = commandant?.title ?? "Commandant record pending database data";
+  const titleText = getCommandantDisplayTitle(commandant);
   const description = commandant?.description ?? "No commandant biography is currently available from the database.";
   const isCurrent = commandant?.isCurrent ?? false;
   const commandantImageUrl = useResolvedMediaUrl(commandant?.imageUrl);
@@ -90,7 +91,7 @@ export function CommandantSplitHero({ commandant, isAutoDisplay = false }: Comma
           </h2>
 
           {/* Title */}
-          <p className="text-[clamp(1rem,2.8vh,2rem)] text-[#FF0000] font-bold tracking-[0.1em] uppercase border-l-[clamp(3px,0.4vw,6px)] border-[#FF0000] pl-[clamp(10px,1.5vw,24px)] mb-[3vh] italic">
+          <p className="text-[clamp(1rem,2.8vh,2rem)] text-[#FF0000] font-bold tracking-[0.1em] border-l-[clamp(3px,0.4vw,6px)] border-[#FF0000] pl-[clamp(10px,1.5vw,24px)] mb-[3vh] italic">
             {titleText}
           </p>
 

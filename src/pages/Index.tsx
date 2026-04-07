@@ -4,6 +4,13 @@ import { AppHeader } from "@/components/AppHeader";
 import { CommandantHero } from "@/components/CommandantHero";
 import { PastCommandants } from "@/components/PastCommandants";
 import { CategoryCards, ViewKey } from "@/components/CategoryCards";
+import {
+  AboutNdcView,
+  GuidedToursView,
+  HallOfFameView,
+  MuseumCollectionsView,
+  MuseumExperienceSection,
+} from "@/components/MuseumExperience";
 import { OrganogramView } from "@/components/OrganogramView";
 import { VisitsSection } from "@/components/VisitsSection";
 import { AdminPanel } from "@/components/AdminPanel";
@@ -136,11 +143,17 @@ const Index = () => {
   const currentCommandant =
     commandants.find((c) => c.isCurrent) ?? commandants[0] ?? null;
 
+  const isMuseumFeatureView =
+    view === "about-ndc" ||
+    view === "museum-collections" ||
+    view === "guided-tours" ||
+    view === "hall-of-fame";
+
   const activeCategory = SECTION_CATEGORIES[view] ?? null;
   const activeView =
     view === "visits"
       ? "visits"
-      : view === "home"
+      : view === "home" || isMuseumFeatureView
         ? "home"
         : view === "admin"
           ? "admin"
@@ -718,7 +731,61 @@ const Index = () => {
           )}
 
           <CategoryCards onSelect={setView} />
+          <MuseumExperienceSection onSelect={setView} />
         </div>
+      );
+    }
+
+    if (view === "about-ndc") {
+      return (
+        <AboutNdcView
+          onBack={() => setView("home")}
+          onOpenCommandants={() => setView("commandants")}
+          onOpenHallOfFame={() => setView("hall-of-fame")}
+          onOpenVisits={() => setView("visits")}
+          currentCommandant={currentCommandant}
+          commandants={commandants}
+          visitsCount={visits.length}
+        />
+      );
+    }
+
+    if (view === "museum-collections") {
+      return (
+        <MuseumCollectionsView
+          onBack={() => setView("home")}
+          onOpenHallOfFame={() => setView("hall-of-fame")}
+          onOpenRelatedView={setView}
+          commandants={commandants}
+          personnel={personnel}
+          visits={visits}
+        />
+      );
+    }
+
+    if (view === "guided-tours") {
+      return (
+        <GuidedToursView
+          onBack={() => setView("home")}
+          onOpenHallOfFame={() => setView("hall-of-fame")}
+          onOpenCollections={() => setView("museum-collections")}
+          onOpenRelatedView={setView}
+          commandants={commandants}
+          personnel={personnel}
+          visits={visits}
+        />
+      );
+    }
+
+    if (view === "hall-of-fame") {
+      return (
+        <HallOfFameView
+          onBack={() => setView("home")}
+          onSelect={setView}
+          personnel={personnel}
+          commandants={commandants}
+          visits={visits}
+        />
       );
     }
 

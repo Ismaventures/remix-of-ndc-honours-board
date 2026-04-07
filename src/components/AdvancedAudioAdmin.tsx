@@ -226,10 +226,20 @@ export function AdvancedAudioAdmin() {
               <AssignmentSelector label="Preloader (Boot) Sequence" contextKey="preloader" />
               <AssignmentSelector label="Global Auto Display Mode" contextKey="globalAuto" />
               <AssignmentSelector label="Idle Stage Background" contextKey="idleStage" />
+              <AssignmentSelector label="Tour Guide Background Music" contextKey="tourBackground" />
               <AssignmentSelector label="FWC (Fellows) Context" contextKey="distinguished_fellows_fwc" />
               <AssignmentSelector label="FDC (Fellows) Context" contextKey="distinguished_fellows_fdc" />
               <AssignmentSelector label="Directing Staff Context" contextKey="directing_staff" />
               <AssignmentSelector label="Allied Officers Context" contextKey="allied_officers" />
+           </div>
+           <h4 className="text-md font-semibold text-primary/80 uppercase tracking-widest border-b border-primary/20 pb-2 pt-4">Collection Background Audio</h4>
+           <p className="text-xs text-muted-foreground">Background music that plays while artefacts in each collection are displayed.</p>
+           <div className="space-y-3">
+              <AssignmentSelector label="History Collection" contextKey="collection_history" />
+              <AssignmentSelector label="State Collection" contextKey="collection_state" />
+              <AssignmentSelector label="Regional Collection" contextKey="collection_regional" />
+              <AssignmentSelector label="World Collection" contextKey="collection_world" />
+              <AssignmentSelector label="Archives Collection" contextKey="collection_archives" />
            </div>
         </div>
 

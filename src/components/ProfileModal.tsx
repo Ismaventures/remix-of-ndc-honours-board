@@ -66,7 +66,7 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
           <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
         </div>
 
-        <div className={`flex items-center justify-between px-8 py-5 border-b ${isLightMode ? "border-slate-100 bg-slate-50/50" : "border-primary/20 bg-muted/20"}`}>
+        <div className={`flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 sm:py-5 border-b ${isLightMode ? "border-slate-100 bg-slate-50/50" : "border-primary/20 bg-muted/20"}`}>
           <div className="flex items-center gap-4">
             <Shield className={`h-6 w-6 ${isLightMode ? "text-[#002060]" : "text-primary"}`} />
             <h3 className={`text-xl font-bold tracking-[0.15em] uppercase ${isLightMode ? "text-[#002060]" : "text-foreground"}`}>
@@ -82,13 +82,13 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
         </div>
 
         <div className={`p-6 md:p-10 overflow-y-auto overscroll-contain ${isLightMode ? "bg-[linear-gradient(90deg,rgba(0,0,0,0.01)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.01)_1px,transparent_1px)]" : "bg-[linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)]"} bg-[size:40px_40px]`}>
-          <div className="flex flex-col md:row gap-10 mb-10 items-center md:items-start md:flex-row">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-10 mb-6 md:mb-10 items-center md:items-start">
             {/* Professional Framed Portrait */}
             <div className="relative shrink-0">
               <div className="p-1.5 bg-[#FFD700] shadow-2xl transition-transform duration-500 hover:scale-[1.03]">
                 <div className="p-1.5 bg-white">
                   <div className="p-1 bg-[#FFD700]">
-                    <div className="relative aspect-[4/5] h-60 sm:h-72 md:h-80 w-auto bg-slate-50 overflow-hidden shadow-inner flex items-center justify-center">
+                    <div className="relative aspect-[4/5] h-48 sm:h-60 md:h-72 lg:h-80 w-auto bg-slate-50 overflow-hidden shadow-inner flex items-center justify-center">
                       {resolvedImageUrl ? (
                         <img
                           src={resolvedImageUrl}
@@ -114,7 +114,7 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
               <div className={`inline-block px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.25em] mb-5 self-center md:self-start shadow-md ${isLightMode ? "bg-[#002060] text-white" : "bg-blue-900/40 text-blue-100 border border-blue-500/30"}`}>
                 {person.rank}
               </div>
-              <h4 className={`text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight uppercase tracking-tight ${isLightMode ? "text-[#002060]" : "text-foreground"}`}>
+              <h4 className={`text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight uppercase tracking-tight ${isLightMode ? "text-[#002060]" : "text-foreground"}`}>
                 {displayName}
               </h4>
               {person.decoration && (

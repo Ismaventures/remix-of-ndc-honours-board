@@ -5,7 +5,7 @@ This document defines a professional, military-grade dynamic color strategy for 
 
 Project context:
 - Repository: remix-of-ndc-honours-board
-- Product focus: NDC historical honours and personnel display experience (FWC, FDC, Directing Staff, Allied)
+- Product focus: NDC historical honours and personnel display experience (FWC, FDCproc, Directing Staff, Allied)
 - Goal: improve environmental readability and command-grade visual consistency without changing core product identity
 
 Scope:

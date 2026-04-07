@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { resolveMediaRefToObjectUrl } from '@/lib/persistentMedia';
 
 const RESOLVED_MEDIA_CACHE_MAX = 420;
@@ -25,6 +25,30 @@ function cacheResolvedMediaUrl(source: string, url: string): void {
   }
 }
 
+async function resolveMediaSource(source: string): Promise<string | null> {
+  const cached = resolvedMediaUrlCache.get(source);
+  if (cached) {
+    return cached;
+  }
+
+  let pending = resolvingMediaUrlCache.get(source);
+  if (!pending) {
+    pending = resolveMediaRefToObjectUrl(source);
+    resolvingMediaUrlCache.set(source, pending);
+  }
+
+  const next = await pending;
+  if (resolvingMediaUrlCache.get(source) === pending) {
+    resolvingMediaUrlCache.delete(source);
+  }
+
+  if (next) {
+    cacheResolvedMediaUrl(source, next);
+  }
+
+  return next;
+}
+
 export function useResolvedMediaUrl(source?: string | null) {
   const [resolvedUrl, setResolvedUrl] = useState<string>('');
 
@@ -37,29 +61,12 @@ export function useResolvedMediaUrl(source?: string | null) {
         return;
       }
 
-      const cached = resolvedMediaUrlCache.get(source);
-      if (cached) {
-        setResolvedUrl(cached);
-        return;
-      }
-
-      let pending = resolvingMediaUrlCache.get(source);
-      if (!pending) {
-        pending = resolveMediaRefToObjectUrl(source);
-        resolvingMediaUrlCache.set(source, pending);
-      }
-
-      const next = await pending;
-      if (resolvingMediaUrlCache.get(source) === pending) {
-        resolvingMediaUrlCache.delete(source);
-      }
-
+      const next = await resolveMediaSource(source);
       if (disposed) {
         return;
       }
 
       if (next) {
-        cacheResolvedMediaUrl(source, next);
         setResolvedUrl(next);
       } else {
         setResolvedUrl('');
@@ -74,4 +81,39 @@ export function useResolvedMediaUrl(source?: string | null) {
   }, [source]);
 
   return resolvedUrl;
+}
+
+export function useResolvedMediaUrls(sources?: Array<string | null | undefined>) {
+  const [resolvedUrls, setResolvedUrls] = useState<string[]>([]);
+  const normalizedSources = useMemo(
+    () => (sources ?? []).filter((source): source is string => Boolean(source && source.trim())),
+    [sources],
+  );
+  const sourceKey = normalizedSources.join('||');
+
+  useEffect(() => {
+    let disposed = false;
+
+    const load = async () => {
+      if (normalizedSources.length === 0) {
+        setResolvedUrls([]);
+        return;
+      }
+
+      const next = await Promise.all(normalizedSources.map((source) => resolveMediaSource(source)));
+      if (disposed) {
+        return;
+      }
+
+      setResolvedUrls(next.filter((url): url is string => Boolean(url)));
+    };
+
+    load();
+
+    return () => {
+      disposed = true;
+    };
+  }, [sourceKey, normalizedSources]);
+
+  return resolvedUrls;
 }

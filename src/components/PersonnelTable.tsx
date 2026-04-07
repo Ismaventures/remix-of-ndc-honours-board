@@ -71,7 +71,7 @@ export function PersonnelTable({ data, title, category }: PersonnelTableProps) {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold gold-text">{title}</h2>
         <div className="flex items-center gap-2">
-          <button onClick={() => setViewMode('table')} className={`p-2 rounded transition-colors ${viewMode === 'table' ? 'bg-muted text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+          <button onClick={() => setViewMode('table')} className={`hidden md:inline-flex p-2 rounded transition-colors ${viewMode === 'table' ? 'bg-muted text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
             <List className="h-4 w-4" />
           </button>
           <button onClick={() => setViewMode('gallery')} className={`p-2 rounded transition-colors ${viewMode === 'gallery' ? 'bg-muted text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
@@ -102,11 +102,11 @@ export function PersonnelTable({ data, title, category }: PersonnelTableProps) {
       </div>
 
       {viewMode === 'table' ? (
-        <div className="gold-border rounded overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="gold-border rounded overflow-hidden overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="bg-muted/60 text-primary text-xs uppercase tracking-wider">
-                <th className="px-4 py-3 text-left w-12">S/N</th>
+                <th className="px-4 py-3 text-left w-12 whitespace-nowrap">S/N</th>
                 <th className="px-4 py-3 text-left cursor-pointer select-none hover:text-gold-bright" onClick={() => handleSort('rank')}>
                   Rank {sortKey === 'rank' && (sortDir === 'asc' ? '↑' : '↓')}
                 </th>
