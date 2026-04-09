@@ -730,12 +730,17 @@ export function MuseumObjectViewer({
         </>
       ) : (
         /* ── Cinematic Empty state ── */
-        <div className={cn("absolute inset-0 z-10 flex items-center justify-center", compact ? "p-3" : "p-6")}>
+        <div className={cn("absolute inset-0 z-10 flex items-center justify-center", compact ? "p-3" : "p-5 sm:p-6 md:p-8")}>
           <div className={cn(
-            "relative flex w-full flex-col items-center justify-center rounded-[24px] border text-center backdrop-blur-sm overflow-hidden",
-            compact ? "max-w-[220px] px-4 py-5" : "max-w-[380px] px-6 py-10",
-            "border-white/[0.08] bg-black/30",
+            "relative flex w-full flex-col items-center justify-center overflow-hidden rounded-[24px] border text-center backdrop-blur-sm",
+            compact ? "max-w-[220px] px-4 py-5" : "max-w-[min(100%,460px)] px-6 py-8 sm:px-8 sm:py-10",
+            "border-white/[0.08] bg-[linear-gradient(180deg,rgba(10,10,10,0.42)_0%,rgba(10,10,10,0.28)_45%,rgba(10,10,10,0.46)_100%)]",
           )}>
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.18),transparent_70%)]" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-[1px] bg-gradient-to-b from-transparent via-white/14 to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-[1px] bg-gradient-to-b from-transparent via-white/14 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-[12%] top-0 h-[1px] bg-gradient-to-r from-transparent via-[#d4af37]/45 to-transparent" />
+
             {/* Ambient pulse ring */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div
@@ -759,13 +764,19 @@ export function MuseumObjectViewer({
               <div className="absolute inset-0 rounded-full" style={{ boxShadow: "0 0 30px rgba(212,175,55,0.08), inset 0 0 15px rgba(212,175,55,0.05)" }} />
               <Shield className={cn(compact ? "h-8 w-8" : "h-12 w-12", "text-[#d8bf76]/35 relative z-10")} />
             </div>
-            <p className={cn("museum-kicker", compact ? "mt-3 text-[7px]" : "mt-4 text-[9px]", "text-[#d8bf76]/60")}>Museum Object Stage</p>
-            <p className={cn(compact ? "mt-1.5 text-xs font-semibold" : "mt-2 text-sm font-semibold", "text-[#f8f3e8]/75")}>{emptyLabel}</p>
-            <p className={cn(compact ? "mt-1.5 text-[10px] leading-4" : "mt-2 max-w-[240px] text-xs leading-5", "text-white/40")}>
+            <p className={cn("museum-kicker", compact ? "mt-3 text-[7px]" : "mt-4 text-[9px] tracking-[0.26em]", "text-[#d8bf76]/65")}>Museum Object Stage</p>
+            <p className={cn(compact ? "mt-1.5 text-xs font-semibold" : "mt-2 text-base font-semibold sm:text-[1.1rem]", "text-[#f8f3e8]/80")}>{emptyLabel}</p>
+            <p className={cn(compact ? "mt-1.5 text-[10px] leading-4" : "mt-2 max-w-[320px] text-xs leading-6 sm:text-[13px]", "text-white/44")}>
               {compact
                 ? "Add an image or multi-angle set."
                 : "Upload an artefact image, document scan, medal, or crest to place it in the display case."}
             </p>
+
+            {!compact && (
+              <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#d4af37]/18 bg-[#d4af37]/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#d8bf76]">
+                Curated showcase ready
+              </div>
+            )}
 
             {/* Subtle scan beam */}
             {!compact && (

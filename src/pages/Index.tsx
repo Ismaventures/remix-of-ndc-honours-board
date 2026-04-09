@@ -15,6 +15,7 @@ import { OrganogramView } from "@/components/OrganogramView";
 import { VisitsSection } from "@/components/VisitsSection";
 import { AdminPanel } from "@/components/AdminPanel";
 import { AdminLogin } from "@/components/AdminLogin";
+import { ArtifactFrameGallery } from "@/components/ArtifactFrameGallery";
 import { AutoRotationDisplay } from "@/components/AutoRotationDisplay";
 import { BootSequence } from "@/components/BootSequence";
 import { AudioManager, playAudioTrack } from "@/components/AudioManager";
@@ -731,6 +732,27 @@ const Index = () => {
           )}
 
           <CategoryCards onSelect={setView} />
+
+          {/* Artifact Frame Gallery entry */}
+          <button
+            type="button"
+            onClick={() => setView("artifact-gallery")}
+            className="group mb-8 w-full rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 p-5 text-left transition-all hover:border-primary/25 hover:shadow-lg sm:p-6"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60">Curated Exhibit</p>
+                <h3 className="mt-1 font-serif text-lg font-semibold text-foreground sm:text-xl">Artifact Collection Frame</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  View the curated display of all artefacts arranged in the museum glass case.
+                </p>
+              </div>
+              <div className="flex-shrink-0 rounded-full border border-primary/20 bg-primary/10 p-3 transition-colors group-hover:bg-primary/15">
+                <svg className="h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+              </div>
+            </div>
+          </button>
+
           <MuseumExperienceSection onSelect={setView} />
         </div>
       );
@@ -787,6 +809,10 @@ const Index = () => {
           visits={visits}
         />
       );
+    }
+
+    if (view === "artifact-gallery") {
+      return <ArtifactFrameGallery onBack={() => setView("home")} />;
     }
 
     if (view === "commandants") {
@@ -1060,11 +1086,11 @@ const Index = () => {
       <div
         className={`command-center-bg min-h-screen flex flex-col transition-opacity duration-1000 ${isBooting ? "opacity-0" : "opacity-100"}`}
       >
-        {!autoDisplayActive && <AppHeader onHomeClick={() => setView("home")} />}
+        {!autoDisplayActive && view !== "admin" && <AppHeader onHomeClick={() => setView("home")} />}
 
         <main className={`flex-1 overflow-y-auto overflow-x-hidden ${autoDisplayActive ? "p-0" : ""}`}>
-          <div className={`${autoDisplayActive ? "w-screen h-screen max-w-none p-0" : "max-w-[1840px] px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8"} mx-auto relative z-10`}>
-            <div className={`${autoDisplayActive ? "bg-transparent border-none p-0 rounded-none shadow-none" : "app-shell-frame rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8"}`}>
+          <div className={`${autoDisplayActive || view === "admin" || view === "artifact-gallery" ? "w-screen h-screen max-w-none p-0" : "max-w-[1840px] px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8"} mx-auto relative z-10`}>
+            <div className={`${autoDisplayActive || view === "admin" || view === "artifact-gallery" ? "bg-transparent border-none p-0 rounded-none shadow-none" : "app-shell-frame rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8"}`}>
               <div className={`${autoDisplayActive ? "fixed top-4 right-4 z-[100]" : "flex justify-end mb-3 sm:mb-4"}`}>
                 <div className="relative flex items-center gap-2">
                   {canConfigureStage && !autoDisplayActive && currentStageTiming && (

@@ -381,6 +381,7 @@ export function AdminPanel({
   onBack,
   onSignOut,
 }: AdminPanelProps) {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices' | 'guide' | 'content' | 'museum'>('personnel');
   const [editingP, setEditingP] = useState<Personnel | null>(null);
   const [editingV, setEditingV] = useState<DistinguishedVisit | null>(null);
@@ -1011,8 +1012,8 @@ export function AdminPanel({
       onClick={() => setTab(key)}
       className={`px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
         tab === key
-          ? 'bg-[#002060] text-white shadow-md shadow-[#002060]/20 scale-100 font-bold'
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 border border-gray-200 active:scale-95'
+          ? 'bg-[#f4c866] text-[#0d1016] shadow-md shadow-[#002060]/20 scale-100 font-bold'
+          : 'bg-[#1c2231] text-white/50 hover:bg-[#232a3b] hover:text-white border border-white/10 active:scale-95'
       }`}
     >
       {label}
@@ -1020,86 +1021,81 @@ export function AdminPanel({
   );
 
   const EmptyState = ({ message, onAdd }: { message: string, onAdd: () => void }) => (
-    <div className="flex flex-col items-center justify-center p-12 border border-dashed border-gray-300 rounded-xl bg-gray-50 text-center view-enter">
-      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-        <Plus className="h-8 w-8 text-[#002060]/50" />
+    <div className="flex flex-col items-center justify-center p-12 border border-dashed border-white/20 rounded-xl bg-[#131824] text-center view-enter">
+      <div className="w-16 h-16 rounded-full bg-[#1c2231] flex items-center justify-center mb-4">
+        <Plus className="h-8 w-8 text-[#f4c866]/50" />
       </div>
-      <p className="text-gray-500 mb-4">{message}</p>
-      <button onClick={onAdd} className="px-4 py-2 bg-[#002060] text-white rounded text-sm font-bold hover:bg-[#002060]/90 transition-colors">
+      <p className="text-white/40 mb-4">{message}</p>
+      <button onClick={onAdd} className="px-4 py-2 bg-[#f4c866] text-[#0d1016] rounded text-sm font-bold hover:bg-[#e0b04c] transition-colors">
         Add First Record
       </button>
     </div>
   );
 
   return (
-    <div className="admin-light-theme page-enter-slide min-h-screen bg-white text-gray-900 -m-4 sm:-m-6 md:-m-8 p-4 sm:p-6 md:p-8 rounded-none">
-      {/* Tri-color accent strip */}
-      <div className="flex h-[5px] rounded-t-lg overflow-hidden mb-6">
-        <div className="flex-1 bg-[#002060]" />
-        <div className="flex-1 bg-[#FF0000]" />
-        <div className="flex-1 bg-[#00B0F0]" />
-      </div>
-
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-full border border-[#002060]/30 bg-[#002060]/10 hover:bg-[#002060]/20 text-[#002060] hover:text-[#002060] transition-all active:scale-95 shadow-sm"
-          >
-            <ArrowLeft className="h-4 w-4" />
+    <div className="admin-obsidian-theme fixed inset-0 z-[100] flex overflow-hidden bg-[radial-gradient(ellipse_at_top,#141926_0%,#090d13_80%)] text-white font-sans">
+      {/* OBSIDIAN CONSOLE SIDEBAR */}
+      <aside className={`flex-shrink-0 flex flex-col border-r border-white/10 bg-[#090d13] overflow-y-auto transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "w-[80px] p-2" : "w-[260px] p-4 lg:p-5"}`}>
+        <div className={`mb-8 flex items-center ${isSidebarCollapsed ? "flex-col gap-4 mt-2" : "gap-3"}`}>
+<button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white transition-all" title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M9 3v18"/></svg> </button>
+          <button onClick={onBack} className="p-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white transition-all"><ArrowLeft className="h-4 w-4" /></button>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#f4c866]">The Obsidian Gallery</p>
+            <p className="mt-0.5 text-[9px] text-white/40 uppercase tracking-widest">Curator Console</p>
+          </div>
+        </div>
+        
+        <div className="space-y-1 flex-1">
+          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-4 text-[9px] font-semibold uppercase tracking-wider text-white/30">Archive Data</p>}
+          <button onClick={() => setTab('personnel')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'personnel' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Personnel Ledger">
+            {!isSidebarCollapsed && <span>Personnel Ledger</span>}
           </button>
-          <div className="min-w-0">
-            <h2 className="text-xl sm:text-2xl font-bold font-serif text-[#002060] leading-tight truncate">Admin Console</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Manage records and system options</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          {onSignOut && (
-            <button
-              onClick={onSignOut}
-              className="px-3 py-2 rounded-full text-xs font-semibold tracking-wider uppercase border border-red-300 text-red-600 hover:text-red-700 hover:bg-red-50 transition-all"
-            >
-              Sign Out
-            </button>
-          )}
-        </div>
-      </div>
+          <button onClick={() => setTab('visits')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'visits' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="VIP Visits">
+            {!isSidebarCollapsed && <span>VIP Visits</span>}
+          </button>
+          <button onClick={() => setTab('commandants')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'commandants' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Commandants">
+            {!isSidebarCollapsed && <span>Commandants</span>}
+          </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mb-5">
-        <div className="rounded-2xl border border-[#002060]/20 bg-[#002060]/5 p-3 space-y-2">
-          <p className="text-[11px] uppercase tracking-wider text-[#002060]/70">Records</p>
-          <div className="flex flex-wrap gap-2">
-            {tabBtn('personnel', 'Personnel')}
-            {tabBtn('visits', 'Visits')}
-            {tabBtn('commandants', 'Commandants')}
-            {tabBtn('content', 'Museum Content')}
-            {tabBtn('museum', 'Museum')}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#FF0000]/15 bg-[#FF0000]/5 p-3 space-y-2">
-          <p className="text-[11px] uppercase tracking-wider text-[#FF0000]/70">Experience & Media</p>
-          <div className="flex flex-wrap gap-2">
-            {tabBtn('theme', 'Theme')}
-            {tabBtn('transitions', 'Transitions')}
-            {tabBtn('audio', 'Audio Settings')}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#00B0F0]/15 bg-[#00B0F0]/5 p-3 space-y-2">
-          <p className="text-[11px] uppercase tracking-wider text-[#00B0F0]/70">Control & Guidance</p>
-          <div className="flex flex-wrap gap-2">
-            {tabBtn('devices', 'Devices')}
-            {tabBtn('guide', 'Helper Guide')}
-          </div>
-        </div>
-      </div>
+          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-white/30">Curator Tools</p>}
+          <button onClick={() => setTab('museum')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'museum' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Exhibits">
+            {!isSidebarCollapsed && <span>Exhibits</span>}
+          </button>
+          <button onClick={() => setTab('content')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'content' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Content Narrative">
+            {!isSidebarCollapsed && <span>Content Narrative</span>}
+          </button>
 
-      <div className="relative">
+          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-white/30">Atmosphere</p>}
+          <button onClick={() => setTab('theme')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'theme' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Visual Styles">
+            {!isSidebarCollapsed && <span>Visual Styles</span>}
+          </button>
+          <button onClick={() => setTab('transitions')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'transitions' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Transitions">
+            {!isSidebarCollapsed && <span>Transitions</span>}
+          </button>
+          <button onClick={() => setTab('audio')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'audio' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Narrative Audio">
+            {!isSidebarCollapsed && <span>Narrative Audio</span>}
+          </button>
+
+          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-white/30">Hardware Control</p>}
+          <button onClick={() => setTab('devices')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'devices' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Endpoint Links">
+            {!isSidebarCollapsed && <span>Endpoint Links</span>}
+          </button>
+          <button onClick={() => setTab('guide')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'guide' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="AI Guide">
+            {!isSidebarCollapsed && <span>AI Guide</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT STAGE */}
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto relative bg-[linear-gradient(180deg,#0b0e14_0%,#0d1016_100%)]">
+        <div className="w-full flex-1 p-4 md:p-8 max-w-[1400px] mx-auto">
+        <div className="relative">
         {guideFlowActive && tab !== 'guide' && (
-          <div className="mb-4 rounded-lg border border-primary/20 bg-primary/10 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="mb-4 rounded-lg border border-[#f4c866]/20 bg-[#f4c866]/10 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <p className="text-xs text-foreground">You are testing settings. Return to Helper Guide to continue from the next step.</p>
             <button
               onClick={() => setTab('guide')}
-              className="px-3 py-1.5 rounded border border-primary/30 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/15"
+              className="px-3 py-1.5 rounded border border-primary/30 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866] text-[#0a0d14]/15"
             >
               Back To Helper Guide (Continue)
             </button>
@@ -1110,7 +1106,7 @@ export function AdminPanel({
           <div className="view-enter">
             {!showFormP && (
               <div className="flex justify-end mb-4">
-                <button onClick={() => { setEditingP(null); setSelectedPersonnelId(null); setShowFormP(true); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
+                <button onClick={() => { setEditingP(null); setSelectedPersonnelId(null); setShowFormP(true); }} className="flex items-center gap-2 px-4 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-full text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
                   <Plus className="h-4 w-4" /> Add Personnel
                 </button>
               </div>
@@ -1131,7 +1127,7 @@ export function AdminPanel({
             ) : personnel.length === 0 ? (
               <EmptyState message="No personnel records found." onAdd={() => setShowFormP(true)} />
             ) : selectedPersonnel ? (
-              <div className="surface-panel p-5 sm:p-6 view-enter">
+              <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 sm:p-6 view-enter">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Full Profile</p>
@@ -1141,13 +1137,13 @@ export function AdminPanel({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedPersonnelId(null)}
-                      className="px-3 py-2 rounded-md border border-primary/20 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      className="px-3 py-2 rounded-md border border-[#f4c866]/20 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     >
                       Back To List
                     </button>
                     <button
                       onClick={() => { setEditingP(selectedPersonnel); setShowFormP(true); }}
-                      className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90"
+                      className="px-3 py-2 rounded-md bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground text-xs font-semibold hover:bg-[#f4c866] text-[#0a0d14]/90"
                     >
                       Edit Profile
                     </button>
@@ -1200,7 +1196,7 @@ export function AdminPanel({
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="surface-panel p-4 sm:p-5">
+                <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-4 sm:p-5">
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       <input
@@ -1208,12 +1204,12 @@ export function AdminPanel({
                         value={personnelSearch}
                         onChange={e => setPersonnelSearch(e.target.value)}
                         placeholder="Search by name, rank, category, service, or year"
-                        className="w-full sm:max-w-md bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                        className="w-full sm:max-w-md bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
                       />
                       <select
                         value={personnelCategoryFilter}
                         onChange={e => setPersonnelCategoryFilter(e.target.value as Category | 'All')}
-                        className="w-full sm:w-auto bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                        className="w-full sm:w-auto bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
                       >
                         <option value="All">All Categories</option>
                         {personnelCategories.map(category => (
@@ -1227,8 +1223,8 @@ export function AdminPanel({
                         onClick={() => setPersonnelCategoryFilter('All')}
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                           personnelCategoryFilter === 'All'
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-card text-muted-foreground border-primary/20 hover:text-foreground hover:bg-muted/50'
+                            ? 'bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground border-primary'
+                            : 'bg-card text-muted-foreground border-[#f4c866]/20 hover:text-foreground hover:bg-muted/50'
                         }`}
                       >
                         All ({personnel.length})
@@ -1239,8 +1235,8 @@ export function AdminPanel({
                           onClick={() => setPersonnelCategoryFilter(category)}
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                             personnelCategoryFilter === category
-                              ? 'bg-primary text-primary-foreground border-primary'
-                              : 'bg-card text-muted-foreground border-primary/20 hover:text-foreground hover:bg-muted/50'
+                              ? 'bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground border-primary'
+                              : 'bg-card text-muted-foreground border-[#f4c866]/20 hover:text-foreground hover:bg-muted/50'
                           }`}
                         >
                           {category} ({personnelCountsByCategory[category] ?? 0})
@@ -1250,11 +1246,11 @@ export function AdminPanel({
                   </div>
                 </div>
 
-                <div className="surface-panel overflow-hidden">
+                <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-muted/40 text-primary text-xs uppercase tracking-wider border-b border-primary/10">
+                      <tr className="bg-muted/40 text-[#f4c866] text-xs uppercase tracking-wider border-b border-primary/10">
                         <th className="px-4 py-4 text-left font-semibold">Name</th>
                         <th className="px-4 py-4 text-left font-semibold">Category</th>
                         <th className="px-4 py-4 text-left font-semibold">Rank</th>
@@ -1278,7 +1274,7 @@ export function AdminPanel({
                             </button>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#f4c866]/10 text-[#f4c866] border border-[#f4c866]/20">
                               {p.category}
                             </span>
                           </td>
@@ -1287,7 +1283,7 @@ export function AdminPanel({
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={(e) => { e.stopPropagation(); setEditingP(p); setShowFormP(true); }}
-                                className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                                className="p-1.5 rounded-md hover:bg-[#f4c866]/10 text-muted-foreground hover:text-[#f4c866] transition-colors"
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
@@ -1321,7 +1317,7 @@ export function AdminPanel({
           <div className="view-enter">
             {!showFormV && (
               <div className="flex justify-end mb-4">
-                <button onClick={() => { setEditingV(null); setShowFormV(true); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
+                <button onClick={() => { setEditingV(null); setShowFormV(true); }} className="flex items-center gap-2 px-4 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-full text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
                   <Plus className="h-4 w-4" /> Add Visit
                 </button>
               </div>
@@ -1340,11 +1336,11 @@ export function AdminPanel({
             ) : visits.length === 0 ? (
               <EmptyState message="No distinguished visits recorded." onAdd={() => setShowFormV(true)} />
             ) : (
-              <div className="surface-panel overflow-hidden">
+              <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-muted/40 text-primary text-xs uppercase tracking-wider border-b border-primary/10">
+                      <tr className="bg-muted/40 text-[#f4c866] text-xs uppercase tracking-wider border-b border-primary/10">
                         <th className="px-4 py-4 text-left font-semibold">Name</th>
                         <th className="px-4 py-4 text-left font-semibold">Country</th>
                         <th className="px-4 py-4 text-left font-semibold">Date</th>
@@ -1359,7 +1355,7 @@ export function AdminPanel({
                           <td className="px-4 py-3 text-muted-foreground">{v.date}</td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => { setEditingV(v); setShowFormV(true); }} className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"><Pencil className="h-4 w-4" /></button>
+                              <button onClick={() => { setEditingV(v); setShowFormV(true); }} className="p-1.5 rounded-md hover:bg-[#f4c866]/10 text-muted-foreground hover:text-[#f4c866] transition-colors"><Pencil className="h-4 w-4" /></button>
                               <button onClick={() => onDeleteVisit(v.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
                             </div>
                           </td>
@@ -1376,7 +1372,7 @@ export function AdminPanel({
         {tab === 'commandants' && (
           <div className="view-enter">
             {!showFormC && (
-              <div className="surface-panel p-4 mb-4">
+              <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-4 mb-4">
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col lg:flex-row lg:items-center gap-3">
                     <input
@@ -1384,18 +1380,18 @@ export function AdminPanel({
                       value={commandantSearch}
                       onChange={e => setCommandantSearch(e.target.value)}
                       placeholder="Search by name, title, year, decoration, or bio"
-                      className="w-full lg:max-w-md bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                      className="w-full lg:max-w-md bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
                     />
                     <select
                       value={commandantStatusFilter}
                       onChange={e => setCommandantStatusFilter(e.target.value as CommandantStatusFilter)}
-                      className="w-full sm:w-auto bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                      className="w-full sm:w-auto bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
                     >
                       <option value="all">All Status</option>
                       <option value="current">Current Only</option>
                       <option value="past">Past Only</option>
                     </select>
-                    <button onClick={() => { setEditingC(null); resetCommandantBatch(); setShowFormC(true); }} className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
+                    <button onClick={() => { setEditingC(null); resetCommandantBatch(); setShowFormC(true); }} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-full text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
                       <Plus className="h-4 w-4" /> Add Commandant
                     </button>
                   </div>
@@ -1404,14 +1400,14 @@ export function AdminPanel({
                     <button
                       type="button"
                       onClick={selectAllVisibleCommandants}
-                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                     >
                       Select Visible
                     </button>
                     <button
                       type="button"
                       onClick={clearCommandantSelection}
-                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                     >
                       Clear Selection
                     </button>
@@ -1419,7 +1415,7 @@ export function AdminPanel({
                       type="button"
                       onClick={startCommandantBatchEdit}
                       disabled={selectedCommandantIds.length === 0}
-                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Batch Edit Selected ({selectedCommandantIds.length})
                     </button>
@@ -1431,7 +1427,7 @@ export function AdminPanel({
             {showFormC ? (
               <>
                 {commandantBatchQueue.length > 0 && (
-                  <div className="mb-3 rounded-lg border border-primary/20 bg-primary/10 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="mb-3 rounded-lg border border-[#f4c866]/20 bg-[#f4c866]/10 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <p className="text-xs text-foreground">
                       Batch edit in progress: {Math.min(commandantBatchIndex + 1, commandantBatchQueue.length)} of {commandantBatchQueue.length}
                     </p>
@@ -1439,7 +1435,7 @@ export function AdminPanel({
                       <button
                         type="button"
                         onClick={openNextCommandantInBatch}
-                        className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                        className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                       >
                         Skip To Next
                       </button>
@@ -1450,7 +1446,7 @@ export function AdminPanel({
                           setShowFormC(false);
                           setEditingC(null);
                         }}
-                        className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                        className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                       >
                         Exit Batch
                       </button>
@@ -1487,7 +1483,7 @@ export function AdminPanel({
             ) : commandants.length === 0 ? (
               <EmptyState message="No commandants on record." onAdd={() => setShowFormC(true)} />
             ) : selectedCommandant ? (
-              <div className="surface-panel p-5 sm:p-6 view-enter">
+              <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 sm:p-6 view-enter">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Commandant Profile</p>
@@ -1497,13 +1493,13 @@ export function AdminPanel({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedCommandantId(null)}
-                      className="px-3 py-2 rounded-md border border-primary/20 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      className="px-3 py-2 rounded-md border border-[#f4c866]/20 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     >
                       Back To List
                     </button>
                     <button
                       onClick={() => { setEditingC(selectedCommandant); resetCommandantBatch(); setShowFormC(true); }}
-                      className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90"
+                      className="px-3 py-2 rounded-md bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground text-xs font-semibold hover:bg-[#f4c866] text-[#0a0d14]/90"
                     >
                       Edit Profile
                     </button>
@@ -1587,11 +1583,11 @@ export function AdminPanel({
                 </div>
               </div>
             ) : (
-              <div className="surface-panel overflow-hidden">
+              <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-muted/40 text-primary text-xs uppercase tracking-wider border-b border-primary/10">
+                      <tr className="bg-muted/40 text-[#f4c866] text-xs uppercase tracking-wider border-b border-primary/10">
                         <th className="px-4 py-4 text-left font-semibold">Select</th>
                         <th className="px-4 py-4 text-left font-semibold">Name</th>
                         <th className="px-4 py-4 text-left font-semibold">Tenure</th>
@@ -1622,7 +1618,7 @@ export function AdminPanel({
                           <td className="px-4 py-3 text-muted-foreground">{c.tenureStart} – {c.tenureEnd ?? 'Present'}</td>
                           <td className="px-4 py-3">
                             {c.isCurrent ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold bg-primary/20 text-primary border border-primary/30">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold bg-[#f4c866] text-[#0a0d14]/20 text-[#f4c866] border border-primary/30">
                                 Current
                               </span>
                             ) : (
@@ -1633,7 +1629,7 @@ export function AdminPanel({
                           </td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={(e) => { e.stopPropagation(); setEditingC(c); resetCommandantBatch(); setShowFormC(true); }} className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"><Pencil className="h-4 w-4" /></button>
+                              <button onClick={(e) => { e.stopPropagation(); setEditingC(c); resetCommandantBatch(); setShowFormC(true); }} className="p-1.5 rounded-md hover:bg-[#f4c866]/10 text-muted-foreground hover:text-[#f4c866] transition-colors"><Pencil className="h-4 w-4" /></button>
                               <button onClick={(e) => { e.stopPropagation(); onDeleteCommandant(c.id); }} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
                             </div>
                           </td>
@@ -1712,9 +1708,9 @@ export function AdminPanel({
 
         {tab === 'guide' && (
           <div className="view-enter">
-            <div className="surface-panel p-5 md:p-6 space-y-6">
+            <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 md:p-6 space-y-6">
               <div>
-                <h4 className="text-base font-semibold gold-text">Admin Helper Guide</h4>
+                <h4 className="text-base font-semibold text-[#f4c866]">Admin Helper Guide</h4>
                 <p className="text-xs text-muted-foreground mt-1">
                   Simple guide: read what a feature does, then use the "Try This Now" button to test it immediately.
                 </p>
@@ -1725,7 +1721,7 @@ export function AdminPanel({
                         setGuideFlowActive(false);
                         setGuideNextSectionId(null);
                       }}
-                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                     >
                       Finish Guide Session
                     </button>
@@ -1746,7 +1742,7 @@ export function AdminPanel({
                   >
                     <p className="text-sm font-semibold text-foreground">{section.title}</p>
                     {isNextTarget && (
-                      <p className="text-[11px] uppercase tracking-wider text-primary mt-1">Next Step</p>
+                      <p className="text-[11px] uppercase tracking-wider text-[#f4c866] mt-1">Next Step</p>
                     )}
                     <div className="mt-2">
                       <p className="text-[11px] uppercase tracking-wider text-muted-foreground">What it is</p>
@@ -1763,7 +1759,7 @@ export function AdminPanel({
                           <button
                             key={`${section.id}-${action.label}`}
                             onClick={() => openGuideLink(action.tab, action.panel, nextSectionId ?? section.id)}
-                            className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                            className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                           >
                             {action.label}
                           </button>
@@ -1798,9 +1794,9 @@ export function AdminPanel({
                   Step 7: Click Apply & Save Transitions to keep changes permanently.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button onClick={() => openGuideLink('transitions', 'library')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Transition Library</button>
-                  <button onClick={() => openGuideLink('transitions', 'categoryApplied')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Category Transition</button>
-                  <button onClick={() => openGuideLink('transitions', 'actions')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Open Save Section</button>
+                  <button onClick={() => openGuideLink('transitions', 'library')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10">Open Transition Library</button>
+                  <button onClick={() => openGuideLink('transitions', 'categoryApplied')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10">Open Category Transition</button>
+                  <button onClick={() => openGuideLink('transitions', 'actions')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10">Open Save Section</button>
                 </div>
               </div>
 
@@ -1809,7 +1805,7 @@ export function AdminPanel({
                 <div className="space-y-4 mt-3">
                   {GROUPED_TRANSITIONS.map(group => (
                     <div key={`helper-group-${group.id}`} className="rounded-md border border-primary/10 p-3 bg-background/40">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-primary">{group.label}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[#f4c866]">{group.label}</p>
                       <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                         {group.entries.map(item => (
@@ -1830,9 +1826,9 @@ export function AdminPanel({
 
         {tab === 'theme' && (
           <div className="view-enter">
-            <div className="surface-panel p-5 md:p-6">
+            <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 md:p-6">
               <div className="mb-5">
-                <h4 className="text-base font-semibold gold-text">Display Theme Control</h4>
+                <h4 className="text-base font-semibold text-[#f4c866]">Display Theme Control</h4>
                 <p className="text-xs text-muted-foreground mt-1">
                   The selected theme is saved and reused whenever the application starts until an admin changes it.
                 </p>
@@ -1847,18 +1843,18 @@ export function AdminPanel({
                       onClick={() => setThemeDraft(option.mode)}
                       className={`relative text-left rounded-lg border p-4 transition-all ${
                         isActive
-                          ? 'border-primary/60 bg-primary/10 shadow-md shadow-primary/10'
+                          ? 'border-primary/60 bg-[#f4c866]/10 shadow-md shadow-primary/10'
                           : 'border-primary/15 bg-card/50 hover:border-primary/35 hover:bg-muted/30'
                       }`}
                     >
                       {isActive && (
-                        <span className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] uppercase tracking-[0.12em] font-bold bg-[#002060] text-white border border-[#001846] shadow-sm">
+                        <span className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] uppercase tracking-[0.12em] font-bold bg-[#f4c866] text-[#0d1016] border border-[#f4c866]/50 shadow-[0_0_10px_rgba(244,200,102,0.2)]">
                           Active Mode
                         </span>
                       )}
                       <p className="text-sm font-semibold text-foreground">{option.label}</p>
                       <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{option.description}</p>
-                      <p className={`mt-3 text-[10px] uppercase tracking-wider font-semibold ${isActive ? 'text-[#002060]' : 'text-muted-foreground'}`}>
+                      <p className={`mt-3 text-[10px] uppercase tracking-wider font-semibold ${isActive ? 'text-[#f4c866]' : 'text-muted-foreground'}`}>
                         {isActive ? 'Currently Applied' : 'Click to Activate'}
                       </p>
                     </button>
@@ -1876,7 +1872,7 @@ export function AdminPanel({
                 <button
                   onClick={applyThemeSettings}
                   disabled={!isThemeDirty}
-                  className="px-4 py-2 rounded-md text-sm font-medium border border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-md text-sm font-medium border border-primary/40 text-[#f4c866] bg-[#f4c866]/10 hover:bg-[#f4c866] text-[#0a0d14]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Apply & Save Theme
                 </button>
@@ -1887,9 +1883,9 @@ export function AdminPanel({
 
         {tab === 'transitions' && (
           <div className="view-enter">
-            <div className="surface-panel p-5 md:p-6">
+            <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 md:p-6">
               <div className="mb-5">
-                <h4 className="text-base font-semibold gold-text">Transition & Boot Experience</h4>
+                <h4 className="text-base font-semibold text-[#f4c866]">Transition & Boot Experience</h4>
                 <p className="text-xs text-muted-foreground mt-1">
                   Control boot timing, transition styles, and sequence behavior. Open any section to configure only what you need.
                 </p>
@@ -1901,7 +1897,7 @@ export function AdminPanel({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
                   {GROUPED_TRANSITIONS.map(group => (
                     <div key={`overview-${group.id}`} className="rounded border border-primary/10 bg-background/40 p-2">
-                      <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                      <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
                       <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
                     </div>
                   ))}
@@ -1917,7 +1913,7 @@ export function AdminPanel({
                   <button
                     type="button"
                     onClick={() => setShowAdvancedTransitionPanels(prev => !prev)}
-                    className="px-3 py-2 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                    className="px-3 py-2 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                   >
                     {showAdvancedTransitionPanels ? 'Hide Advanced Sections' : 'Show Advanced Sections'}
                   </button>
@@ -1926,7 +1922,7 @@ export function AdminPanel({
                 <div className="space-y-3 mt-3">
                   {GROUPED_TRANSITIONS.map(group => (
                     <div key={`glance-${group.id}`} className="rounded border border-primary/10 bg-background/40 p-3">
-                      <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                      <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
                       <div className="space-y-2 mt-2">
                         {group.entries.map(transition => (
                           <div key={`glance-row-${transition.id}`} className="rounded border border-primary/10 bg-card/40 px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -1939,7 +1935,7 @@ export function AdminPanel({
                             <button
                               type="button"
                               onClick={() => openTransitionPreview(transition.id, `${group.label} Preview`)}
-                              className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                              className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                             >
                               Preview
                             </button>
@@ -1953,7 +1949,7 @@ export function AdminPanel({
 
               {showAdvancedTransitionPanels && (
               <div className="space-y-3 mt-3">
-                <button onClick={() => setActiveTransitionPanel('guide')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('guide')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Transition Usage Guide</span>
                 </button>
                 {activeTransitionPanel === 'guide' && (
@@ -1964,7 +1960,7 @@ export function AdminPanel({
                         <select
                           value={previewTransition}
                           onChange={e => setPreviewTransition(e.target.value as AutoDisplayTransitionType)}
-                          className="w-full mt-1 bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground"
+                          className="w-full mt-1 bg-background border border-[#f4c866]/20 rounded-md px-2 py-2 text-xs text-foreground"
                         >
                           {GROUPED_TRANSITIONS.map(group => (
                             <optgroup key={`guide-group-${group.id}`} label={group.label}>
@@ -1978,7 +1974,7 @@ export function AdminPanel({
                       <button
                         type="button"
                         onClick={() => openTransitionPreview(previewTransition, 'Guide Preview')}
-                        className="px-3 py-2 rounded border border-primary/25 text-xs uppercase tracking-wider text-primary hover:bg-primary/10"
+                        className="px-3 py-2 rounded border border-primary/25 text-xs uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                       >
                         Preview From Center
                       </button>
@@ -1992,7 +1988,7 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('cinematic')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('cinematic')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Cinematic Experience Preset</span>
                 </button>
                 {activeTransitionPanel === 'cinematic' && (
@@ -2003,11 +1999,11 @@ export function AdminPanel({
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="rounded border border-primary/15 bg-background/50 p-3">
-                        <p className="text-[11px] uppercase tracking-wider text-primary">Authority Motion Rules</p>
+                        <p className="text-[11px] uppercase tracking-wider text-[#f4c866]">Authority Motion Rules</p>
                         <p className="text-xs text-muted-foreground mt-2">Ken Burns background zoom, foreground card lift, delayed text reveal, and reduced-motion fallback.</p>
                       </div>
                       <div className="rounded border border-primary/15 bg-background/50 p-3">
-                        <p className="text-[11px] uppercase tracking-wider text-primary">Audio Sync Rules</p>
+                        <p className="text-[11px] uppercase tracking-wider text-[#f4c866]">Audio Sync Rules</p>
                         <p className="text-xs text-muted-foreground mt-2">Whoosh on slide start, soft chime on completion, ambient loop with fade-in/out, cooldown anti-spam protection.</p>
                       </div>
                     </div>
@@ -2107,21 +2103,21 @@ export function AdminPanel({
                       <button
                         type="button"
                         onClick={applyCinematicPreset}
-                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-primary hover:bg-primary/10"
+                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                       >
                         Apply Cinematic Preset
                       </button>
                       <button
                         type="button"
                         onClick={() => openTransitionPreview('pro-slider', 'Cinematic Preset')}
-                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-primary hover:bg-primary/10"
+                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                       >
                         Preview Pro Slider
                       </button>
                       <button
                         type="button"
                         onClick={resetCinematicSettings}
-                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-primary hover:bg-primary/10"
+                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                       >
                         Reset Cinematic Controls
                       </button>
@@ -2129,7 +2125,7 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('boot')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('boot')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Boot Sequence Timing</span>
                 </button>
                 {activeTransitionPanel === 'boot' && (
@@ -2151,7 +2147,7 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('idle')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('idle')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Idle Stage (Isolation Mode)</span>
                 </button>
                 {activeTransitionPanel === 'idle' && (
@@ -2194,7 +2190,7 @@ export function AdminPanel({
                       <select
                         value={idleStageDraft.design}
                         onChange={e => setIdleStageDraft(prev => ({ ...prev, design: e.target.value as IdleStageSettings['design'] }))}
-                        className="w-full bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground"
+                        className="w-full bg-background border border-[#f4c866]/20 rounded-md px-2 py-2 text-xs text-foreground"
                       >
                         {IDLE_STAGE_DESIGNS.map(design => (
                           <option key={design.id} value={design.id}>{design.label}</option>
@@ -2207,7 +2203,7 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('globalTiming')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('globalTiming')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Global Timing</span>
                 </button>
                 {activeTransitionPanel === 'globalTiming' && (
@@ -2223,7 +2219,7 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('categoryTiming')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('categoryTiming')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Category-Specific Timing</span>
                 </button>
                 {activeTransitionPanel === 'categoryTiming' && (
@@ -2244,7 +2240,7 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('library')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('library')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Transition Library (Multi-Select)</span>
                 </button>
                 {activeTransitionPanel === 'library' && (
@@ -2252,7 +2248,7 @@ export function AdminPanel({
                     <div className="space-y-4">
                       {GROUPED_TRANSITIONS.map(group => (
                         <div key={`library-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
-                          <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                          <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
                           <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                             {group.entries.map(transition => {
@@ -2271,7 +2267,7 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('sequence')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('sequence')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Global Sequence Order (Multi-Select)</span>
                 </button>
                 {activeTransitionPanel === 'sequence' && (
@@ -2281,21 +2277,21 @@ export function AdminPanel({
                       return (
                         <div key={`${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
                           <span className="text-foreground">{index + 1}. {label}</span>
-                          <div className="flex gap-1"><button type="button" onClick={() => moveTransitionInSequence(transition, -1)} className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40">Up</button><button type="button" onClick={() => moveTransitionInSequence(transition, 1)} className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40">Down</button></div>
+                          <div className="flex gap-1"><button type="button" onClick={() => moveTransitionInSequence(transition, -1)} className="px-2 py-1 rounded border border-[#f4c866]/20 hover:bg-muted/40">Up</button><button type="button" onClick={() => moveTransitionInSequence(transition, 1)} className="px-2 py-1 rounded border border-[#f4c866]/20 hover:bg-muted/40">Down</button></div>
                         </div>
                       );
                     })}
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('categorySequence')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('categorySequence')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Per-Category Sequence (Multi-Select)</span>
                 </button>
                 {activeTransitionPanel === 'categorySequence' && (
                   <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                       <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Selected Category</p>
-                      <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="bg-background border border-primary/20 rounded-md px-2 py-1 text-xs text-foreground">
+                      <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="bg-background border border-[#f4c866]/20 rounded-md px-2 py-1 text-xs text-foreground">
                         {AUTO_DISPLAY_CONTEXTS.map(context => <option key={context.key} value={context.key}>{context.label}</option>)}
                       </select>
                     </div>
@@ -2303,7 +2299,7 @@ export function AdminPanel({
                       <div className="space-y-3">
                         {GROUPED_TRANSITIONS.map(group => (
                           <div key={`${sequenceContext}-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
-                            <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                            <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                               {group.entries.map(transition => {
                                 const activeSequence = autoDisplayDraft.transitionSequenceByContext[sequenceContext] ?? autoDisplayDraft.transitionSequence;
@@ -2325,7 +2321,7 @@ export function AdminPanel({
                           return (
                             <div key={`${sequenceContext}-${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
                               <span className="text-foreground">{index + 1}. {label}</span>
-                              <div className="flex gap-1"><button type="button" onClick={() => moveTransitionInContextSequence(sequenceContext, transition, -1)} className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40">Up</button><button type="button" onClick={() => moveTransitionInContextSequence(sequenceContext, transition, 1)} className="px-2 py-1 rounded border border-primary/20 hover:bg-muted/40">Down</button></div>
+                              <div className="flex gap-1"><button type="button" onClick={() => moveTransitionInContextSequence(sequenceContext, transition, -1)} className="px-2 py-1 rounded border border-[#f4c866]/20 hover:bg-muted/40">Up</button><button type="button" onClick={() => moveTransitionInContextSequence(sequenceContext, transition, 1)} className="px-2 py-1 rounded border border-[#f4c866]/20 hover:bg-muted/40">Down</button></div>
                             </div>
                           );
                         })}
@@ -2334,7 +2330,7 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('categoryApplied')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('categoryApplied')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Per-Category Applied Transition (Single Choice)</span>
                 </button>
                 {activeTransitionPanel === 'categoryApplied' && (
@@ -2342,7 +2338,7 @@ export function AdminPanel({
                     <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
                       <div>
                         <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Category</label>
-                        <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="w-full mt-1 bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground">
+                        <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="w-full mt-1 bg-background border border-[#f4c866]/20 rounded-md px-2 py-2 text-xs text-foreground">
                           {AUTO_DISPLAY_CONTEXTS.map(context => <option key={`apply-${context.key}`} value={context.key}>{context.label}</option>)}
                         </select>
                       </div>
@@ -2364,7 +2360,7 @@ export function AdminPanel({
                               openTransitionPreview(value as AutoDisplayTransitionType, contextLabel);
                             }
                           }}
-                          className="w-full mt-1 bg-background border border-primary/20 rounded-md px-2 py-2 text-xs text-foreground"
+                          className="w-full mt-1 bg-background border border-[#f4c866]/20 rounded-md px-2 py-2 text-xs text-foreground"
                         >
                           <option value="sequence">Use Sequence</option>
                           {GROUPED_TRANSITIONS.map(group => (
@@ -2380,12 +2376,12 @@ export function AdminPanel({
                         const selected = autoDisplayDraft.appliedTransitionByContext[sequenceContext] ?? 'fade-zoom';
                         const contextLabel = AUTO_DISPLAY_CONTEXTS.find(item => item.key === sequenceContext)?.label ?? sequenceContext;
                         openTransitionPreview(selected, contextLabel);
-                      }} className="px-3 py-2 rounded border border-primary/25 text-xs uppercase tracking-wider text-primary hover:bg-primary/10">Preview</button>
+                      }} className="px-3 py-2 rounded border border-primary/25 text-xs uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10">Preview</button>
                     </div>
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('durations')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('durations')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Individual Transition Times</span>
                 </button>
                 {activeTransitionPanel === 'durations' && (
@@ -2398,7 +2394,7 @@ export function AdminPanel({
                             onClick={() => setActiveDurationGroup(prev => (prev === group.id ? null : group.id))}
                             className="w-full flex items-center justify-between gap-3 text-left"
                           >
-                            <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                            <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
                             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                               {activeDurationGroup === group.id ? 'Hide' : 'Show'}
                             </span>
@@ -2409,7 +2405,7 @@ export function AdminPanel({
                                 <div key={transition.id} className="space-y-1.5 rounded border border-primary/10 p-2">
                                   <div className="flex items-center justify-between"><label className="text-[11px] text-foreground">{transition.label}</label><span className="text-[11px] text-muted-foreground">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span></div>
                                   <input type="range" min={250} max={3000} step={50} value={autoDisplayDraft.transitionDurationByTypeMs[transition.id]} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, transitionDurationByTypeMs: { ...prev.transitionDurationByTypeMs, [transition.id]: Number(e.target.value) } }))} className="w-full" />
-                                  <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10">Preview</button>
+                                  <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-[#f4c866]/20 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10">Preview</button>
                                 </div>
                               ))}
                             </div>
@@ -2420,7 +2416,7 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('soundPairing')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('soundPairing')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Transition Sound Pairing</span>
                 </button>
                 {activeTransitionPanel === 'soundPairing' && (
@@ -2429,7 +2425,7 @@ export function AdminPanel({
                     <div className="space-y-4">
                       {GROUPED_TRANSITIONS.map(group => (
                         <div key={`cue-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
-                          <p className="text-[11px] uppercase tracking-wider text-primary font-semibold">{group.label}</p>
+                          <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                             {group.entries.map((transition) => (
                               <div key={`cue-${transition.id}`} className="space-y-1.5 rounded border border-primary/10 p-2">
@@ -2444,7 +2440,7 @@ export function AdminPanel({
                                         [transition.id]: e.target.value as (typeof TRANSITION_CUE_TYPES)[number]['id'],
                                       },
                                     }))}
-                                    className="w-full bg-background border border-primary/20 rounded-md px-2 py-1.5 text-xs text-foreground"
+                                    className="w-full bg-background border border-[#f4c866]/20 rounded-md px-2 py-1.5 text-xs text-foreground"
                                   >
                                     {TRANSITION_CUE_TYPES.map(cue => (
                                       <option key={`cue-opt-${transition.id}-${cue.id}`} value={cue.id}>{cue.label}</option>
@@ -2453,7 +2449,7 @@ export function AdminPanel({
                                   <button
                                     type="button"
                                     onClick={() => playTransitionCue(autoDisplayDraft.transitionCueByType[transition.id], true)}
-                                    className="px-2 py-1 rounded border border-primary/20 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10"
+                                    className="px-2 py-1 rounded border border-[#f4c866]/20 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
                                   >
                                     Test
                                   </button>
@@ -2467,7 +2463,7 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('commandantLayout')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('commandantLayout')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Commandant Auto-Display Layout</span>
                 </button>
                 {activeTransitionPanel === 'commandantLayout' && (
@@ -2476,7 +2472,7 @@ export function AdminPanel({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <button 
                         onClick={() => setAutoDisplayDraft(prev => ({ ...prev, commandantLayout: 'standard' }))}
-                        className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'standard' || !autoDisplayDraft.commandantLayout ? 'border-primary/60 bg-primary/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-primary/20 bg-background/50 hover:bg-muted/30'}`}
+                        className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'standard' || !autoDisplayDraft.commandantLayout ? 'border-primary/60 bg-[#f4c866]/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-[#f4c866]/20 bg-background/50 hover:bg-muted/30'}`}
                       >
                         <h4 className="text-sm font-bold text-foreground">Standard Layout</h4>
                         <p className="text-[11px] text-muted-foreground mt-1">Portrait on top, centered identity plate underneath.</p>
@@ -2484,7 +2480,7 @@ export function AdminPanel({
                       
                       <button 
                         onClick={() => setAutoDisplayDraft(prev => ({ ...prev, commandantLayout: 'split' }))}
-                        className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'split' ? 'border-primary/60 bg-primary/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-primary/20 bg-background/50 hover:bg-muted/30'}`}
+                        className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'split' ? 'border-primary/60 bg-[#f4c866]/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-[#f4c866]/20 bg-background/50 hover:bg-muted/30'}`}
                       >
                         <h4 className="text-sm font-bold text-foreground">Split (Side-by-Side) Layout</h4>
                         <p className="text-[11px] text-muted-foreground mt-1">Portrait on one side, write-up and bio details on the other.</p>
@@ -2493,7 +2489,7 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('actions')} className="w-full text-left px-4 py-3 rounded-lg border border-primary/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('actions')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Save / Import / Export</span>
                 </button>
                 {activeTransitionPanel === 'actions' && (
@@ -2530,14 +2526,14 @@ export function AdminPanel({
                       <button
                         onClick={applyBootAndTransitionsSettings}
                         disabled={!isBootDirty && !isAutoDisplayDirty && !isIdleStageDirty}
-                        className="px-4 py-2 rounded-md text-sm font-medium border border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 rounded-md text-sm font-medium border border-primary/40 text-[#f4c866] bg-[#f4c866]/10 hover:bg-[#f4c866] text-[#0a0d14]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Apply & Save Transitions
                       </button>
                     </div>
                   </div>
                 )}
-                {settingsImportStatus && <p className="text-xs text-primary mt-3">{settingsImportStatus}</p>}
+                {settingsImportStatus && <p className="text-xs text-[#f4c866] mt-3">{settingsImportStatus}</p>}
               </div>
               )}
 
@@ -2549,10 +2545,10 @@ export function AdminPanel({
                         <p className="text-xs uppercase tracking-wider text-muted-foreground">Transition Preview</p>
                         <p className="text-sm font-semibold text-foreground">{previewContextLabel}</p>
                       </div>
-                      <button onClick={() => setPreviewModalOpen(false)} className="px-3 py-1 rounded border border-primary/20 text-xs hover:bg-muted/40">Close</button>
+                      <button onClick={() => setPreviewModalOpen(false)} className="px-3 py-1 rounded border border-[#f4c866]/20 text-xs hover:bg-muted/40">Close</button>
                     </div>
-                    <div className="h-44 rounded-lg border border-primary/20 bg-slate-950/70 overflow-hidden relative flex items-center justify-center">
-                      <div key={`${previewTransition}-${previewNonce}`} className={`px-6 py-3 rounded-md border border-primary/35 bg-primary/15 text-primary font-semibold tracking-wider ${getPreviewTransitionClasses(previewTransition)}`}>
+                    <div className="h-44 rounded-lg border border-[#f4c866]/20 bg-slate-950/70 overflow-hidden relative flex items-center justify-center">
+                      <div key={`${previewTransition}-${previewNonce}`} className={`px-6 py-3 rounded-md border border-primary/35 bg-[#f4c866] text-[#0a0d14]/15 text-[#f4c866] font-semibold tracking-wider ${getPreviewTransitionClasses(previewTransition)}`}>
                         {TRANSITION_TYPES.find(item => item.id === previewTransition)?.label ?? previewTransition}
                       </div>
                     </div>
@@ -2581,6 +2577,8 @@ export function AdminPanel({
           @keyframes preview-pro-slider { from { opacity: 0; transform: translateX(26px) scale(0.96); filter: blur(8px);} to { opacity: 1; transform: translateX(0) scale(1); filter: blur(0);} }
         `}</style>
       </div>
+      </div>
+      </main>
     </div>
   );
 }
@@ -2650,11 +2648,11 @@ function PersonnelForm({ initial, onSave, onCancel }: {
   };
 
   return (
-    <div className="surface-panel p-5 mb-6 view-enter relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+    <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 mb-6 view-enter relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-1 h-full bg-[#f4c866] text-[#0a0d14]" />
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h4 className="text-base font-semibold gold-text">{initial ? 'Edit' : 'Add'} Personnel</h4>
+          <h4 className="text-base font-semibold text-[#f4c866]">{initial ? 'Edit' : 'Add'} Personnel</h4>
           <p className="text-xs text-muted-foreground mt-1">Enter the details for this personnel record.</p>
         </div>
         <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
@@ -2662,46 +2660,46 @@ function PersonnelForm({ initial, onSave, onCancel }: {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Full Name</label>
-          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Rank / Title</label>
-          <input placeholder="Rank" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Rank" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Category</label>
-          <select value={form.category} onChange={e => update('category', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30">
+          <select value={form.category} onChange={e => update('category', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30">
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Service Branch</label>
-          <select value={form.service} onChange={e => update('service', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30">
+          <select value={form.service} onChange={e => update('service', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30">
             {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Period Start (Year)</label>
-          <input type="number" placeholder="Period Start" value={form.periodStart} onChange={e => update('periodStart', parseInt(e.target.value))} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="number" placeholder="Period Start" value={form.periodStart} onChange={e => update('periodStart', parseInt(e.target.value))} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Period End (Year)</label>
-          <input type="number" placeholder="Period End" value={form.periodEnd} onChange={e => update('periodEnd', parseInt(e.target.value))} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="number" placeholder="Period End" value={form.periodEnd} onChange={e => update('periodEnd', parseInt(e.target.value))} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Seniority Order</label>
-          <input type="number" placeholder="Order (1=highest)" value={form.seniorityOrder} onChange={e => update('seniorityOrder', parseInt(e.target.value))} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="number" placeholder="Order (1=highest)" value={form.seniorityOrder} onChange={e => update('seniorityOrder', parseInt(e.target.value))} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
           <div className="flex items-center gap-2">
             <label className="px-3 py-1.5 text-xs rounded border border-primary/25 bg-card hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
               Upload Image / GIF
               <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
             </label>
             {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-primary/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#f4c866]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
                 Clear
               </button>
             )}
@@ -2711,16 +2709,16 @@ function PersonnelForm({ initial, onSave, onCancel }: {
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Citation / Bio</label>
-          <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+          <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
-          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={handleSave} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-md text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
@@ -2777,11 +2775,11 @@ function VisitForm({ initial, onSave, onCancel }: {
   };
 
   return (
-    <div className="surface-panel p-5 mb-6 view-enter relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+    <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 mb-6 view-enter relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-1 h-full bg-[#f4c866] text-[#0a0d14]" />
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h4 className="text-base font-semibold gold-text">{initial ? 'Edit' : 'Add'} Visit</h4>
+          <h4 className="text-base font-semibold text-[#f4c866]">{initial ? 'Edit' : 'Add'} Visit</h4>
           <p className="text-xs text-muted-foreground mt-1">Enter the details for this distinguished visit.</p>
         </div>
         <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
@@ -2789,30 +2787,30 @@ function VisitForm({ initial, onSave, onCancel }: {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Visitor Name</label>
-          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Title / Position</label>
-          <input placeholder="Title/Position" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Title/Position" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Country</label>
-          <input placeholder="Country" value={form.country} onChange={e => update('country', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Country" value={form.country} onChange={e => update('country', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Date of Visit</label>
-          <input type="date" value={form.date} onChange={e => update('date', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="date" value={form.date} onChange={e => update('date', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
           <div className="flex items-center gap-2">
             <label className="px-3 py-1.5 text-xs rounded border border-primary/25 bg-card hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
               Upload Image / GIF
               <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
             </label>
             {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-primary/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#f4c866]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
                 Clear
               </button>
             )}
@@ -2822,16 +2820,16 @@ function VisitForm({ initial, onSave, onCancel }: {
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Visit Description / Context</label>
-          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
-          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={handleSave} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-md text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
@@ -2915,11 +2913,11 @@ function CommandantForm({ initial, onSave, onCancel }: {
   };
 
   return (
-    <div className="surface-panel p-5 mb-6 view-enter relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+    <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 mb-6 view-enter relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-1 h-full bg-[#f4c866] text-[#0a0d14]" />
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h4 className="text-base font-semibold gold-text">{initial ? 'Edit' : 'Add'} Commandant</h4>
+          <h4 className="text-base font-semibold text-[#f4c866]">{initial ? 'Edit' : 'Add'} Commandant</h4>
           <p className="text-xs text-muted-foreground mt-1">Manage commandant records and tenure details.</p>
         </div>
         <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
@@ -2927,38 +2925,38 @@ function CommandantForm({ initial, onSave, onCancel }: {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Commandant Name</label>
-          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Rank</label>
-          <input placeholder="Rear Admiral" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Rear Admiral" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Title</label>
-          <input placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Post Nominals</label>
-          <input placeholder="GSS psc(+) fdc(+) ..." value={form.postNominals} onChange={e => update('postNominals', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="GSS psc(+) fdc(+) ..." value={form.postNominals} onChange={e => update('postNominals', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tenure Start</label>
-          <input type="number" placeholder="Tenure Start" value={form.tenureStart} onChange={e => update('tenureStart', parseInt(e.target.value))} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="number" placeholder="Tenure Start" value={form.tenureStart} onChange={e => update('tenureStart', parseInt(e.target.value))} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5 flex flex-col">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tenure End</label>
-          <input type="number" disabled={form.isCurrent} placeholder={form.isCurrent ? 'Present' : 'Tenure End'} value={form.isCurrent ? '' : form.tenureEnd} onChange={e => update('tenureEnd', e.target.value ? parseInt(e.target.value) : '')} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 disabled:opacity-50 disabled:cursor-not-allowed" />
+          <input type="number" disabled={form.isCurrent} placeholder={form.isCurrent ? 'Present' : 'Tenure End'} value={form.isCurrent ? '' : form.tenureEnd} onChange={e => update('tenureEnd', e.target.value ? parseInt(e.target.value) : '')} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 disabled:opacity-50 disabled:cursor-not-allowed" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
           <div className="flex items-center gap-2">
             <label className="px-3 py-1.5 text-xs rounded border border-primary/25 bg-card hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
               Upload Image / GIF
               <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
             </label>
             {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-primary/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#f4c866]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
                 Clear
               </button>
             )}
@@ -2968,62 +2966,62 @@ function CommandantForm({ initial, onSave, onCancel }: {
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Biography / Description</label>
-          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Bio Summary (short)</label>
-          <textarea placeholder="Short profile summary used in compact profile cards" value={form.bioSummary} onChange={e => update('bioSummary', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+          <textarea placeholder="Short profile summary used in compact profile cards" value={form.bioSummary} onChange={e => update('bioSummary', e.target.value)} rows={2} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Full Biography</label>
-          <textarea placeholder="Detailed biography for full profile view" value={form.biographyFull} onChange={e => update('biographyFull', e.target.value)} rows={6} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <textarea placeholder="Detailed biography for full profile view" value={form.biographyFull} onChange={e => update('biographyFull', e.target.value)} rows={6} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Years Experience</label>
-          <input type="number" min={0} placeholder="32" value={form.yearsExperience} onChange={e => update('yearsExperience', e.target.value ? parseInt(e.target.value, 10) : '')} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="number" min={0} placeholder="32" value={form.yearsExperience} onChange={e => update('yearsExperience', e.target.value ? parseInt(e.target.value, 10) : '')} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Education (one per line)</label>
-          <textarea placeholder="BSc...\nMSc..." value={form.educationText} onChange={e => update('educationText', e.target.value)} rows={3} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <textarea placeholder="BSc...\nMSc..." value={form.educationText} onChange={e => update('educationText', e.target.value)} rows={3} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Training (one per line)</label>
-          <textarea placeholder="Chevening Scholar\nInternational Cyber Policy" value={form.trainingText} onChange={e => update('trainingText', e.target.value)} rows={3} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <textarea placeholder="Chevening Scholar\nInternational Cyber Policy" value={form.trainingText} onChange={e => update('trainingText', e.target.value)} rows={3} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Past Appointments (one per line)</label>
-          <textarea placeholder="Deputy Chief ...\nDirector ..." value={form.pastAppointmentsText} onChange={e => update('pastAppointmentsText', e.target.value)} rows={4} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <textarea placeholder="Deputy Chief ...\nDirector ..." value={form.pastAppointmentsText} onChange={e => update('pastAppointmentsText', e.target.value)} rows={4} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Honours (one per line)</label>
-          <textarea placeholder="GSS\npsc(+)" value={form.honoursText} onChange={e => update('honoursText', e.target.value)} rows={3} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <textarea placeholder="GSS\npsc(+)" value={form.honoursText} onChange={e => update('honoursText', e.target.value)} rows={3} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Family Note</label>
-          <input placeholder="Married with children" value={form.familyNote} onChange={e => update('familyNote', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Married with children" value={form.familyNote} onChange={e => update('familyNote', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Impact Statement</label>
-          <textarea placeholder="Expected strategic impact statement" value={form.impactStatement} onChange={e => update('impactStatement', e.target.value)} rows={2} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+          <textarea placeholder="Expected strategic impact statement" value={form.impactStatement} onChange={e => update('impactStatement', e.target.value)} rows={2} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
-          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-primary/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
         </div>
-        <label className="flex items-center gap-3 text-sm text-foreground sm:col-span-2 p-3 rounded-md bg-primary/5 border border-primary/10 cursor-pointer hover:bg-primary/10 transition-colors">
-          <div className={`w-5 h-5 rounded border ${form.isCurrent ? 'bg-primary border-primary text-primary-foreground' : 'border-primary/30 bg-background'} flex items-center justify-center transition-colors`}>
+        <label className="flex items-center gap-3 text-sm text-foreground sm:col-span-2 p-3 rounded-md bg-[#f4c866] text-[#0a0d14]/5 border border-primary/10 cursor-pointer hover:bg-[#f4c866]/10 transition-colors">
+          <div className={`w-5 h-5 rounded border ${form.isCurrent ? 'bg-[#f4c866] text-[#0a0d14] border-primary text-[#f4c866]-foreground' : 'border-primary/30 bg-background'} flex items-center justify-center transition-colors`}>
             {form.isCurrent && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-3.5 h-3.5"><polyline points="20 6 9 17 4 12" /></svg>}
           </div>
           <input type="checkbox" checked={form.isCurrent} onChange={e => update('isCurrent', e.target.checked)} className="sr-only" />
           <div>
-            <p className="font-medium text-primary">Current Commandant</p>
+            <p className="font-medium text-[#f4c866]">Current Commandant</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">Check this if the commandant is currently serving.</p>
           </div>
         </label>
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={handleSave} className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-md text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>

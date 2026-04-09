@@ -100,6 +100,44 @@
     --input: 214 20% 88%;
     --ring: 213 72% 40%;
   }
+
+  /* Obsidian dark theme overrides scoped to admin panel */
+  .admin-obsidian-theme {
+    --background: 220 30% 5%;
+    --foreground: 40 50% 95%;
+    --card: 222 28% 7%;
+    --card-foreground: 40 50% 95%;
+    --popover: 222 28% 7%;
+    --popover-foreground: 40 50% 95%;
+    --primary: 40 84% 68%;
+    --primary-foreground: 222 30% 5%;
+    --secondary: 222 22% 12%;
+    --secondary-foreground: 40 50% 90%;
+    --muted: 222 22% 12%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 222 22% 14%;
+    --accent-foreground: 40 50% 90%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 40 84% 68%;
+  }
+  .admin-obsidian-theme input,
+  .admin-obsidian-theme select,
+  .admin-obsidian-theme textarea {
+    background-color: hsl(222, 28%, 7%) !important;
+    color: hsl(40, 50%, 95%) !important;
+    border-color: hsl(220, 15%, 18%) !important;
+  }
+  .admin-obsidian-theme input::placeholder,
+  .admin-obsidian-theme textarea::placeholder {
+    color: hsl(220, 10%, 40%) !important;
+  }
+  .admin-obsidian-theme option {
+    background-color: hsl(222, 28%, 9%);
+    color: hsl(40, 50%, 95%);
+  }
 }
 
 @layer base {

@@ -1229,33 +1229,33 @@ function CollectionItemProfileModal({
         />
 
         {/* ── Main content: Split layout (portrait left, details right) ── */}
-        <div className="relative z-10 mx-auto flex h-full w-full max-w-[min(96vw,1400px)] flex-1 min-h-0 flex-col items-center justify-center gap-5 px-4 pb-6 pt-[max(4rem,12%)] md:flex-row md:items-center md:justify-center md:gap-7 md:px-7 md:py-7">
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-[min(97vw,1520px)] flex-1 min-h-0 flex-col items-center justify-center gap-5 px-4 pb-6 pt-[max(4rem,12%)] md:flex-row md:items-center md:justify-center md:gap-8 lg:gap-10 md:px-7 md:py-7">
 
           {/* ── LEFT: Cinematic artifact showcase ── */}
           <motion.div
             initial={{ opacity: 0, x: -40, scale: 0.95, filter: "blur(8px)" }}
             animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
             transition={{ duration: 1, ease: CINEMATIC_EASE, delay: 0.2 }}
-            className="group relative shrink-0 flex items-center justify-center"
+            className="group relative flex w-full items-center justify-center md:max-w-[min(54vw,860px)] md:flex-[1.08]"
           >
             {/* Ambient glow behind the frame */}
             <div className={cn(
-              "pointer-events-none absolute -inset-4 z-0 rounded-2xl opacity-60 blur-2xl",
+              "pointer-events-none absolute -inset-4 z-0 rounded-[32px] opacity-60 blur-2xl md:-inset-6 lg:-inset-8",
               isLightMode ? "bg-[#bca46a]/20" : "bg-[#FFD700]/8",
             )} />
 
             {/* Outer gold frame */}
-            <div className="relative z-10 rounded-md bg-gradient-to-b from-[#FFD700] via-[#C5A028] to-[#FFD700] p-[3px] shadow-[0_8px_40px_rgba(212,175,55,0.25),0_2px_10px_rgba(0,0,0,0.3)]">
+            <div className="relative z-10 w-full max-w-[min(92vw,760px)] rounded-md bg-gradient-to-b from-[#FFD700] via-[#C5A028] to-[#FFD700] p-[3px] shadow-[0_16px_60px_rgba(212,175,55,0.24),0_6px_22px_rgba(0,0,0,0.28)] md:max-w-[min(54vw,820px)]">
               {/* White separator */}
               <div className="rounded-[5px] bg-white p-[3px]">
                 {/* Inner gold frame */}
                 <div className="rounded-[4px] bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#FFD700] p-[2px]">
                   {/* Artifact display container — generous sizing for the viewer */}
                   <div className={cn(
-                    "relative overflow-hidden rounded-[3px] shadow-inner",
-                    "h-[clamp(280px,58dvh,700px)] w-[clamp(220px,44dvh,520px)]",
-                    "sm:h-[clamp(320px,62dvh,760px)] sm:w-[clamp(240px,47dvh,560px)]",
-                    "md:h-[clamp(360px,68dvh,820px)] md:w-[clamp(270px,51dvh,600px)]",
+                    "relative w-full overflow-hidden rounded-[3px] shadow-inner",
+                    "h-[clamp(300px,44dvh,540px)]",
+                    "sm:h-[clamp(340px,50dvh,620px)]",
+                    "md:h-[clamp(390px,58dvh,760px)]",
                     isLightMode ? "bg-[#f4f1ea]" : "bg-[#0a0e16]",
                   )}>
                     {/* Soft blurred background fill */}
@@ -1291,7 +1291,7 @@ function CollectionItemProfileModal({
             initial={{ opacity: 0, x: 40, filter: "blur(8px)" }}
             animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
             transition={{ duration: 1, ease: CINEMATIC_EASE, delay: 0.35 }}
-            className="flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-y-auto md:items-start md:max-w-[min(45vw,580px)]"
+            className="flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-y-auto md:items-start md:max-w-[min(34vw,520px)]"
           >
             {/* ── Tag / category badge with flanking lines ── */}
             <motion.div
@@ -1944,28 +1944,28 @@ function CollectionAutoDisplay({
             <img src={ndcCrest} alt="" className="absolute right-[3.5%] top-[4.5%] z-20 h-[clamp(20px,4.8vh,56px)] w-auto object-contain drop-shadow-sm" />
 
             {/* ── Main split content ── */}
-            <div className="relative z-10 mx-auto flex h-full w-full max-w-[min(96vw,1400px)] flex-1 min-h-0 flex-col items-center justify-center gap-5 px-4 pb-6 pt-[max(4rem,12%)] md:flex-row md:items-center md:justify-center md:gap-7 md:px-7 md:py-7">
+            <div className="relative z-10 mx-auto flex h-full w-full max-w-[min(97vw,1520px)] flex-1 min-h-0 flex-col items-center justify-center gap-5 px-4 pb-6 pt-[max(4rem,12%)] md:flex-row md:items-center md:justify-center md:gap-8 lg:gap-10 md:px-7 md:py-7">
 
               {/* LEFT: Cinematic artifact showcase */}
-              <div className="relative shrink-0 flex items-center justify-center">
+              <div className="relative flex w-full items-center justify-center md:max-w-[min(54vw,860px)] md:flex-[1.08]">
                 {/* Ambient glow behind the frame */}
                 <div className={cn(
-                  "pointer-events-none absolute -inset-4 z-0 rounded-2xl opacity-60 blur-2xl",
+                  "pointer-events-none absolute -inset-4 z-0 rounded-[32px] opacity-60 blur-2xl md:-inset-6 lg:-inset-8",
                   isLightMode ? "bg-[#bca46a]/20" : "bg-[#FFD700]/8",
                 )} />
 
                 {/* Outer gold frame */}
-                <div className="relative z-10 rounded-md bg-gradient-to-b from-[#FFD700] via-[#C5A028] to-[#FFD700] p-[3px] shadow-[0_8px_40px_rgba(212,175,55,0.25),0_2px_10px_rgba(0,0,0,0.3)]">
+                <div className="relative z-10 w-full max-w-[min(92vw,760px)] rounded-md bg-gradient-to-b from-[#FFD700] via-[#C5A028] to-[#FFD700] p-[3px] shadow-[0_16px_60px_rgba(212,175,55,0.24),0_6px_22px_rgba(0,0,0,0.28)] md:max-w-[min(54vw,820px)]">
                   {/* White separator */}
                   <div className="rounded-[5px] bg-white p-[3px]">
                     {/* Inner gold frame */}
                     <div className="rounded-[4px] bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#FFD700] p-[2px]">
                       {/* Artifact display container — generous sizing */}
                       <div className={cn(
-                        "relative overflow-hidden rounded-[3px] shadow-inner",
-                        "h-[clamp(280px,58dvh,700px)] w-[clamp(220px,44dvh,520px)]",
-                        "sm:h-[clamp(320px,62dvh,760px)] sm:w-[clamp(240px,47dvh,560px)]",
-                        "md:h-[clamp(360px,68dvh,820px)] md:w-[clamp(270px,51dvh,600px)]",
+                        "relative w-full overflow-hidden rounded-[3px] shadow-inner",
+                        "h-[clamp(300px,44dvh,540px)]",
+                        "sm:h-[clamp(340px,50dvh,620px)]",
+                        "md:h-[clamp(390px,58dvh,760px)]",
                         isLightMode ? "bg-[#f4f1ea]" : "bg-[#0a0e16]",
                       )}>
                         {/* Soft blurred background fill */}
@@ -1993,7 +1993,7 @@ function CollectionAutoDisplay({
               </div>
 
               {/* RIGHT: Details panel (commandant split-hero style) */}
-              <div className="flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-y-auto md:items-start md:max-w-[min(45vw,580px)]">
+              <div className="flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-y-auto md:items-start md:max-w-[min(34vw,520px)]">
                 {/* Tag with flanking lines */}
                 <div className="flex items-center gap-3">
                   <div className={cn("h-px w-[clamp(20px,3vw,48px)]", isLightMode ? "bg-[#002060]/40" : "bg-[#FFD700]/30")} />

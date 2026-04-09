@@ -15,7 +15,8 @@ export type ViewKey =
   | "about-ndc"
   | "museum-collections"
   | "guided-tours"
-  | "hall-of-fame";
+  | "hall-of-fame"
+  | "artifact-gallery";
 
 interface CategoryCardsProps {
   onSelect: (key: ViewKey) => void;
