@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  Frame,
   GalleryHorizontalEnd,
   Globe2,
   Landmark,
@@ -686,6 +687,52 @@ export function MuseumExperienceSection({
             initial="initial"
             animate="animate"
           >
+            {/* ── Artifact Frame Gallery – highlight card ── */}
+            <motion.button
+              variants={museumStaggerItem}
+              whileHover={{ y: -2, scale: 1.01 }}
+              whileTap={{ scale: 0.992 }}
+              onClick={() => onSelect("artifact-gallery" as ViewKey)}
+              className={cn(
+                "museum-grain museum-plaque-shadow group relative overflow-hidden rounded-[16px] sm:rounded-[20px] md:rounded-[26px] border p-4 sm:p-5 md:p-6 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70",
+                isLightMode
+                  ? "border-[#bca46a]/22 bg-[linear-gradient(180deg,rgba(255,255,255,0.72)_0%,rgba(244,239,226,0.94)_100%)]"
+                  : "border-[#d4af37]/18 bg-[linear-gradient(180deg,rgba(212,175,55,0.06)_0%,rgba(255,255,255,0.02)_100%)]",
+              )}
+            >
+              <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#d4af37] via-[#f4e198] to-[#d4af37]" />
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>Curated Exhibit</p>
+                  <h3 className={cn("mt-3 text-2xl font-semibold", isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]")}>
+                    Artefact Collection Frame
+                  </h3>
+                  <p className={cn("mt-2 text-[11px] uppercase tracking-[0.18em]", isLightMode ? "text-[#6f7682]" : "text-white/38")}>
+                    Interactive glass-case display
+                  </p>
+                </div>
+                <div
+                  className={cn(
+                    "rounded-full border p-3",
+                    isLightMode
+                      ? "border-[#bca46a]/30 bg-[#d4af37]/10 text-[#7f6112]"
+                      : "border-[#d4af37]/25 bg-[#d4af37]/14 text-[#d4af37]",
+                  )}
+                >
+                  <Frame className="h-5 w-5" />
+                </div>
+              </div>
+
+              <p className={cn("mt-4 text-sm leading-7", isLightMode ? "text-[#445267]" : "text-white/72")}>
+                Browse all artefacts arranged in the museum glass case — curated by the exhibit administrator with cinematic lighting, audio narration, and categorised presentation.
+              </p>
+
+              <div className={cn("mt-5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em]", isLightMode ? "text-[#17253b]" : "text-[#d8bf76]")}>
+                View Exhibit
+                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+              </div>
+            </motion.button>
+
             {secondaryEntries.map((entry) => {
               const Icon = entry.icon;
 

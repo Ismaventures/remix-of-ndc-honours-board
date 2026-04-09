@@ -733,26 +733,6 @@ const Index = () => {
 
           <CategoryCards onSelect={setView} />
 
-          {/* Artifact Frame Gallery entry */}
-          <button
-            type="button"
-            onClick={() => setView("artifact-gallery")}
-            className="group mb-8 w-full rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 p-5 text-left transition-all hover:border-primary/25 hover:shadow-lg sm:p-6"
-          >
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60">Curated Exhibit</p>
-                <h3 className="mt-1 font-serif text-lg font-semibold text-foreground sm:text-xl">Artifact Collection Frame</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  View the curated display of all artefacts arranged in the museum glass case.
-                </p>
-              </div>
-              <div className="flex-shrink-0 rounded-full border border-primary/20 bg-primary/10 p-3 transition-colors group-hover:bg-primary/15">
-                <svg className="h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
-              </div>
-            </div>
-          </button>
-
           <MuseumExperienceSection onSelect={setView} />
         </div>
       );
