@@ -517,7 +517,7 @@ export function MuseumObjectViewer({
         <div className={cn(
           "absolute left-3 top-3 z-30 rounded-full border font-semibold uppercase backdrop-blur-sm",
           compact ? "px-2 py-0.5 text-[7px] tracking-[0.16em]" : "px-3 py-1.5 text-[9px] tracking-[0.2em]",
-          "border-[#d4af37]/20 bg-black/50 text-[#d8bf76]",
+          "border-[#d4af37]/16 bg-black/55 text-[#d8bf76] shadow-[0_2px_10px_rgba(0,0,0,0.2)]",
         )}>
           {topLabel}
         </div>
@@ -527,7 +527,7 @@ export function MuseumObjectViewer({
         <div className={cn(
           "absolute right-3 top-3 z-30 rounded-full border font-semibold uppercase backdrop-blur-sm",
           compact ? "px-2 py-0.5 text-[7px] tracking-[0.14em]" : "px-2.5 py-1 text-[8px] tracking-[0.16em]",
-          "border-white/10 bg-black/45 text-white/60",
+          "border-white/[0.06] bg-black/50 text-white/55 shadow-[0_2px_10px_rgba(0,0,0,0.2)]",
         )}>
           {resolvedTopRightLabel}
         </div>
@@ -729,36 +729,65 @@ export function MuseumObjectViewer({
           </div>
         </>
       ) : (
-        /* ── Empty state ── */
+        /* ── Cinematic Empty state ── */
         <div className={cn("absolute inset-0 z-10 flex items-center justify-center", compact ? "p-3" : "p-6")}>
           <div className={cn(
-            "relative flex w-full flex-col items-center justify-center rounded-[24px] border text-center backdrop-blur-sm",
+            "relative flex w-full flex-col items-center justify-center rounded-[24px] border text-center backdrop-blur-sm overflow-hidden",
             compact ? "max-w-[220px] px-4 py-5" : "max-w-[380px] px-6 py-10",
-            "border-white/10 bg-black/30",
+            "border-white/[0.08] bg-black/30",
           )}>
-            <div className={cn(
-              "relative rounded-full border p-4",
-              compact ? "p-3" : "p-5",
-              "border-[#d4af37]/16 bg-black/30",
-            )}>
-              <Shield className={cn(compact ? "h-8 w-8" : "h-12 w-12", "text-[#d8bf76]/30")} />
+            {/* Ambient pulse ring */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div
+                className={cn("rounded-full border", compact ? "h-28 w-28" : "h-44 w-44", "border-[#d4af37]/10")}
+                style={{ animation: "mo-breathe 4s ease-in-out infinite" }}
+              />
             </div>
-            <p className={cn("museum-kicker", compact ? "mt-3 text-[7px]" : "mt-4 text-[9px]", "text-[#d8bf76]/70")}>Museum Object Stage</p>
-            <p className={cn(compact ? "mt-1.5 text-xs font-semibold" : "mt-2 text-sm font-semibold", "text-[#f8f3e8]/80")}>{emptyLabel}</p>
-            <p className={cn(compact ? "mt-1.5 text-[10px] leading-4" : "mt-2 max-w-[240px] text-xs leading-5", "text-white/45")}>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div
+                className={cn("rounded-full border", compact ? "h-36 w-36" : "h-56 w-56", "border-[#d4af37]/[0.04]")}
+                style={{ animation: "mo-breathe 4s ease-in-out 1s infinite" }}
+              />
+            </div>
+
+            {/* Shield icon with glow */}
+            <div className={cn(
+              "relative rounded-full border",
+              compact ? "p-3" : "p-5",
+              "border-[#d4af37]/16 bg-black/40",
+            )}>
+              <div className="absolute inset-0 rounded-full" style={{ boxShadow: "0 0 30px rgba(212,175,55,0.08), inset 0 0 15px rgba(212,175,55,0.05)" }} />
+              <Shield className={cn(compact ? "h-8 w-8" : "h-12 w-12", "text-[#d8bf76]/35 relative z-10")} />
+            </div>
+            <p className={cn("museum-kicker", compact ? "mt-3 text-[7px]" : "mt-4 text-[9px]", "text-[#d8bf76]/60")}>Museum Object Stage</p>
+            <p className={cn(compact ? "mt-1.5 text-xs font-semibold" : "mt-2 text-sm font-semibold", "text-[#f8f3e8]/75")}>{emptyLabel}</p>
+            <p className={cn(compact ? "mt-1.5 text-[10px] leading-4" : "mt-2 max-w-[240px] text-xs leading-5", "text-white/40")}>
               {compact
                 ? "Add an image or multi-angle set."
                 : "Upload an artefact image, document scan, medal, or crest to place it in the display case."}
             </p>
+
+            {/* Subtle scan beam */}
+            {!compact && (
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div
+                  className="absolute inset-x-0 h-[1px] top-0"
+                  style={{
+                    background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.2), transparent)",
+                    animation: "mo-float 6s ease-in-out infinite",
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {footerLabel && (
         <div className={cn(
-          "absolute bottom-3 left-3 z-30 rounded-full border font-semibold uppercase backdrop-blur-sm",
+          "absolute bottom-3 left-3 z-30 rounded-full border font-semibold uppercase backdrop-blur-md transition-all duration-300 hover:border-[#d4af37]/25",
           compact ? "px-2 py-0.5 text-[7px] tracking-[0.14em]" : "px-3 py-1.5 text-[9px] tracking-[0.2em]",
-          "border-white/10 bg-black/45 text-white/60",
+          "border-white/[0.08] bg-black/50 text-white/55 hover:text-white/75 hover:shadow-[0_2px_12px_rgba(212,175,55,0.08)]",
         )}>
           {footerLabel}
         </div>
@@ -766,8 +795,8 @@ export function MuseumObjectViewer({
 
       {showControls ? (
         <div className={cn(
-          "absolute bottom-3 right-3 z-30 flex flex-wrap items-center justify-end gap-2 rounded-full border px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] backdrop-blur-sm",
-          "border-white/10 bg-black/50 text-white/60",
+          "absolute bottom-3 right-3 z-30 flex flex-wrap items-center justify-end gap-2 rounded-full border px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] backdrop-blur-md transition-all duration-300",
+          "border-white/[0.08] bg-black/55 text-white/55 shadow-[0_4px_20px_rgba(0,0,0,0.3)]",
         )}>
           {frameCount > 1 ? (
             <>
@@ -777,7 +806,7 @@ export function MuseumObjectViewer({
                   setAutoSpin(false);
                   setActiveFrameIndex((previousIndex) => positiveMod(previousIndex - 1, frameCount));
                 }}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/70 hover:bg-white/[0.1] transition-colors"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.05] text-white/60 hover:bg-white/[0.12] hover:text-white/90 hover:border-[#d4af37]/20 hover:shadow-[0_0_10px_rgba(212,175,55,0.1)] transition-all duration-200"
                 aria-label="Previous artefact angle"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
@@ -789,8 +818,8 @@ export function MuseumObjectViewer({
                 className={cn(
                   "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 transition-colors",
                   autoSpin
-                    ? "border-[#d4af37]/30 bg-[#d4af37]/14 text-[#d4af37]"
-                    : "border-white/10 bg-white/[0.06] text-white/70 hover:bg-white/[0.1]",
+                    ? "border-[#d4af37]/30 bg-[#d4af37]/14 text-[#d4af37] shadow-[0_0_14px_rgba(212,175,55,0.15)]"
+                    : "border-white/[0.08] bg-white/[0.05] text-white/60 hover:bg-white/[0.12] hover:text-white/90 hover:border-[#d4af37]/20",
                 )}
               >
                 <RotateCcw className="h-3 w-3" />
@@ -802,7 +831,7 @@ export function MuseumObjectViewer({
                   setAutoSpin(false);
                   setActiveFrameIndex((previousIndex) => positiveMod(previousIndex + 1, frameCount));
                 }}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/70 hover:bg-white/[0.1] transition-colors"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.05] text-white/60 hover:bg-white/[0.12] hover:text-white/90 hover:border-[#d4af37]/20 hover:shadow-[0_0_10px_rgba(212,175,55,0.1)] transition-all duration-200"
                 aria-label="Next artefact angle"
               >
                 <ChevronRight className="h-3.5 w-3.5" />

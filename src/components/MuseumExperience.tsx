@@ -6,6 +6,7 @@ import {
   Award,
   ChevronLeft,
   ChevronRight,
+  Filter,
   GalleryHorizontalEnd,
   Globe2,
   Landmark,
@@ -16,6 +17,8 @@ import {
   ScrollText,
   Search,
   Shield,
+  SlidersHorizontal,
+  Tag,
   Star,
   Trophy,
   Users,
@@ -483,10 +486,10 @@ function PageShell({
         initial="initial"
         animate="animate"
         className={cn(
-          "museum-grain museum-ledger museum-plaque-shadow relative overflow-hidden rounded-[34px] border",
+          "museum-grain museum-ledger museum-plaque-shadow relative overflow-hidden rounded-[20px] sm:rounded-[28px] md:rounded-[34px] border",
           isLightMode
-            ? "border-[#bca46a]/20 bg-[linear-gradient(165deg,#fbf7ee_0%,#f4efe2_40%,#edf2f7_100%)] text-[#132136]"
-            : "border-[#d4af37]/14 bg-[linear-gradient(165deg,rgba(7,12,20,0.98)_0%,rgba(14,22,36,0.98)_42%,rgba(24,33,49,0.98)_100%)] text-white",
+            ? "border-[#bca46a]/20 bg-[hsl(var(--vault-base))] text-[#132136]"
+            : "border-[#d4af37]/14 bg-[hsl(var(--vault-base))] text-white",
         )}
       >
         <TriColorStrip className="h-[3px]" />
@@ -583,10 +586,10 @@ export function MuseumExperienceSection({
 
       <div
         className={cn(
-          "museum-grain museum-ledger museum-plaque-shadow relative overflow-hidden rounded-[34px] border p-4 sm:p-5 md:p-6",
+          "museum-grain museum-ledger museum-plaque-shadow relative overflow-hidden rounded-[20px] sm:rounded-[28px] md:rounded-[34px] border p-4 sm:p-5 md:p-6",
           isLightMode
-            ? "border-[#bca46a]/20 bg-[linear-gradient(165deg,#f7f2e7_0%,#f1eadc_36%,#ebf2f7_100%)]"
-            : "border-[#d4af37]/14 bg-[linear-gradient(165deg,rgba(8,12,19,0.98)_0%,rgba(16,22,34,0.98)_38%,rgba(24,32,46,0.98)_100%)]",
+            ? "border-[#bca46a]/20 bg-[hsl(var(--vault-base))]"
+            : "border-[#d4af37]/14 bg-[hsl(var(--vault-base))]",
         )}
       >
         <TriColorStrip className="mb-4 rounded-full h-[3px]" />
@@ -605,7 +608,7 @@ export function MuseumExperienceSection({
           )}
         />
 
-        <div className="relative z-10 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+        <div className="relative z-10 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(min(320px,100%),0.9fr)]">
           <motion.button
             variants={museumFadeUpVariant}
             initial="initial"
@@ -614,7 +617,7 @@ export function MuseumExperienceSection({
             whileTap={{ scale: 0.992 }}
             onClick={() => onSelect(featuredEntry.key)}
             className={cn(
-              "museum-grain museum-plaque-shadow group relative overflow-hidden rounded-[30px] border p-6 sm:p-7 md:p-8 text-left transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70",
+              "museum-grain museum-plaque-shadow group relative overflow-hidden rounded-[20px] sm:rounded-[24px] md:rounded-[30px] border p-6 sm:p-7 md:p-8 text-left transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70",
               isLightMode
                 ? "border-[#bca46a]/22 bg-[linear-gradient(180deg,rgba(255,255,255,0.78)_0%,rgba(244,239,226,0.96)_100%)]"
                 : "border-[#d4af37]/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0.02)_100%)]",
@@ -694,7 +697,7 @@ export function MuseumExperienceSection({
                   whileTap={{ scale: 0.992 }}
                   onClick={() => onSelect(entry.key)}
                   className={cn(
-                    "museum-grain museum-plaque-shadow group relative overflow-hidden rounded-[26px] border p-5 sm:p-6 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70",
+                    "museum-grain museum-plaque-shadow group relative overflow-hidden rounded-[16px] sm:rounded-[20px] md:rounded-[26px] border p-4 sm:p-5 md:p-6 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70",
                     isLightMode
                       ? "border-[#bca46a]/18 bg-[linear-gradient(180deg,rgba(255,255,255,0.72)_0%,rgba(244,239,226,0.94)_100%)]"
                       : "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0.02)_100%)]",
@@ -953,22 +956,32 @@ function CollectionItemCard({
   return (
     <motion.button
       type="button"
-      whileHover={isFull ? { y: -2, scale: 1.008 } : { y: -2, scale: 1.012 }}
-      transition={{ duration: 0.45, ease: MUSEUM_EASE }}
+      whileHover={isFull ? { y: -4, scale: 1.012 } : { y: -3, scale: 1.015 }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ duration: 0.4, ease: MUSEUM_EASE }}
       className={cn(
-        "museum-grain museum-ledger museum-plaque-shadow relative overflow-hidden rounded-[26px] border text-left group cursor-pointer",
+        "museum-grain museum-ledger relative overflow-hidden rounded-[16px] sm:rounded-[20px] md:rounded-[26px] border text-left group cursor-pointer transition-shadow duration-500",
         isFull
           ? "w-full max-w-[560px] mx-auto"
           : isGrid
             ? "w-full min-w-0"
             : "w-[min(300px,85vw)] sm:w-[320px] shrink-0 snap-center",
         isLightMode
-          ? "border-[#bca46a]/18 bg-[linear-gradient(180deg,rgba(255,255,255,0.76)_0%,rgba(244,239,226,0.96)_100%)]"
-          : "border-[#d4af37]/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0.02)_100%)]",
+          ? "border-[#bca46a]/18 bg-[linear-gradient(180deg,rgba(255,255,255,0.76)_0%,rgba(244,239,226,0.96)_100%)] hover:border-[#bca46a]/35 hover:shadow-[0_20px_60px_rgba(0,0,0,0.1),0_8px_24px_rgba(188,164,106,0.12)]"
+          : "border-[#d4af37]/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.015)_100%)] hover:border-[#d4af37]/20 hover:shadow-[0_20px_60px_rgba(0,0,0,0.35),0_0_40px_rgba(212,175,55,0.04)]",
       )}
       onClick={() => onItemClick?.(item)}
     >
-      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#d4af37] to-transparent" />
+      {/* Top gold accent line with shimmer on hover */}
+      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#d4af37]/70 to-transparent transition-opacity duration-500 group-hover:opacity-100 opacity-60" />
+
+      {/* Hover ambient glow */}
+      <div className={cn(
+        "pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700",
+        isLightMode
+          ? "bg-gradient-to-b from-[#bca46a]/[0.04] via-transparent to-transparent"
+          : "bg-gradient-to-b from-[#d4af37]/[0.03] via-transparent to-transparent",
+      )} />
 
       <div className="relative z-10 p-3">
         <MuseumObjectViewer
@@ -990,36 +1003,87 @@ function CollectionItemCard({
         <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>
           {item.tag}
         </p>
-        <h3 className={cn("museum-display-title mt-3 font-semibold leading-tight", isFull ? "text-2xl" : "text-lg", isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]")}>
+        <h3 className={cn("museum-display-title mt-3 font-semibold leading-tight transition-colors duration-300", isFull ? "text-2xl" : "text-lg", isLightMode ? "text-[#17253b] group-hover:text-[#0d1928]" : "text-[#f8f3e8] group-hover:text-white")}>
           {item.name}
         </h3>
-        <p className={cn("mt-3 leading-7", isFull ? "text-sm" : "text-[13px] line-clamp-3", isLightMode ? "text-[#4c5b70]" : "text-white/72")}>
+        <p className={cn("mt-3 leading-7", isFull ? "text-sm" : "text-[13px] line-clamp-3", isLightMode ? "text-[#4c5b70]" : "text-white/65")}>
           {item.description}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <span className={cn("rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]", isLightMode ? "border-[#bca46a]/18 bg-[#f3ecdb]/78 text-[#7f6112]" : "border-[#d4af37]/18 bg-[#d4af37]/10 text-[#d8bf76]")}>
+          <span className={cn("rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors duration-300", isLightMode ? "border-[#bca46a]/18 bg-[#f3ecdb]/78 text-[#7f6112]" : "border-[#d4af37]/15 bg-[#d4af37]/[0.06] text-[#d8bf76] group-hover:border-[#d4af37]/25 group-hover:bg-[#d4af37]/10")}>
             {item.era}
           </span>
           {item.location && (
-            <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]", isLightMode ? "border-[#17253b]/10 bg-white/70 text-[#435267]" : "border-white/10 bg-white/[0.04] text-white/70")}>
+            <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]", isLightMode ? "border-[#17253b]/10 bg-white/70 text-[#435267]" : "border-white/[0.06] bg-white/[0.03] text-white/60")}>
               <MapPin className="h-3 w-3" />
               {item.location}
             </span>
           )}
         </div>
 
-        <div className={cn("mt-5 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em]", isLightMode ? "text-[#17253b]" : "text-[#d8bf76]")}>
+        <div className={cn("mt-5 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] transition-all duration-300", isLightMode ? "text-[#17253b] group-hover:text-[#7f6112]" : "text-[#d8bf76]/70 group-hover:text-[#d8bf76]")}>
           View Artefact
-          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1.5" />
         </div>
       </div>
 
-      <TriColorStrip className="h-[2px] opacity-70" />
+      {/* Bottom accent strip with glow */}
+      <div className="relative">
+        <TriColorStrip className="h-[2px] opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
+      </div>
     </motion.button>
   );
 }
 
 /* ---------- Full-View Profile Modal for Collection Artefacts ---------- */
+
+/* Cinematic keyframes for modal ambient effects */
+const MODAL_KEYFRAMES_ID = "museum-modal-cinematic-fx";
+function ensureModalKeyframes() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(MODAL_KEYFRAMES_ID)) return;
+  const style = document.createElement("style");
+  style.id = MODAL_KEYFRAMES_ID;
+  style.textContent = `
+@keyframes modal-spotlight-drift {
+  0%, 100% { background-position: 30% 20%; }
+  25% { background-position: 60% 15%; }
+  50% { background-position: 55% 50%; }
+  75% { background-position: 35% 45%; }
+}
+@keyframes modal-scan-beam {
+  0% { transform: translateY(-100%) scaleY(0.5); opacity: 0; }
+  15% { opacity: 0.6; }
+  50% { transform: translateY(100%) scaleY(1); opacity: 0.3; }
+  100% { transform: translateY(300%) scaleY(0.5); opacity: 0; }
+}
+@keyframes modal-ring-pulse {
+  0% { transform: scale(1); opacity: 0.25; }
+  50% { transform: scale(1.15); opacity: 0.08; }
+  100% { transform: scale(1); opacity: 0.25; }
+}
+@keyframes modal-glow-breathe {
+  0%, 100% { opacity: 0.08; }
+  50% { opacity: 0.18; }
+}
+@keyframes modal-float-particle {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-120px) translateX(30px) scale(0.4); opacity: 0; }
+}
+@keyframes modal-title-underline {
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+@keyframes modal-card-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+`;
+  document.head.appendChild(style);
+}
+
 function CollectionItemProfileModal({
   item,
   isLightMode,
@@ -1030,9 +1094,13 @@ function CollectionItemProfileModal({
   onClose: () => void;
 }) {
   const [detailsVisible, setDetailsVisible] = useState(false);
+  const [showFullNote, setShowFullNote] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(ensureModalKeyframes, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDetailsVisible(true), 200);
+    const timer = setTimeout(() => setDetailsVisible(true), 320);
     return () => clearTimeout(timer);
   }, []);
 
@@ -1047,125 +1115,387 @@ function CollectionItemProfileModal({
     };
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   if (typeof document === "undefined") return null;
+
+  const metaItems = [
+    { key: "era", label: "Era", value: item.era },
+    { key: "ref", label: "Reference", value: `ID-${item.id.toUpperCase()}` },
+    { key: "loc", label: "Archive Location", value: item.location ?? "Museum archive collection" },
+  ];
 
   return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.35, ease: MUSEUM_EASE }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#04070d]/88 backdrop-blur-xl p-3 md:p-6 overflow-hidden overscroll-none"
+      transition={{ duration: 0.5, ease: MUSEUM_EASE }}
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden overscroll-none bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
+      {/* ── Main card — Commandant-style fullscreen profile ── */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ duration: 0.55, ease: MUSEUM_EASE }}
+        ref={modalRef}
+        initial={{ opacity: 0, scale: 0.92, y: 30, filter: "blur(12px)" }}
+        animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+        exit={{ opacity: 0, scale: 0.94, y: 20, filter: "blur(8px)" }}
+        transition={{ duration: 0.7, ease: MUSEUM_EASE }}
         className={cn(
-          "museum-grain museum-ledger museum-plaque-shadow relative max-h-[95dvh] w-full max-w-7xl overflow-hidden rounded-[32px] border flex flex-col",
+          "relative flex h-[95dvh] w-[96vw] max-w-[1800px] flex-col overflow-hidden border shadow-2xl",
           isLightMode
-            ? "border-[#bca46a]/24 bg-[linear-gradient(180deg,#f7f2e7_0%,#f2ecdf_32%,#edf2f7_100%)]"
-            : "border-[#d4af37]/16 bg-[linear-gradient(180deg,rgba(7,11,18,0.98)_0%,rgba(14,20,31,0.98)_38%,rgba(22,29,44,0.98)_100%)]",
+            ? "border-slate-200 bg-white text-slate-900"
+            : "border-slate-500/35 bg-slate-950/95 text-white",
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <TriColorStrip className="h-[3px] shrink-0" />
+        {/* ── Top Tri-Color Defence Strip ── */}
+        <div className="absolute inset-x-0 top-0 z-30 flex h-[8px]">
+          <div className="flex-1 bg-[#002060]" />
+          <div className="flex-1 bg-[#FF0000]" />
+          <div className="flex-1 bg-[#00B0F0]" />
+        </div>
 
-        <button
+        {/* ── Bottom Tri-Color Defence Strip ── */}
+        <div className="absolute inset-x-0 bottom-0 z-30 flex h-[8px]">
+          <div className="flex-1 bg-[#002060]" />
+          <div className="flex-1 bg-[#FF0000]" />
+          <div className="flex-1 bg-[#00B0F0]" />
+        </div>
+
+        {/* ── Background grid pattern (matches commandant display) ── */}
+        <div className={cn(
+          "pointer-events-none absolute inset-0 z-0",
+          isLightMode ? "opacity-40" : "opacity-20",
+        )}>
+          <div className={cn(
+            "h-full w-full",
+            isLightMode ? "bg-white" : "bg-slate-950",
+          )} style={{
+            backgroundImage: "linear-gradient(90deg,rgba(0,0,0,0.02) 1px,transparent 1px),linear-gradient(rgba(0,0,0,0.02) 1px,transparent 1px)",
+            backgroundSize: "3vw 3vw",
+          }} />
+        </div>
+
+        {/* ── NDC Crests in top corners ── */}
+        <motion.img
+          src={ndcCrest}
+          alt=""
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, ease: MUSEUM_EASE, delay: 0.3 }}
+          className="absolute left-[3.5%] top-[4.5%] z-20 h-[clamp(20px,4.8vh,56px)] w-auto object-contain drop-shadow-sm"
+        />
+        <motion.img
+          src={ndcCrest}
+          alt=""
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, ease: MUSEUM_EASE, delay: 0.4 }}
+          className="absolute right-[3.5%] top-[4.5%] z-20 h-[clamp(20px,4.8vh,56px)] w-auto object-contain drop-shadow-sm"
+        />
+
+        {/* ── Close button ── */}
+        <motion.button
           onClick={onClose}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.92 }}
+          transition={{ duration: 0.3, ease: MUSEUM_EASE }}
           className={cn(
-            "absolute right-4 top-4 z-30 rounded-full border p-2.5 transition-colors",
+            "absolute right-[3.5%] top-[calc(4.5%+clamp(20px,4.8vh,56px)+12px)] z-40 rounded-full border p-2 transition-all duration-300",
             isLightMode
-              ? "border-[#17253b]/10 bg-white/80 text-[#17253b] hover:bg-white"
-              : "border-white/12 bg-black/30 text-white/72 hover:bg-black/50 hover:text-white",
+              ? "border-slate-300 bg-white/90 text-slate-700 hover:bg-white hover:shadow-lg"
+              : "border-white/15 bg-black/50 text-white/70 hover:bg-black/70 hover:text-white",
           )}
         >
-          <X className="h-5 w-5" />
-        </button>
+          <X className="h-4 w-4" />
+        </motion.button>
 
-        <div className="grid flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[minmax(0,1.15fr)_minmax(min(360px,100%),0.85fr)]">
-          <div className={cn(
-            "museum-grain relative flex min-h-[320px] items-center justify-center border-b p-6 md:p-10 xl:border-b-0 xl:border-r",
-            isLightMode ? "border-[#bca46a]/14" : "border-white/8",
-          )}>
+        {/* ── Scan beam effect (matches commandant auto-display) ── */}
+        <motion.div
+          className={cn(
+            "pointer-events-none absolute inset-y-0 -left-1/3 z-10 w-1/3",
+            "bg-gradient-to-r from-transparent via-primary/20 to-transparent",
+          )}
+          initial={{ x: "-10%" }}
+          animate={{ x: "460%" }}
+          transition={{ duration: 2.8, ease: "easeInOut", repeat: Infinity, repeatDelay: 3.5 }}
+        />
+
+        {/* ── Main content: Split layout (portrait left, details right) ── */}
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-[min(96vw,1400px)] flex-1 min-h-0 flex-col items-center justify-center gap-5 px-4 pb-6 pt-[max(4rem,12%)] md:flex-row md:items-center md:justify-center md:gap-7 md:px-7 md:py-7">
+
+          {/* ── LEFT: Cinematic artifact showcase ── */}
+          <motion.div
+            initial={{ opacity: 0, x: -40, scale: 0.95, filter: "blur(8px)" }}
+            animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
+            transition={{ duration: 1, ease: CINEMATIC_EASE, delay: 0.2 }}
+            className="group relative shrink-0 flex items-center justify-center"
+          >
+            {/* Ambient glow behind the frame */}
             <div className={cn(
-              "absolute left-6 top-6 z-20 rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em]",
-              isLightMode ? "border-[#bca46a]/24 bg-[#f3ecdb]/88 text-[#7f6112]" : "border-[#d4af37]/18 bg-black/45 text-[#d8bf76]",
-            )}>
-              Collection Artefact
+              "pointer-events-none absolute -inset-4 z-0 rounded-2xl opacity-60 blur-2xl",
+              isLightMode ? "bg-[#bca46a]/20" : "bg-[#FFD700]/8",
+            )} />
+
+            {/* Outer gold frame */}
+            <div className="relative z-10 rounded-md bg-gradient-to-b from-[#FFD700] via-[#C5A028] to-[#FFD700] p-[3px] shadow-[0_8px_40px_rgba(212,175,55,0.25),0_2px_10px_rgba(0,0,0,0.3)]">
+              {/* White separator */}
+              <div className="rounded-[5px] bg-white p-[3px]">
+                {/* Inner gold frame */}
+                <div className="rounded-[4px] bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#FFD700] p-[2px]">
+                  {/* Artifact display container — generous sizing for the viewer */}
+                  <div className={cn(
+                    "relative overflow-hidden rounded-[3px] shadow-inner",
+                    "h-[clamp(280px,58dvh,700px)] w-[clamp(220px,44dvh,520px)]",
+                    "sm:h-[clamp(320px,62dvh,760px)] sm:w-[clamp(240px,47dvh,560px)]",
+                    "md:h-[clamp(360px,68dvh,820px)] md:w-[clamp(270px,51dvh,600px)]",
+                    isLightMode ? "bg-[#f4f1ea]" : "bg-[#0a0e16]",
+                  )}>
+                    {/* Soft blurred background fill */}
+                    {item.imageUrl && (
+                      <img
+                        src={item.imageUrl}
+                        alt=""
+                        className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-xl"
+                      />
+                    )}
+                    {/* Main artifact — full MuseumObjectViewer with all admin animations/settings */}
+                    <MuseumObjectViewer
+                      title={item.name}
+                      mediaSources={getCollectionItemMediaSources(item)}
+                      isLightMode={isLightMode}
+                      className="h-full w-full"
+                      topLabel="Collection Artefact"
+                      topRightLabel={item.mediaUrls && item.mediaUrls.length > 1 ? "360° Inspect" : "Glass Case"}
+                      footerLabel={`Object ${item.id.toUpperCase()}`}
+                      showControls
+                      loading="eager"
+                      emptyLabel="Image pending"
+                      {...resolveImageOverrides(item.imageSettings)}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
+          </motion.div>
 
+          {/* ── RIGHT: Details panel (commandant split-hero style) ── */}
+          <motion.div
+            initial={{ opacity: 0, x: 40, filter: "blur(8px)" }}
+            animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+            transition={{ duration: 1, ease: CINEMATIC_EASE, delay: 0.35 }}
+            className="flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-y-auto md:items-start md:max-w-[min(45vw,580px)]"
+          >
+            {/* ── Tag / category badge with flanking lines ── */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.97, filter: "blur(8px)" }}
-              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-              transition={{ duration: 0.9, ease: MUSEUM_EASE }}
-              className="h-full w-full"
+              initial={{ opacity: 0, y: 12 }}
+              animate={detailsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+              transition={{ duration: 0.6, ease: MUSEUM_EASE, delay: 0.5 }}
+              className="flex items-center gap-3"
             >
-              <MuseumObjectViewer
-                title={item.name}
-                mediaSources={getCollectionItemMediaSources(item)}
-                isLightMode={isLightMode}
-                topLabel="Collection Artefact"
-                topRightLabel={item.mediaUrls && item.mediaUrls.length > 1 ? "360 Inspection" : "Glass Case"}
-                footerLabel={`Object ${item.id.toUpperCase()}`}
-                showControls
-                loading="eager"
-                emptyLabel="Image pending"
-                {...resolveImageOverrides(item.imageSettings)}
-              />
-            </motion.div>
-          </div>
-
-          <div className={cn(
-            "flex flex-col overflow-y-auto p-6 md:p-8 lg:p-10",
-            isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]",
-          )}>
-            <motion.div
-              initial={{ opacity: 0, x: 18, filter: "blur(8px)" }}
-              animate={{ opacity: detailsVisible ? 1 : 0, x: detailsVisible ? 0 : 18, filter: detailsVisible ? "blur(0px)" : "blur(8px)" }}
-              transition={{ duration: 0.82, ease: MUSEUM_EASE }}
-              className="flex-1"
-            >
-              <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>
+              <div className={cn("h-px w-[clamp(20px,3vw,48px)]", isLightMode ? "bg-[#002060]/40" : "bg-[#FFD700]/30")} />
+              <p className={cn(
+                "text-[clamp(0.6rem,1.8vh,1.2rem)] font-bold uppercase tracking-[0.25em]",
+                isLightMode ? "text-[#002060]" : "text-[#FFD700]",
+              )}>
                 {item.tag}
               </p>
-              <h2 className={cn("museum-display-title mt-4 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.04]", isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]")}>
-                {item.name}
-              </h2>
-              <div className="mt-5 museum-metal-rule" />
-              <p className={cn("mt-6 text-base leading-8", isLightMode ? "text-[#4c5b70]" : "text-[#d6dbe3]/82")}>
-                {item.description}
+              <div className={cn("h-px w-[clamp(20px,3vw,48px)]", isLightMode ? "bg-[#002060]/40" : "bg-[#FFD700]/30")} />
+            </motion.div>
+
+            {/* ── Artifact name (large title, matches commandant name style) ── */}
+            <motion.h2
+              initial={{ opacity: 0, y: 20, filter: "blur(6px)" }}
+              animate={detailsVisible ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 20, filter: "blur(6px)" }}
+              transition={{ duration: 0.8, ease: MUSEUM_EASE, delay: 0.6 }}
+              className={cn(
+                "mt-4 text-center text-[clamp(1.8rem,5vh,3.8rem)] font-bold uppercase leading-tight tracking-tight md:text-left",
+                isLightMode ? "text-[#002060]" : "text-[#FFD700] drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]",
+              )}
+            >
+              {item.name}
+            </motion.h2>
+
+            {/* ── Era subtitle (red accent, italic — matches commandant title style) ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={detailsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+              transition={{ duration: 0.7, ease: MUSEUM_EASE, delay: 0.7 }}
+              className={cn(
+                "mt-3 border-l-[clamp(3px,0.4vw,6px)] pl-[clamp(10px,1.5vw,24px)]",
+                isLightMode ? "border-[#FF0000]" : "border-[#FF0000]",
+              )}
+            >
+              <p className={cn(
+                "text-[clamp(0.9rem,2.5vh,1.8rem)] font-bold italic tracking-[0.1em]",
+                isLightMode ? "text-[#FF0000]" : "text-[#FF3B30]",
+              )}>
+                {item.era}
               </p>
+            </motion.div>
 
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <div className={cn("rounded-[24px] border p-5", isLightMode ? "border-[#bca46a]/18 bg-white/66" : "border-white/10 bg-white/[0.035]")}>
-                  <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>Era</p>
-                  <p className={cn("mt-3 text-lg font-semibold", isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]")}>{item.era}</p>
-                </div>
-                <div className={cn("rounded-[24px] border p-5", isLightMode ? "border-[#bca46a]/18 bg-white/66" : "border-white/10 bg-white/[0.035]")}>
-                  <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>Reference</p>
-                  <p className={cn("mt-3 text-lg font-semibold", isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]")}>ID-{item.id.toUpperCase()}</p>
-                </div>
-                <div className={cn("rounded-[24px] border p-5 sm:col-span-2", isLightMode ? "border-[#bca46a]/18 bg-white/66" : "border-white/10 bg-white/[0.035]")}>
-                  <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>Location</p>
-                  <p className={cn("mt-3 text-lg font-semibold inline-flex items-center gap-2", isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]")}>
-                    <MapPin className={cn("h-4 w-4", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")} />
-                    {item.location ?? "Museum archive collection"}
-                  </p>
-                </div>
-              </div>
-
-              <div className={cn("mt-8 rounded-[26px] border p-6", isLightMode ? "border-[#17253b]/10 bg-[#17253b]/[0.04]" : "border-[#d4af37]/10 bg-[#d4af37]/[0.04]")}>
-                <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>Curatorial Note</p>
-                <p className={cn("mt-4 text-sm leading-7", isLightMode ? "text-[#4c5b70]" : "text-white/72")}>
-                  Presented as part of the NDC digital museum archive, this object is staged as a standalone exhibit with contextual metadata, provenance cues, and a narrative wall label rather than a conventional application card.
+            {/* ── Identity plate (navy blue with gold text — commandant style) ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 16, scaleX: 0.9 }}
+              animate={detailsVisible ? { opacity: 1, y: 0, scaleX: 1 } : { opacity: 0, y: 16, scaleX: 0.9 }}
+              transition={{ duration: 0.8, ease: MUSEUM_EASE, delay: 0.85 }}
+              className="mt-6 w-full max-w-[min(90vw,480px)]"
+            >
+              {/* Red bar top */}
+              <div className="h-[0.6vh] min-h-[2px] w-full bg-[#FF0000]" />
+              {/* Navy plate */}
+              <div className="bg-[#002060] px-[3vw] py-[max(8px,1.5vh)] text-center md:text-left">
+                <p className="text-[clamp(0.56rem,1.6vh,1.4rem)] font-bold uppercase tracking-[0.17em] text-white">
+                  Collection Artefact
+                </p>
+                <p className="mt-1 text-[clamp(0.5rem,1.3vh,1.2rem)] font-semibold uppercase tracking-[0.12em] text-[#FFD700]">
+                  {item.location ?? "NDC Museum Archive"}
                 </p>
               </div>
+              {/* Red bar bottom */}
+              <div className="h-[0.6vh] min-h-[2px] w-full bg-[#FF0000]" />
             </motion.div>
-          </div>
+
+            {/* ── Description text ── */}
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              animate={detailsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+              transition={{ duration: 0.7, ease: MUSEUM_EASE, delay: 1.0 }}
+              className={cn(
+                "mt-5 max-h-[22vh] overflow-y-auto text-center text-[clamp(0.82rem,2vh,1.4rem)] font-medium leading-[1.65] md:text-left",
+                isLightMode ? "text-slate-700" : "text-white/80",
+              )}
+            >
+              {item.description}
+            </motion.p>
+
+            {/* ── Metadata tags row (commandant tenure-tag style) ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={detailsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+              transition={{ duration: 0.7, ease: MUSEUM_EASE, delay: 1.1 }}
+              className="mt-5 flex flex-wrap items-center justify-center gap-2 md:justify-start"
+            >
+              {metaItems.map((meta) => (
+                <span
+                  key={meta.key}
+                  className={cn(
+                    "rounded-md border px-2.5 py-1 text-[clamp(0.55rem,1.2vh,0.85rem)] font-bold uppercase tracking-[0.15em]",
+                    isLightMode
+                      ? "border-[#002060]/20 bg-[#002060] text-white"
+                      : "border-[#FFD700]/20 bg-[#002060] text-[#FFD700]",
+                  )}
+                >
+                  {meta.label}: {meta.value}
+                </span>
+              ))}
+            </motion.div>
+
+            {/* ── Expandable curatorial note ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={detailsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+              transition={{ duration: 0.7, ease: MUSEUM_EASE, delay: 1.2 }}
+              className={cn(
+                "mt-5 w-full max-w-[min(90vw,480px)] cursor-pointer overflow-hidden rounded-lg border transition-all duration-300",
+                isLightMode
+                  ? "border-slate-200 bg-slate-50 hover:bg-slate-100"
+                  : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
+              )}
+              onClick={() => setShowFullNote(!showFullNote)}
+            >
+              <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <ScrollText className={cn("h-3.5 w-3.5", isLightMode ? "text-[#002060]" : "text-[#FFD700]")} />
+                  <span className={cn(
+                    "text-[clamp(0.6rem,1.2vh,0.8rem)] font-bold uppercase tracking-[0.2em]",
+                    isLightMode ? "text-[#002060]" : "text-[#FFD700]",
+                  )}>Curatorial Note</span>
+                </div>
+                <motion.div animate={{ rotate: showFullNote ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                  <ChevronRight className={cn("h-4 w-4 rotate-90", isLightMode ? "text-slate-400" : "text-white/30")} />
+                </motion.div>
+              </div>
+              <AnimatePresence>
+                {showFullNote && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.4, ease: MUSEUM_EASE }}
+                  >
+                    <div className={cn("mx-4 h-px", isLightMode ? "bg-slate-200" : "bg-white/10")} />
+                    <p className={cn("px-4 py-3 text-[clamp(0.7rem,1.4vh,0.95rem)] leading-7", isLightMode ? "text-slate-600" : "text-white/60")}>
+                      Presented as part of the NDC digital museum archive, this object is staged as a standalone exhibit with contextual metadata, provenance cues, and a narrative wall label rather than a conventional application card.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* ── Action buttons ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={detailsVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+              transition={{ duration: 0.7, ease: MUSEUM_EASE, delay: 1.3 }}
+              className="mt-5 flex flex-wrap items-center justify-center gap-3 md:justify-start"
+            >
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.03, y: -1 }}
+                whileTap={{ scale: 0.97 }}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-md border px-4 py-2 text-[clamp(0.6rem,1.2vh,0.8rem)] font-bold uppercase tracking-[0.18em] transition-all duration-300",
+                  isLightMode
+                    ? "border-[#002060]/30 bg-[#002060] text-[#FFD700] hover:bg-[#001845] shadow-md"
+                    : "border-[#FFD700]/20 bg-[#002060] text-[#FFD700] hover:bg-[#001845] shadow-lg",
+                )}
+                onClick={(e) => { e.stopPropagation(); }}
+              >
+                <Globe2 className="h-3.5 w-3.5" />
+                Explore Object
+                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+              </motion.button>
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.03, y: -1 }}
+                whileTap={{ scale: 0.97 }}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-md border px-4 py-2 text-[clamp(0.6rem,1.2vh,0.8rem)] font-bold uppercase tracking-[0.18em] transition-all duration-300",
+                  isLightMode
+                    ? "border-slate-300 bg-white text-[#002060] hover:bg-slate-50 shadow-sm"
+                    : "border-white/15 bg-white/[0.04] text-white/70 hover:bg-white/[0.08]",
+                )}
+                onClick={(e) => { e.stopPropagation(); }}
+              >
+                <Award className="h-3.5 w-3.5" />
+                Provenance
+              </motion.button>
+            </motion.div>
+          </motion.div>
         </div>
+
+        {/* ── Sequence badge (bottom-right, like commandant) ── */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, ease: MUSEUM_EASE, delay: 1.4 }}
+          className={cn(
+            "absolute bottom-[2.2%] right-[3.5vw] z-30 rounded border px-2.5 py-1 text-[clamp(7px,1.1vh,14px)] font-bold uppercase tracking-[0.12em] shadow-md",
+            isLightMode
+              ? "border-slate-400 bg-white text-black"
+              : "border-slate-500 bg-slate-900 text-white",
+          )}
+        >
+          Object {item.id.toUpperCase()}
+        </motion.div>
       </motion.div>
     </motion.div>,
     document.body,
@@ -1190,6 +1520,10 @@ function CollectionItemsSlider({
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const rafRef = useRef<number>(0);
+  const lastRef = useRef(0);
 
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return items;
@@ -1202,6 +1536,47 @@ function CollectionItemsSlider({
         item.era.toLowerCase().includes(q),
     );
   }, [items, searchQuery]);
+
+  // Triple items for seamless infinite loop
+  const loopedItems = useMemo(() => {
+    if (filteredItems.length <= 1) return filteredItems;
+    return [...filteredItems, ...filteredItems, ...filteredItems];
+  }, [filteredItems]);
+
+  // Auto-scroll engine (same as PastCommandants)
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || filteredItems.length <= 1) return;
+    const speedPxPerMs = 0.03;
+
+    const tick = (now: number) => {
+      if (!lastRef.current) lastRef.current = now;
+      const elapsed = now - lastRef.current;
+      lastRef.current = now;
+      if (!isPaused && elapsed < 200) {
+        container.scrollLeft += elapsed * speedPxPerMs;
+        const segmentWidth = container.scrollWidth / 3;
+        if (container.scrollLeft >= segmentWidth * 2) {
+          container.scrollLeft -= segmentWidth;
+        } else if (container.scrollLeft < segmentWidth * 0.1) {
+          container.scrollLeft += segmentWidth;
+        }
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    // Start in the middle segment
+    const segmentWidth = container.scrollWidth / 3;
+    container.scrollLeft = segmentWidth;
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [isPaused, filteredItems.length]);
+
+  const scroll = useCallback((dir: number) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const target = container.scrollLeft + dir * 340;
+    container.scrollTo({ left: target, behavior: "smooth" });
+  }, []);
 
   if (items.length === 0) return null;
 
@@ -1234,27 +1609,50 @@ function CollectionItemsSlider({
             </button>
           )}
         </div>
-        <button
-          onClick={onAutoDisplay}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/24 bg-[#d4af37]/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#d4af37] hover:bg-[#d4af37]/16 transition-colors"
-        >
-          <Play className="h-3 w-3" />
-          Auto Display
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Manual scroll arrows */}
+          <button
+            onClick={() => scroll(-1)}
+            className={cn("rounded-full border p-2 transition-colors", isLightMode ? "border-[#17253b]/10 bg-white/70 text-[#17253b] hover:bg-white" : "border-white/12 bg-white/[0.04] text-white/60 hover:bg-white/[0.08] hover:text-white")}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => scroll(1)}
+            className={cn("rounded-full border p-2 transition-colors", isLightMode ? "border-[#17253b]/10 bg-white/70 text-[#17253b] hover:bg-white" : "border-white/12 bg-white/[0.04] text-white/60 hover:bg-white/[0.08] hover:text-white")}
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          <button
+            onClick={onAutoDisplay}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/24 bg-[#d4af37]/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#d4af37] hover:bg-[#d4af37]/16 transition-colors"
+          >
+            <Play className="h-3 w-3" />
+            Auto Display
+          </button>
+        </div>
       </div>
 
       {filteredItems.length === 0 ? (
         <div className={cn("rounded-[22px] border p-6 text-center", isLightMode ? "border-[#bca46a]/16 bg-white/70" : "border-white/10 bg-white/[0.035]")}>
-          <p className={cn("text-sm", isLightMode ? "text-[#5e6a79]" : "text-white/60")}>No artefacts match "{searchQuery}"</p>
+          <p className={cn("text-sm", isLightMode ? "text-[#5e6a79]" : "text-white/60")}>No artefacts match &ldquo;{searchQuery}&rdquo;</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-          {filteredItems.map((item, i) => (
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto pb-4 pt-1 px-1 scrollbar-hide"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {loopedItems.map((item, i) => (
             <motion.div
               key={`${item.id}-${i}`}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: Math.min(i, 5) * 0.05, ease: CINEMATIC_EASE }}
+              transition={{ duration: 0.5, delay: Math.min(i % filteredItems.length, 5) * 0.06, ease: CINEMATIC_EASE }}
+              className="shrink-0 w-[min(320px,85vw)] sm:w-[340px] snap-center"
             >
               <CollectionItemCard item={item} isLightMode={isLightMode} variant="grid" onItemClick={onItemClick} categoryAnimConfig={categoryAnimConfig} categoryImageDefaults={categoryImageDefaults} />
             </motion.div>
@@ -1430,237 +1828,322 @@ function CollectionAutoDisplay({
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.9, ease: MUSEUM_EASE, opacity: { duration: 0.6 } }}
-      className={cn(
-        "museum-grain museum-ledger museum-plaque-shadow relative flex min-h-[60vh] md:min-h-[82vh] w-full flex-col overflow-hidden rounded-[32px] border pointer-events-auto",
-        isLightMode
-          ? "border-[#bca46a]/22 bg-[linear-gradient(180deg,#f7f2e7_0%,#f2ecdf_32%,#edf2f7_100%)] text-[#17253b]"
-          : "border-[#d4af37]/14 bg-[linear-gradient(180deg,rgba(6,10,16,0.99)_0%,rgba(14,20,31,0.99)_35%,rgba(22,29,44,0.99)_100%)] text-[#f8f3e8]"
-      )}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.6, ease: MUSEUM_EASE }}
+      className="fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-background"
       onMouseEnter={() => { if (isPlaying) { pausedByHoverRef.current = true; stopSpeech(); setIsPlaying(false); } }}
       onMouseLeave={() => { if (pausedByHoverRef.current) { pausedByHoverRef.current = false; setIsPlaying(true); } }}
     >
       {/* Hidden background audio element */}
       <audio ref={bgAudioRef} preload="none" />
-      <TriColorStrip className="h-[3px]" />
 
-      <div className="relative z-10 flex items-center justify-between gap-4 border-b border-inherit px-5 py-4 md:px-6">
-        <div>
-          <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>
-            Docent Display Room
+      {/* ── Header bar (matches AutoRotationDisplay) ── */}
+      <div className={cn(
+        "relative z-[100] flex shrink-0 items-center justify-between gap-3 border-b px-3 py-2 backdrop-blur-md",
+        isLightMode
+          ? "border-slate-200 bg-white/90"
+          : "border-border/60 bg-background/90",
+      )}>
+        <div className="flex items-center gap-3">
+          <p className={cn("text-xs font-bold uppercase tracking-[0.2em]", isLightMode ? "text-[#002060]" : "text-[#FFD700]")}>
+            {activeCol.title}
           </p>
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <h3 className={cn("text-xl md:text-2xl font-semibold", isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]")}>
-              {activeCol.title}
-            </h3>
-            <span className={cn(
-              "rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]",
-              isLightMode ? "border-[#17253b]/10 bg-white/72 text-[#435267]" : "border-white/10 bg-white/[0.04] text-white/64",
-            )}>
-              {activeCol.category}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
           {isSpeaking && (
-            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/18 bg-[#d4af37]/10 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#d4af37] animate-pulse">
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/18 bg-[#d4af37]/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#d4af37] animate-pulse">
               <Volume2 className="h-3 w-3" />
-              Narration Active
+              Narrating
             </span>
           )}
-           <button
-             onClick={() => { setIsMuted((m) => !m); if (!isMuted) stopSpeech(); }}
-             className={cn("rounded-full border p-2.5 transition-colors", isMuted ? "border-[#ff6b6b]/28 text-[#ff6b6b] bg-[#ff6b6b]/10" : isLightMode ? "border-[#17253b]/10 bg-white/72 text-[#17253b] hover:bg-white" : "border-white/12 bg-black/24 text-white/70 hover:bg-black/40 hover:text-white")}
-           >
-             {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-           </button>
-           <button
-             onClick={() => { stopSpeech(); onClose(); }}
-             className={cn("rounded-full border p-2.5 transition-colors", isLightMode ? "border-[#17253b]/10 bg-white/72 text-[#17253b] hover:bg-white" : "border-white/12 bg-black/24 text-white/70 hover:bg-black/40 hover:text-white")}
-           >
-             <span className="sr-only">Close</span>
-             ✕
-           </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setIsMuted((m) => !m); if (!isMuted) stopSpeech(); }}
+            className={cn("h-10 w-10 rounded-full border flex items-center justify-center transition-colors", isMuted ? "border-[#ff6b6b]/28 text-[#ff6b6b] bg-[#ff6b6b]/10" : isLightMode ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50" : "border-primary/35 bg-background/70 text-primary/70 backdrop-blur hover:text-primary")}
+          >
+            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </button>
+          <button
+            onClick={() => { stopSpeech(); setIsPlaying((p) => !p); }}
+            className={cn("h-10 w-10 rounded-full border flex items-center justify-center transition-colors", isPlaying ? "border-[#d4af37]/28 text-[#d4af37] bg-[#d4af37]/10" : isLightMode ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50" : "border-primary/35 bg-background/70 text-primary/70 backdrop-blur hover:text-primary")}
+          >
+            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+          </button>
+          <button
+            onClick={() => { stopSpeech(); onClose(); }}
+            className={cn("h-10 w-10 rounded-full border flex items-center justify-center transition-colors", isLightMode ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50" : "border-primary/35 bg-background/70 text-primary/70 backdrop-blur hover:text-primary")}
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
-      <div className="grid flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[minmax(0,1.16fr)_minmax(min(360px,100%),0.84fr)]">
-        <div className={cn(
-          "museum-grain relative flex min-h-[340px] items-center justify-center border-b p-6 md:p-10 xl:border-b-0 xl:border-r",
-          isLightMode ? "border-[#bca46a]/14" : "border-white/8",
-        )}>
-          <div className={cn(
-            "absolute left-6 top-6 z-20 rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em]",
-            isLightMode ? "border-[#bca46a]/24 bg-[#f3ecdb]/88 text-[#7f6112]" : "border-[#d4af37]/18 bg-black/45 text-[#d8bf76]",
-          )}>
-            Object {(currentIndex + 1).toString().padStart(2, "0")}
-          </div>
+      {/* ── Slide content area ── */}
+      <div className="relative flex flex-1 min-h-0 items-center justify-center overflow-hidden px-2 sm:px-4 md:px-6">
+        {/* Cinematic parallax background blur */}
+        {currentItem.imageUrl && (
+          <motion.div
+            className="absolute inset-0 -z-10 overflow-hidden rounded-xl"
+            animate={{ opacity: [0.2, 0.32, 0.22], scale: [1, 1.03, 1.01], x: [0, 10, -6, 0], y: [0, -6, 4, 0] }}
+            transition={{ duration: 14, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" }}
+          >
+            <img src={currentItem.imageUrl} alt="" className="h-full w-full object-contain object-top blur-[2.5px]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-950/76 via-slate-950/68 to-slate-950/82" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,hsl(var(--primary)/0.22)_0%,transparent_40%),radial-gradient(circle_at_85%_78%,hsl(var(--primary)/0.16)_0%,transparent_44%)]" />
+          </motion.div>
+        )}
 
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={`${activeCol.id}-${currentItem.id}--media`}
-              custom={direction}
-              variants={museumSlideVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="absolute inset-0 flex items-center justify-center p-0 md:p-0"
-            >
-              <MuseumObjectViewer
-                title={currentItem.name}
-                mediaSources={getCollectionItemMediaSources(currentItem)}
-                isLightMode={isLightMode}
-                className="h-full w-full"
-                topLabel={`Object ${(currentIndex + 1).toString().padStart(2, "0")}`}
-                topRightLabel={currentItem.mediaUrls && currentItem.mediaUrls.length > 1 ? "360 Inspection" : "Glass Case"}
-                footerLabel={currentItem.era}
-                showControls
-                loading="eager"
-                emptyLabel="Image pending"
-                {...resolveImageOverrides(currentItem.imageSettings, activeCategoryAnim, activeCategoryImageDefs)}
-              />
-            </motion.div>
-          </AnimatePresence>
+        {/* Scan beam (commandant-style) */}
+        <motion.div
+          className="pointer-events-none absolute inset-y-0 -left-1/3 z-10 w-1/3 bg-gradient-to-r from-transparent via-primary/20 to-transparent"
+          animate={{ x: ["-10%", "360%"] }}
+          transition={{ duration: 2.8, ease: "easeInOut", repeat: Infinity, repeatDelay: 2.4 }}
+        />
 
-          <div className={cn(
-            "absolute bottom-6 right-6 z-20 flex items-center gap-3 rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em]",
-            isLightMode ? "border-[#17253b]/10 bg-white/82 text-[#17253b]" : "border-white/10 bg-black/40 text-white/68",
-          )}>
-            <span className="text-[#d4af37]">
-              NO. {(currentIndex + 1).toString().padStart(3, '0')}
-            </span>
-            <span className={cn("h-[1px] w-5", isLightMode ? "bg-[#17253b]/16" : "bg-white/16")} />
-            <span>
-              {items.length.toString().padStart(3, '0')}
-            </span>
-          </div>
-        </div>
+        {/* ── Commandant-style fullscreen card ── */}
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={`${activeCol.id}-${currentItem.id}`}
+            custom={direction}
+            initial={(d: number) => ({ opacity: 0, x: d * 210, y: 14, scale: 0.94, rotateZ: d * 0.7, filter: "blur(11px)" })}
+            animate={{ opacity: 1, x: 0, y: 0, scale: 1, rotateZ: 0, filter: "blur(0px)" }}
+            exit={(d: number) => ({ opacity: 0, x: -d * 170, y: -10, scale: 0.965, rotateZ: -d * 0.45, filter: "blur(9px)" })}
+            transition={{ duration: 1, ease: CINEMATIC_EASE }}
+            className={cn(
+              "relative flex h-full min-h-0 max-h-full w-full max-w-6xl flex-col items-stretch overflow-hidden border",
+              isLightMode
+                ? "border-slate-200 bg-white text-slate-900"
+                : "border-slate-500/35 bg-slate-950/95 text-white",
+            )}
+          >
+            {/* Top Tri-Color Defence Strip */}
+            <div className="absolute inset-x-0 top-0 z-30 flex h-[8px]">
+              <div className="flex-1 bg-[#002060]" />
+              <div className="flex-1 bg-[#FF0000]" />
+              <div className="flex-1 bg-[#00B0F0]" />
+            </div>
 
-        <div className={cn(
-          "flex flex-col overflow-y-auto p-6 md:p-8 lg:p-10",
-          isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]",
-        )}>
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={`${activeCol.id}-${currentItem.id}--text`}
-              custom={direction}
-              variants={museumSlideVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="flex-1 flex flex-col"
-            >
-              <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>
-                {activeCol.category}
-              </p>
-              <h2 className={cn("museum-display-title mt-4 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.04]", isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]")}>
-                {currentItem.name}
-              </h2>
-              <p className={cn("mt-3 text-sm uppercase tracking-[0.22em]", isLightMode ? "text-[#6f7682]" : "text-white/40")}>
-                Room Context: {activeCol.title}
-              </p>
-              <div className="mt-5 museum-metal-rule" />
-              <p className={cn("mt-6 text-base leading-8", isLightMode ? "text-[#4c5b70]" : "text-[#d6dbe3]/82")}>
-                {currentItem.description}
-              </p>
+            {/* Bottom Tri-Color Defence Strip */}
+            <div className="absolute inset-x-0 bottom-0 z-30 flex h-[8px]">
+              <div className="flex-1 bg-[#002060]" />
+              <div className="flex-1 bg-[#FF0000]" />
+              <div className="flex-1 bg-[#00B0F0]" />
+            </div>
 
-              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {currentItem.era && (
-                  <div className={cn("rounded-[22px] border p-4", isLightMode ? "border-[#bca46a]/16 bg-white/68" : "border-white/10 bg-white/[0.035]")}>
-                    <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>Era</p>
-                    <p className="mt-3 text-sm font-semibold">{currentItem.era}</p>
+            {/* Background grid pattern */}
+            <div className={cn("pointer-events-none absolute inset-0 z-0", isLightMode ? "opacity-40" : "opacity-20")}>
+              <div className={cn("h-full w-full", isLightMode ? "bg-white" : "bg-slate-950")} style={{
+                backgroundImage: "linear-gradient(90deg,rgba(0,0,0,0.02) 1px,transparent 1px),linear-gradient(rgba(0,0,0,0.02) 1px,transparent 1px)",
+                backgroundSize: "3vw 3vw",
+              }} />
+            </div>
+
+            {/* NDC Crests */}
+            <img src={ndcCrest} alt="" className="absolute left-[3.5%] top-[4.5%] z-20 h-[clamp(20px,4.8vh,56px)] w-auto object-contain drop-shadow-sm" />
+            <img src={ndcCrest} alt="" className="absolute right-[3.5%] top-[4.5%] z-20 h-[clamp(20px,4.8vh,56px)] w-auto object-contain drop-shadow-sm" />
+
+            {/* ── Main split content ── */}
+            <div className="relative z-10 mx-auto flex h-full w-full max-w-[min(96vw,1400px)] flex-1 min-h-0 flex-col items-center justify-center gap-5 px-4 pb-6 pt-[max(4rem,12%)] md:flex-row md:items-center md:justify-center md:gap-7 md:px-7 md:py-7">
+
+              {/* LEFT: Cinematic artifact showcase */}
+              <div className="relative shrink-0 flex items-center justify-center">
+                {/* Ambient glow behind the frame */}
+                <div className={cn(
+                  "pointer-events-none absolute -inset-4 z-0 rounded-2xl opacity-60 blur-2xl",
+                  isLightMode ? "bg-[#bca46a]/20" : "bg-[#FFD700]/8",
+                )} />
+
+                {/* Outer gold frame */}
+                <div className="relative z-10 rounded-md bg-gradient-to-b from-[#FFD700] via-[#C5A028] to-[#FFD700] p-[3px] shadow-[0_8px_40px_rgba(212,175,55,0.25),0_2px_10px_rgba(0,0,0,0.3)]">
+                  {/* White separator */}
+                  <div className="rounded-[5px] bg-white p-[3px]">
+                    {/* Inner gold frame */}
+                    <div className="rounded-[4px] bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#FFD700] p-[2px]">
+                      {/* Artifact display container — generous sizing */}
+                      <div className={cn(
+                        "relative overflow-hidden rounded-[3px] shadow-inner",
+                        "h-[clamp(280px,58dvh,700px)] w-[clamp(220px,44dvh,520px)]",
+                        "sm:h-[clamp(320px,62dvh,760px)] sm:w-[clamp(240px,47dvh,560px)]",
+                        "md:h-[clamp(360px,68dvh,820px)] md:w-[clamp(270px,51dvh,600px)]",
+                        isLightMode ? "bg-[#f4f1ea]" : "bg-[#0a0e16]",
+                      )}>
+                        {/* Soft blurred background fill */}
+                        {currentItem.imageUrl && (
+                          <img src={currentItem.imageUrl} alt="" className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-xl" />
+                        )}
+                        {/* Main artifact — full MuseumObjectViewer with all admin animations/settings */}
+                        <MuseumObjectViewer
+                          title={currentItem.name}
+                          mediaSources={getCollectionItemMediaSources(currentItem)}
+                          isLightMode={isLightMode}
+                          className="h-full w-full"
+                          topLabel={`Object ${(currentIndex + 1).toString().padStart(2, "0")}`}
+                          topRightLabel={currentItem.mediaUrls && currentItem.mediaUrls.length > 1 ? "360° Inspect" : "Glass Case"}
+                          footerLabel={currentItem.era}
+                          showControls
+                          loading="eager"
+                          emptyLabel="Image pending"
+                          {...resolveImageOverrides(currentItem.imageSettings, activeCategoryAnim, activeCategoryImageDefs)}
+                        />
+                      </div>
+                    </div>
                   </div>
-                )}
-                {currentItem.location && (
-                  <div className={cn("rounded-[22px] border p-4", isLightMode ? "border-[#bca46a]/16 bg-white/68" : "border-white/10 bg-white/[0.035]")}>
-                    <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>Location</p>
-                    <p className={cn("mt-3 text-sm font-semibold", isLightMode ? "text-[#435267]" : "text-white/76")}>{currentItem.location}</p>
-                  </div>
-                )}
-                {currentItem.tag && (
-                  <div className={cn("rounded-[22px] border p-4 sm:col-span-2", isLightMode ? "border-[#bca46a]/16 bg-white/68" : "border-white/10 bg-white/[0.035]")}>
-                    <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>Classification</p>
-                    <p className={cn("mt-3 text-sm font-semibold uppercase tracking-[0.18em]", isLightMode ? "text-[#435267]" : "text-white/76")}>{currentItem.tag}</p>
-                  </div>
-                )}
+                </div>
               </div>
 
-              <div className={cn("mt-8 rounded-[26px] border p-6", isLightMode ? "border-[#17253b]/10 bg-[#17253b]/[0.04]" : "border-[#d4af37]/10 bg-[#d4af37]/[0.04]")}>
-                <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>Exhibition Context</p>
-                <p className={cn("mt-4 text-sm leading-7", isLightMode ? "text-[#4c5b70]" : "text-white/72")}>
-                  {activeCol.summary}
+              {/* RIGHT: Details panel (commandant split-hero style) */}
+              <div className="flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-y-auto md:items-start md:max-w-[min(45vw,580px)]">
+                {/* Tag with flanking lines */}
+                <div className="flex items-center gap-3">
+                  <div className={cn("h-px w-[clamp(20px,3vw,48px)]", isLightMode ? "bg-[#002060]/40" : "bg-[#FFD700]/30")} />
+                  <p className={cn("text-[clamp(0.6rem,1.8vh,1.2rem)] font-bold uppercase tracking-[0.25em]", isLightMode ? "text-[#002060]" : "text-[#FFD700]")}>
+                    {currentItem.tag}
+                  </p>
+                  <div className={cn("h-px w-[clamp(20px,3vw,48px)]", isLightMode ? "bg-[#002060]/40" : "bg-[#FFD700]/30")} />
+                </div>
+
+                {/* Artifact name */}
+                <h2 className={cn(
+                  "mt-4 text-center text-[clamp(1.8rem,5vh,3.8rem)] font-bold uppercase leading-tight tracking-tight md:text-left",
+                  isLightMode ? "text-[#002060]" : "text-[#FFD700] drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]",
+                )}>
+                  {currentItem.name}
+                </h2>
+
+                {/* Era — red accent italic */}
+                <div className={cn("mt-3 border-l-[clamp(3px,0.4vw,6px)] pl-[clamp(10px,1.5vw,24px)] border-[#FF0000]")}>
+                  <p className={cn("text-[clamp(0.9rem,2.5vh,1.8rem)] font-bold italic tracking-[0.1em]", isLightMode ? "text-[#FF0000]" : "text-[#FF3B30]")}>
+                    {currentItem.era}
+                  </p>
+                </div>
+
+                {/* Identity plate */}
+                <div className="mt-6 w-full max-w-[min(90vw,480px)]">
+                  <div className="h-[0.6vh] min-h-[2px] w-full bg-[#FF0000]" />
+                  <div className="bg-[#002060] px-[3vw] py-[max(8px,1.5vh)] text-center md:text-left">
+                    <p className="text-[clamp(0.56rem,1.6vh,1.4rem)] font-bold uppercase tracking-[0.17em] text-white">
+                      {activeCol.category}
+                    </p>
+                    <p className="mt-1 text-[clamp(0.5rem,1.3vh,1.2rem)] font-semibold uppercase tracking-[0.12em] text-[#FFD700]">
+                      {currentItem.location ?? "NDC Museum Archive"}
+                    </p>
+                  </div>
+                  <div className="h-[0.6vh] min-h-[2px] w-full bg-[#FF0000]" />
+                </div>
+
+                {/* Description */}
+                <p className={cn(
+                  "mt-5 max-h-[20vh] overflow-y-auto text-center text-[clamp(0.82rem,2vh,1.4rem)] font-medium leading-[1.65] md:text-left",
+                  isLightMode ? "text-slate-700" : "text-white/80",
+                )}>
+                  {currentItem.description}
                 </p>
-              </div>
 
-              {onItemClick && (
-                <button
-                  onClick={() => { stopSpeech(); onItemClick(currentItem); }}
-                  className={cn(
-                    "mt-6 inline-flex items-center gap-2 rounded-full border px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.22em] transition-all self-start",
-                    isLightMode
-                      ? "border-[#17253b]/12 bg-[#17253b]/8 text-[#17253b] hover:bg-[#17253b]/12"
-                      : "border-[#d4af37]/18 bg-[#d4af37]/10 text-[#d8bf76] hover:bg-[#d4af37]/16",
+                {/* Metadata tags */}
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2 md:justify-start">
+                  <span className="rounded-md border border-[#FFD700]/20 bg-[#002060] px-2.5 py-1 text-[clamp(0.55rem,1.2vh,0.85rem)] font-bold uppercase tracking-[0.15em] text-[#FFD700]">
+                    Ref: ID-{currentItem.id.toUpperCase()}
+                  </span>
+                  {currentItem.tag && (
+                    <span className="rounded-md border border-[#FFD700]/20 bg-[#002060] px-2.5 py-1 text-[clamp(0.55rem,1.2vh,0.85rem)] font-bold uppercase tracking-[0.15em] text-[#FFD700]">
+                      {currentItem.tag}
+                    </span>
                   )}
-                >
-                  <Shield className="h-4 w-4" />
-                  View Full Profile
-                </button>
-              )}
-            </motion.div>
-          </AnimatePresence>
+                </div>
 
-          <div className="mt-8 border-t border-inherit pt-6 flex flex-col gap-5">
-             <div className="flex gap-2 flex-wrap">
-                {collections.map((col) => (
+                {/* View Full Profile button */}
+                {onItemClick && (
                   <button
-                    key={col.id}
-                    onClick={() => goToCollection(col.id)}
+                    onClick={() => { stopSpeech(); onItemClick(currentItem); }}
                     className={cn(
-                      "rounded-full border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] transition-all duration-300",
-                      col.id === activeCol.id
-                        ? isLightMode ? "border-[#17253b]/14 bg-[#17253b]/8 text-[#17253b]" : "border-[#d4af37]/18 bg-[#d4af37]/10 text-[#d8bf76]"
-                        : isLightMode ? "border-[#17253b]/10 bg-white/72 text-[#435267] hover:bg-white" : "border-white/10 bg-white/[0.04] text-white/58 hover:bg-white/[0.08] hover:text-white/84"
+                      "mt-5 inline-flex items-center gap-2 rounded-md border px-4 py-2 text-[clamp(0.6rem,1.2vh,0.8rem)] font-bold uppercase tracking-[0.18em] transition-all",
+                      isLightMode
+                        ? "border-[#002060]/30 bg-[#002060] text-[#FFD700] hover:bg-[#001845] shadow-md"
+                        : "border-[#FFD700]/20 bg-[#002060] text-[#FFD700] hover:bg-[#001845] shadow-lg",
                     )}
                   >
-                    {col.title.replace(" Collection", "").replace(" Hall of Fame", "")}
+                    <Shield className="h-3.5 w-3.5" />
+                    View Full Profile
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </button>
-                ))}
-             </div>
-             
-             <div className="flex items-center justify-between gap-4">
-                <div className="flex flex-1 items-center gap-2 pr-2">
-                  {items.map((item, i) => (
-                    <button
-                      key={item.id}
-                      onClick={() => goToItem(i)}
-                      className={cn(
-                        "h-[3px] transition-all duration-500 rounded-full",
-                        i === currentIndex
-                          ? "flex-[3] bg-[#d4af37]"
-                          : isLightMode ? "flex-1 bg-[#17253b]/16 hover:bg-[#17253b]/40" : "flex-1 bg-white/14 hover:bg-white/34",
-                      )}
-                      aria-label={`Go to item ${i + 1}`}
-                    />
-                  ))}
-                </div>
+                )}
+              </div>
+            </div>
 
-                <div className="flex items-center gap-1">
-                  <button onClick={() => goToItem(currentIndex - 1, -1)} className={cn("rounded-full p-2.5 transition-colors", isLightMode ? "text-[#17253b]/60 hover:bg-[#17253b]/8 hover:text-[#17253b]" : "text-white/56 hover:bg-white/[0.06] hover:text-white") }>
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <button onClick={() => { stopSpeech(); setIsPlaying((p) => !p); }} className={cn("rounded-full p-4 transition-all", isPlaying ? "text-[#d4af37] bg-[#d4af37]/10" : isLightMode ? "text-[#17253b]/70 hover:bg-[#17253b]/8" : "text-white/70 hover:bg-white/[0.06]")}>
-                    {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-1" />}
-                  </button>
-                  <button onClick={() => goToItem(currentIndex + 1, 1)} className={cn("rounded-full p-2.5 transition-colors", isLightMode ? "text-[#17253b]/60 hover:bg-[#17253b]/8 hover:text-[#17253b]" : "text-white/56 hover:bg-white/[0.06] hover:text-white") }>
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                </div>
-             </div>
-          </div>
+            {/* Sequence badge */}
+            <div className={cn(
+              "absolute bottom-[2.2%] right-[3.5vw] z-30 rounded border px-2.5 py-1 text-[clamp(7px,1.1vh,14px)] font-bold uppercase tracking-[0.12em] shadow-md",
+              isLightMode ? "border-slate-400 bg-white text-black" : "border-slate-500 bg-slate-900 text-white",
+            )}>
+              {(currentIndex + 1).toString().padStart(2, "0")} / {items.length.toString().padStart(2, "0")}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Navigation: left/right arrows */}
+        <button
+          onClick={() => goToItem(currentIndex - 1, -1)}
+          className={cn(
+            "absolute left-3 top-1/2 z-20 -translate-y-1/2 h-10 w-10 md:left-6 md:h-12 md:w-12 rounded-full border flex items-center justify-center backdrop-blur transition-all",
+            isLightMode
+              ? "border-slate-300 bg-white/80 text-slate-700 hover:bg-white"
+              : "border-primary/35 bg-background/70 text-primary/70 hover:text-primary",
+          )}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button
+          onClick={() => goToItem(currentIndex + 1, 1)}
+          className={cn(
+            "absolute right-3 top-1/2 z-20 -translate-y-1/2 h-10 w-10 md:right-6 md:h-12 md:w-12 rounded-full border flex items-center justify-center backdrop-blur transition-all",
+            isLightMode
+              ? "border-slate-300 bg-white/80 text-slate-700 hover:bg-white"
+              : "border-primary/35 bg-background/70 text-primary/70 hover:text-primary",
+          )}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* ── Progress dots + collection pickers footer ── */}
+      <div className={cn(
+        "relative z-[100] flex shrink-0 flex-col gap-3 border-t px-4 py-3",
+        isLightMode ? "border-slate-200 bg-white/90" : "border-border/60 bg-background/90 backdrop-blur-md",
+      )}>
+        {/* Collection switcher */}
+        <div className="flex gap-2 flex-wrap justify-center">
+          {collections.map((col) => (
+            <button
+              key={col.id}
+              onClick={() => goToCollection(col.id)}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] transition-all duration-300",
+                col.id === activeCol.id
+                  ? "border-[#d4af37]/30 bg-[#d4af37]/15 text-[#d4af37]"
+                  : isLightMode ? "border-slate-200 bg-white text-slate-500 hover:bg-slate-50" : "border-white/10 bg-white/[0.04] text-white/50 hover:bg-white/[0.08]",
+              )}
+            >
+              {col.title.replace(" Collection", "").replace(" Hall of Fame", "")}
+            </button>
+          ))}
+        </div>
+
+        {/* Progress dots */}
+        <div className="flex justify-center gap-1.5">
+          {items.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goToItem(i)}
+              className={cn(
+                "rounded-full transition-all duration-500",
+                i === currentIndex
+                  ? "h-1 w-6 bg-primary"
+                  : "h-1.5 w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50",
+              )}
+              aria-label={`Go to item ${i + 1}`}
+            />
+          ))}
         </div>
       </div>
     </motion.div>
@@ -1710,6 +2193,76 @@ export function MuseumCollectionsView({
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showAutoDisplay, setShowAutoDisplay] = useState(false);
   const [selectedArtefact, setSelectedArtefact] = useState<CollectionItem | null>(null);
+
+  // ── Global search & filter state ──
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterEra, setFilterEra] = useState<string>("all");
+  const [filterLocation, setFilterLocation] = useState<string>("all");
+  const [filterTag, setFilterTag] = useState<string>("all");
+
+  // All items flattened for global search
+  const allItems = useMemo(() => {
+    const result: (CollectionItem & { _collectionId: string; _collectionTitle: string })[] = [];
+    for (const col of collectionFeatures) {
+      const items = collectionItemsById[col.id] ?? [];
+      for (const item of items) {
+        result.push({ ...item, _collectionId: col.id, _collectionTitle: col.title });
+      }
+    }
+    return result;
+  }, [collectionFeatures, collectionItemsById]);
+
+  // Extract unique filter options
+  const filterOptions = useMemo(() => {
+    const eras = new Set<string>();
+    const locations = new Set<string>();
+    const tags = new Set<string>();
+    for (const item of allItems) {
+      if (item.era) eras.add(item.era);
+      if (item.location) locations.add(item.location);
+      if (item.tag) tags.add(item.tag);
+    }
+    return {
+      eras: Array.from(eras).sort(),
+      locations: Array.from(locations).sort(),
+      tags: Array.from(tags).sort(),
+    };
+  }, [allItems]);
+
+  // Global filtered results (only when search or filters are active)
+  const isFilterActive = globalSearch.trim() !== "" || filterCategory !== "all" || filterEra !== "all" || filterLocation !== "all" || filterTag !== "all";
+
+  const globalFilteredItems = useMemo(() => {
+    if (!isFilterActive) return [];
+    const q = globalSearch.toLowerCase().trim();
+    return allItems.filter((item) => {
+      if (filterCategory !== "all" && item._collectionId !== filterCategory) return false;
+      if (filterEra !== "all" && item.era !== filterEra) return false;
+      if (filterLocation !== "all" && (item.location ?? "") !== filterLocation) return false;
+      if (filterTag !== "all" && item.tag !== filterTag) return false;
+      if (q) {
+        return (
+          item.name.toLowerCase().includes(q) ||
+          item.description.toLowerCase().includes(q) ||
+          item.tag.toLowerCase().includes(q) ||
+          item.era.toLowerCase().includes(q) ||
+          (item.location ?? "").toLowerCase().includes(q) ||
+          item._collectionTitle.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [allItems, globalSearch, filterCategory, filterEra, filterLocation, filterTag, isFilterActive]);
+
+  const clearAllFilters = useCallback(() => {
+    setGlobalSearch("");
+    setFilterCategory("all");
+    setFilterEra("all");
+    setFilterLocation("all");
+    setFilterTag("all");
+  }, []);
 
   const activeIndex = collectionFeatures.findIndex((c) => c.id === activeCollectionId);
   const activeCollection = collectionFeatures[activeIndex] ?? collectionFeatures[0];
@@ -1816,8 +2369,268 @@ export function MuseumCollectionsView({
           </div>
         </motion.div>
 
-        {/* Selected collection — compact header + artefacts grid */}
-        <AnimatePresence mode="wait" custom={slideDirection}>
+        {/* ── Search & Filter Bar ── */}
+        <motion.div
+          variants={museumFadeUpVariant}
+          initial="initial"
+          animate="animate"
+          className={cn(
+            "museum-grain museum-plaque-shadow rounded-[20px] border p-3 sm:p-4 space-y-3",
+            isLightMode
+              ? "border-[#bca46a]/18 bg-[linear-gradient(180deg,rgba(255,255,255,0.72)_0%,rgba(244,239,226,0.94)_100%)]"
+              : "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.02)_100%)]",
+          )}
+        >
+          <div className="flex items-center gap-2">
+            {/* Search input */}
+            <div className={cn(
+              "relative flex-1 flex items-center rounded-full border transition-colors",
+              isLightMode ? "border-[#bca46a]/18 bg-white/80" : "border-white/10 bg-white/[0.04]",
+            )}>
+              <Search className={cn("absolute left-3 h-3.5 w-3.5", isLightMode ? "text-[#7f6112]/50" : "text-white/35")} />
+              <input
+                type="text"
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
+                placeholder="Search artefacts by name, era, location…"
+                className={cn(
+                  "w-full rounded-full bg-transparent py-2.5 pl-9 pr-8 text-xs outline-none placeholder:tracking-wide",
+                  isLightMode ? "text-[#17253b] placeholder:text-[#7f6112]/40" : "text-white/90 placeholder:text-white/30",
+                )}
+              />
+              {globalSearch && (
+                <button onClick={() => setGlobalSearch("")} className="absolute right-2.5 p-0.5">
+                  <X className={cn("h-3 w-3", isLightMode ? "text-[#5e6a79]" : "text-white/45")} />
+                </button>
+              )}
+            </div>
+
+            {/* Filter toggle */}
+            <button
+              onClick={() => setShowFilters((p) => !p)}
+              className={cn(
+                "inline-flex items-center gap-1.5 shrink-0 rounded-full border px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] transition-all",
+                showFilters || isFilterActive
+                  ? "border-[#d4af37]/24 bg-[#d4af37]/10 text-[#d4af37]"
+                  : isLightMode
+                    ? "border-[#17253b]/10 bg-white/72 text-[#435267] hover:bg-white"
+                    : "border-white/10 bg-white/[0.04] text-white/55 hover:bg-white/[0.08]",
+              )}
+            >
+              <SlidersHorizontal className="h-3 w-3" />
+              Filters
+              {isFilterActive && (
+                <span className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#d4af37]/20 text-[8px] font-bold text-[#d4af37]">
+                  {[filterCategory, filterEra, filterLocation, filterTag].filter((v) => v !== "all").length + (globalSearch.trim() ? 1 : 0)}
+                </span>
+              )}
+            </button>
+
+            {isFilterActive && (
+              <button
+                onClick={clearAllFilters}
+                className="shrink-0 rounded-full border border-red-400/20 bg-red-400/8 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-400 transition-colors hover:bg-red-400/14"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
+
+          {/* Expandable filter dropdowns */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                className="overflow-hidden"
+              >
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1">
+                  {/* Category filter */}
+                  <div className="space-y-1">
+                    <label className={cn("flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.18em]", isLightMode ? "text-[#7f6112]/60" : "text-white/35")}>
+                      <Filter className="h-2.5 w-2.5" /> Wing
+                    </label>
+                    <select
+                      value={filterCategory}
+                      onChange={(e) => setFilterCategory(e.target.value)}
+                      className={cn(
+                        "w-full rounded-lg border px-2.5 py-2 text-[11px] outline-none transition-colors cursor-pointer",
+                        isLightMode
+                          ? "border-[#bca46a]/18 bg-white/90 text-[#17253b]"
+                          : "border-white/10 bg-white/[0.06] text-white/80",
+                      )}
+                    >
+                      <option value="all">All Wings</option>
+                      {collectionFeatures.map((cf) => (
+                        <option key={cf.id} value={cf.id}>{cf.title}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Era/Year filter */}
+                  <div className="space-y-1">
+                    <label className={cn("flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.18em]", isLightMode ? "text-[#7f6112]/60" : "text-white/35")}>
+                      <ScrollText className="h-2.5 w-2.5" /> Era / Year
+                    </label>
+                    <select
+                      value={filterEra}
+                      onChange={(e) => setFilterEra(e.target.value)}
+                      className={cn(
+                        "w-full rounded-lg border px-2.5 py-2 text-[11px] outline-none transition-colors cursor-pointer",
+                        isLightMode
+                          ? "border-[#bca46a]/18 bg-white/90 text-[#17253b]"
+                          : "border-white/10 bg-white/[0.06] text-white/80",
+                      )}
+                    >
+                      <option value="all">All Eras</option>
+                      {filterOptions.eras.map((era) => (
+                        <option key={era} value={era}>{era}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Location filter */}
+                  <div className="space-y-1">
+                    <label className={cn("flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.18em]", isLightMode ? "text-[#7f6112]/60" : "text-white/35")}>
+                      <MapPin className="h-2.5 w-2.5" /> Location
+                    </label>
+                    <select
+                      value={filterLocation}
+                      onChange={(e) => setFilterLocation(e.target.value)}
+                      className={cn(
+                        "w-full rounded-lg border px-2.5 py-2 text-[11px] outline-none transition-colors cursor-pointer",
+                        isLightMode
+                          ? "border-[#bca46a]/18 bg-white/90 text-[#17253b]"
+                          : "border-white/10 bg-white/[0.06] text-white/80",
+                      )}
+                    >
+                      <option value="all">All Locations</option>
+                      {filterOptions.locations.map((loc) => (
+                        <option key={loc} value={loc}>{loc}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Tag/Classification filter */}
+                  <div className="space-y-1">
+                    <label className={cn("flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.18em]", isLightMode ? "text-[#7f6112]/60" : "text-white/35")}>
+                      <Tag className="h-2.5 w-2.5" /> Classification
+                    </label>
+                    <select
+                      value={filterTag}
+                      onChange={(e) => setFilterTag(e.target.value)}
+                      className={cn(
+                        "w-full rounded-lg border px-2.5 py-2 text-[11px] outline-none transition-colors cursor-pointer",
+                        isLightMode
+                          ? "border-[#bca46a]/18 bg-white/90 text-[#17253b]"
+                          : "border-white/10 bg-white/[0.06] text-white/80",
+                      )}
+                    >
+                      <option value="all">All Tags</option>
+                      {filterOptions.tags.map((tag) => (
+                        <option key={tag} value={tag}>{tag}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Active filter pills */}
+                {isFilterActive && (
+                  <div className="flex flex-wrap gap-1.5 pt-2">
+                    {globalSearch.trim() && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#d4af37]/12 border border-[#d4af37]/20 px-2.5 py-1 text-[10px] font-medium text-[#d4af37]">
+                        Search: "{globalSearch.trim()}"
+                        <button onClick={() => setGlobalSearch("")}><X className="h-2.5 w-2.5" /></button>
+                      </span>
+                    )}
+                    {filterCategory !== "all" && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#d4af37]/12 border border-[#d4af37]/20 px-2.5 py-1 text-[10px] font-medium text-[#d4af37]">
+                        Wing: {collectionFeatures.find((c) => c.id === filterCategory)?.title}
+                        <button onClick={() => setFilterCategory("all")}><X className="h-2.5 w-2.5" /></button>
+                      </span>
+                    )}
+                    {filterEra !== "all" && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#d4af37]/12 border border-[#d4af37]/20 px-2.5 py-1 text-[10px] font-medium text-[#d4af37]">
+                        Era: {filterEra}
+                        <button onClick={() => setFilterEra("all")}><X className="h-2.5 w-2.5" /></button>
+                      </span>
+                    )}
+                    {filterLocation !== "all" && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#d4af37]/12 border border-[#d4af37]/20 px-2.5 py-1 text-[10px] font-medium text-[#d4af37]">
+                        Location: {filterLocation}
+                        <button onClick={() => setFilterLocation("all")}><X className="h-2.5 w-2.5" /></button>
+                      </span>
+                    )}
+                    {filterTag !== "all" && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#d4af37]/12 border border-[#d4af37]/20 px-2.5 py-1 text-[10px] font-medium text-[#d4af37]">
+                        Tag: {filterTag}
+                        <button onClick={() => setFilterTag("all")}><X className="h-2.5 w-2.5" /></button>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* ── Search results (cross-wing) or standard collection view ── */}
+        {isFilterActive ? (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4"
+          >
+            {/* Results header */}
+            <div className={cn(
+              "flex items-center justify-between rounded-[16px] border px-4 py-3",
+              isLightMode
+                ? "border-[#bca46a]/16 bg-white/60"
+                : "border-white/8 bg-white/[0.03]",
+            )}>
+              <p className={cn("text-sm font-medium", isLightMode ? "text-[#17253b]" : "text-white/80")}>
+                <span className="text-[#d4af37] font-bold">{globalFilteredItems.length}</span>{" "}
+                {globalFilteredItems.length === 1 ? "artefact" : "artefacts"} found
+              </p>
+              <button
+                onClick={clearAllFilters}
+                className={cn("text-[10px] uppercase tracking-[0.14em] font-semibold transition-colors", isLightMode ? "text-[#5e6a79] hover:text-[#17253b]" : "text-white/40 hover:text-white/70")}
+              >
+                Back to Wings
+              </button>
+            </div>
+
+            {globalFilteredItems.length > 0 ? (
+              <CollectionItemsSlider
+                items={globalFilteredItems}
+                isLightMode={isLightMode}
+                onAutoDisplay={() => setShowAutoDisplay(true)}
+                onItemClick={setSelectedArtefact}
+                categoryAnimConfig={getCategoryAnim(activeCollection.id)}
+                categoryImageDefaults={getCategoryImageDefs(activeCollection.id)}
+              />
+            ) : (
+              <div className={cn(
+                "museum-grain museum-plaque-shadow rounded-[24px] border p-10 text-center",
+                isLightMode ? "border-[#bca46a]/16 bg-white/70" : "border-white/10 bg-white/[0.035]",
+              )}>
+                <Search className={cn("mx-auto mb-3 h-8 w-8", isLightMode ? "text-[#bca46a]/40" : "text-white/20")} />
+                <p className={cn("text-sm font-medium", isLightMode ? "text-[#435267]" : "text-white/55")}>
+                  No artefacts match your filters
+                </p>
+                <p className={cn("mt-1 text-xs", isLightMode ? "text-[#6f7682]" : "text-white/35")}>
+                  Try broadening your search or removing a filter
+                </p>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <>
+            {/* Selected collection — compact header + artefacts grid */}
+            <AnimatePresence mode="wait" custom={slideDirection}>
           <motion.div
             key={activeCollection.id}
             custom={slideDirection}
@@ -1902,8 +2715,10 @@ export function MuseumCollectionsView({
                 </p>
               </div>
             )}
-          </motion.div>
-        </AnimatePresence>
+              </motion.div>
+            </AnimatePresence>
+          </>
+        )}
         
         <AutoTourGuide
           commandants={commandants}
