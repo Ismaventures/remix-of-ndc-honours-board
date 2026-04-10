@@ -5,6 +5,7 @@ const MEDIA_KEY_PREFIX = 'media_';
 const MEDIA_URL_PREFIX = 'idb-media://';
 const MEDIA_FALLBACK_DELIMITER = '::';
 const MEDIA_BUCKET = import.meta.env.VITE_SUPABASE_MEDIA_BUCKET || 'ndc-media';
+const AUDIO_BUCKET = import.meta.env.VITE_SUPABASE_AUDIO_BUCKET || 'ndc-audio';
 const REMOTE_MEDIA_KEY_PREFIX = 'remote_media_';
 export const REMOTE_MEDIA_CACHE_TTL_MS = 73 * 60 * 60 * 1000;
 const REMOTE_MEDIA_MAX_ENTRIES = 600;
@@ -79,10 +80,12 @@ async function uploadMediaToSupabase(id: string, file: File): Promise<string | n
   if (!isSupabaseMediaReady()) return null;
 
   const safeFilename = normalizeFilename(file.name || `${id}.bin`);
-  const path = `images/${id}-${safeFilename}`;
+  const isAudioFile = file.type.startsWith('audio/');
+  const bucket = isAudioFile ? AUDIO_BUCKET : MEDIA_BUCKET;
+  const path = `${isAudioFile ? 'tracks' : 'images'}/${id}-${safeFilename}`;
 
   const { error: uploadError } = await supabase.storage
-    .from(MEDIA_BUCKET)
+    .from(bucket)
     .upload(path, file, {
       upsert: true,
       contentType: file.type || 'application/octet-stream',
@@ -90,11 +93,11 @@ async function uploadMediaToSupabase(id: string, file: File): Promise<string | n
     });
 
   if (uploadError) {
-    console.error(`Supabase media upload failed (bucket: ${MEDIA_BUCKET}):`, uploadError.message);
+    console.error(`Supabase media upload failed (bucket: ${bucket}):`, uploadError.message);
     return null;
   }
 
-  const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data?.publicUrl ?? null;
 }
 

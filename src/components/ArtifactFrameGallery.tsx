@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Eye, Frame, ImageIcon, Music, Pause, Play, Power, Settings, SkipForward, Square, Trash2, Upload, Volume2, VolumeX, X, Globe, MapPin, Flag } from "lucide-react";
 import { MuseumObjectViewer } from "./MuseumObjectViewer";
-import { resolveMediaRefToObjectUrl } from "@/lib/persistentMedia";
+import { isPersistentMediaRef, resolveMediaRefToObjectUrl, saveMediaFile } from "@/lib/persistentMedia";
+import { loadSharedSetting, saveSharedSetting } from "@/lib/sharedSettingsStorage";
 import { loadUiSetting } from "@/lib/uiSettingsStorage";
 import { getPreferredVoice, getPreferredLang } from "@/hooks/useVoicePreference";
 import {
@@ -62,37 +63,52 @@ type ChamberStudioScene = {
 
 const STUDIO_STORAGE_KEY = "museum_artifact_chamber_studio";
 const AUTO_DISPLAY_BG_KEY = "afg_auto_display_bg";
+const AUTO_DISPLAY_BG_SETTING_KEY = "artifact_gallery_auto_display_backgrounds";
 const DEFAULT_AUTO_DISPLAY_BG = "/images/cosmic-nebulae-bg.png";
 const TOUR_AUDIO_KEY = "afg_tour_category_audio";
+const TOUR_AUDIO_SETTING_KEY = "artifact_gallery_tour_category_audio";
 const NARRATION_KEY = "afg_narration_enabled";
 
-type StoredBackgroundImage = { id: string; name: string; url: string; active?: boolean };
-type StoredAudioTrack = { id: string; name: string; dataUrl: string; active?: boolean };
+type StoredBackgroundImage = { id: string; name: string; sourceRef: string; active?: boolean };
+type StoredAudioTrack = { id: string; name: string; sourceRef: string; active?: boolean };
 type TourCategoryAudios = Record<string, StoredAudioTrack[]>;
+
+type LegacyStoredBackgroundImage = Partial<StoredBackgroundImage> & { url?: string | null };
+type LegacyStoredAudioTrack = Partial<StoredAudioTrack> & { dataUrl?: string | null };
+
+function revokeBlobUrl(url?: string | null) {
+  if (url?.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+}
 
 function getDefaultAutoDisplayBackgroundImage(): StoredBackgroundImage {
   return {
     id: "auto-display-default-bg",
     name: "Default Cosmic Nebula",
-    url: DEFAULT_AUTO_DISPLAY_BG,
+    sourceRef: DEFAULT_AUTO_DISPLAY_BG,
     active: true,
   };
 }
 
-function normalizeAutoDisplayBackgrounds(images: StoredBackgroundImage[]) {
+function normalizeAutoDisplayBackgrounds(images: LegacyStoredBackgroundImage[]) {
   let activeAssigned = false;
   return images
-    .filter((image) => Boolean(image?.url))
     .map((image, index) => {
+      const sourceRef = image?.sourceRef ?? image?.url ?? "";
+      if (!sourceRef) return null;
+
       const isActive = image.active === true && !activeAssigned;
       if (isActive) activeAssigned = true;
+
       return {
         id: image.id || `auto-display-bg-${index + 1}`,
         name: image.name || `Background ${index + 1}`,
-        url: image.url,
+        sourceRef,
         active: isActive,
-      };
-    });
+      } satisfies StoredBackgroundImage;
+    })
+    .filter(Boolean) as StoredBackgroundImage[];
 }
 
 function loadAutoDisplayBackgrounds(): StoredBackgroundImage[] {
@@ -101,7 +117,7 @@ function loadAutoDisplayBackgrounds(): StoredBackgroundImage[] {
     if (!raw) return [getDefaultAutoDisplayBackgroundImage()];
 
     try {
-      const parsed = JSON.parse(raw) as StoredBackgroundImage[] | string;
+      const parsed = JSON.parse(raw) as LegacyStoredBackgroundImage[] | string;
       if (Array.isArray(parsed)) {
         const normalized = normalizeAutoDisplayBackgrounds(parsed);
         return normalized.length > 0 ? normalized : [getDefaultAutoDisplayBackgroundImage()];
@@ -111,7 +127,7 @@ function loadAutoDisplayBackgrounds(): StoredBackgroundImage[] {
           ? [{
               id: "auto-display-legacy-bg",
               name: parsed === DEFAULT_AUTO_DISPLAY_BG ? "Default Cosmic Nebula" : "Saved Background",
-              url: parsed,
+              sourceRef: parsed,
               active: true,
             }]
           : [getDefaultAutoDisplayBackgroundImage()];
@@ -121,7 +137,7 @@ function loadAutoDisplayBackgrounds(): StoredBackgroundImage[] {
         ? [{
             id: "auto-display-legacy-bg",
             name: raw === DEFAULT_AUTO_DISPLAY_BG ? "Default Cosmic Nebula" : "Saved Background",
-            url: raw,
+            sourceRef: raw,
             active: true,
           }]
         : [getDefaultAutoDisplayBackgroundImage()];
@@ -137,17 +153,33 @@ function saveAutoDisplayBackgrounds(images: StoredBackgroundImage[]) {
   try { localStorage.setItem(AUTO_DISPLAY_BG_KEY, JSON.stringify(normalizeAutoDisplayBackgrounds(images))); } catch {}
 }
 
+function normalizeTourAudios(audios: Record<string, LegacyStoredAudioTrack[]>) {
+  return Object.fromEntries(
+    Object.entries(audios).map(([categoryId, tracks]) => [
+      categoryId,
+      (tracks ?? [])
+        .map((track, index) => {
+          const sourceRef = track?.sourceRef ?? track?.dataUrl ?? "";
+          if (!sourceRef) return null;
+
+          return {
+            id: track.id || `${categoryId}-track-${index + 1}`,
+            name: track.name || `Track ${index + 1}`,
+            sourceRef,
+            active: track.active === true,
+          } satisfies StoredAudioTrack;
+        })
+        .filter(Boolean) as StoredAudioTrack[],
+    ]),
+  ) as TourCategoryAudios;
+}
+
 function loadTourAudios(): TourCategoryAudios {
   try {
     const raw = localStorage.getItem(TOUR_AUDIO_KEY);
     if (!raw) return {};
-    const parsed = JSON.parse(raw) as TourCategoryAudios;
-    return Object.fromEntries(
-      Object.entries(parsed).map(([categoryId, tracks]) => [
-        categoryId,
-        (tracks ?? []).map((track) => ({ ...track, active: track.active === true })),
-      ]),
-    );
+    const parsed = JSON.parse(raw) as Record<string, LegacyStoredAudioTrack[]>;
+    return normalizeTourAudios(parsed);
   } catch { return {}; }
 }
 
@@ -878,11 +910,20 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
 
   // Auto Display background image library (admin-configurable)
   const [autoDisplayBgImages, setAutoDisplayBgImages] = useState<StoredBackgroundImage[]>(loadAutoDisplayBackgrounds);
+  const [resolvedAutoDisplayBgUrls, setResolvedAutoDisplayBgUrls] = useState<Record<string, string>>({});
+  const resolvedAutoDisplayBgUrlsRef = useRef<Record<string, string>>({});
   const activeAutoDisplayBg = useMemo(
     () => autoDisplayBgImages.find((image) => image.active === true) ?? null,
     [autoDisplayBgImages],
   );
-  const autoDisplayBgUrl = activeAutoDisplayBg?.url ?? "";
+  const autoDisplayBgUrl = activeAutoDisplayBg
+    ? (resolvedAutoDisplayBgUrls[activeAutoDisplayBg.id]
+      ?? (isPersistentMediaRef(activeAutoDisplayBg.sourceRef) ? "" : activeAutoDisplayBg.sourceRef))
+    : "";
+  const getResolvedBackgroundPreviewUrl = useCallback((image: StoredBackgroundImage) => {
+    return resolvedAutoDisplayBgUrls[image.id]
+      ?? (isPersistentMediaRef(image.sourceRef) ? undefined : image.sourceRef);
+  }, [resolvedAutoDisplayBgUrls]);
   const [showAutoDisplaySettings, setShowAutoDisplaySettings] = useState(false);
   const [bgUrlInput, setBgUrlInput] = useState("");
 
@@ -901,6 +942,77 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
   }, []);
   const bgFileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    resolvedAutoDisplayBgUrlsRef.current = resolvedAutoDisplayBgUrls;
+  }, [resolvedAutoDisplayBgUrls]);
+
+  useEffect(() => () => {
+    Object.values(resolvedAutoDisplayBgUrlsRef.current).forEach((url) => revokeBlobUrl(url));
+  }, []);
+
+  useEffect(() => {
+    const legacyImages = loadAutoDisplayBackgrounds();
+    let cancelled = false;
+
+    void loadSharedSetting<LegacyStoredBackgroundImage[]>(AUTO_DISPLAY_BG_SETTING_KEY).then((storedImages) => {
+      if (cancelled) return;
+
+      if (storedImages != null) {
+        const normalized = normalizeAutoDisplayBackgrounds(storedImages);
+        if (normalized.length > 0) {
+          setAutoDisplayBgImages(normalized);
+          saveAutoDisplayBackgrounds(normalized);
+        }
+        return;
+      }
+
+      void saveSharedSetting(AUTO_DISPLAY_BG_SETTING_KEY, legacyImages);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void Promise.all(
+      autoDisplayBgImages.map(async (image) => {
+        const resolvedUrl = await resolveMediaRefToObjectUrl(image.sourceRef);
+        return [image.id, resolvedUrl] as const;
+      }),
+    ).then((entries) => {
+      const nextUrls = Object.fromEntries(
+        entries.filter((entry): entry is [string, string] => Boolean(entry[1])),
+      );
+
+      if (cancelled) {
+        Object.values(nextUrls).forEach((url) => revokeBlobUrl(url));
+        return;
+      }
+
+      setResolvedAutoDisplayBgUrls((prev) => {
+        const nextUrlSet = new Set(Object.values(nextUrls));
+        Object.values(prev).forEach((url) => {
+          if (!nextUrlSet.has(url)) {
+            revokeBlobUrl(url);
+          }
+        });
+        return nextUrls;
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [autoDisplayBgImages]);
+
+  const persistAutoDisplayBackgrounds = useCallback((images: StoredBackgroundImage[]) => {
+    saveAutoDisplayBackgrounds(images);
+    void saveSharedSetting(AUTO_DISPLAY_BG_SETTING_KEY, images);
+  }, []);
+
   const updateAutoDisplayBackgrounds = useCallback((
     updater: StoredBackgroundImage[] | ((prev: StoredBackgroundImage[]) => StoredBackgroundImage[]),
   ) => {
@@ -909,10 +1021,10 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
         ? (updater as (prev: StoredBackgroundImage[]) => StoredBackgroundImage[])(prev)
         : updater;
       const next = normalizeAutoDisplayBackgrounds(nextImages);
-      saveAutoDisplayBackgrounds(next);
+      persistAutoDisplayBackgrounds(next);
       return next;
     });
-  }, []);
+  }, [persistAutoDisplayBackgrounds]);
 
   const addAutoDisplayBackground = useCallback((image: StoredBackgroundImage) => {
     updateAutoDisplayBackgrounds((prev) => [...prev, image]);
@@ -929,12 +1041,12 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
     if (!url) return;
 
     updateAutoDisplayBackgrounds((prev) => {
-      const existingImage = prev.find((image) => image.url === url);
+      const existingImage = prev.find((image) => image.sourceRef === url);
       if (existingImage) {
         return prev.map((image) => ({
           ...image,
-          name: image.url === url ? name : image.name,
-          active: image.url === url,
+          name: image.sourceRef === url ? name : image.name,
+          active: image.sourceRef === url,
         }));
       }
 
@@ -942,7 +1054,7 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
         {
           id: `auto-display-bg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           name,
-          url,
+          sourceRef: url,
           active: true,
         },
         ...prev.map((image) => ({ ...image, active: false })),
@@ -959,25 +1071,22 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
   }, [updateAutoDisplayBackgrounds]);
 
   const handleBgFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
 
-    Array.from(files).forEach((file) => {
+    files.forEach((file) => {
       if (!file.type.startsWith("image/")) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result !== "string") return;
+
+      void (async () => {
+        const sourceRef = await saveMediaFile(file);
         addAutoDisplayBackground({
           id: `auto-display-bg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           name: file.name,
-          url: reader.result,
+          sourceRef,
           active: false,
         });
-      };
-      reader.readAsDataURL(file);
+      })();
     });
-
-    e.target.value = "";
   }, [addAutoDisplayBackground]);
 
   const addAutoDisplayBgFromUrl = useCallback(() => {
@@ -988,7 +1097,7 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
     addAutoDisplayBackground({
       id: `auto-display-bg-url-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       name: label,
-      url: trimmedUrl,
+      sourceRef: trimmedUrl,
       active: false,
     });
     setBgUrlInput("");
@@ -997,12 +1106,12 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
   const resetAutoDisplayBg = useCallback(() => {
     updateAutoDisplayBackgrounds((prev) => {
       const defaultBg = getDefaultAutoDisplayBackgroundImage();
-      const existingDefault = prev.find((image) => image.url === DEFAULT_AUTO_DISPLAY_BG);
+      const existingDefault = prev.find((image) => image.sourceRef === DEFAULT_AUTO_DISPLAY_BG);
       if (existingDefault) {
         return prev.map((image) => ({
           ...image,
-          name: image.url === DEFAULT_AUTO_DISPLAY_BG ? defaultBg.name : image.name,
-          active: image.url === DEFAULT_AUTO_DISPLAY_BG,
+          name: image.sourceRef === DEFAULT_AUTO_DISPLAY_BG ? defaultBg.name : image.name,
+          active: image.sourceRef === DEFAULT_AUTO_DISPLAY_BG,
         }));
       }
       return [
@@ -1055,6 +1164,35 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
 
   // Tour category audio state (declared early so startTourAutoDisplay can reference it)
   const [tourCategoryAudios, setTourCategoryAudios] = useState<TourCategoryAudios>(loadTourAudios);
+  const persistTourCategoryAudios = useCallback((audios: TourCategoryAudios) => {
+    saveTourAudios(audios);
+    void saveSharedSetting(TOUR_AUDIO_SETTING_KEY, audios);
+  }, []);
+
+  useEffect(() => {
+    const legacyAudios = loadTourAudios();
+    let cancelled = false;
+
+    void loadSharedSetting<Record<string, LegacyStoredAudioTrack[]>>(TOUR_AUDIO_SETTING_KEY).then((storedAudios) => {
+      if (cancelled) return;
+
+      if (storedAudios != null) {
+        const normalized = normalizeTourAudios(storedAudios);
+        setTourCategoryAudios(normalized);
+        saveTourAudios(normalized);
+        return;
+      }
+
+      if (Object.keys(legacyAudios).length > 0) {
+        void saveSharedSetting(TOUR_AUDIO_SETTING_KEY, legacyAudios);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const hasActiveTourTracks = useMemo(() => hasActiveTourAudio(tourCategoryAudios), [tourCategoryAudios]);
 
   const startTourAutoDisplay = useCallback(() => {
@@ -1189,67 +1327,85 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
 
   // Preview playback in admin
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const previewAudioUrlRef = useRef<string | null>(null);
+  const previewRequestRef = useRef(0);
   const [previewingTrackId, setPreviewingTrackId] = useState<string | null>(null);
 
-  const previewTrack = useCallback((track: StoredAudioTrack) => {
-    // Stop any existing preview
-    if (previewAudioRef.current) {
-      previewAudioRef.current.pause();
-      previewAudioRef.current.src = "";
-      previewAudioRef.current = null;
-    }
-    if (previewingTrackId === track.id) {
-      setPreviewingTrackId(null);
-      return;
-    }
-    const audio = new Audio(track.dataUrl);
-    audio.volume = 0.35;
-    previewAudioRef.current = audio;
-    setPreviewingTrackId(track.id);
-    audio.onended = () => {
-      setPreviewingTrackId(null);
-      previewAudioRef.current = null;
-    };
-    audio.play().catch(() => { setPreviewingTrackId(null); });
-  }, [previewingTrackId]);
-
   const stopPreview = useCallback(() => {
+    previewRequestRef.current += 1;
     if (previewAudioRef.current) {
       previewAudioRef.current.pause();
       previewAudioRef.current.src = "";
       previewAudioRef.current = null;
     }
+    revokeBlobUrl(previewAudioUrlRef.current);
+    previewAudioUrlRef.current = null;
     setPreviewingTrackId(null);
   }, []);
 
+  const previewTrack = useCallback(async (track: StoredAudioTrack) => {
+    stopPreview();
+    if (previewingTrackId === track.id) {
+      return;
+    }
+
+    const requestId = previewRequestRef.current;
+    const resolvedUrl = await resolveMediaRefToObjectUrl(track.sourceRef);
+    if (!resolvedUrl) return;
+
+    if (previewRequestRef.current !== requestId) {
+      revokeBlobUrl(resolvedUrl);
+      return;
+    }
+
+    const audio = new Audio(resolvedUrl);
+    audio.volume = 0.35;
+    previewAudioRef.current = audio;
+    previewAudioUrlRef.current = resolvedUrl;
+    setPreviewingTrackId(track.id);
+
+    const cleanup = () => {
+      if (previewAudioRef.current === audio) {
+        previewAudioRef.current = null;
+      }
+      if (previewAudioUrlRef.current === resolvedUrl) {
+        previewAudioUrlRef.current = null;
+      }
+      revokeBlobUrl(resolvedUrl);
+      setPreviewingTrackId(null);
+    };
+
+    audio.onended = cleanup;
+    audio.onerror = cleanup;
+    audio.play().catch(cleanup);
+  }, [previewingTrackId, stopPreview]);
+
   const addTourAudio = useCallback((categoryId: string, file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result !== "string") return;
+    void (async () => {
+      const sourceRef = await saveMediaFile(file);
       const track: StoredAudioTrack = {
         id: `${categoryId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         name: file.name,
-        dataUrl: reader.result,
+        sourceRef,
         active: false,
       };
       setTourCategoryAudios((prev) => {
         const next = { ...prev, [categoryId]: [...(prev[categoryId] ?? []), track] };
-        saveTourAudios(next);
+        persistTourCategoryAudios(next);
         return next;
       });
-    };
-    reader.readAsDataURL(file);
-  }, []);
+    })();
+  }, [persistTourCategoryAudios]);
 
   const removeTourAudio = useCallback((categoryId: string, trackId: string) => {
     // Stop preview if it's playing the track being removed
     if (previewingTrackId === trackId) stopPreview();
     setTourCategoryAudios((prev) => {
       const next = { ...prev, [categoryId]: (prev[categoryId] ?? []).filter((t) => t.id !== trackId) };
-      saveTourAudios(next);
+      persistTourCategoryAudios(next);
       return next;
     });
-  }, [previewingTrackId, stopPreview]);
+  }, [persistTourCategoryAudios, previewingTrackId, stopPreview]);
 
   const toggleTourAudioActive = useCallback((categoryId: string, trackId: string) => {
     setTourCategoryAudios((prev) => {
@@ -1264,10 +1420,10 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
             : { ...track, active: false }
         ),
       };
-      saveTourAudios(next);
+      persistTourCategoryAudios(next);
       return next;
     });
-  }, []);
+  }, [persistTourCategoryAudios]);
 
   const handleTourAudioUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -1278,41 +1434,65 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
     e.target.value = "";
   }, [audioUploadTarget, addTourAudio]);
 
-  const playTourCategoryAudio = useCallback((categoryId: string) => {
+  const tourAudioUrlRef = useRef<string | null>(null);
+  const tourAudioSessionRef = useRef(0);
+
+  const stopTourCategoryAudio = useCallback(() => {
+    tourAudioSessionRef.current += 1;
     if (tourAudioRef.current) {
       tourAudioRef.current.pause();
       tourAudioRef.current.src = "";
       tourAudioRef.current = null;
     }
+    revokeBlobUrl(tourAudioUrlRef.current);
+    tourAudioUrlRef.current = null;
+  }, []);
+
+  const playTourCategoryAudio = useCallback((categoryId: string) => {
+    stopTourCategoryAudio();
     const tracks = tourCategoryAudios[categoryId];
     const activeTracks = (tracks ?? []).filter((t) => t.active === true);
     if (activeTracks.length === 0) return;
+    const sessionId = tourAudioSessionRef.current;
     tourAudioTrackIndexRef.current = 0;
 
-    const playTrack = (index: number) => {
-      if (!tourAutoMountedRef.current) return;
+    const playTrack = async (index: number) => {
+      if (!tourAutoMountedRef.current || tourAudioSessionRef.current !== sessionId) return;
       const track = activeTracks[index % activeTracks.length];
       if (!track) return;
-      const audio = new Audio(track.dataUrl);
+      const resolvedUrl = await resolveMediaRefToObjectUrl(track.sourceRef);
+      if (!resolvedUrl) return;
+      if (!tourAutoMountedRef.current || tourAudioSessionRef.current !== sessionId) {
+        revokeBlobUrl(resolvedUrl);
+        return;
+      }
+
+      const audio = new Audio(resolvedUrl);
       audio.volume = 0.25;
       tourAudioRef.current = audio;
+      tourAudioUrlRef.current = resolvedUrl;
+
+      const cleanup = () => {
+        if (tourAudioRef.current === audio) {
+          tourAudioRef.current = null;
+        }
+        if (tourAudioUrlRef.current === resolvedUrl) {
+          tourAudioUrlRef.current = null;
+        }
+        revokeBlobUrl(resolvedUrl);
+      };
+
       audio.onended = () => {
+        cleanup();
         if (!tourAutoMountedRef.current) return;
         tourAudioTrackIndexRef.current = (index + 1) % activeTracks.length;
-        playTrack(tourAudioTrackIndexRef.current);
+        void playTrack(tourAudioTrackIndexRef.current);
       };
-      audio.play().catch(() => {});
+      audio.onerror = cleanup;
+      audio.play().catch(cleanup);
     };
-    playTrack(0);
-  }, [tourCategoryAudios]);
-
-  const stopTourCategoryAudio = useCallback(() => {
-    if (tourAudioRef.current) {
-      tourAudioRef.current.pause();
-      tourAudioRef.current.src = "";
-      tourAudioRef.current = null;
-    }
-  }, []);
+    void playTrack(0);
+  }, [stopTourCategoryAudio, tourCategoryAudios]);
 
   // Track which category audio is playing to avoid restarting same category
   const currentTourAudioCatRef = useRef<string | null>(null);
@@ -1323,6 +1503,7 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
     const displayItem = allTourDisplayItems[tourAutoIndex];
     if (!displayItem) return;
     const catId = displayItem.tourCategory.collectionId;
+    if (currentTourAudioCatRef.current === catId) return;
     currentTourAudioCatRef.current = catId;
     playTourCategoryAudio(catId);
   }, [tourAutoActive, tourAutoIndex, allTourDisplayItems, playTourCategoryAudio]);
@@ -1360,6 +1541,11 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
       }
     }
   }, [tourAutoActive, tourAutoPhase, hasActiveTourTracks, narrationEnabled]);
+
+  useEffect(() => () => {
+    stopPreview();
+    stopTourCategoryAudio();
+  }, [stopPreview, stopTourCategoryAudio]);
 
   // Inject keyframe styles
   useEffect(() => { ensureGalleryStyles(); }, []);
@@ -1846,7 +2032,7 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   {frameOptions.map((option) => {
-                    const isActiveBackground = activeAutoDisplayBg?.url === option.url;
+                    const isActiveBackground = activeAutoDisplayBg?.sourceRef === option.url;
                     const isSelectedFrame = option.ref === exhibitionFrameRef;
                     return (
                       <div
@@ -1906,6 +2092,7 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     {autoDisplayBgImages.map((image) => {
                       const isActive = image.active === true;
+                      const previewUrl = getResolvedBackgroundPreviewUrl(image);
                       return (
                         <div
                           key={image.id}
@@ -1917,7 +2104,13 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
                           )}
                         >
                           <div className="relative mb-3 h-24 overflow-hidden rounded-xl border border-white/10 bg-[#080a10]">
-                            <img src={image.url} alt={image.name} className="h-full w-full object-cover" />
+                            {previewUrl ? (
+                              <img src={previewUrl} alt={image.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-[9px] font-semibold uppercase tracking-[0.12em] text-white/25">
+                                Preview loading
+                              </div>
+                            )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                             {isActive && (
                               <span className="absolute left-2 top-2 rounded-full border border-emerald-400/30 bg-emerald-400/15 px-2 py-0.5 text-[7px] font-bold uppercase tracking-[0.12em] text-emerald-300/90">

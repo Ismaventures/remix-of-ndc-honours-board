@@ -89,6 +89,14 @@ CREATE TABLE IF NOT EXISTS museum_tour_routes (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- 6. Shared UI settings (global artefact-gallery media settings shared across users)
+CREATE TABLE IF NOT EXISTS shared_ui_settings (
+  setting_key text PRIMARY KEY,
+  setting_value jsonb NOT NULL,
+  updated_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
 -- ============================================================
 -- Enable RLS
 -- ============================================================
@@ -96,12 +104,15 @@ ALTER TABLE museum_sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE museum_about_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE museum_collection_wings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE museum_tour_routes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shared_ui_settings ENABLE ROW LEVEL SECURITY;
 
 -- Public read policies
 CREATE POLICY museum_sections_public_read ON museum_sections FOR SELECT USING (true);
 CREATE POLICY museum_about_items_public_read ON museum_about_items FOR SELECT USING (true);
 CREATE POLICY museum_collection_wings_public_read ON museum_collection_wings FOR SELECT USING (true);
 CREATE POLICY museum_tour_routes_public_read ON museum_tour_routes FOR SELECT USING (true);
+DROP POLICY IF EXISTS shared_ui_settings_public_read ON shared_ui_settings;
+CREATE POLICY shared_ui_settings_public_read ON shared_ui_settings FOR SELECT USING (true);
 
 -- Authenticated write (insert / update / delete)
 CREATE POLICY museum_sections_auth_insert ON museum_sections FOR INSERT WITH CHECK ((select auth.role()) = 'authenticated');
@@ -119,6 +130,13 @@ CREATE POLICY museum_collection_wings_auth_delete ON museum_collection_wings FOR
 CREATE POLICY museum_tour_routes_auth_insert ON museum_tour_routes FOR INSERT WITH CHECK ((select auth.role()) = 'authenticated');
 CREATE POLICY museum_tour_routes_auth_update ON museum_tour_routes FOR UPDATE USING ((select auth.role()) = 'authenticated') WITH CHECK ((select auth.role()) = 'authenticated');
 CREATE POLICY museum_tour_routes_auth_delete ON museum_tour_routes FOR DELETE USING ((select auth.role()) = 'authenticated');
+
+DROP POLICY IF EXISTS shared_ui_settings_auth_insert ON shared_ui_settings;
+DROP POLICY IF EXISTS shared_ui_settings_auth_update ON shared_ui_settings;
+DROP POLICY IF EXISTS shared_ui_settings_auth_delete ON shared_ui_settings;
+CREATE POLICY shared_ui_settings_auth_insert ON shared_ui_settings FOR INSERT WITH CHECK ((select auth.role()) = 'authenticated' AND (select auth.uid()) = updated_by);
+CREATE POLICY shared_ui_settings_auth_update ON shared_ui_settings FOR UPDATE USING ((select auth.role()) = 'authenticated') WITH CHECK ((select auth.role()) = 'authenticated' AND (select auth.uid()) = updated_by);
+CREATE POLICY shared_ui_settings_auth_delete ON shared_ui_settings FOR DELETE USING ((select auth.role()) = 'authenticated');
 
 -- Also add authenticated write for museum_artifacts if it doesn't exist for the new columns
 -- (base schema already has museum_artifacts_auth_insert/update/delete, so this is safe)
