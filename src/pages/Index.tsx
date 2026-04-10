@@ -42,7 +42,7 @@ import {
   saveDeviceOverrides,
 } from "@/lib/deviceOverrideSettings";
 import { Category, Commandant } from "@/types/domain";
-import { supabase } from "@/lib/supabaseClient";
+import { getSafeSupabaseSession, supabase } from "@/lib/supabaseClient";
 import { prefetchMediaReferences } from "@/lib/persistentMedia";
 import { prefetchAudioTrack, useAudioStore } from "@/hooks/useAudioStore";
 
@@ -596,10 +596,10 @@ const Index = () => {
     let mounted = true;
 
     const initSession = async () => {
-      const { data } = await supabase.auth.getSession();
+      const session = await getSafeSupabaseSession();
       if (!mounted) return;
-      setAdminAuthenticated(Boolean(data.session));
-      setAdminEmail(data.session?.user?.email ?? null);
+      setAdminAuthenticated(Boolean(session));
+      setAdminEmail(session?.user?.email ?? null);
       setAuthReady(true);
     };
 
@@ -959,9 +959,7 @@ const Index = () => {
           }}
           onSendGlobalSiteClose={async (reason) => {
             if (!isSuperAdmin) return false;
-            const {
-              data: { session },
-            } = await supabase.auth.getSession();
+            const session = await getSafeSupabaseSession();
             if (!session?.user) return false;
             const { error } = await supabase
               .from("global_site_control")
@@ -977,9 +975,7 @@ const Index = () => {
           }}
           onSendGlobalSiteOpen={async () => {
             if (!isSuperAdmin) return false;
-            const {
-              data: { session },
-            } = await supabase.auth.getSession();
+            const session = await getSafeSupabaseSession();
             if (!session?.user) return false;
             const { error } = await supabase
               .from("global_site_control")

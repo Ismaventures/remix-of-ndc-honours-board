@@ -1,5 +1,5 @@
 import { get, set } from 'idb-keyval';
-import { supabase } from './supabaseClient';
+import { getSafeSupabaseSession, supabase } from './supabaseClient';
 
 const UI_SETTINGS_TABLE = 'ui_settings';
 const LOCAL_SETTINGS_PREFIX = 'ui_setting_';
@@ -36,9 +36,7 @@ async function saveLocal<T>(settingKey: string, value: T): Promise<void> {
 async function loadRemote<T>(settingKey: string): Promise<T | null> {
   if (!isSupabaseSettingsReady()) return null;
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const session = await getSafeSupabaseSession();
 
   if (!session?.user) return null;
 
@@ -60,9 +58,7 @@ async function loadRemote<T>(settingKey: string): Promise<T | null> {
 async function saveRemote<T>(settingKey: string, value: T): Promise<boolean> {
   if (!isSupabaseSettingsReady()) return false;
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const session = await getSafeSupabaseSession();
 
   if (!session?.user) return false;
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { getSafeSupabaseSession, supabase } from '@/lib/supabaseClient';
 import { getDefaultDeviceLabel, getOrCreateDeviceId } from '@/lib/deviceIdentity';
 
 export type DeviceControlView = 'home' | 'fwc' | 'fdc' | 'directing' | 'allied' | 'visits' | 'admin';
@@ -77,9 +77,7 @@ export function useDeviceControl({ currentView, autoDisplayEnabled, onCommand }:
 
     if (!isSupabaseConfigured()) return false;
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const session = await getSafeSupabaseSession();
 
     if (!session?.user) return false;
 
@@ -100,9 +98,7 @@ export function useDeviceControl({ currentView, autoDisplayEnabled, onCommand }:
   const heartbeat = useCallback(async () => {
     if (!isSupabaseConfigured()) return;
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const session = await getSafeSupabaseSession();
 
     if (!session?.user) return;
 
@@ -121,9 +117,7 @@ export function useDeviceControl({ currentView, autoDisplayEnabled, onCommand }:
   const refreshDevices = useCallback(async () => {
     if (!isSupabaseConfigured()) return;
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const session = await getSafeSupabaseSession();
 
     if (!session?.user) {
       setDevices([]);
@@ -150,9 +144,7 @@ export function useDeviceControl({ currentView, autoDisplayEnabled, onCommand }:
     async (targetDeviceIds: string[], commandType: DeviceControlCommandType, payload: Record<string, unknown>) => {
       if (!isSupabaseConfigured() || targetDeviceIds.length === 0) return false;
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const session = await getSafeSupabaseSession();
 
       if (!session?.user) return false;
 
@@ -190,9 +182,7 @@ export function useDeviceControl({ currentView, autoDisplayEnabled, onCommand }:
     const poll = async () => {
       if (!isSupabaseConfigured()) return;
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const session = await getSafeSupabaseSession();
 
       if (!session?.user) return;
 
