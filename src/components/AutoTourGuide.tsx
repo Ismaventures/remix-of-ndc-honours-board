@@ -20,6 +20,7 @@ import { MuseumObjectViewer } from "./MuseumObjectViewer";
 import { buildFallbackMuseumTours } from "@/lib/tourGuide";
 import { cn } from "@/lib/utils";
 import { useThemeMode } from "@/hooks/useThemeMode";
+import { getPreferredVoice, getPreferredLang } from "@/hooks/useVoicePreference";
 import type {
   Commandant,
   DistinguishedVisit,
@@ -341,8 +342,6 @@ export function AutoTourGuide({
   const [isCompleted, setIsCompleted] = useState(false);
   const [narrationStatus, setNarrationStatus] = useState<NarrationStatus>("idle");
   const [narrationSource, setNarrationSource] = useState<NarrationSource>("silent");
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoiceUri, setSelectedVoiceUri] = useState<string>("");
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const bgAudioRef = useRef<HTMLAudioElement>(null);
@@ -425,11 +424,6 @@ export function AutoTourGuide({
     const targetVol = (isNarrating ? BG_VOLUME_DUCKED : BG_VOLUME_NORMAL) * masterVolume;
     bgEl.volume = Math.max(0, Math.min(1, targetVol));
   }, [narrationStatus, masterVolume]);
-
-  const selectedVoice = useMemo(
-    () => availableVoices.find((voice) => voice.voiceURI === selectedVoiceUri) ?? null,
-    [availableVoices, selectedVoiceUri],
-  );
 
   const stopNarration = useCallback(() => {
     if (activeAdvanceTimerRef.current) {
@@ -514,37 +508,6 @@ export function AutoTourGuide({
   }, [currentStepIndex, isAutoMode, selectedTour]);
 
   useEffect(() => {
-    if (!speechSupported) return;
-
-    const updateVoices = () => {
-      const voices = window.speechSynthesis
-        .getVoices()
-        .filter((voice) => voice.lang.toLowerCase().startsWith("en"));
-      setAvailableVoices(voices);
-      setSelectedVoiceUri((current) => {
-        if (current && voices.some((voice) => voice.voiceURI === current)) {
-          return current;
-        }
-
-        const preferred =
-          voices.find((voice) => /female|zira|aria|samantha|sonia|ava/i.test(voice.name)) ??
-          voices[0];
-
-        return preferred?.voiceURI ?? "";
-      });
-    };
-
-    updateVoices();
-    window.speechSynthesis.onvoiceschanged = updateVoices;
-
-    return () => {
-      if (window.speechSynthesis.onvoiceschanged === updateVoices) {
-        window.speechSynthesis.onvoiceschanged = null;
-      }
-    };
-  }, [speechSupported]);
-
-  useEffect(() => {
     return () => {
       stopNarration();
     };
@@ -622,13 +585,13 @@ export function AutoTourGuide({
         setNarrationSource("browser-tts");
         setNarrationStatus("loading");
         const utterance = new SpeechSynthesisUtterance(activeStep.narrationText);
+        const preferredVoice = getPreferredVoice();
         utterance.lang =
           activeStep.languageCode ??
           selectedTour.languageCode ??
-          selectedVoice?.lang ??
-          "en-NG";
-        if (selectedVoice) {
-          utterance.voice = selectedVoice;
+          getPreferredLang();
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
         }
         utterance.rate = 0.93;
         utterance.pitch = 0.96;
@@ -675,7 +638,6 @@ export function AutoTourGuide({
     isPaused,
     isPlaying,
     selectedTour,
-    selectedVoice,
     speechSupported,
     stopNarration,
   ]);
@@ -897,21 +859,11 @@ export function AutoTourGuide({
                 Download Transcript
               </button>
 
-              {speechSupported && availableVoices.length > 0 && (
-                <label className={cn("inline-flex min-h-12 items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em]", isLightMode ? "border-[#17253b]/10 bg-white/80 text-[#17253b]" : "border-white/10 bg-white/[0.04] text-white/72")}>
+              {speechSupported && (
+                <span className={cn("inline-flex min-h-12 items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em]", isLightMode ? "border-[#17253b]/10 bg-white/80 text-[#17253b]/60" : "border-white/10 bg-white/[0.04] text-white/40")}>
                   <AudioLines className="h-4 w-4" />
-                  <select
-                    value={selectedVoiceUri}
-                    onChange={(event) => setSelectedVoiceUri(event.target.value)}
-                    className={cn("bg-transparent text-[10px] font-semibold uppercase tracking-[0.14em] outline-none", isLightMode ? "text-[#17253b]" : "text-white")}
-                  >
-                    {availableVoices.map((voice) => (
-                      <option key={voice.voiceURI} value={voice.voiceURI} className="text-black">
-                        {voice.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  Voice: Header Selector
+                </span>
               )}
             </div>
           </article>

@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import ndcCrest from "/images/ndc-crest.png";
 import { useThemeMode } from "@/hooks/useThemeMode";
+import { getPreferredVoice, getPreferredLang } from "@/hooks/useVoicePreference";
+import { VoiceSelector } from "./VoiceSelector";
 import { useMuseumCollectionItems } from "@/hooks/useMuseumCollectionItems";
 import { useMuseumSections } from "@/hooks/useMuseumSections";
 import { useAboutItems } from "@/hooks/useAboutItems";
@@ -51,6 +53,7 @@ import type { ViewKey } from "./CategoryCards";
 import { AutoTourGuide } from "./AutoTourGuide";
 import { MuseumObjectViewer } from "./MuseumObjectViewer";
 import type { AnimationPreset } from "./MuseumObjectViewer";
+import { useDisplayFrameSettings } from "@/hooks/useDisplayFrameSettings";
 import { useCategoryAnimationSettings } from "@/hooks/useCategoryAnimationSettings";
 import { useCategoryImageDefaults } from "@/hooks/useCategoryImageDefaults";
 
@@ -1710,6 +1713,159 @@ function CollectionItemsSlider({
   );
 }
 
+/* ────────── Framed Exhibition Grid ────────── */
+function FramedExhibitionGrid({
+  items,
+  isLightMode,
+  onItemClick,
+  categoryAnimConfig,
+  categoryImageDefaults,
+}: {
+  items: CollectionItem[];
+  isLightMode: boolean;
+  onItemClick?: (item: CollectionItem) => void;
+  categoryAnimConfig?: { animation: AnimationPreset; speed: number; bgFade?: number };
+  categoryImageDefaults?: Partial<CollectionItem["imageSettings"]>;
+}) {
+  const { frameOptions, frameUrl, frameRef } = useDisplayFrameSettings();
+  const [selectedFrameRef, setSelectedFrameRef] = useState(frameRef);
+
+  const activeFrameOption = frameOptions.find((f) => f.ref === selectedFrameRef) ?? frameOptions[0];
+  const activeFrameUrl = activeFrameOption?.url ?? frameUrl;
+
+  if (items.length === 0) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: MUSEUM_EASE }}
+      className="space-y-4"
+    >
+      {/* Section header + frame selector */}
+      <div className={cn(
+        "museum-grain museum-plaque-shadow flex flex-wrap items-center justify-between gap-3 rounded-[20px] border px-5 py-4",
+        isLightMode
+          ? "border-[#bca46a]/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.7)_0%,rgba(244,239,226,0.92)_100%)]"
+          : "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.02)_100%)]",
+      )}>
+        <div className="flex items-center gap-3">
+          <Frame className={cn("h-5 w-5", isLightMode ? "text-[#7f6112]" : "text-[#d4af37]")} />
+          <div>
+            <h3 className={cn("text-lg font-semibold", isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]")}>
+              Framed Exhibition
+            </h3>
+            <p className={cn("text-[10px] uppercase tracking-[0.18em]", isLightMode ? "text-[#6f7682]" : "text-white/42")}>
+              Each artefact in its display frame
+            </p>
+          </div>
+        </div>
+
+        {/* Frame selector thumbnails */}
+        <div className="flex items-center gap-2">
+          <span className={cn("text-[10px] uppercase tracking-[0.14em] font-semibold", isLightMode ? "text-[#6f7682]" : "text-white/40")}>
+            Frame:
+          </span>
+          <div className="flex gap-1.5 flex-wrap">
+            {frameOptions.map((option) => (
+              <button
+                key={option.ref}
+                onClick={() => setSelectedFrameRef(option.ref)}
+                title={option.label}
+                className={cn(
+                  "rounded-lg border p-1 transition-all overflow-hidden",
+                  option.ref === selectedFrameRef
+                    ? isLightMode
+                      ? "border-[#d4af37] bg-[#d4af37]/10 ring-1 ring-[#d4af37]/30"
+                      : "border-[#d4af37] bg-[#d4af37]/12 ring-1 ring-[#d4af37]/30"
+                    : isLightMode
+                      ? "border-[#bca46a]/20 bg-white/60 hover:border-[#bca46a]/40"
+                      : "border-white/10 bg-white/[0.04] hover:border-white/20",
+                )}
+              >
+                <img
+                  src={option.url}
+                  alt={option.label}
+                  className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Grid of individually-framed artefacts */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {items.map((item, i) => (
+          <motion.button
+            key={item.id}
+            type="button"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: Math.min(i, 8) * 0.06, ease: MUSEUM_EASE }}
+            whileHover={{ y: -4, scale: 1.015 }}
+            whileTap={{ scale: 0.988 }}
+            onClick={() => onItemClick?.(item)}
+            className={cn(
+              "museum-grain museum-plaque-shadow group relative overflow-hidden rounded-[20px] border text-left transition-shadow duration-500 cursor-pointer",
+              isLightMode
+                ? "border-[#bca46a]/18 bg-[linear-gradient(180deg,rgba(255,255,255,0.76)_0%,rgba(244,239,226,0.96)_100%)] hover:border-[#bca46a]/35 hover:shadow-[0_20px_60px_rgba(0,0,0,0.1)]"
+                : "border-[#d4af37]/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.015)_100%)] hover:border-[#d4af37]/20 hover:shadow-[0_20px_60px_rgba(0,0,0,0.35)]",
+            )}
+          >
+            {/* Gold accent line */}
+            <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#d4af37]/60 to-transparent opacity-60 group-hover:opacity-100 transition-opacity" />
+
+            <div className="relative z-10 p-3">
+              <MuseumObjectViewer
+                title={item.name}
+                mediaSources={getCollectionItemMediaSources(item)}
+                isLightMode={isLightMode}
+                compact
+                frameOverride={activeFrameUrl}
+                topLabel="Exhibition Frame"
+                topRightLabel="360"
+                showTopRightBadge={Boolean(item.mediaUrls && item.mediaUrls.length > 1)}
+                footerLabel={item.era}
+                loading="lazy"
+                emptyLabel="Image pending"
+                {...resolveImageOverrides(item.imageSettings, categoryAnimConfig, categoryImageDefaults)}
+              />
+            </div>
+
+            <div className="relative z-10 px-4 pb-4">
+              <p className={cn("museum-kicker", isLightMode ? "text-[#7f6112]" : "text-[#d8bf76]")}>
+                {item.tag}
+              </p>
+              <h4 className={cn("mt-2 text-base font-semibold leading-tight truncate", isLightMode ? "text-[#17253b]" : "text-[#f8f3e8]")}>
+                {item.name}
+              </h4>
+              <p className={cn("mt-1.5 text-[12px] leading-5 line-clamp-2", isLightMode ? "text-[#4c5b70]" : "text-white/55")}>
+                {item.description}
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <span className={cn("rounded-full border px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em]", isLightMode ? "border-[#bca46a]/18 bg-[#f3ecdb]/78 text-[#7f6112]" : "border-[#d4af37]/15 bg-[#d4af37]/[0.06] text-[#d8bf76]")}>
+                  {item.era}
+                </span>
+                {item.location && (
+                  <span className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em]", isLightMode ? "border-[#17253b]/10 bg-white/70 text-[#435267]" : "border-white/[0.06] bg-white/[0.03] text-white/50")}>
+                    <MapPin className="h-2.5 w-2.5" />
+                    {item.location}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="relative">
+              <TriColorStrip className="h-[2px] opacity-50 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </motion.button>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 function CollectionAutoDisplay({
   collections,
   collectionItemsById,
@@ -1798,11 +1954,10 @@ function CollectionAutoDisplay({
     }
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = "en-NG";
+    utt.lang = getPreferredLang();
     utt.rate = 0.95;
     utt.pitch = 0.96;
-    const voices = window.speechSynthesis.getVoices().filter((v) => v.lang.startsWith("en"));
-    const preferred = voices.find((v) => /female|zira|aria|samantha|sonia|ava/i.test(v.name)) ?? voices[0];
+    const preferred = getPreferredVoice();
     if (preferred) utt.voice = preferred;
     utt.onstart = () => setIsSpeaking(true);
     utt.onend = () => { setIsSpeaking(false); onEnd(); };
@@ -2344,6 +2499,11 @@ export function MuseumCollectionsView({
       description="Five exhibition wings — institutional memory, national identity, continental partnerships, global defence education, and the honours archive bridge."
       onBack={onBack}
     >
+      {/* Voice selector for narration */}
+      <div className="flex justify-end mb-2">
+        <VoiceSelector />
+      </div>
+
       <AnimatePresence>
         {showAutoDisplay && (
           <CollectionAutoDisplay
@@ -2746,6 +2906,17 @@ export function MuseumCollectionsView({
                 items={activeCollectionItems}
                 isLightMode={isLightMode}
                 onAutoDisplay={() => setShowAutoDisplay(true)}
+                onItemClick={setSelectedArtefact}
+                categoryAnimConfig={getCategoryAnim(activeCollection.id)}
+                categoryImageDefaults={getCategoryImageDefs(activeCollection.id)}
+              />
+            )}
+
+            {/* Framed Exhibition — each artefact in its own display frame */}
+            {activeCollectionItems.length > 0 && (
+              <FramedExhibitionGrid
+                items={activeCollectionItems}
+                isLightMode={isLightMode}
                 onItemClick={setSelectedArtefact}
                 categoryAnimConfig={getCategoryAnim(activeCollection.id)}
                 categoryImageDefaults={getCategoryImageDefs(activeCollection.id)}

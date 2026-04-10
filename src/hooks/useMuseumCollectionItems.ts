@@ -21,7 +21,7 @@ type ImageSettings = {
   bgFade?: number;
 };
 
-type CollectionItem = {
+export type CollectionItem = {
   id: string;
   name: string;
   imageUrl: string;

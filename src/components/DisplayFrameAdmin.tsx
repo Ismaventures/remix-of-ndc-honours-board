@@ -310,6 +310,7 @@ function createLayer(sourceRef: string, label: string, _index: number): StudioLa
  * - 5-6 items: top row + bottom row (pyramid)
  * - 7+ items: responsive grid that fills the frame evenly
  */
+/** Re-arrange ALL layers from scratch (used by the explicit Auto-Arrange button). */
 function autoArrangeLayers(layers: StudioLayer[]): StudioLayer[] {
   const n = layers.length;
   if (n === 0) return layers;
@@ -389,6 +390,65 @@ function autoArrangeLayers(layers: StudioLayer[]): StudioLayer[] {
       depth: 10 + i * 2,
     };
   });
+}
+
+/**
+ * Place only NEW layers into open positions, preserving existing layer positions.
+ * Existing layers keep their x/y/scale/rotation/depth untouched.
+ */
+function placeNewLayers(existingLayers: StudioLayer[], newLayers: StudioLayer[]): StudioLayer[] {
+  if (newLayers.length === 0) return existingLayers;
+  const total = existingLayers.length + newLayers.length;
+
+  // Compute a full grid for total items to find open slots
+  const cols = total <= 2 ? 2 : total <= 4 ? 2 : total <= 9 ? 3 : total <= 16 ? 4 : Math.ceil(Math.sqrt(total * 1.2));
+  const rows = Math.ceil(total / cols);
+  const maxScale = Math.max(10, Math.min(28, 55 / Math.max(cols, rows)));
+  const spanX = 68, spanY = 48;
+  const cellW = spanX / cols, cellH = spanY / rows;
+
+  // Generate all grid slot positions
+  const slots: { x: number; y: number }[] = [];
+  for (let i = 0; i < total; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const colsInRow = row === rows - 1 ? total - row * cols : cols;
+    const rowOffsetX = (cols - colsInRow) * cellW / 2;
+    slots.push({
+      x: clampNumber(-(spanX / 2) + rowOffsetX + cellW * col + cellW / 2, -42, 42),
+      y: clampNumber(-(spanY / 2) + cellH * row + cellH / 2, -28, 28),
+    });
+  }
+
+  // Find slots not occupied by existing layers (by proximity)
+  const usedSlots = new Set<number>();
+  for (const layer of existingLayers) {
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    for (let s = 0; s < slots.length; s++) {
+      if (usedSlots.has(s)) continue;
+      const d = (layer.x - slots[s].x) ** 2 + (layer.y - slots[s].y) ** 2;
+      if (d < bestDist) { bestDist = d; bestIdx = s; }
+    }
+    usedSlots.add(bestIdx);
+  }
+
+  // Assign open slots to new layers
+  const openSlots = slots.filter((_, i) => !usedSlots.has(i));
+  const maxDepth = existingLayers.reduce((m, l) => Math.max(m, l.depth), 10);
+  const placed = newLayers.map((layer, i) => {
+    const slot = openSlots[i] ?? { x: 0, y: 0 };
+    return {
+      ...layer,
+      x: slot.x,
+      y: slot.y,
+      scale: maxScale,
+      rotation: ((i % 3) - 1) * 1.5,
+      depth: maxDepth + 2 + i * 2,
+    };
+  });
+
+  return [...existingLayers, ...placed];
 }
 
 const BG_GRADIENT_PRESETS = [
@@ -894,7 +954,7 @@ export function DisplayFrameAdmin() {
       updateScene((current) => {
         const offset = current.layers.length;
         const newLayers = uploadedRefs.map((ref, index) => createLayer(ref, stripExtension(files[index].name), offset + index));
-        const allLayers = autoArrangeLayers([...current.layers, ...newLayers]);
+        const allLayers = placeNewLayers(current.layers, newLayers);
         return {
           ...current,
           layers: allLayers,
@@ -970,7 +1030,7 @@ export function DisplayFrameAdmin() {
       updateScene((current) => {
         const offset = current.layers.length;
         const newLayers = refs.map((ref, i) => createLayer(ref, stripExtension(files[i].name), offset + i));
-        const allLayers = autoArrangeLayers([...current.layers, ...newLayers]);
+        const allLayers = placeNewLayers(current.layers, newLayers);
         return {
           ...current,
           layers: allLayers,
