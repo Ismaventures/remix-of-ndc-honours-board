@@ -9,8 +9,8 @@ interface PreBootVaultProps {
 const MILITARY_BRANCHES = [
   { id: "navy", src: "/images/Badge_of_the_Nigerian_Navy.svg", name: "Nigerian Navy", zoom: 1 },
   { id: "army", src: "/images/Emblem_of_the_Nigerian_Army.svg", name: "Nigerian Army", zoom: 1 },
-  { id: "airforce", src: "/Nigerian_Air_Force_emblem.svg.png", name: "Nigerian Air Force", zoom: 1 },
-  { id: "dhq", src: "/dhq logo.jpg", name: "Defence Headquarters", zoom: 1 }
+  { id: "airforce", src: "/images/nigerian-air-force-emblem.png", name: "Nigerian Air Force", zoom: 1 },
+  { id: "dhq", src: "/images/dhq-logo.jpg", name: "Defence Headquarters", zoom: 1 }
 ];
 
 export const PreBootVault: React.FC<PreBootVaultProps> = ({ onComplete }) => {
