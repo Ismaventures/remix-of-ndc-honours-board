@@ -62,6 +62,7 @@ type ChamberStudioScene = {
 };
 
 const STUDIO_STORAGE_KEY = "museum_artifact_chamber_studio";
+const STUDIO_SHARED_SETTING_KEY = "artifact_gallery_chamber_studio";
 const AUTO_DISPLAY_BG_KEY = "afg_auto_display_bg";
 const AUTO_DISPLAY_BG_SETTING_KEY = "artifact_gallery_auto_display_backgrounds";
 const DEFAULT_AUTO_DISPLAY_BG = "/images/cosmic-nebulae-bg.png";
@@ -189,6 +190,10 @@ function saveTourAudios(audios: TourCategoryAudios) {
 
 function hasActiveTourAudio(audios: TourCategoryAudios) {
   return Object.values(audios).some((tracks) => (tracks ?? []).some((track) => track.active === true));
+}
+
+function isDisplayableStudioScene(value: ChamberStudioScene | null | undefined): value is ChamberStudioScene {
+  return Boolean(value?.frameActive && Array.isArray(value.layers) && value.layers.length > 0);
 }
 
 const SAMPLE_ARTIFACT = "/images/ndc-crest.png";
@@ -1559,13 +1564,32 @@ export function ArtifactFrameGallery({ onBack }: ArtifactFrameGalleryProps) {
   // Load the studio scene
   useEffect(() => {
     let cancelled = false;
-    void loadUiSetting<ChamberStudioScene>(STUDIO_STORAGE_KEY).then((stored) => {
+
+    void (async () => {
+      const [sharedScene, localScene] = await Promise.all([
+        loadSharedSetting<ChamberStudioScene>(STUDIO_SHARED_SETTING_KEY),
+        loadUiSetting<ChamberStudioScene>(STUDIO_STORAGE_KEY),
+      ]);
+
       if (cancelled) return;
-      if (stored && stored.frameActive && Array.isArray(stored.layers) && stored.layers.length > 0) {
-        setScene({ ...stored, layers: ensureArranged(stored.layers) });
+
+      const nextScene = isDisplayableStudioScene(sharedScene)
+        ? sharedScene
+        : isDisplayableStudioScene(localScene)
+          ? localScene
+          : null;
+
+      if (nextScene) {
+        setScene({ ...nextScene, layers: ensureArranged(nextScene.layers) });
       }
+
+      if (!isDisplayableStudioScene(sharedScene) && isDisplayableStudioScene(localScene)) {
+        void saveSharedSetting(STUDIO_SHARED_SETTING_KEY, localScene);
+      }
+
       setLoading(false);
-    });
+    })();
+
     return () => { cancelled = true; };
   }, []);
 

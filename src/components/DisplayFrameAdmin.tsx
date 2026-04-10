@@ -31,12 +31,14 @@ import {
   type FrameDisplayParams,
 } from "@/hooks/useDisplayFrameSettings";
 import { resolveMediaRefToObjectUrl, saveMediaFile } from "@/lib/persistentMedia";
+import { loadSharedSetting, saveSharedSetting } from "@/lib/sharedSettingsStorage";
 import { loadUiSetting, saveUiSetting } from "@/lib/uiSettingsStorage";
 import { cn } from "@/lib/utils";
 import { MuseumObjectViewer } from "./MuseumObjectViewer";
 
 const SAMPLE_ARTIFACT = "/images/ndc-crest.png";
 const STUDIO_STORAGE_KEY = "museum_artifact_chamber_studio";
+const STUDIO_SHARED_SETTING_KEY = "artifact_gallery_chamber_studio";
 const MAX_MEDIA_SIZE_MB = 8;
 const MAX_MEDIA_BYTES = MAX_MEDIA_SIZE_MB * 1024 * 1024;
 const STAGE_REGION = { left: 15, top: 12, width: 70, height: 60 };
@@ -254,6 +256,10 @@ const DEFAULT_SCENE: ChamberStudioScene = {
   frameActive: false,
   backgroundAudioRef: "",
 };
+
+function isStoredStudioScene(value: ChamberStudioScene | null | undefined): value is ChamberStudioScene {
+  return Boolean(value && Array.isArray(value.layers) && typeof value.stageFrameRef === "string");
+}
 
 function clampNumber(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -698,16 +704,40 @@ export function DisplayFrameAdmin() {
     savedTimer.current = setTimeout(() => setSavedFlash(false), 1800);
   }, []);
 
+  const persistStudioScene = useCallback(async (nextScene: ChamberStudioScene) => {
+    await Promise.allSettled([
+      saveUiSetting(STUDIO_STORAGE_KEY, nextScene),
+      saveSharedSetting(STUDIO_SHARED_SETTING_KEY, nextScene),
+    ]);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
-    void loadUiSetting<ChamberStudioScene>(STUDIO_STORAGE_KEY).then((stored) => {
+    void (async () => {
+      const [sharedScene, localScene] = await Promise.all([
+        loadSharedSetting<ChamberStudioScene>(STUDIO_SHARED_SETTING_KEY),
+        loadUiSetting<ChamberStudioScene>(STUDIO_STORAGE_KEY),
+      ]);
+
       if (cancelled) return;
-      if (stored) {
-        setScene(normalizeScene(stored));
+
+      const nextScene = isStoredStudioScene(sharedScene)
+        ? sharedScene
+        : isStoredStudioScene(localScene)
+          ? localScene
+          : null;
+
+      if (nextScene) {
+        setScene(normalizeScene(nextScene));
       }
+
+      if (!isStoredStudioScene(sharedScene) && isStoredStudioScene(localScene)) {
+        void saveSharedSetting(STUDIO_SHARED_SETTING_KEY, localScene);
+      }
+
       setSceneLoaded(true);
-    });
+    })();
 
     return () => {
       cancelled = true;
@@ -721,11 +751,11 @@ export function DisplayFrameAdmin() {
 
     clearTimeout(autosaveTimer.current);
     autosaveTimer.current = setTimeout(() => {
-      void saveUiSetting(STUDIO_STORAGE_KEY, scene);
+      void persistStudioScene(scene);
     }, 650);
 
     return () => clearTimeout(autosaveTimer.current);
-  }, [scene, sceneLoaded]);
+  }, [persistStudioScene, scene, sceneLoaded]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1092,15 +1122,15 @@ export function DisplayFrameAdmin() {
   }, [flashSaved, selectedLayer, updateLayer]);
 
   const handlePublishCuration = useCallback(async () => {
-    await saveUiSetting(STUDIO_STORAGE_KEY, scene);
+    await persistStudioScene(scene);
     await setActiveFrame(scene.stageFrameRef);
     flashSaved("Curation published. The chamber frame is now ready for live museum preview.");
-  }, [flashSaved, scene, setActiveFrame]);
+  }, [flashSaved, persistStudioScene, scene, setActiveFrame]);
 
   const saveSceneNow = useCallback(async () => {
-    await saveUiSetting(STUDIO_STORAGE_KEY, scene);
+    await persistStudioScene(scene);
     flashSaved("Artifact chamber scene saved.");
-  }, [flashSaved, scene]);
+  }, [flashSaved, persistStudioScene, scene]);
 
   const applyStageAsLiveFrame = useCallback(async () => {
     await setActiveFrame(scene.stageFrameRef);
