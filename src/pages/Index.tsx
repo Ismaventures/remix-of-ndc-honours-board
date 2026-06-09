@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { SlidersHorizontal, ChevronLeft, ChevronRight, Play, Pause, X } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { CommandantHero } from "@/components/CommandantHero";
 import { PastCommandants } from "@/components/PastCommandants";
@@ -12,6 +12,7 @@ import {
   MuseumExperienceSection,
 } from "@/components/MuseumExperience";
 import { OrganogramView } from "@/components/OrganogramView";
+import { DirectingStaffByCourseYear } from "@/components/DirectingStaffByCourseYear";
 import { VisitsSection } from "@/components/VisitsSection";
 import { AdminPanel } from "@/components/AdminPanel";
 import { AdminLogin } from "@/components/AdminLogin";
@@ -45,6 +46,7 @@ import { Category, Commandant } from "@/types/domain";
 import { getSafeSupabaseSession, supabase } from "@/lib/supabaseClient";
 import { prefetchMediaReferences } from "@/lib/persistentMedia";
 import { prefetchAudioTrack, useAudioStore } from "@/hooks/useAudioStore";
+import ndcCrest from "/images/ndc-crest.png";
 
 const SECTION_TITLES: Record<string, string> = {
   fwc: "Distinguished Fellows of the War College (FWC)",
@@ -97,6 +99,11 @@ const Index = () => {
   const [deviceClosed, setDeviceClosed] = useState(false);
   const [selectedPastCommandant, setSelectedPastCommandant] =
     useState<Commandant | null>(null);
+  
+  // Commandants auto-display state
+  const [commandantsAutoDisplayActive, setCommandantsAutoDisplayActive] = useState(false);
+  const [commandantsAutoDisplayIndex, setCommandantsAutoDisplayIndex] = useState(0);
+  const [isCommandantsAutoPlaying, setIsCommandantsAutoPlaying] = useState(true);
   const commandantSlideDir = useRef<'left' | 'right' | null>(null);
   const globalCommandRef = useRef<number | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -654,6 +661,19 @@ const Index = () => {
     };
   }, []);
 
+  // Auto-cycling effect for commandants auto-display
+  useEffect(() => {
+    if (!commandantsAutoDisplayActive || commandants.length === 0 || !isCommandantsAutoPlaying) return;
+
+    const interval = setInterval(() => {
+      setCommandantsAutoDisplayIndex((prev) => (prev + 1) % commandants.length);
+    }, 4000); // Change every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [commandantsAutoDisplayActive, commandants.length, isCommandantsAutoPlaying]);
+
+  const currentAutoDisplayCommandant = commandantsAutoDisplayActive && commandants[commandantsAutoDisplayIndex] ? commandants[commandantsAutoDisplayIndex] : null;
+
   const renderContent = () => {
     if (view === "home") {
       const showCommandantShell = isCommandantsLoading || commandants.length > 0;
@@ -682,7 +702,7 @@ const Index = () => {
                 </section>
               )}
 
-              {!isCommandantsLoading && currentCommandant && (
+              {false && currentCommandant && (
                 <div
                   role="button"
                   tabIndex={0}
@@ -709,7 +729,7 @@ const Index = () => {
                 </div>
               )}
 
-              {!isCommandantsLoading && commandants.length > 0 && (
+              {false && commandants.length > 0 && (
                 <div className="rounded-xl md:rounded-2xl border border-[#d8e1ee]/80 bg-[#f8fafc] p-3 sm:p-4 md:p-5">
                   <PastCommandants
                     commandants={commandants}
@@ -828,22 +848,35 @@ const Index = () => {
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               Previous
             </button>
+            <button
+              onClick={() => {
+                setCommandantsAutoDisplayActive(true);
+                setCommandantsAutoDisplayIndex(0);
+                setIsCommandantsAutoPlaying(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#002060] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#003080] transition-all duration-200"
+            >
+              <Play className="h-3.5 w-3.5" />
+              Auto Display
+            </button>
           </div>
 
-          {currentCommandant && (
+          {false && currentCommandant && (
             <CommandantHero
               commandant={currentCommandant}
               compactDescription={false}
             />
           )}
 
-          <PastCommandants
-            commandants={commandants}
-            includeCurrent
-            onSelectCommandant={(commandant) =>
-              openPastCommandantProfile(commandant)
-            }
-          />
+          {false && (
+            <PastCommandants
+              commandants={commandants}
+              includeCurrent
+              onSelectCommandant={(commandant) =>
+                openPastCommandantProfile(commandant)
+              }
+            />
+          )}
         </section>
       );
     }
@@ -995,6 +1028,18 @@ const Index = () => {
             setAdminEmail(null);
           }}
           onBack={() => setView("home")}
+        />
+      );
+    }
+
+    // Special handling for Directing Staff with course year categorization
+    if (view === "directing") {
+      return (
+        <DirectingStaffByCourseYear
+          personnel={personnel}
+          onBack={() => setView("home")}
+          title={SECTION_TITLES["directing"]}
+          description="Directing staff who have guided courses and shaped the NDC academic framework, categorized by CSE course year."
         />
       );
     }
@@ -1296,6 +1341,105 @@ const Index = () => {
                   </div>
                 );
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Commandants Auto-Display Modal */}
+      {false && commandantsAutoDisplayActive && currentAutoDisplayCommandant && (
+        <div className="fixed inset-0 z-[100] bg-gradient-to-br from-[#001030] via-[#0a0a1f] to-[#001030] flex items-center justify-center p-4">
+          {/* Header */}
+          <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-6 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <img src={ndcCrest} alt="NDC" className="h-8 w-8 object-contain" />
+              <div>
+                <p className="text-[#FFD700] font-serif text-sm uppercase tracking-widest font-bold">
+                  Commandants
+                </p>
+                <p className="text-white/60 text-xs mt-1">
+                  {commandantsAutoDisplayIndex + 1} of {commandants.length}
+                </p>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsCommandantsAutoPlaying(!isCommandantsAutoPlaying)}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all"
+                title={isCommandantsAutoPlaying ? 'Pause' : 'Play'}
+              >
+                {isCommandantsAutoPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+              </button>
+              <button
+                onClick={() => setCommandantsAutoDisplayActive(false)}
+                className="p-2 rounded-lg bg-white/10 hover:bg-red-500/20 text-white transition-all"
+                title="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex flex-col items-center justify-center gap-8 max-w-2xl">
+            {/* Large NDC Crest */}
+            <img
+              src={ndcCrest}
+              alt="NDC"
+              className="h-40 w-40 object-contain opacity-90 drop-shadow-lg"
+            />
+
+            {/* Commandant Info */}
+            <div className="text-center space-y-4 w-full">
+              <h2 className="text-4xl font-bold text-white">
+                {currentAutoDisplayCommandant.name}
+              </h2>
+              {currentAutoDisplayCommandant.rank && (
+                <p className="text-xl text-[#FFD700] font-semibold">
+                  {currentAutoDisplayCommandant.rank}
+                </p>
+              )}
+              {currentAutoDisplayCommandant.title && (
+                <p className="text-lg text-white/80">
+                  {currentAutoDisplayCommandant.title}
+                </p>
+              )}
+            </div>
+
+            {/* Commandant Image */}
+            {currentAutoDisplayCommandant.portraitUrl && (
+              <div className="w-full max-w-sm aspect-square rounded-lg overflow-hidden border-2 border-[#FFD700]/30">
+                <img
+                  src={currentAutoDisplayCommandant.portraitUrl}
+                  alt={currentAutoDisplayCommandant.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
+            {/* Navigation */}
+            <div className="flex items-center gap-4 mt-8">
+              <button
+                onClick={() => setCommandantsAutoDisplayIndex((prev) => (prev - 1 + commandants.length) % commandants.length)}
+                className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+                title="Previous"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+
+              <div className="text-white text-sm font-semibold">
+                {commandantsAutoDisplayIndex + 1} / {commandants.length}
+              </div>
+
+              <button
+                onClick={() => setCommandantsAutoDisplayIndex((prev) => (prev + 1) % commandants.length)}
+                className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+                title="Next"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
             </div>
           </div>
         </div>

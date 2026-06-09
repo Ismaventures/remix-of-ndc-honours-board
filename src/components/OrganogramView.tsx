@@ -9,10 +9,15 @@ import {
   ChevronsUpDown,
   Search,
   CalendarDays,
+  Play,
+  Pause,
+  X,
 } from "lucide-react";
 import { Personnel, Category } from "@/types/domain";
 import { ProfileModal } from "./ProfileModal";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
+import ndcCrest from "/images/ndc-crest.png";
+import { useThemeMode } from "@/hooks/useThemeMode";
 import {
   Popover,
   PopoverContent,
@@ -174,6 +179,8 @@ export function OrganogramView({
   forcedSelectedId = undefined,
   forcedSelectionNonce = 0,
 }: OrganogramViewProps) {
+  const { themeMode } = useThemeMode();
+  const isLightMode = themeMode.startsWith("outdoor");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("oldest");
@@ -182,6 +189,11 @@ export function OrganogramView({
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [displayMode, setDisplayMode] = useState<"scroll" | "list">("scroll");
+
+  // Auto-display states
+  const [autoDisplayActive, setAutoDisplayActive] = useState(false);
+  const [autoDisplayIndex, setAutoDisplayIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
   const [rankOpen, setRankOpen] = useState(false);
   const [serviceOpen, setServiceOpen] = useState(false);
@@ -242,6 +254,19 @@ export function OrganogramView({
     () => data.filter((p) => p.category === category),
     [data, category],
   );
+
+  // Auto-cycling effect for autodisplay
+  useEffect(() => {
+    if (!autoDisplayActive || categoryRecords.length === 0 || !isAutoPlaying) return;
+
+    const interval = setInterval(() => {
+      setAutoDisplayIndex((prev) => (prev + 1) % categoryRecords.length);
+    }, 4000); // Change every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [autoDisplayActive, categoryRecords.length, isAutoPlaying]);
+
+  const currentAutoDisplayPerson = autoDisplayActive && categoryRecords[autoDisplayIndex] ? categoryRecords[autoDisplayIndex] : null;
 
   const rankOptions = useMemo(() => {
     return [...new Set(categoryRecords.map((p) => p.rank))].sort((a, b) => {
@@ -466,8 +491,23 @@ export function OrganogramView({
             </p>
           </div>
         </div>
-        <div className="text-xs uppercase tracking-widest text-[#002060]/80 font-semibold">
-          {filtered.length} Records
+        <div className="flex items-center gap-4">
+          <div className="text-xs uppercase tracking-widest text-[#002060]/80 font-semibold">
+            {filtered.length} Records
+          </div>
+          {filtered.length > 0 && (
+            <button
+              onClick={() => {
+                setAutoDisplayActive(true);
+                setAutoDisplayIndex(0);
+                setIsAutoPlaying(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#002060] text-white font-semibold text-sm hover:bg-[#003080] transition-all"
+            >
+              <Play className="h-4 w-4" />
+              Auto Display
+            </button>
+          )}
         </div>
       </div>
 
@@ -949,6 +989,105 @@ export function OrganogramView({
           person={selectedPerson}
           onClose={() => setSelectedId(null)}
         />
+      )}
+
+      {/* Auto-Display Full-Screen Modal */}
+      {autoDisplayActive && currentAutoDisplayPerson && (
+        <div className="fixed inset-0 z-[100] bg-gradient-to-br from-[#001030] via-[#0a0a1f] to-[#001030] flex items-center justify-center p-4">
+          {/* Header */}
+          <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-6 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <img src={ndcCrest} alt="NDC" className="h-8 w-8 object-contain" />
+              <div>
+                <p className="text-[#FFD700] font-serif text-sm uppercase tracking-widest font-bold">
+                  {title}
+                </p>
+                <p className="text-white/60 text-xs mt-1">
+                  {autoDisplayIndex + 1} of {categoryRecords.length}
+                </p>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all"
+                title={isAutoPlaying ? 'Pause' : 'Play'}
+              >
+                {isAutoPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+              </button>
+              <button
+                onClick={() => setAutoDisplayActive(false)}
+                className="p-2 rounded-lg bg-white/10 hover:bg-red-500/20 text-white transition-all"
+                title="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex flex-col items-center justify-center gap-8 max-w-2xl">
+            {/* Large NDC Crest */}
+            <img
+              src={ndcCrest}
+              alt="NDC"
+              className="h-40 w-40 object-contain opacity-90 drop-shadow-lg"
+            />
+
+            {/* Person Info */}
+            <div className="text-center space-y-4 w-full">
+              <h2 className="text-4xl font-bold text-white">
+                {currentAutoDisplayPerson.name}
+              </h2>
+              {currentAutoDisplayPerson.rank && (
+                <p className="text-xl text-[#FFD700] font-semibold">
+                  {currentAutoDisplayPerson.rank}
+                </p>
+              )}
+              {currentAutoDisplayPerson.service && (
+                <p className="text-lg text-white/80">
+                  {currentAutoDisplayPerson.service}
+                </p>
+              )}
+            </div>
+
+            {/* Person Image */}
+            {currentAutoDisplayPerson.imageUrl && (
+              <div className="w-full max-w-sm aspect-square rounded-lg overflow-hidden border-2 border-[#FFD700]/30">
+                <img
+                  src={currentAutoDisplayPerson.imageUrl}
+                  alt={currentAutoDisplayPerson.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
+            {/* Navigation */}
+            <div className="flex items-center gap-4 mt-8">
+              <button
+                onClick={() => setAutoDisplayIndex((prev) => (prev - 1 + categoryRecords.length) % categoryRecords.length)}
+                className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+                title="Previous"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+
+              <div className="text-white text-sm font-semibold">
+                {autoDisplayIndex + 1} / {categoryRecords.length}
+              </div>
+
+              <button
+                onClick={() => setAutoDisplayIndex((prev) => (prev + 1) % categoryRecords.length)}
+                className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+                title="Next"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,4 +1,10 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,21 +23,10 @@ import { CommandantHero } from "./CommandantHero";
 import { CommandantSplitHero } from "./CommandantSplitHero";
 import { UnifiedAutoCard } from "./UnifiedAutoCard";
 import { ProfileModal } from "./ProfileModal";
+import { CommandantProfileModal } from "./CommandantProfileModal";
 import ndcCrest from "/images/ndc-crest.png";
 import { prefetchAudioTrack, useAudioStore } from "@/hooks/useAudioStore";
 import { playAudioTrack } from "@/components/AudioManager";
-import {
-  AutoDisplayContextKey,
-  AutoDisplaySettings,
-  AutoDisplayTransitionType,
-  DEFAULT_AUTO_DISPLAY_SETTINGS,
-} from "@/hooks/useAutoDisplaySettings";
-import { NdcScatteredTransition } from "./NdcScatteredTransition";
-import { BarracksRevealTransition } from "./BarracksRevealTransition";
-import { SaluteFlashTransition } from "./SaluteFlashTransition";
-import { ParadeSweepTransition } from "./ParadeSweepTransition";
-import { MissionBriefTransition } from "./MissionBriefTransition";
-import { RunwaySweepTransition } from "./RunwaySweepTransition";
 import { useSliderControl } from "@/hooks/useSliderControl";
 import { useThemeMode } from "@/hooks/useThemeMode";
 import {
@@ -44,6 +39,18 @@ import { playTransitionCue } from "@/lib/transitionCues";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
 import { useCinematicExperienceSettings } from "@/hooks/useCinematicExperienceSettings";
 import { getCommandantDisplayTitle } from "@/lib/utils";
+import {
+  AutoDisplayContextKey,
+  AutoDisplaySettings,
+  AutoDisplayTransitionType,
+  DEFAULT_AUTO_DISPLAY_SETTINGS,
+} from "@/hooks/useAutoDisplaySettings";
+import { NdcScatteredTransition } from "./NdcScatteredTransition";
+import { BarracksRevealTransition } from "./BarracksRevealTransition";
+import { SaluteFlashTransition } from "./SaluteFlashTransition";
+import { ParadeSweepTransition } from "./ParadeSweepTransition";
+import { MissionBriefTransition } from "./MissionBriefTransition";
+import { RunwaySweepTransition } from "./RunwaySweepTransition";
 
 interface AutoRotationDisplayProps {
   personnel: Personnel[];
@@ -893,7 +900,6 @@ export function AutoRotationDisplay({
 
   useEffect(() => {
     if (!isActive) return;
-
     const prevBodyOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
@@ -1601,203 +1607,18 @@ export function AutoRotationDisplay({
       )}
 
       {selectedCommandant && (
-        <div className="fixed inset-0 z-[70] bg-gradient-to-br from-[#000a1a] via-[#001030] to-[#000a1a] p-0 overflow-y-auto overflow-x-hidden">
-          {/* Subtle diagonal texture */}
-          <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]">
-            <div className="absolute inset-0 bg-[repeating-linear-gradient(135deg,transparent,transparent_40px,rgba(255,255,255,0.08)_40px,rgba(255,255,255,0.08)_41px)]" />
-          </div>
-          <div className="min-h-screen w-full flex flex-col items-center relative z-10">
-            {/* Close Button Header */}
-            <div className="sticky top-0 z-[80] w-full bg-[#001030]/80 backdrop-blur-xl border-b border-[#FFD700]/10 px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center shadow-lg gap-3">
-              <div className="flex items-center gap-3">
-                <img
-                  src={ndcCrest}
-                  alt="Logo"
-                  className="h-8 w-8 object-contain"
-                />
-                <span className="text-[#FFD700]/80 font-serif tracking-widest uppercase text-[11px] sm:text-sm font-semibold">
-                  Officer Profile : {selectedCommandant.name}
-                </span>
-              </div>
-              <button
-                onClick={() => setSelectedCommandant(null)}
-                className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 transition-all duration-300"
-              >
-                <div className="w-5 h-5 flex items-center justify-center rounded-full bg-white/10 group-hover:bg-red-500/20 transition-all">
-                  <span className="text-xs text-white/60 group-hover:text-red-400">✕</span>
-                </div>
-                <span className="text-xs uppercase tracking-[0.2em] text-white/50 font-bold group-hover:text-white/80 transition-colors">
-                  Close Profile
-                </span>
-              </button>
-            </div>
-
-            <button
-              onClick={() => setSelectedCommandant(null)}
-              aria-label="Close commandant profile"
-              className="fixed right-3 top-20 z-[90] sm:right-6 sm:top-24 rounded-full border border-white/15 bg-[#001030]/85 px-3 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.18em] text-white/70 backdrop-blur hover:bg-white/10 hover:text-white transition-colors"
-            >
-              Close
-            </button>
-
-            {/* Main Content with slide animation */}
-            <div className="w-full max-w-[1400px] px-3 sm:px-6 py-6 sm:py-12 relative">
-              {/* Prev / Next navigation arrows */}
-              {(() => {
-                const idx = commandants.findIndex((c) => c.id === selectedCommandant.id);
-                const hasPrev = idx > 0;
-                const hasNext = idx >= 0 && idx < commandants.length - 1;
-                return (
-                  <>
-                    {hasPrev && (
-                      <button
-                        onClick={() => navigateCommandantProfile("prev")}
-                        aria-label="Previous commandant"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-11 h-11 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-[#FFD700]/20 hover:border-[#FFD700]/40 backdrop-blur-sm transition-all duration-300 group/nav"
-                      >
-                        <ChevronLeft className="h-5 w-5 text-[#FFD700]/60 group-hover/nav:text-[#FFD700] transition-colors" />
-                      </button>
-                    )}
-                    {hasNext && (
-                      <button
-                        onClick={() => navigateCommandantProfile("next")}
-                        aria-label="Next commandant"
-                        className="absolute right-0 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-11 h-11 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-[#FFD700]/20 hover:border-[#FFD700]/40 backdrop-blur-sm transition-all duration-300 group/nav"
-                      >
-                        <ChevronRight className="h-5 w-5 text-[#FFD700]/60 group-hover/nav:text-[#FFD700] transition-colors" />
-                      </button>
-                    )}
-                  </>
-                );
-              })()}
-
-              <div
-                key={selectedCommandant.id}
-                className={commandantSlideDir.current === 'left' ? 'profile-slide-left' : commandantSlideDir.current === 'right' ? 'profile-slide-right' : ''}
-              >
-                <CommandantHero
-                  commandant={selectedCommandant}
-                  compactDescription={false}
-                  isAutoDisplay={false}
-                />
-              </div>
-
-              {/* Profile counter */}
-              {(() => {
-                const idx = commandants.findIndex((c) => c.id === selectedCommandant.id);
-                if (idx === -1 || commandants.length <= 1) return null;
-                return (
-                  <div className="flex justify-center mt-6 gap-1.5">
-                    {commandants.map((c, i) => (
-                      <button
-                        key={c.id}
-                        onClick={() => {
-                          commandantSlideDir.current = i > idx ? 'left' : 'right';
-                          setSelectedCommandant(c);
-                        }}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${
-                          i === idx
-                            ? 'w-8 bg-[#FFD700]/80'
-                            : 'w-1.5 bg-white/20 hover:bg-white/40'
-                        }`}
-                        aria-label={`View ${c.name}`}
-                      />
-                    ))}
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
-        </div>
+        <CommandantProfileModal
+          commandant={selectedCommandant}
+          onClose={() => setSelectedCommandant(null)}
+          onNavigate={navigateCommandantProfile}
+        />
       )}
 
       {selectedVisit && (
-        <div className="fixed inset-0 z-[70] bg-background/85 backdrop-blur-sm p-3 sm:p-4 md:p-8 overflow-y-auto">
-          <div className="max-w-4xl mx-auto rounded-xl border border-primary/35 bg-card p-4 sm:p-6 md:p-8 shadow-[0_0_40px_rgba(0,0,0,0.25)]">
-            <div className="flex justify-between items-start gap-4 mb-5">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-primary/85 font-semibold">
-                  Distinguished Visit
-                </p>
-                <h3 className="text-2xl md:text-3xl font-bold font-serif text-foreground mt-1">
-                  {selectedVisit.name}
-                </h3>
-              </div>
-              <button
-                onClick={() => setSelectedVisit(null)}
-                className="px-3 py-1.5 rounded text-xs bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Close
-              </button>
-            </div>
-
-            <p className="text-sm md:text-base text-primary/90 font-semibold tracking-[0.12em] uppercase mb-3">
-              {selectedVisit.title}
-            </p>
-            <p className="text-sm text-muted-foreground mb-6">
-              {selectedVisit.country} · {selectedVisit.date}
-            </p>
-
-            {selectedVisit.imageUrl && (
-              <div className="w-full max-w-xl mx-auto mb-6 rounded-lg overflow-hidden border border-primary/25">
-                <img
-                  src={selectedVisit.imageUrl}
-                  alt={selectedVisit.name}
-                  className="w-full h-auto object-cover"
-                />
-              </div>
-            )}
-
-            <p className="text-base leading-relaxed text-foreground/90">
-              {selectedVisit.description}
-            </p>
-
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Name
-                </p>
-                <p className="text-foreground mt-1">{selectedVisit.name}</p>
-              </div>
-              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Title
-                </p>
-                <p className="text-foreground mt-1">{selectedVisit.title}</p>
-              </div>
-              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Country
-                </p>
-                <p className="text-foreground mt-1">{selectedVisit.country}</p>
-              </div>
-              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Date
-                </p>
-                <p className="text-foreground mt-1">{selectedVisit.date}</p>
-              </div>
-              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2 md:col-span-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Decoration
-                </p>
-                <div className="mt-1 inline-flex max-w-full items-center rounded-md border border-[#D4AF37]/80 bg-[linear-gradient(140deg,#FFF8CF_0%,#EBCB59_45%,#C49A2C_100%)] px-2.5 py-1 shadow-[0_0_14px_rgba(212,175,55,0.3)]">
-                  <p className="text-[#1f2937] font-bold tracking-[0.08em] break-words">
-                    {selectedVisit.decoration || "N/A"}
-                  </p>
-                </div>
-              </div>
-              <div className="rounded-lg border border-primary/20 bg-card/70 px-3 py-2 md:col-span-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Description
-                </p>
-                <p className="text-foreground/90 mt-1 leading-relaxed">
-                  {selectedVisit.description || "No description available."}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ProfileModal
+          person={selectedVisit as unknown as Personnel}
+          onClose={() => setSelectedVisit(null)}
+        />
       )}
     </div>
   );
