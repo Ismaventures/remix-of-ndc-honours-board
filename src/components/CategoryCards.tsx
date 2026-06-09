@@ -200,10 +200,10 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
             {CARDS.map((card) => {
               const Icon = card.icon;
               return (
-                <div key={card.key} className="p-1.5 h-full">
+                <div key={card.key} className="p-2 h-full">
                   <button
                     onClick={() => onSelect(card.key)}
-                    className={`relative w-full h-[clamp(230px,36vh,310px)] sm:h-[clamp(250px,34vh,320px)] lg:h-[clamp(270px,33vh,330px)] overflow-hidden rounded-2xl border text-left group transition-all duration-500 hover:-translate-y-2.5 hover:scale-[1.012] flex flex-col justify-end ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${card.accentGlow} ${
+                    className={`relative w-full h-[clamp(320px,42vh,400px)] sm:h-[clamp(340px,40vh,420px)] lg:h-[clamp(360px,38vh,440px)] overflow-hidden rounded-2xl border text-left group transition-all duration-500 hover:-translate-y-2.5 hover:scale-[1.012] flex flex-col justify-end ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${card.accentGlow} ${
                       isLightMode
                         ? "bg-[linear-gradient(160deg,#ffffff_0%,#f7faff_52%,#eef5ff_100%)] border-[#002060]/10 hover:shadow-[0_22px_48px_rgba(0,32,96,0.14)] hover:border-[#002060]/25"
                         : `bg-gradient-to-br ${card.cardGradient} border-white/10 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]`
@@ -260,7 +260,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                   </div>
 
                   <div
-                    className={`relative p-5 sm:p-6 z-10 w-full pt-12 sm:pt-16 ${
+                    className={`relative p-6 sm:p-7 md:p-8 z-10 w-full pt-16 sm:pt-20 ${
                       !isLightMode
                         ? "bg-gradient-to-t from-black/85 via-black/45 to-transparent"
                         : "bg-gradient-to-t from-white/90 via-white/40 to-transparent"
@@ -268,7 +268,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                   >
                     <div className="flex items-center gap-3 mb-4">
                       <div
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-105 transition-all duration-500 shadow-lg p-2 relative overflow-hidden ${
+                        className={`w-16 h-16 rounded-xl flex items-center justify-center group-hover:scale-105 transition-all duration-500 shadow-lg p-2 relative overflow-hidden ${
                           isLightMode
                             ? "bg-white border border-slate-200/80 shadow-slate-200/40"
                             : "bg-black/30 border border-white/15 backdrop-blur-sm"
@@ -283,21 +283,10 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                           className="w-full h-full object-contain relative z-10 drop-shadow-sm"
                         />
                       </div>
-                      <div
-                        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
-                          isLightMode
-                            ? "bg-[#002060]/[0.06] border border-[#002060]/10"
-                            : "bg-white/[0.08] border border-white/15"
-                        }`}
-                      >
-                        <Icon
-                          className={`h-4 w-4 ${isLightMode ? card.color : "text-white/90"}`}
-                        />
-                      </div>
                     </div>
                     <div>
                       <h3
-                        className={`text-lg sm:text-xl font-bold font-serif leading-tight mb-1 transition-colors tracking-tight ${
+                        className={`text-2xl sm:text-3xl font-bold font-serif leading-tight mb-2 transition-colors tracking-tight ${
                           isLightMode
                             ? "text-[#0f2a5f]"
                             : "text-white drop-shadow-md"
@@ -306,7 +295,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                         {card.label}
                       </h3>
                       <p
-                        className={`text-[10px] sm:text-[11px] tracking-[0.18em] uppercase font-semibold ${
+                        className={`text-xs sm:text-sm tracking-[0.18em] uppercase font-semibold ${
                           isLightMode ? "text-slate-400" : "text-white/60"
                         }`}
                       >
