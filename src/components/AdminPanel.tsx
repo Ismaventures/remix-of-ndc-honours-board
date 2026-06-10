@@ -1026,7 +1026,7 @@ export function AdminPanel({
         <Plus className="h-8 w-8 text-[#002060]/50" />
       </div>
       <p className="text-white/40 mb-4">{message}</p>
-      <button onClick={onAdd} className="px-4 py-2 bg-[#002060] text-white rounded text-sm font-bold hover:bg-[#003080] transition-colors">
+      <button onClick={onAdd} className="px-4 py-2 bg-white border-2 border-[#002060] text-[#002060] rounded text-sm font-bold hover:bg-slate-50 transition-colors">
         Add First Record
       </button>
     </div>
@@ -2718,7 +2718,7 @@ function PersonnelForm({ initial, onSave, onCancel }: {
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-slate-300/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-slate-600 hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={handleSave} className="px-6 py-2 bg-[#002060] text-[#0a0d14] text-[#002060]-foreground rounded-md text-sm font-medium hover:bg-[#002060] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-white border-2 border-[#002060] text-[#002060] rounded-md text-sm font-medium hover:bg-slate-50 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
@@ -2829,7 +2829,7 @@ function VisitForm({ initial, onSave, onCancel }: {
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-slate-300/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-slate-600 hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={handleSave} className="px-6 py-2 bg-[#002060] text-[#0a0d14] text-[#002060]-foreground rounded-md text-sm font-medium hover:bg-[#002060] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-white border-2 border-[#002060] text-[#002060] rounded-md text-sm font-medium hover:bg-slate-50 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
@@ -3021,7 +3021,7 @@ function CommandantForm({ initial, onSave, onCancel }: {
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-slate-300/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-slate-600 hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={handleSave} className="px-6 py-2 bg-[#002060] text-[#0a0d14] text-[#002060]-foreground rounded-md text-sm font-medium hover:bg-[#002060] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-white border-2 border-[#002060] text-[#002060] rounded-md text-sm font-medium hover:bg-slate-50 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
