@@ -1012,7 +1012,7 @@ export function AdminPanel({
       onClick={() => setTab(key)}
       className={`px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
         tab === key
-          ? 'bg-[#f4c866] text-[#0d1016] shadow-md shadow-[#002060]/20 scale-100 font-bold'
+          ? 'bg-[#002060] text-white shadow-md shadow-[#002060]/20 scale-100 font-bold'
           : 'bg-[#1c2231] text-white/50 hover:bg-[#232a3b] hover:text-white border border-white/10 active:scale-95'
       }`}
     >
@@ -1026,78 +1026,78 @@ export function AdminPanel({
         <Plus className="h-8 w-8 text-[#f4c866]/50" />
       </div>
       <p className="text-white/40 mb-4">{message}</p>
-      <button onClick={onAdd} className="px-4 py-2 bg-[#f4c866] text-[#0d1016] rounded text-sm font-bold hover:bg-[#e0b04c] transition-colors">
+      <button onClick={onAdd} className="px-4 py-2 bg-[#002060] text-white rounded text-sm font-bold hover:bg-[#003080] transition-colors">
         Add First Record
       </button>
     </div>
   );
 
   return (
-    <div className="admin-obsidian-theme fixed inset-0 z-[100] flex overflow-hidden bg-[radial-gradient(ellipse_at_top,#141926_0%,#090d13_80%)] text-white font-sans">
-      {/* OBSIDIAN CONSOLE SIDEBAR */}
-      <aside className={`flex-shrink-0 flex flex-col border-r border-white/10 bg-[#090d13] overflow-y-auto transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "w-[80px] p-2" : "w-[260px] p-4 lg:p-5"}`}>
+    <div className="admin-ndc-theme fixed inset-0 z-[100] flex overflow-hidden bg-white text-slate-900 font-sans">
+      {/* NDC PROFESSIONAL SIDEBAR */}
+      <aside className={`flex-shrink-0 flex flex-col border-r border-slate-200 bg-gradient-to-b from-white to-slate-50 overflow-y-auto transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "w-[80px] p-2" : "w-[260px] p-4 lg:p-5"}`}>
         <div className={`mb-8 flex items-center ${isSidebarCollapsed ? "flex-col gap-4 mt-2" : "gap-3"}`}>
-<button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white transition-all" title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M9 3v18"/></svg> </button>
-          <button onClick={onBack} className="p-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white transition-all"><ArrowLeft className="h-4 w-4" /></button>
+<button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-2 rounded-full border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all" title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M9 3v18"/></svg> </button>
+          <button onClick={onBack} className="p-2 rounded-full border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all"><ArrowLeft className="h-4 w-4" /></button>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#f4c866]">The Obsidian Gallery</p>
-            <p className="mt-0.5 text-[9px] text-white/40 uppercase tracking-widest">Curator Console</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#002060]">NDC Honours Board</p>
+            <p className="mt-0.5 text-[9px] text-slate-500 uppercase tracking-widest">Admin Panel</p>
           </div>
         </div>
         
         <div className="space-y-1 flex-1">
-          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-4 text-[9px] font-semibold uppercase tracking-wider text-white/30">Archive Data</p>}
-          <button onClick={() => setTab('personnel')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'personnel' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Personnel Ledger">
-            {!isSidebarCollapsed && <span>Personnel Ledger</span>}
+          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-4 text-[9px] font-semibold uppercase tracking-wider text-slate-500">Records</p>}
+          <button onClick={() => setTab('personnel')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'personnel' ? "bg-[#002060]/10 text-[#002060] font-medium border border-[#002060]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Personnel">
+            {!isSidebarCollapsed && <span>Personnel</span>}
           </button>
-          <button onClick={() => setTab('visits')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'visits' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="VIP Visits">
-            {!isSidebarCollapsed && <span>VIP Visits</span>}
+          <button onClick={() => setTab('visits')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'visits' ? "bg-[#FF0000]/10 text-[#FF0000] font-medium border border-[#FF0000]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Visits">
+            {!isSidebarCollapsed && <span>Distinguished Visits</span>}
           </button>
-          <button onClick={() => setTab('commandants')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'commandants' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Commandants">
+          <button onClick={() => setTab('commandants')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'commandants' ? "bg-[#00B0F0]/10 text-[#00B0F0] font-medium border border-[#00B0F0]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Commandants">
             {!isSidebarCollapsed && <span>Commandants</span>}
           </button>
 
-          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-white/30">Curator Tools</p>}
-          <button onClick={() => setTab('museum')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'museum' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Exhibits">
-            {!isSidebarCollapsed && <span>Exhibits</span>}
+          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-slate-500">Content</p>}
+          <button onClick={() => setTab('museum')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'museum' ? "bg-[#002060]/10 text-[#002060] font-medium border border-[#002060]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Museum">
+            {!isSidebarCollapsed && <span>Museum Content</span>}
           </button>
-          <button onClick={() => setTab('content')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'content' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Content Narrative">
-            {!isSidebarCollapsed && <span>Content Narrative</span>}
+          <button onClick={() => setTab('content')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'content' ? "bg-[#FF0000]/10 text-[#FF0000] font-medium border border-[#FF0000]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Content">
+            {!isSidebarCollapsed && <span>Narratives</span>}
           </button>
 
-          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-white/30">Atmosphere</p>}
-          <button onClick={() => setTab('theme')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'theme' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Visual Styles">
-            {!isSidebarCollapsed && <span>Visual Styles</span>}
+          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-slate-500">Settings</p>}
+          <button onClick={() => setTab('theme')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'theme' ? "bg-[#00B0F0]/10 text-[#00B0F0] font-medium border border-[#00B0F0]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Theme">
+            {!isSidebarCollapsed && <span>Visual Theme</span>}
           </button>
-          <button onClick={() => setTab('transitions')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'transitions' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Transitions">
+          <button onClick={() => setTab('transitions')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'transitions' ? "bg-[#002060]/10 text-[#002060] font-medium border border-[#002060]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Transitions">
             {!isSidebarCollapsed && <span>Transitions</span>}
           </button>
-          <button onClick={() => setTab('audio')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'audio' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Narrative Audio">
-            {!isSidebarCollapsed && <span>Narrative Audio</span>}
+          <button onClick={() => setTab('audio')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'audio' ? "bg-[#FF0000]/10 text-[#FF0000] font-medium border border-[#FF0000]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Audio">
+            {!isSidebarCollapsed && <span>Audio Settings</span>}
           </button>
 
-          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-white/30">Hardware Control</p>}
-          <button onClick={() => setTab('devices')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'devices' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="Endpoint Links">
-            {!isSidebarCollapsed && <span>Endpoint Links</span>}
+          {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-slate-500">Control</p>}
+          <button onClick={() => setTab('devices')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'devices' ? "bg-[#00B0F0]/10 text-[#00B0F0] font-medium border border-[#00B0F0]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Devices">
+            {!isSidebarCollapsed && <span>Devices</span>}
           </button>
-          <button onClick={() => setTab('guide')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'guide' ? "bg-[#f4c866]/10 text-[#f4c866] font-medium border border-[#f4c866]/20" : "text-white/50 hover:bg-white/5 hover:text-white")} title="AI Guide">
-            {!isSidebarCollapsed && <span>AI Guide</span>}
+          <button onClick={() => setTab('guide')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'guide' ? "bg-[#002060]/10 text-[#002060] font-medium border border-[#002060]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Guide">
+            {!isSidebarCollapsed && <span>Setup Guide</span>}
           </button>
         </div>
       </aside>
 
-      {/* MAIN CONTENT STAGE */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto relative bg-[linear-gradient(180deg,#0b0e14_0%,#0d1016_100%)]">
+      {/* MAIN CONTENT */}
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto relative bg-white">
         <div className="w-full flex-1 p-4 md:p-8 max-w-[1400px] mx-auto">
         <div className="relative">
         {guideFlowActive && tab !== 'guide' && (
-          <div className="mb-4 rounded-lg border border-[#f4c866]/20 bg-[#f4c866]/10 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <p className="text-xs text-foreground">You are testing settings. Return to Helper Guide to continue from the next step.</p>
+          <div className="mb-4 rounded-lg border border-[#002060]/20 bg-[#002060]/5 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <p className="text-xs text-slate-700">You are testing settings. Return to Setup Guide to continue from the next step.</p>
             <button
               onClick={() => setTab('guide')}
-              className="px-3 py-1.5 rounded border border-primary/30 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866] text-[#0a0d14]/15"
+              className="px-3 py-1.5 rounded border border-[#002060]/30 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060] hover:text-white"
             >
-              Back To Helper Guide (Continue)
+              Back To Setup Guide
             </button>
           </div>
         )}
@@ -1106,7 +1106,7 @@ export function AdminPanel({
           <div className="view-enter">
             {!showFormP && (
               <div className="flex justify-end mb-4">
-                <button onClick={() => { setEditingP(null); setSelectedPersonnelId(null); setShowFormP(true); }} className="flex items-center gap-2 px-4 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-full text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
+                <button onClick={() => { setEditingP(null); setSelectedPersonnelId(null); setShowFormP(true); }} className="flex items-center gap-2 px-4 py-2 bg-[#002060] text-white rounded-full text-sm font-medium hover:bg-[#003080] transition-all hover:shadow-lg hover:shadow-[#002060]/20 active:scale-[0.97]">
                   <Plus className="h-4 w-4" /> Add Personnel
                 </button>
               </div>
@@ -1143,7 +1143,7 @@ export function AdminPanel({
                     </button>
                     <button
                       onClick={() => { setEditingP(selectedPersonnel); setShowFormP(true); }}
-                      className="px-3 py-2 rounded-md bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground text-xs font-semibold hover:bg-[#f4c866] text-[#0a0d14]/90"
+                      className="px-3 py-2 rounded-md bg-[#002060] text-white text-xs font-semibold hover:bg-[#003080]"
                     >
                       Edit Profile
                     </button>
@@ -1196,7 +1196,7 @@ export function AdminPanel({
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-4 sm:p-5">
+                <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-4 sm:p-5">
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       <input
@@ -1246,11 +1246,11 @@ export function AdminPanel({
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl overflow-hidden">
+                <div className="rounded-[24px] border border-slate-200 bg-white shadow-md overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-muted/40 text-[#f4c866] text-xs uppercase tracking-wider border-b border-primary/10">
+                      <tr className="bg-gradient-to-r from-[#002060]/5 to-[#00B0F0]/5 text-[#002060] text-xs uppercase tracking-wider border-b border-slate-300">
                         <th className="px-4 py-4 text-left font-semibold">Name</th>
                         <th className="px-4 py-4 text-left font-semibold">Category</th>
                         <th className="px-4 py-4 text-left font-semibold">Rank</th>
@@ -1274,7 +1274,7 @@ export function AdminPanel({
                             </button>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#f4c866]/10 text-[#f4c866] border border-[#f4c866]/20">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#002060]/10 text-[#002060] border border-[#002060]/30">
                               {p.category}
                             </span>
                           </td>
@@ -1317,7 +1317,7 @@ export function AdminPanel({
           <div className="view-enter">
             {!showFormV && (
               <div className="flex justify-end mb-4">
-                <button onClick={() => { setEditingV(null); setShowFormV(true); }} className="flex items-center gap-2 px-4 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-full text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
+                <button onClick={() => { setEditingV(null); setShowFormV(true); }} className="flex items-center gap-2 px-4 py-2 bg-[#FF0000] text-white rounded-full text-sm font-medium hover:bg-[#cc0000] transition-all hover:shadow-lg hover:shadow-[#FF0000]/20 active:scale-[0.97]">
                   <Plus className="h-4 w-4" /> Add Visit
                 </button>
               </div>
@@ -1391,7 +1391,7 @@ export function AdminPanel({
                       <option value="current">Current Only</option>
                       <option value="past">Past Only</option>
                     </select>
-                    <button onClick={() => { setEditingC(null); resetCommandantBatch(); setShowFormC(true); }} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-full text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]">
+                    <button onClick={() => { setEditingC(null); resetCommandantBatch(); setShowFormC(true); }} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#00B0F0] text-white rounded-full text-sm font-medium hover:bg-[#0090cc] transition-all hover:shadow-lg hover:shadow-[#00B0F0]/20 active:scale-[0.97]">
                       <Plus className="h-4 w-4" /> Add Commandant
                     </button>
                   </div>
