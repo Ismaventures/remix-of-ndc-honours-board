@@ -53,20 +53,16 @@ import ndcCrest from "/images/ndc-crest.png";
 import { getCommandantDisplayTitle } from "@/lib/utils";
 
 const SECTION_TITLES: Record<string, string> = {
-  faculty: "Faculty Members",
   fwc: "Distinguished Fellows of the War College (FWC)",
   fdc: "Distinguished Fellows of the Defence College (FDC)",
-  participants: "Academic Participants",
-  directorate: "Directorate",
+  participants: "Participants",
   allied: "International Allied Officers (Allied)",
 };
 
 const SECTION_CATEGORIES: Record<string, Category | Category[]> = {
-  faculty: ["FWC", "FDC"],
   fwc: "FWC",
   fdc: "FDC",
   participants: "Directing Staff",
-  directorate: "Directorate",
   allied: "Allied",
 };
 
@@ -205,7 +201,6 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
 
   const [view, setView] = useState<ViewKey>(defaultView);
   const [showStageConfig, setShowStageConfig] = useState(false);
-  const [selectedFacultyType, setSelectedFacultyType] = useState<"FWC" | "FDC" | "Directing Staff" | null>(null);
 
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
   const {
@@ -264,11 +259,9 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
 
   const stageConfigContext: AutoDisplayContextKey | null = useMemo(() => {
     if (view === "commandants") return "commandants";
-    if (view === "faculty") return "FWC"; // Default to FWC for faculty
     if (view === "fwc") return "FWC";
     if (view === "fdc") return "FDC";
     if (view === "participants") return "Directing Staff";
-    if (view === "directorate") return "Directorate";
     if (view === "allied") return "Allied";
     return null;
   }, [view]);
@@ -320,7 +313,6 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
 
   useEffect(() => {
     setShowStageConfig(false);
-    setSelectedFacultyType(null);
   }, [view]);
 
   const isSuperAdmin = useMemo(() => {
@@ -1126,169 +1118,10 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
         <DirectingStaffByCourseYear
           personnel={personnel}
           onBack={() => setView("home")}
-          title="Academic Participants"
+          title="Participants"
           description="Distinguished participants who have guided courses and shaped the NDC academic framework, categorized by CSE course year."
         />
       );
-    }
-
-    // Special handling for Faculty (combined FWC, FDC, and Participants view)
-    if (view === "faculty") {
-      // Show category selection if no type selected
-      if (selectedFacultyType === null) {
-        const facultyCategories = [
-          {
-            type: "FWC" as const,
-            label: "War College",
-            subtitle: "Distinguished Fellows (FWC)",
-            cardGradient: "from-[#2a1a4a] via-[#3d2960] to-[#503680]",
-            icon: "FWC",
-          },
-          {
-            type: "FDC" as const,
-            label: "Defence College",
-            subtitle: "Distinguished Fellows (FDC)",
-            cardGradient: "from-[#1a365d] via-[#214373] to-[#2a528a]",
-            icon: "FDC",
-          },
-          {
-            type: "Directing Staff" as const,
-            label: "Participants",
-            subtitle: "Academic Participants",
-            cardGradient: "from-[#1a365d] via-[#214373] to-[#2a528a]",
-            icon: "Participants",
-          },
-        ];
-
-        return (
-          <section className="min-h-screen bg-white p-6 md:p-12">
-            <div className="max-w-6xl mx-auto">
-              {/* Header */}
-              <div className="mb-12 flex flex-col items-start">
-                <button
-                  onClick={() => setView("home")}
-                  className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-6"
-                >
-                  <ChevronLeft size={20} />
-                  Back to Home
-                </button>
-                <h1 className="text-4xl md:text-5xl font-bold font-serif text-slate-900 mb-2">Faculty Categories</h1>
-                <p className="text-slate-600 text-lg">Select a category to view personnel</p>
-                <div className="mt-4 h-1 w-24 bg-gradient-to-r from-[#002060] via-[#FF0000] to-[#00B0F0]"></div>
-              </div>
-
-              {/* Category Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {facultyCategories.map((category) => (
-                  <button
-                    key={category.type}
-                    onClick={() => setSelectedFacultyType(category.type)}
-                    className={`relative w-full h-72 overflow-hidden rounded-2xl border border-white/10 text-center group transition-all duration-500 hover:-translate-y-2.5 hover:scale-[1.012] flex flex-col items-center justify-center p-8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/30 bg-gradient-to-br ${category.cardGradient} hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]`}
-                  >
-                    {/* Top tri-service accent */}
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-[5px] flex z-20">
-                      <div className="flex-1 bg-[#002060]" />
-                      <div className="flex-1 bg-[#FF0000]" />
-                      <div className="flex-1 bg-[#00B0F0]" />
-                    </div>
-
-                    {/* Bottom tri-service accent */}
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[4px] flex z-20 opacity-80">
-                      <div className="flex-1 bg-[#002060]" />
-                      <div className="flex-1 bg-[#FF0000]" />
-                      <div className="flex-1 bg-[#00B0F0]" />
-                    </div>
-
-                    {/* Gloss/Highlight Effect */}
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700" />
-                      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/10 via-white/5 to-transparent opacity-80" />
-                    </>
-
-                    {/* NDC Logo Background Watermark */}
-                    <div className="absolute inset-0 m-auto w-56 h-56 transition-all duration-700 pointer-events-none transform group-hover:scale-105 group-hover:rotate-6 opacity-[0.05] group-hover:opacity-[0.09] filter grayscale invert">
-                      <img src={ndcCrest} alt="" className="w-full h-full object-contain" />
-                    </div>
-
-                    {/* Content */}
-                    <div className="relative z-10 flex flex-col items-center justify-center">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-all duration-500 shadow-xl p-4 mb-6 relative overflow-hidden bg-black/30 border border-white/15 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.4)]">
-                        <img src={ndcCrest} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain opacity-90" />
-                      </div>
-                      <h2 className="text-2xl font-bold text-white mb-2">{category.label}</h2>
-                      <p className="text-slate-300">{category.subtitle}</p>
-                      <p className="text-xs text-slate-500 mt-4 uppercase tracking-wide">Categorized by CSE course year</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </section>
-        );
-      }
-
-      // Show selected category view
-      if (selectedFacultyType === "FWC") {
-        return (
-          <div>
-            <button
-              onClick={() => setSelectedFacultyType(null)}
-              className="absolute top-6 left-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors z-10"
-            >
-              <ArrowLeft size={20} />
-              Back to Faculty
-            </button>
-            <FellowsByCourse
-              personnel={personnel}
-              category="FWC"
-              onBack={() => setSelectedFacultyType(null)}
-              title="Faculty Members - War College"
-              description="Distinguished Fellows of the War College, categorized by CSE course year."
-            />
-          </div>
-        );
-      }
-
-      if (selectedFacultyType === "FDC") {
-        return (
-          <div>
-            <button
-              onClick={() => setSelectedFacultyType(null)}
-              className="absolute top-6 left-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors z-10"
-            >
-              <ArrowLeft size={20} />
-              Back to Faculty
-            </button>
-            <FellowsByCourse
-              personnel={personnel}
-              category="FDC"
-              onBack={() => setSelectedFacultyType(null)}
-              title="Faculty Members - Defence College"
-              description="Distinguished Fellows of the Defence College, categorized by CSE course year."
-            />
-          </div>
-        );
-      }
-
-      if (selectedFacultyType === "Directing Staff") {
-        return (
-          <div>
-            <button
-              onClick={() => setSelectedFacultyType(null)}
-              className="absolute top-6 left-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors z-10"
-            >
-              <ArrowLeft size={20} />
-              Back to Faculty
-            </button>
-            <DirectingStaffByCourseYear
-              personnel={personnel}
-              onBack={() => setSelectedFacultyType(null)}
-              title="Academic Participants"
-              description="Distinguished participants who have guided courses and shaped the NDC academic framework, categorized by CSE course year."
-            />
-          </div>
-        );
-      }
     }
 
     // Special handling for Directing Staff (legacy route)
@@ -1320,15 +1153,14 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
       );
     }
 
-    // Special handling for Directorate
-    if (view === "directorate") {
-      const directoratePersonnel = personnel.filter(p => p.category === "Directorate");
+    // Special handling for Participants
+    if (view === "participants") {
       return (
-        <OrganogramView
-          data={directoratePersonnel}
-          title="Directorate"
-          category="Directorate"
+        <DirectingStaffByCourseYear
+          personnel={personnel}
           onBack={() => setView("home")}
+          title="Participants"
+          description="Participants who have shaped the NDC academic framework, categorized by CSE course year."
         />
       );
     }

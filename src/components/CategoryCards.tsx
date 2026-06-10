@@ -6,15 +6,13 @@ import { useThemeMode } from "@/hooks/useThemeMode";
 export type ViewKey =
   | "home"
   | "commandants"
-  | "faculty"
   | "fwc"
   | "fdc"
   | "participants"
-  | "directorate"
-  | "directing"
   | "allied"
   | "visits"
   | "ndc-events"
+  | "directing"
   | "admin"
   | "about-ndc"
   | "museum-collections"
@@ -45,31 +43,31 @@ const CARDS: {
     accentGlow: "shadow-[0_0_0_1px_rgba(255,215,0,0.34),0_20px_46px_rgba(0,0,0,0.2)]",
   },
   {
-    key: "faculty",
-    label: "FACULTY MEMBERS",
-    subtitle: "War College & Defence College",
+    key: "fwc",
+    label: "DISTINGUISHED FELLOWS OF WAR COLLEGE",
+    subtitle: "FWC",
+    icon: Shield,
+    color: "text-blue-600",
+    cardGradient: "from-[#0f2c4e] via-[#14365d] to-[#1a4373]",
+    accentGlow: "shadow-[0_0_0_1px_rgba(0,32,96,0.2),0_18px_42px_rgba(3,44,88,0.18)]",
+  },
+  {
+    key: "fdc",
+    label: "DISTINGUISHED FELLOWS OF DEFENCE COLLEGE",
+    subtitle: "FDC",
     icon: Award,
-    color: "text-purple-600",
-    cardGradient: "from-[#2a1a4a] via-[#3d2960] to-[#503680]",
-    accentGlow: "shadow-[0_0_0_1px_rgba(147,51,234,0.3),0_18px_42px_rgba(88,28,135,0.2)]",
+    color: "text-sky-600",
+    cardGradient: "from-[#0e2d4a] via-[#133e66] to-[#195080]",
+    accentGlow: "shadow-[0_0_0_1px_rgba(0,176,240,0.2),0_18px_42px_rgba(0,83,120,0.2)]",
   },
   {
     key: "participants",
-    label: "ACADEMIC PARTICIPANTS",
-    subtitle: "Directing Staff",
+    label: "PARTICIPANTS",
+    subtitle: "Participants",
     icon: Users,
     color: "text-indigo-600",
     cardGradient: "from-[#1a365d] via-[#214373] to-[#2a528a]",
     accentGlow: "shadow-[0_0_0_1px_rgba(0,32,96,0.2),0_18px_42px_rgba(33,67,115,0.18)]",
-  },
-  {
-    key: "directorate",
-    label: "DIRECTORATE",
-    subtitle: "Administrative Leadership",
-    icon: Shield,
-    color: "text-red-600",
-    cardGradient: "from-[#4a1a1a] via-[#6a2d2d] to-[#8a4a4a]",
-    accentGlow: "shadow-[0_0_0_1px_rgba(220,38,38,0.3),0_18px_42px_rgba(153,27,27,0.2)]",
   },
   {
     key: "allied",
