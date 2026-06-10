@@ -190,7 +190,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
           <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 stagger-reveal">
             {CARDS.map((card) => {
               return (
-                <div key={card.key} className="p-1.5 h-full">
+                <div key={card.key} className="p-2 h-full">
                   <button
                     onClick={() => onSelect(card.key)}
                     className={`relative w-full h-[clamp(230px,36vh,310px)] sm:h-[clamp(250px,34vh,320px)] lg:h-[clamp(270px,33vh,330px)] overflow-hidden rounded-2xl border text-center group transition-all duration-500 hover:-translate-y-2.5 hover:scale-[1.012] flex flex-col items-center justify-center p-6 sm:p-8 ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${card.accentGlow} ${
