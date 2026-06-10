@@ -1047,39 +1047,39 @@ export function AdminPanel({
         
         <div className="space-y-1 flex-1">
           {!isSidebarCollapsed && <p className="px-3 mb-2 mt-4 text-[9px] font-semibold uppercase tracking-wider text-slate-500">Records</p>}
-          <button onClick={() => setTab('personnel')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'personnel' ? "bg-[#002060]/10 text-[#002060] font-medium border border-[#002060]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Personnel">
+          <button onClick={() => setTab('personnel')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'personnel' ? "bg-white text-[#002060] font-medium border-2 border-[#002060]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Personnel">
             {!isSidebarCollapsed && <span>Personnel</span>}
           </button>
-          <button onClick={() => setTab('visits')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'visits' ? "bg-[#FF0000]/10 text-[#FF0000] font-medium border border-[#FF0000]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Visits">
+          <button onClick={() => setTab('visits')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'visits' ? "bg-white text-[#FF0000] font-medium border-2 border-[#FF0000]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Visits">
             {!isSidebarCollapsed && <span>Distinguished Visits</span>}
           </button>
-          <button onClick={() => setTab('commandants')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'commandants' ? "bg-[#00B0F0]/10 text-[#00B0F0] font-medium border border-[#00B0F0]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Commandants">
+          <button onClick={() => setTab('commandants')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'commandants' ? "bg-white text-[#00B0F0] font-medium border-2 border-[#00B0F0]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Commandants">
             {!isSidebarCollapsed && <span>Commandants</span>}
           </button>
 
           {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-slate-500">Content</p>}
           {/* Museum Content - Hidden for now */}
           {/* <button onClick={() => setTab('museum')} className={...}>Museum Content</button> */}
-          <button onClick={() => setTab('content')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'content' ? "bg-[#FF0000]/10 text-[#FF0000] font-medium border border-[#FF0000]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Content">
+          <button onClick={() => setTab('content')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'content' ? "bg-white text-[#FF0000] font-medium border-2 border-[#FF0000]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Content">
             {!isSidebarCollapsed && <span>Narratives</span>}
           </button>
 
           {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-slate-500">Settings</p>}
-          <button onClick={() => setTab('theme')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'theme' ? "bg-[#00B0F0]/10 text-[#00B0F0] font-medium border border-[#00B0F0]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Theme">
+          <button onClick={() => setTab('theme')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'theme' ? "bg-white text-[#00B0F0] font-medium border-2 border-[#00B0F0]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Theme">
             {!isSidebarCollapsed && <span>Visual Theme</span>}
           </button>
-          <button onClick={() => setTab('transitions')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'transitions' ? "bg-[#002060]/10 text-[#002060] font-medium border border-[#002060]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Transitions">
+          <button onClick={() => setTab('transitions')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'transitions' ? "bg-white text-[#002060] font-medium border-2 border-[#002060]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Transitions">
             {!isSidebarCollapsed && <span>Transitions</span>}
           </button>
-          <button onClick={() => setTab('audio')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'audio' ? "bg-[#FF0000]/10 text-[#FF0000] font-medium border border-[#FF0000]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Audio">
+          <button onClick={() => setTab('audio')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'audio' ? "bg-white text-[#FF0000] font-medium border-2 border-[#FF0000]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Audio">
             {!isSidebarCollapsed && <span>Audio Settings</span>}
           </button>
 
           {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-slate-500">Control</p>}
-          <button onClick={() => setTab('devices')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'devices' ? "bg-[#00B0F0]/10 text-[#00B0F0] font-medium border border-[#00B0F0]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Devices">
+          <button onClick={() => setTab('devices')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'devices' ? "bg-white text-[#00B0F0] font-medium border-2 border-[#00B0F0]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Devices">
             {!isSidebarCollapsed && <span>Devices</span>}
           </button>
-          <button onClick={() => setTab('guide')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'guide' ? "bg-[#002060]/10 text-[#002060] font-medium border border-[#002060]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Guide">
+          <button onClick={() => setTab('guide')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'guide' ? "bg-white text-[#002060] font-medium border-2 border-[#002060]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Guide">
             {!isSidebarCollapsed && <span>Setup Guide</span>}
           </button>
         </div>
@@ -1105,7 +1105,7 @@ export function AdminPanel({
           <div className="view-enter">
             {!showFormP && (
               <div className="flex justify-end mb-4">
-                <button onClick={() => { setEditingP(null); setSelectedPersonnelId(null); setShowFormP(true); }} className="flex items-center gap-2 px-4 py-2 bg-[#002060] text-white rounded-full text-sm font-medium hover:bg-[#003080] transition-all hover:shadow-lg hover:shadow-[#002060]/20 active:scale-[0.97]">
+                <button onClick={() => { setEditingP(null); setSelectedPersonnelId(null); setShowFormP(true); }} className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#002060] text-[#002060] rounded-full text-sm font-medium hover:bg-slate-50 transition-all hover:shadow-lg hover:shadow-[#002060]/20 active:scale-[0.97]">
                   <Plus className="h-4 w-4" /> Add Personnel
                 </button>
               </div>
@@ -1316,7 +1316,7 @@ export function AdminPanel({
           <div className="view-enter">
             {!showFormV && (
               <div className="flex justify-end mb-4">
-                <button onClick={() => { setEditingV(null); setShowFormV(true); }} className="flex items-center gap-2 px-4 py-2 bg-[#FF0000] text-white rounded-full text-sm font-medium hover:bg-[#cc0000] transition-all hover:shadow-lg hover:shadow-[#FF0000]/20 active:scale-[0.97]">
+                <button onClick={() => { setEditingV(null); setShowFormV(true); }} className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#FF0000] text-[#FF0000] rounded-full text-sm font-medium hover:bg-slate-50 transition-all hover:shadow-lg hover:shadow-[#FF0000]/20 active:scale-[0.97]">
                   <Plus className="h-4 w-4" /> Add Visit
                 </button>
               </div>
@@ -1390,7 +1390,7 @@ export function AdminPanel({
                       <option value="current">Current Only</option>
                       <option value="past">Past Only</option>
                     </select>
-                    <button onClick={() => { setEditingC(null); resetCommandantBatch(); setShowFormC(true); }} className="flex items-center justify-center gap-2 px-4 py-2 bg-[#00B0F0] text-white rounded-full text-sm font-medium hover:bg-[#0090cc] transition-all hover:shadow-lg hover:shadow-[#00B0F0]/20 active:scale-[0.97]">
+                    <button onClick={() => { setEditingC(null); resetCommandantBatch(); setShowFormC(true); }} className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-[#00B0F0] text-[#00B0F0] rounded-full text-sm font-medium hover:bg-slate-50 transition-all hover:shadow-lg hover:shadow-[#00B0F0]/20 active:scale-[0.97]">
                       <Plus className="h-4 w-4" /> Add Commandant
                     </button>
                   </div>
