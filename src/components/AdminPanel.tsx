@@ -1129,14 +1129,14 @@ export function AdminPanel({
               <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 sm:p-6 view-enter">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Full Profile</p>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-600">Full Profile</p>
                     <h4 className="text-lg sm:text-xl font-semibold text-foreground">{selectedPersonnel.name}</h4>
-                    <p className="text-sm text-muted-foreground mt-1">{selectedPersonnel.rank} • {selectedPersonnel.category}</p>
+                    <p className="text-sm text-slate-600 mt-1">{selectedPersonnel.rank} • {selectedPersonnel.category}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedPersonnelId(null)}
-                      className="px-3 py-2 rounded-md border border-slate-300 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                      className="px-3 py-2 rounded-md border-2 border-slate-400 text-xs font-medium text-slate-700 hover:border-slate-600 hover:bg-slate-100 transition-all"
                     >
                       Back To List
                     </button>
@@ -1151,7 +1151,7 @@ export function AdminPanel({
                         onDeletePersonnel(selectedPersonnel.id);
                         setSelectedPersonnelId(null);
                       }}
-                      className="px-3 py-2 rounded-md border border-destructive/40 text-xs font-semibold text-destructive hover:bg-destructive/10"
+                      className="px-3 py-2 rounded-md bg-[#FF0000] text-white text-xs font-semibold hover:bg-[#cc0000] transition-all shadow-md"
                     >
                       Delete
                     </button>
@@ -1160,35 +1160,35 @@ export function AdminPanel({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Full Name</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Full Name</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.name}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank / Title</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Rank / Title</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.rank}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Category</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Category</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.category}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Service</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Service</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.service}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Period</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Period</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.periodStart} - {selectedPersonnel.periodEnd}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Seniority Order</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Seniority Order</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.seniorityOrder}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Citation / Bio</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Citation / Bio</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedPersonnel.citation}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Decoration</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Decoration</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedPersonnel.decoration || 'N/A'}</p>
                   </div>
                 </div>
@@ -1203,7 +1203,7 @@ export function AdminPanel({
                         value={personnelSearch}
                         onChange={e => setPersonnelSearch(e.target.value)}
                         placeholder="Search by name, rank, category, service, or year"
-                        className="w-full sm:max-w-md bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50"
+                        className="w-full sm:max-w-md bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50"
                       />
                       <select
                         value={personnelCategoryFilter}
@@ -1223,7 +1223,7 @@ export function AdminPanel({
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                           personnelCategoryFilter === 'All'
                             ? 'bg-[#002060] text-[#0a0d14] text-[#002060]-foreground border-slate-300'
-                            : 'bg-white text-muted-foreground border-[#002060]/20 hover:text-foreground hover:bg-muted/50'
+                            : 'bg-white text-slate-600 border-[#002060]/20 hover:text-foreground hover:bg-muted/50'
                         }`}
                       >
                         All ({personnel.length})
@@ -1235,7 +1235,7 @@ export function AdminPanel({
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                             personnelCategoryFilter === category
                               ? 'bg-[#002060] text-[#0a0d14] text-[#002060]-foreground border-slate-300'
-                              : 'bg-white text-muted-foreground border-[#002060]/20 hover:text-foreground hover:bg-muted/50'
+                              : 'bg-white text-slate-600 border-[#002060]/20 hover:text-foreground hover:bg-muted/50'
                           }`}
                         >
                           {category} ({personnelCountsByCategory[category] ?? 0})
@@ -1272,23 +1272,23 @@ export function AdminPanel({
                               {p.name}
                             </button>
                           </td>
-                          <td className="px-4 py-3 text-muted-foreground">
+                          <td className="px-4 py-3 text-slate-600">
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#002060]/10 text-[#002060] border border-[#002060]/30">
                               {p.category}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-muted-foreground">{p.rank}</td>
+                          <td className="px-4 py-3 text-slate-600">{p.rank}</td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={(e) => { e.stopPropagation(); setEditingP(p); setShowFormP(true); }}
-                                className="p-1.5 rounded-md hover:bg-[#002060]/10 text-muted-foreground hover:text-[#002060] transition-colors"
+                                className="p-1.5 rounded-md hover:bg-[#002060]/10 text-slate-600 hover:text-[#002060] transition-colors"
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); onDeletePersonnel(p.id); }}
-                                className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                className="p-1.5 rounded-md hover:bg-destructive/10 text-slate-600 hover:text-destructive transition-colors"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -1298,7 +1298,7 @@ export function AdminPanel({
                       ))}
                       {filteredPersonnel.length === 0 && (
                         <tr>
-                          <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                          <td colSpan={4} className="px-4 py-8 text-center text-slate-600">
                             No personnel records match this filter.
                           </td>
                         </tr>
@@ -1354,8 +1354,8 @@ export function AdminPanel({
                           <td className="px-4 py-3 text-slate-600">{v.date}</td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => { setEditingV(v); setShowFormV(true); }} className="p-1.5 rounded-md hover:bg-[#002060]/10 text-muted-foreground hover:text-[#002060] transition-colors"><Pencil className="h-4 w-4" /></button>
-                              <button onClick={() => onDeleteVisit(v.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
+                              <button onClick={() => { setEditingV(v); setShowFormV(true); }} className="p-1.5 rounded-md hover:bg-[#002060]/10 text-slate-600 hover:text-[#002060] transition-colors"><Pencil className="h-4 w-4" /></button>
+                              <button onClick={() => onDeleteVisit(v.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-slate-600 hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
                             </div>
                           </td>
                         </tr>
@@ -1379,7 +1379,7 @@ export function AdminPanel({
                       value={commandantSearch}
                       onChange={e => setCommandantSearch(e.target.value)}
                       placeholder="Search by name, title, year, decoration, or bio"
-                      className="w-full lg:max-w-md bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50"
+                      className="w-full lg:max-w-md bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50"
                     />
                     <select
                       value={commandantStatusFilter}
@@ -1485,20 +1485,20 @@ export function AdminPanel({
               <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 sm:p-6 view-enter">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Commandant Profile</p>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-600">Commandant Profile</p>
                     <h4 className="text-lg sm:text-xl font-semibold text-foreground">{selectedCommandant.name}</h4>
-                    <p className="text-sm text-muted-foreground mt-1">{selectedCommandant.title} • {selectedCommandant.tenureStart} - {selectedCommandant.tenureEnd ?? 'Present'}</p>
+                    <p className="text-sm text-slate-600 mt-1">{selectedCommandant.title} • {selectedCommandant.tenureStart} - {selectedCommandant.tenureEnd ?? 'Present'}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedCommandantId(null)}
-                      className="px-3 py-2 rounded-md border border-[#002060]/20 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      className="px-3 py-2 rounded-md border border-[#002060]/20 text-xs font-medium text-slate-600 hover:text-foreground hover:bg-muted/50"
                     >
                       Back To List
                     </button>
                     <button
                       onClick={() => { setEditingC(selectedCommandant); resetCommandantBatch(); setShowFormC(true); }}
-                      className="px-3 py-2 rounded-md bg-[#002060] text-[#0a0d14] text-[#002060]-foreground text-xs font-semibold hover:bg-[#002060] text-[#0a0d14]/90"
+                      className="px-3 py-2 rounded-md bg-[#002060] text-white text-xs font-semibold hover:bg-[#003080] transition-all shadow-md"
                     >
                       Edit Profile
                     </button>
@@ -1507,7 +1507,7 @@ export function AdminPanel({
                         onDeleteCommandant(selectedCommandant.id);
                         setSelectedCommandantId(null);
                       }}
-                      className="px-3 py-2 rounded-md border border-destructive/40 text-xs font-semibold text-destructive hover:bg-destructive/10"
+                      className="px-3 py-2 rounded-md bg-[#FF0000] text-white text-xs font-semibold hover:bg-[#cc0000] transition-all shadow-md"
                     >
                       Delete
                     </button>
@@ -1516,67 +1516,67 @@ export function AdminPanel({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Name</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Name</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.name}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Rank</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.rank || 'N/A'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Title</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Title</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.title}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Post Nominals</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Post Nominals</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.postNominals || 'N/A'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tenure</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Tenure</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.tenureStart} - {selectedCommandant.tenureEnd ?? 'Present'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Years Experience</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Years Experience</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.yearsExperience ?? 'N/A'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Status</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.isCurrent ? 'Current' : 'Past'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Summary</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Summary</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.bioSummary || 'No summary available.'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Biography</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Biography</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.biographyFull || selectedCommandant.description || 'No bio available.'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Education</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Education</p>
                     <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.education ?? []).join(' | ') || 'N/A'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Training</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Training</p>
                     <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.training ?? []).join(' | ') || 'N/A'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Past Appointments</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Past Appointments</p>
                     <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.pastAppointments ?? []).join(' | ') || 'N/A'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Honours</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Honours</p>
                     <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.honours ?? []).join(' | ') || 'N/A'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Family Note</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Family Note</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.familyNote || 'N/A'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Impact Statement</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Impact Statement</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.impactStatement || 'N/A'}</p>
                   </div>
                   <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Decoration</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-600">Decoration</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.decoration || 'N/A'}</p>
                   </div>
                 </div>
@@ -1614,29 +1614,29 @@ export function AdminPanel({
                               {c.name}
                             </button>
                           </td>
-                          <td className="px-4 py-3 text-muted-foreground">{c.tenureStart} – {c.tenureEnd ?? 'Present'}</td>
+                          <td className="px-4 py-3 text-slate-600">{c.tenureStart} – {c.tenureEnd ?? 'Present'}</td>
                           <td className="px-4 py-3">
                             {c.isCurrent ? (
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold bg-[#002060] text-[#0a0d14]/20 text-[#002060] border border-slate-300/30">
                                 Current
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-medium bg-muted text-muted-foreground border border-muted-foreground/20">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-medium bg-muted text-slate-600 border border-muted-foreground/20">
                                 Past
                               </span>
                             )}
                           </td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={(e) => { e.stopPropagation(); setEditingC(c); resetCommandantBatch(); setShowFormC(true); }} className="p-1.5 rounded-md hover:bg-[#002060]/10 text-muted-foreground hover:text-[#002060] transition-colors"><Pencil className="h-4 w-4" /></button>
-                              <button onClick={(e) => { e.stopPropagation(); onDeleteCommandant(c.id); }} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
+                              <button onClick={(e) => { e.stopPropagation(); setEditingC(c); resetCommandantBatch(); setShowFormC(true); }} className="p-1.5 rounded-md hover:bg-[#002060]/10 text-slate-600 hover:text-[#002060] transition-colors"><Pencil className="h-4 w-4" /></button>
+                              <button onClick={(e) => { e.stopPropagation(); onDeleteCommandant(c.id); }} className="p-1.5 rounded-md hover:bg-destructive/10 text-slate-600 hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
                             </div>
                           </td>
                         </tr>
                       ))}
                       {filteredCommandants.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                          <td colSpan={5} className="px-4 py-8 text-center text-slate-600">
                             No commandant records match this filter.
                           </td>
                         </tr>
@@ -1711,7 +1711,7 @@ export function AdminPanel({
             <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 md:p-6 space-y-6">
               <div>
                 <h4 className="text-base font-semibold text-[#002060]">Admin Helper Guide</h4>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Simple guide: read what a feature does, then use the "Try This Now" button to test it immediately.
                 </p>
                 {guideFlowActive && (
@@ -1745,15 +1745,15 @@ export function AdminPanel({
                       <p className="text-[11px] uppercase tracking-wider text-[#002060] mt-1">Next Step</p>
                     )}
                     <div className="mt-2">
-                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">What it is</p>
+                      <p className="text-[11px] uppercase tracking-wider text-slate-600">What it is</p>
                       <p className="text-xs text-foreground mt-1 leading-relaxed">{section.whatIs}</p>
                     </div>
                     <div className="mt-3">
-                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">When to use</p>
+                      <p className="text-[11px] uppercase tracking-wider text-slate-600">When to use</p>
                       <p className="text-xs text-foreground mt-1 leading-relaxed">{section.whenToUse}</p>
                     </div>
                     <div className="mt-3">
-                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Try it now</p>
+                      <p className="text-[11px] uppercase tracking-wider text-slate-600 mb-2">Try it now</p>
                       <div className="flex flex-wrap gap-2">
                         {section.actions.map(action => (
                           <button
@@ -1772,25 +1772,25 @@ export function AdminPanel({
 
               <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
                 <h5 className="text-sm font-semibold text-foreground">Transitions: Logical Operating Guide</h5>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-slate-600 mt-2">
                   Step 1: Turn ON the transition styles you want in Transition Library.
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Step 2: Set the order in Global Sequence (this is your default order).
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Step 3: If one category needs its own order, edit Per-Category Sequence.
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Step 4: If you want one fixed transition for a category, set Per-Category Applied Transition.
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Step 5: Adjust speed in Individual Transition Times.
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Step 6: Click Preview to test from the center popup.
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Step 7: Click Apply & Save Transitions to keep changes permanently.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -1806,13 +1806,13 @@ export function AdminPanel({
                   {GROUPED_TRANSITIONS.map(group => (
                     <div key={`helper-group-${group.id}`} className="rounded-md border border-slate-300/10 p-3 bg-background/40">
                       <p className="text-xs font-semibold uppercase tracking-wider text-[#002060]">{group.label}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
+                      <p className="text-[11px] text-slate-600 mt-1">{group.description}</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                         {group.entries.map(item => (
                           <div key={`helper-${item.id}`} className="rounded-md border border-slate-300/10 p-3 bg-background/50">
                             <p className="text-xs font-semibold uppercase tracking-wider text-foreground">{item.label}</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">Best for: {TRANSITION_USAGE_GUIDES[item.id].bestFor}</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">How to use: {TRANSITION_USAGE_GUIDES[item.id].tip}</p>
+                            <p className="text-[11px] text-slate-600 mt-1">Best for: {TRANSITION_USAGE_GUIDES[item.id].bestFor}</p>
+                            <p className="text-[11px] text-slate-600 mt-1">How to use: {TRANSITION_USAGE_GUIDES[item.id].tip}</p>
                           </div>
                         ))}
                       </div>
@@ -1829,7 +1829,7 @@ export function AdminPanel({
             <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 md:p-6">
               <div className="mb-5">
                 <h4 className="text-base font-semibold text-[#002060]">Display Theme Control</h4>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   The selected theme is saved and reused whenever the application starts until an admin changes it.
                 </p>
               </div>
@@ -1853,8 +1853,8 @@ export function AdminPanel({
                         </span>
                       )}
                       <p className="text-sm font-semibold text-foreground">{option.label}</p>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{option.description}</p>
-                      <p className={`mt-3 text-[10px] uppercase tracking-wider font-semibold ${isActive ? 'text-[#002060]' : 'text-muted-foreground'}`}>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">{option.description}</p>
+                      <p className={`mt-3 text-[10px] uppercase tracking-wider font-semibold ${isActive ? 'text-[#002060]' : 'text-slate-600'}`}>
                         {isActive ? 'Currently Applied' : 'Click to Activate'}
                       </p>
                     </button>
@@ -1886,19 +1886,19 @@ export function AdminPanel({
             <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 md:p-6">
               <div className="mb-5">
                 <h4 className="text-base font-semibold text-[#002060]">Transition & Boot Experience</h4>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Control boot timing, transition styles, and sequence behavior. Open any section to configure only what you need.
                 </p>
               </div>
 
               <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 mb-4">
                 <h5 className="text-sm font-semibold text-foreground">Transition Categories Overview</h5>
-                <p className="text-xs text-muted-foreground mt-1">All transition controls below are grouped by these categories for easier setup and review.</p>
+                <p className="text-xs text-slate-600 mt-1">All transition controls below are grouped by these categories for easier setup and review.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
                   {GROUPED_TRANSITIONS.map(group => (
                     <div key={`overview-${group.id}`} className="rounded border border-slate-300/10 bg-background/40 p-2">
                       <p className="text-[11px] uppercase tracking-wider text-[#002060] font-semibold">{group.label}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
+                      <p className="text-[11px] text-slate-600 mt-1">{group.description}</p>
                     </div>
                   ))}
                 </div>
@@ -1908,7 +1908,7 @@ export function AdminPanel({
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
                     <h5 className="text-sm font-semibold text-foreground">All Transitions At A Glance</h5>
-                    <p className="text-xs text-muted-foreground mt-1">Every transition is visible here with its timing and instant preview. No extra clicks needed.</p>
+                    <p className="text-xs text-slate-600 mt-1">Every transition is visible here with its timing and instant preview. No extra clicks needed.</p>
                   </div>
                   <button
                     type="button"
@@ -1928,7 +1928,7 @@ export function AdminPanel({
                           <div key={`glance-row-${transition.id}`} className="rounded border border-slate-300/10 bg-white/40 px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div>
                               <p className="text-xs font-semibold text-foreground">{transition.label}</p>
-                              <p className="text-[11px] text-muted-foreground">
+                              <p className="text-[11px] text-slate-600">
                                 {autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms
                               </p>
                             </div>
@@ -1956,7 +1956,7 @@ export function AdminPanel({
                   <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
                       <div>
-                        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Select Transition</label>
+                        <label className="text-[11px] uppercase tracking-wider text-slate-600">Select Transition</label>
                         <select
                           value={previewTransition}
                           onChange={e => setPreviewTransition(e.target.value as AutoDisplayTransitionType)}
@@ -1980,9 +1980,9 @@ export function AdminPanel({
                       </button>
                     </div>
                     <div className="rounded border border-slate-300/15 bg-slate-950/60 p-3">
-                      <p className="text-xs text-muted-foreground">Best For</p>
+                      <p className="text-xs text-slate-600">Best For</p>
                       <p className="text-sm text-foreground mt-1">{TRANSITION_USAGE_GUIDES[previewTransition].bestFor}</p>
-                      <p className="text-xs text-muted-foreground mt-3">How To Use</p>
+                      <p className="text-xs text-slate-600 mt-3">How To Use</p>
                       <p className="text-sm text-foreground mt-1">{TRANSITION_USAGE_GUIDES[previewTransition].tip}</p>
                     </div>
                   </div>
@@ -1993,23 +1993,23 @@ export function AdminPanel({
                 </button>
                 {activeTransitionPanel === 'cinematic' && (
                   <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 space-y-3">
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-slate-600">
                       Enables defence-grade pacing: commandant cards transition at 0.7-1.0s, image-heavy categories at 0.4-0.6s,
                       with Pro Slider layered motion, synchronized whoosh/chime audio cues, ambient fade, and auto-pause on user interaction.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="rounded border border-slate-300/15 bg-background/50 p-3">
                         <p className="text-[11px] uppercase tracking-wider text-[#002060]">Authority Motion Rules</p>
-                        <p className="text-xs text-muted-foreground mt-2">Ken Burns background zoom, foreground card lift, delayed text reveal, and reduced-motion fallback.</p>
+                        <p className="text-xs text-slate-600 mt-2">Ken Burns background zoom, foreground card lift, delayed text reveal, and reduced-motion fallback.</p>
                       </div>
                       <div className="rounded border border-slate-300/15 bg-background/50 p-3">
                         <p className="text-[11px] uppercase tracking-wider text-[#002060]">Audio Sync Rules</p>
-                        <p className="text-xs text-muted-foreground mt-2">Whoosh on slide start, soft chime on completion, ambient loop with fade-in/out, cooldown anti-spam protection.</p>
+                        <p className="text-xs text-slate-600 mt-2">Whoosh on slide start, soft chime on completion, ambient loop with fade-in/out, cooldown anti-spam protection.</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
                       <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
-                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                        <div className="flex justify-between text-[11px] text-slate-600 uppercase tracking-wider">
                           <span>Whoosh Cooldown</span>
                           <span>{cinematicSettings.whooshCooldownMs}ms</span>
                         </div>
@@ -2024,7 +2024,7 @@ export function AdminPanel({
                         />
                       </div>
                       <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
-                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                        <div className="flex justify-between text-[11px] text-slate-600 uppercase tracking-wider">
                           <span>Ambient Level</span>
                           <span>{Math.round(cinematicSettings.ambientLevel * 100)}%</span>
                         </div>
@@ -2039,7 +2039,7 @@ export function AdminPanel({
                         />
                       </div>
                       <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
-                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                        <div className="flex justify-between text-[11px] text-slate-600 uppercase tracking-wider">
                           <span>Ambient Fade In</span>
                           <span>{cinematicSettings.ambientFadeInMs}ms</span>
                         </div>
@@ -2054,7 +2054,7 @@ export function AdminPanel({
                         />
                       </div>
                       <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
-                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                        <div className="flex justify-between text-[11px] text-slate-600 uppercase tracking-wider">
                           <span>Ambient Fade Out</span>
                           <span>{cinematicSettings.ambientFadeOutMs}ms</span>
                         </div>
@@ -2069,7 +2069,7 @@ export function AdminPanel({
                         />
                       </div>
                       <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
-                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                        <div className="flex justify-between text-[11px] text-slate-600 uppercase tracking-wider">
                           <span>Commandant Duration</span>
                           <span>{cinematicSettings.commandantDurationMs}ms</span>
                         </div>
@@ -2084,7 +2084,7 @@ export function AdminPanel({
                         />
                       </div>
                       <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
-                        <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
+                        <div className="flex justify-between text-[11px] text-slate-600 uppercase tracking-wider">
                           <span>Image Duration</span>
                           <span>{cinematicSettings.imageDurationMs}ms</span>
                         </div>
@@ -2132,14 +2132,14 @@ export function AdminPanel({
                   <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Archive Transition</label>
+                        <label className="text-xs uppercase tracking-wider text-slate-600 font-semibold">Archive Transition</label>
                         <span className="text-xs text-foreground">{bootDraft.archiveTransitionMs} ms</span>
                       </div>
                       <input type="range" min={250} max={2000} step={50} value={bootDraft.archiveTransitionMs} onChange={e => setBootDraft(prev => ({ ...prev, archiveTransitionMs: Number(e.target.value) }))} className="w-full" />
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Total Boot Duration</label>
+                        <label className="text-xs uppercase tracking-wider text-slate-600 font-semibold">Total Boot Duration</label>
                         <span className="text-xs text-foreground">{bootDraft.totalDurationMs} ms</span>
                       </div>
                       <input type="range" min={7000} max={24000} step={500} value={bootDraft.totalDurationMs} onChange={e => setBootDraft(prev => ({ ...prev, totalDurationMs: Number(e.target.value) }))} className="w-full" />
@@ -2156,7 +2156,7 @@ export function AdminPanel({
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-foreground">Enable Idle Stage</p>
-                          <p className="text-xs text-muted-foreground mt-1">When no one interacts with the app, show a pre-boot style animated isolation screen.</p>
+                          <p className="text-xs text-slate-600 mt-1">When no one interacts with the app, show a pre-boot style animated isolation screen.</p>
                         </div>
                         <label className="inline-flex items-center gap-2 text-xs text-foreground">
                           <input
@@ -2171,7 +2171,7 @@ export function AdminPanel({
 
                     <div className="rounded border border-slate-300/10 p-3 bg-background/40 space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Idle Activation Delay</label>
+                        <label className="text-xs uppercase tracking-wider text-slate-600 font-semibold">Idle Activation Delay</label>
                         <span className="text-xs text-foreground">{Math.round(idleStageDraft.activationDelayMs / 1000)} sec</span>
                       </div>
                       <input
@@ -2186,7 +2186,7 @@ export function AdminPanel({
                     </div>
 
                     <div className="rounded border border-slate-300/10 p-3 bg-background/40 space-y-2">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Idle Design Type</label>
+                      <label className="text-xs uppercase tracking-wider text-slate-600 font-semibold">Idle Design Type</label>
                       <select
                         value={idleStageDraft.design}
                         onChange={e => setIdleStageDraft(prev => ({ ...prev, design: e.target.value as IdleStageSettings['design'] }))}
@@ -2196,7 +2196,7 @@ export function AdminPanel({
                           <option key={design.id} value={design.id}>{design.label}</option>
                         ))}
                       </select>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-slate-600">
                         {IDLE_STAGE_DESIGNS.find(item => item.id === idleStageDraft.design)?.description}
                       </p>
                     </div>
@@ -2209,11 +2209,11 @@ export function AdminPanel({
                 {activeTransitionPanel === 'globalTiming' && (
                   <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between"><label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Global Slide Time</label><span className="text-xs text-foreground">{autoDisplayDraft.global.slideDurationMs} ms</span></div>
+                      <div className="flex items-center justify-between"><label className="text-xs uppercase tracking-wider text-slate-600 font-semibold">Global Slide Time</label><span className="text-xs text-foreground">{autoDisplayDraft.global.slideDurationMs} ms</span></div>
                       <input type="range" min={3000} max={30000} step={250} value={autoDisplayDraft.global.slideDurationMs} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, global: { ...prev.global, slideDurationMs: Number(e.target.value) } }))} className="w-full" />
                     </div>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between"><label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Global Transition Time</label><span className="text-xs text-foreground">{autoDisplayDraft.global.transitionDurationMs} ms</span></div>
+                      <div className="flex items-center justify-between"><label className="text-xs uppercase tracking-wider text-slate-600 font-semibold">Global Transition Time</label><span className="text-xs text-foreground">{autoDisplayDraft.global.transitionDurationMs} ms</span></div>
                       <input type="range" min={250} max={2600} step={50} value={autoDisplayDraft.global.transitionDurationMs} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, global: { ...prev.global, transitionDurationMs: Number(e.target.value) } }))} className="w-full" />
                     </div>
                   </div>
@@ -2228,11 +2228,11 @@ export function AdminPanel({
                       <div key={context.key} className="rounded-lg border border-slate-300/15 bg-white/50 p-3 space-y-3">
                         <p className="text-sm font-semibold text-foreground">{context.label}</p>
                         <div className="space-y-1.5">
-                          <div className="flex items-center justify-between"><label className="text-[11px] uppercase tracking-wider text-muted-foreground">Slide Time</label><span className="text-[11px] text-foreground">{autoDisplayDraft.byContext[context.key].slideDurationMs} ms</span></div>
+                          <div className="flex items-center justify-between"><label className="text-[11px] uppercase tracking-wider text-slate-600">Slide Time</label><span className="text-[11px] text-foreground">{autoDisplayDraft.byContext[context.key].slideDurationMs} ms</span></div>
                           <input type="range" min={3000} max={30000} step={250} value={autoDisplayDraft.byContext[context.key].slideDurationMs} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, byContext: { ...prev.byContext, [context.key]: { ...prev.byContext[context.key], slideDurationMs: Number(e.target.value) } } }))} className="w-full" />
                         </div>
                         <div className="space-y-1.5">
-                          <div className="flex items-center justify-between"><label className="text-[11px] uppercase tracking-wider text-muted-foreground">Transition Base Time</label><span className="text-[11px] text-foreground">{autoDisplayDraft.byContext[context.key].transitionDurationMs} ms</span></div>
+                          <div className="flex items-center justify-between"><label className="text-[11px] uppercase tracking-wider text-slate-600">Transition Base Time</label><span className="text-[11px] text-foreground">{autoDisplayDraft.byContext[context.key].transitionDurationMs} ms</span></div>
                           <input type="range" min={250} max={2600} step={50} value={autoDisplayDraft.byContext[context.key].transitionDurationMs} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, byContext: { ...prev.byContext, [context.key]: { ...prev.byContext[context.key], transitionDurationMs: Number(e.target.value) } } }))} className="w-full" />
                         </div>
                       </div>
@@ -2249,7 +2249,7 @@ export function AdminPanel({
                       {GROUPED_TRANSITIONS.map(group => (
                         <div key={`library-group-${group.id}`} className="rounded border border-slate-300/10 p-3 bg-background/40">
                           <p className="text-[11px] uppercase tracking-wider text-[#002060] font-semibold">{group.label}</p>
-                          <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
+                          <p className="text-[11px] text-slate-600 mt-1">{group.description}</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                             {group.entries.map(transition => {
                               const enabled = autoDisplayDraft.transitionSequence.includes(transition.id);
@@ -2290,7 +2290,7 @@ export function AdminPanel({
                 {activeTransitionPanel === 'categorySequence' && (
                   <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Selected Category</p>
+                      <p className="text-xs uppercase tracking-wider text-slate-600 font-semibold">Selected Category</p>
                       <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="bg-background border border-[#002060]/20 rounded-md px-2 py-1 text-xs text-foreground">
                         {AUTO_DISPLAY_CONTEXTS.map(context => <option key={context.key} value={context.key}>{context.label}</option>)}
                       </select>
@@ -2337,13 +2337,13 @@ export function AdminPanel({
                   <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
                     <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
                       <div>
-                        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Category</label>
+                        <label className="text-[11px] uppercase tracking-wider text-slate-600">Category</label>
                         <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="w-full mt-1 bg-background border border-[#002060]/20 rounded-md px-2 py-2 text-xs text-foreground">
                           {AUTO_DISPLAY_CONTEXTS.map(context => <option key={`apply-${context.key}`} value={context.key}>{context.label}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Applied Transition</label>
+                        <label className="text-[11px] uppercase tracking-wider text-slate-600">Applied Transition</label>
                         <select
                           value={autoDisplayDraft.appliedTransitionByContext[sequenceContext] ?? 'sequence'}
                           onChange={e => {
@@ -2395,7 +2395,7 @@ export function AdminPanel({
                             className="w-full flex items-center justify-between gap-3 text-left"
                           >
                             <p className="text-[11px] uppercase tracking-wider text-[#002060] font-semibold">{group.label}</p>
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span className="text-[10px] uppercase tracking-wider text-slate-600">
                               {activeDurationGroup === group.id ? 'Hide' : 'Show'}
                             </span>
                           </button>
@@ -2403,7 +2403,7 @@ export function AdminPanel({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                               {group.entries.map(transition => (
                                 <div key={transition.id} className="space-y-1.5 rounded border border-slate-300/10 p-2">
-                                  <div className="flex items-center justify-between"><label className="text-[11px] text-foreground">{transition.label}</label><span className="text-[11px] text-muted-foreground">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span></div>
+                                  <div className="flex items-center justify-between"><label className="text-[11px] text-foreground">{transition.label}</label><span className="text-[11px] text-slate-600">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span></div>
                                   <input type="range" min={250} max={3000} step={50} value={autoDisplayDraft.transitionDurationByTypeMs[transition.id]} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, transitionDurationByTypeMs: { ...prev.transitionDurationByTypeMs, [transition.id]: Number(e.target.value) } }))} className="w-full" />
                                   <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-[#002060]/20 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10">Preview</button>
                                 </div>
@@ -2421,7 +2421,7 @@ export function AdminPanel({
                 </button>
                 {activeTransitionPanel === 'soundPairing' && (
                   <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
-                    <p className="text-xs text-muted-foreground mb-3">Assign a cue sound profile to each transition. These cues play at transition start in auto display.</p>
+                    <p className="text-xs text-slate-600 mb-3">Assign a cue sound profile to each transition. These cues play at transition start in auto display.</p>
                     <div className="space-y-4">
                       {GROUPED_TRANSITIONS.map(group => (
                         <div key={`cue-group-${group.id}`} className="rounded border border-slate-300/10 p-3 bg-background/40">
@@ -2468,14 +2468,14 @@ export function AdminPanel({
                 </button>
                 {activeTransitionPanel === 'commandantLayout' && (
                   <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 space-y-4">
-                    <p className="text-xs text-muted-foreground">Select the layout style used for Commandants when the Auto Rotation Display is running.</p>
+                    <p className="text-xs text-slate-600">Select the layout style used for Commandants when the Auto Rotation Display is running.</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <button 
                         onClick={() => setAutoDisplayDraft(prev => ({ ...prev, commandantLayout: 'standard' }))}
                         className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'standard' || !autoDisplayDraft.commandantLayout ? 'border-slate-300/60 bg-[#002060]/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-[#002060]/20 bg-background/50 hover:bg-muted/30'}`}
                       >
                         <h4 className="text-sm font-bold text-foreground">Standard Layout</h4>
-                        <p className="text-[11px] text-muted-foreground mt-1">Portrait on top, centered identity plate underneath.</p>
+                        <p className="text-[11px] text-slate-600 mt-1">Portrait on top, centered identity plate underneath.</p>
                       </button>
                       
                       <button 
@@ -2483,7 +2483,7 @@ export function AdminPanel({
                         className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'split' ? 'border-slate-300/60 bg-[#002060]/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-[#002060]/20 bg-background/50 hover:bg-muted/30'}`}
                       >
                         <h4 className="text-sm font-bold text-foreground">Split (Side-by-Side) Layout</h4>
-                        <p className="text-[11px] text-muted-foreground mt-1">Portrait on one side, write-up and bio details on the other.</p>
+                        <p className="text-[11px] text-slate-600 mt-1">Portrait on one side, write-up and bio details on the other.</p>
                       </button>
                     </div>
                   </div>
@@ -2542,7 +2542,7 @@ export function AdminPanel({
                   <div className="w-full max-w-lg rounded-xl border border-slate-300/25 bg-white/95 p-5 shadow-2xl">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <p className="text-xs uppercase tracking-wider text-muted-foreground">Transition Preview</p>
+                        <p className="text-xs uppercase tracking-wider text-slate-600">Transition Preview</p>
                         <p className="text-sm font-semibold text-foreground">{previewContextLabel}</p>
                       </div>
                       <button onClick={() => setPreviewModalOpen(false)} className="px-3 py-1 rounded border border-[#002060]/20 text-xs hover:bg-muted/40">Close</button>
@@ -2552,7 +2552,7 @@ export function AdminPanel({
                         {TRANSITION_TYPES.find(item => item.id === previewTransition)?.label ?? previewTransition}
                       </div>
                     </div>
-                    <p className="text-[11px] text-muted-foreground mt-3">Preview opens from center so you can test one transition cleanly without clutter.</p>
+                    <p className="text-[11px] text-slate-600 mt-3">Preview opens from center so you can test one transition cleanly without clutter.</p>
                   </div>
                 </div>
               )}
@@ -2653,71 +2653,71 @@ function PersonnelForm({ initial, onSave, onCancel }: {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h4 className="text-base font-semibold text-[#002060]">{initial ? 'Edit' : 'Add'} Personnel</h4>
-          <p className="text-xs text-muted-foreground mt-1">Enter the details for this personnel record.</p>
+          <p className="text-xs text-slate-600 mt-1">Enter the details for this personnel record.</p>
         </div>
-        <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
+        <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-slate-600 hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Full Name</label>
-          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Full Name</label>
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Rank / Title</label>
-          <input placeholder="Rank" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Rank / Title</label>
+          <input placeholder="Rank" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Category</label>
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Category</label>
           <select value={form.category} onChange={e => update('category', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30">
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Service Branch</label>
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Service Branch</label>
           <select value={form.service} onChange={e => update('service', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30">
             {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Period Start (Year)</label>
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Period Start (Year)</label>
           <input type="number" placeholder="Period Start" value={form.periodStart} onChange={e => update('periodStart', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Period End (Year)</label>
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Period End (Year)</label>
           <input type="number" placeholder="Period End" value={form.periodEnd} onChange={e => update('periodEnd', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Seniority Order</label>
-          <input type="number" placeholder="Order (1=highest)" value={form.seniorityOrder} onChange={e => update('seniorityOrder', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Seniority Order</label>
+          <input type="number" placeholder="Order (1=highest)" value={form.seniorityOrder} onChange={e => update('seniorityOrder', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Image URL</label>
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
           <div className="flex items-center gap-2">
-            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
+            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-slate-600 hover:text-foreground">
               Upload Image / GIF
               <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
             </label>
             {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-slate-600 hover:text-foreground hover:bg-muted/40 transition-colors">
                 Clear
               </button>
             )}
           </div>
           {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
-          <p className="text-[10px] text-muted-foreground">Stored locally with public fallback when cloud storage is configured.</p>
+          <p className="text-[10px] text-slate-600">Stored locally with public fallback when cloud storage is configured.</p>
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Citation / Bio</label>
-          <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Citation / Bio</label>
+          <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
-          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Decoration</label>
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-slate-300/10">
-        <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
+        <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-slate-600 hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
         <button onClick={handleSave} className="px-6 py-2 bg-[#002060] text-[#0a0d14] text-[#002060]-foreground rounded-md text-sm font-medium hover:bg-[#002060] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
@@ -2780,55 +2780,55 @@ function VisitForm({ initial, onSave, onCancel }: {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h4 className="text-base font-semibold text-[#002060]">{initial ? 'Edit' : 'Add'} Visit</h4>
-          <p className="text-xs text-muted-foreground mt-1">Enter the details for this distinguished visit.</p>
+          <p className="text-xs text-slate-600 mt-1">Enter the details for this distinguished visit.</p>
         </div>
-        <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
+        <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-slate-600 hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Visitor Name</label>
-          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Visitor Name</label>
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Title / Position</label>
-          <input placeholder="Title/Position" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Title / Position</label>
+          <input placeholder="Title/Position" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Country</label>
-          <input placeholder="Country" value={form.country} onChange={e => update('country', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Country</label>
+          <input placeholder="Country" value={form.country} onChange={e => update('country', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Date of Visit</label>
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Date of Visit</label>
           <input type="date" value={form.date} onChange={e => update('date', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Image URL</label>
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
           <div className="flex items-center gap-2">
-            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
+            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-slate-600 hover:text-foreground">
               Upload Image / GIF
               <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
             </label>
             {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-slate-600 hover:text-foreground hover:bg-muted/40 transition-colors">
                 Clear
               </button>
             )}
           </div>
           {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
-          <p className="text-[10px] text-muted-foreground">Stored locally with public fallback when cloud storage is configured.</p>
+          <p className="text-[10px] text-slate-600">Stored locally with public fallback when cloud storage is configured.</p>
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Visit Description / Context</label>
-          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Visit Description / Context</label>
+          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
-          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Decoration</label>
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-slate-300/10">
-        <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
+        <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-slate-600 hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
         <button onClick={handleSave} className="px-6 py-2 bg-[#002060] text-[#0a0d14] text-[#002060]-foreground rounded-md text-sm font-medium hover:bg-[#002060] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
@@ -2918,95 +2918,95 @@ function CommandantForm({ initial, onSave, onCancel }: {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h4 className="text-base font-semibold text-[#002060]">{initial ? 'Edit' : 'Add'} Commandant</h4>
-          <p className="text-xs text-muted-foreground mt-1">Manage commandant records and tenure details.</p>
+          <p className="text-xs text-slate-600 mt-1">Manage commandant records and tenure details.</p>
         </div>
-        <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
+        <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-slate-600 hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Commandant Name</label>
-          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Commandant Name</label>
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Rank</label>
-          <input placeholder="Rear Admiral" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Rank</label>
+          <input placeholder="Rear Admiral" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Title</label>
-          <input placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Title</label>
+          <input placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Post Nominals</label>
-          <input placeholder="GSS psc(+) fdc(+) ..." value={form.postNominals} onChange={e => update('postNominals', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Post Nominals</label>
+          <input placeholder="GSS psc(+) fdc(+) ..." value={form.postNominals} onChange={e => update('postNominals', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tenure Start</label>
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Tenure Start</label>
           <input type="number" placeholder="Tenure Start" value={form.tenureStart} onChange={e => update('tenureStart', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5 flex flex-col">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tenure End</label>
-          <input type="number" disabled={form.isCurrent} placeholder={form.isCurrent ? 'Present' : 'Tenure End'} value={form.isCurrent ? '' : form.tenureEnd} onChange={e => update('tenureEnd', e.target.value ? parseInt(e.target.value) : '')} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 disabled:opacity-50 disabled:cursor-not-allowed" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Tenure End</label>
+          <input type="number" disabled={form.isCurrent} placeholder={form.isCurrent ? 'Present' : 'Tenure End'} value={form.isCurrent ? '' : form.tenureEnd} onChange={e => update('tenureEnd', e.target.value ? parseInt(e.target.value) : '')} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 disabled:opacity-50 disabled:cursor-not-allowed" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Image URL</label>
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
           <div className="flex items-center gap-2">
-            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
+            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-slate-600 hover:text-foreground">
               Upload Image / GIF
               <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
             </label>
             {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-slate-600 hover:text-foreground hover:bg-muted/40 transition-colors">
                 Clear
               </button>
             )}
           </div>
           {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
-          <p className="text-[10px] text-muted-foreground">Stored locally with public fallback when cloud storage is configured.</p>
+          <p className="text-[10px] text-slate-600">Stored locally with public fallback when cloud storage is configured.</p>
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Biography / Description</label>
-          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Biography / Description</label>
+          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Bio Summary (short)</label>
-          <textarea placeholder="Short profile summary used in compact profile cards" value={form.bioSummary} onChange={e => update('bioSummary', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Bio Summary (short)</label>
+          <textarea placeholder="Short profile summary used in compact profile cards" value={form.bioSummary} onChange={e => update('bioSummary', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Full Biography</label>
-          <textarea placeholder="Detailed biography for full profile view" value={form.biographyFull} onChange={e => update('biographyFull', e.target.value)} rows={6} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Full Biography</label>
+          <textarea placeholder="Detailed biography for full profile view" value={form.biographyFull} onChange={e => update('biographyFull', e.target.value)} rows={6} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Years Experience</label>
-          <input type="number" min={0} placeholder="32" value={form.yearsExperience} onChange={e => update('yearsExperience', e.target.value ? parseInt(e.target.value, 10) : '')} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Years Experience</label>
+          <input type="number" min={0} placeholder="32" value={form.yearsExperience} onChange={e => update('yearsExperience', e.target.value ? parseInt(e.target.value, 10) : '')} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Education (one per line)</label>
-          <textarea placeholder="BSc...\nMSc..." value={form.educationText} onChange={e => update('educationText', e.target.value)} rows={3} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Education (one per line)</label>
+          <textarea placeholder="BSc...\nMSc..." value={form.educationText} onChange={e => update('educationText', e.target.value)} rows={3} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Training (one per line)</label>
-          <textarea placeholder="Chevening Scholar\nInternational Cyber Policy" value={form.trainingText} onChange={e => update('trainingText', e.target.value)} rows={3} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Training (one per line)</label>
+          <textarea placeholder="Chevening Scholar\nInternational Cyber Policy" value={form.trainingText} onChange={e => update('trainingText', e.target.value)} rows={3} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Past Appointments (one per line)</label>
-          <textarea placeholder="Deputy Chief ...\nDirector ..." value={form.pastAppointmentsText} onChange={e => update('pastAppointmentsText', e.target.value)} rows={4} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Past Appointments (one per line)</label>
+          <textarea placeholder="Deputy Chief ...\nDirector ..." value={form.pastAppointmentsText} onChange={e => update('pastAppointmentsText', e.target.value)} rows={4} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Honours (one per line)</label>
-          <textarea placeholder="GSS\npsc(+)" value={form.honoursText} onChange={e => update('honoursText', e.target.value)} rows={3} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Honours (one per line)</label>
+          <textarea placeholder="GSS\npsc(+)" value={form.honoursText} onChange={e => update('honoursText', e.target.value)} rows={3} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Family Note</label>
-          <input placeholder="Married with children" value={form.familyNote} onChange={e => update('familyNote', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Family Note</label>
+          <input placeholder="Married with children" value={form.familyNote} onChange={e => update('familyNote', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Impact Statement</label>
-          <textarea placeholder="Expected strategic impact statement" value={form.impactStatement} onChange={e => update('impactStatement', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Impact Statement</label>
+          <textarea placeholder="Expected strategic impact statement" value={form.impactStatement} onChange={e => update('impactStatement', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
-          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Decoration</label>
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <label className="flex items-center gap-3 text-sm text-foreground sm:col-span-2 p-3 rounded-md bg-[#002060] text-[#0a0d14]/5 border border-slate-300/10 cursor-pointer hover:bg-[#002060]/10 transition-colors">
           <div className={`w-5 h-5 rounded border ${form.isCurrent ? 'bg-[#002060] text-[#0a0d14] border-slate-300 text-[#002060]-foreground' : 'border-slate-300/30 bg-background'} flex items-center justify-center transition-colors`}>
@@ -3015,12 +3015,12 @@ function CommandantForm({ initial, onSave, onCancel }: {
           <input type="checkbox" checked={form.isCurrent} onChange={e => update('isCurrent', e.target.checked)} className="sr-only" />
           <div>
             <p className="font-medium text-[#002060]">Current Commandant</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Check this if the commandant is currently serving.</p>
+            <p className="text-[10px] text-slate-600 mt-0.5">Check this if the commandant is currently serving.</p>
           </div>
         </label>
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-slate-300/10">
-        <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
+        <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-slate-600 hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
         <button onClick={handleSave} className="px-6 py-2 bg-[#002060] text-[#0a0d14] text-[#002060]-foreground rounded-md text-sm font-medium hover:bg-[#002060] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
