@@ -1023,7 +1023,7 @@ export function AdminPanel({
   const EmptyState = ({ message, onAdd }: { message: string, onAdd: () => void }) => (
     <div className="flex flex-col items-center justify-center p-12 border border-dashed border-white/20 rounded-xl bg-[#131824] text-center view-enter">
       <div className="w-16 h-16 rounded-full bg-[#1c2231] flex items-center justify-center mb-4">
-        <Plus className="h-8 w-8 text-[#f4c866]/50" />
+        <Plus className="h-8 w-8 text-[#002060]/50" />
       </div>
       <p className="text-white/40 mb-4">{message}</p>
       <button onClick={onAdd} className="px-4 py-2 bg-[#002060] text-white rounded text-sm font-bold hover:bg-[#003080] transition-colors">
@@ -1058,9 +1058,8 @@ export function AdminPanel({
           </button>
 
           {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-slate-500">Content</p>}
-          <button onClick={() => setTab('museum')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'museum' ? "bg-[#002060]/10 text-[#002060] font-medium border border-[#002060]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Museum">
-            {!isSidebarCollapsed && <span>Museum Content</span>}
-          </button>
+          {/* Museum Content - Hidden for now */}
+          {/* <button onClick={() => setTab('museum')} className={...}>Museum Content</button> */}
           <button onClick={() => setTab('content')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'content' ? "bg-[#FF0000]/10 text-[#FF0000] font-medium border border-[#FF0000]/30" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Content">
             {!isSidebarCollapsed && <span>Narratives</span>}
           </button>
@@ -1127,7 +1126,7 @@ export function AdminPanel({
             ) : personnel.length === 0 ? (
               <EmptyState message="No personnel records found." onAdd={() => setShowFormP(true)} />
             ) : selectedPersonnel ? (
-              <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 sm:p-6 view-enter">
+              <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 sm:p-6 view-enter">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Full Profile</p>
@@ -1137,7 +1136,7 @@ export function AdminPanel({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedPersonnelId(null)}
-                      className="px-3 py-2 rounded-md border border-[#f4c866]/20 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      className="px-3 py-2 rounded-md border border-slate-300 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                     >
                       Back To List
                     </button>
@@ -1160,35 +1159,35 @@ export function AdminPanel({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Full Name</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.name}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank / Title</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.rank}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Category</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.category}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Service</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.service}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Period</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.periodStart} - {selectedPersonnel.periodEnd}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Seniority Order</p>
                     <p className="font-medium text-foreground mt-1">{selectedPersonnel.seniorityOrder}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Citation / Bio</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedPersonnel.citation}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Decoration</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedPersonnel.decoration || 'N/A'}</p>
                   </div>
@@ -1204,12 +1203,12 @@ export function AdminPanel({
                         value={personnelSearch}
                         onChange={e => setPersonnelSearch(e.target.value)}
                         placeholder="Search by name, rank, category, service, or year"
-                        className="w-full sm:max-w-md bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                        className="w-full sm:max-w-md bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50"
                       />
                       <select
                         value={personnelCategoryFilter}
                         onChange={e => setPersonnelCategoryFilter(e.target.value as Category | 'All')}
-                        className="w-full sm:w-auto bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                        className="w-full sm:w-auto bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50"
                       >
                         <option value="All">All Categories</option>
                         {personnelCategories.map(category => (
@@ -1223,8 +1222,8 @@ export function AdminPanel({
                         onClick={() => setPersonnelCategoryFilter('All')}
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                           personnelCategoryFilter === 'All'
-                            ? 'bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground border-primary'
-                            : 'bg-card text-muted-foreground border-[#f4c866]/20 hover:text-foreground hover:bg-muted/50'
+                            ? 'bg-[#002060] text-[#0a0d14] text-[#002060]-foreground border-slate-300'
+                            : 'bg-white text-muted-foreground border-[#002060]/20 hover:text-foreground hover:bg-muted/50'
                         }`}
                       >
                         All ({personnel.length})
@@ -1235,8 +1234,8 @@ export function AdminPanel({
                           onClick={() => setPersonnelCategoryFilter(category)}
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                             personnelCategoryFilter === category
-                              ? 'bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground border-primary'
-                              : 'bg-card text-muted-foreground border-[#f4c866]/20 hover:text-foreground hover:bg-muted/50'
+                              ? 'bg-[#002060] text-[#0a0d14] text-[#002060]-foreground border-slate-300'
+                              : 'bg-white text-muted-foreground border-[#002060]/20 hover:text-foreground hover:bg-muted/50'
                           }`}
                         >
                           {category} ({personnelCountsByCategory[category] ?? 0})
@@ -1283,7 +1282,7 @@ export function AdminPanel({
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={(e) => { e.stopPropagation(); setEditingP(p); setShowFormP(true); }}
-                                className="p-1.5 rounded-md hover:bg-[#f4c866]/10 text-muted-foreground hover:text-[#f4c866] transition-colors"
+                                className="p-1.5 rounded-md hover:bg-[#002060]/10 text-muted-foreground hover:text-[#002060] transition-colors"
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
@@ -1336,26 +1335,26 @@ export function AdminPanel({
             ) : visits.length === 0 ? (
               <EmptyState message="No distinguished visits recorded." onAdd={() => setShowFormV(true)} />
             ) : (
-              <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl overflow-hidden">
+              <div className="rounded-[24px] border border-slate-200 bg-white shadow-md overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-muted/40 text-[#f4c866] text-xs uppercase tracking-wider border-b border-primary/10">
+                      <tr className="bg-gradient-to-r from-slate-100 to-slate-50 text-[#002060] text-xs uppercase tracking-wider border-b border-slate-300">
                         <th className="px-4 py-4 text-left font-semibold">Name</th>
                         <th className="px-4 py-4 text-left font-semibold">Country</th>
                         <th className="px-4 py-4 text-left font-semibold">Date</th>
                         <th className="px-4 py-4 text-center font-semibold text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-primary/5">
+                    <tbody className="divide-y divide-slate-200">
                       {visits.map(v => (
-                        <tr key={v.id} className="hover:bg-muted/30 transition-colors group">
-                          <td className="px-4 py-3 font-medium text-foreground">{v.name}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{v.country}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{v.date}</td>
+                        <tr key={v.id} className="hover:bg-slate-50 transition-colors group">
+                          <td className="px-4 py-3 font-medium text-slate-900">{v.name}</td>
+                          <td className="px-4 py-3 text-slate-600">{v.country}</td>
+                          <td className="px-4 py-3 text-slate-600">{v.date}</td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => { setEditingV(v); setShowFormV(true); }} className="p-1.5 rounded-md hover:bg-[#f4c866]/10 text-muted-foreground hover:text-[#f4c866] transition-colors"><Pencil className="h-4 w-4" /></button>
+                              <button onClick={() => { setEditingV(v); setShowFormV(true); }} className="p-1.5 rounded-md hover:bg-[#002060]/10 text-muted-foreground hover:text-[#002060] transition-colors"><Pencil className="h-4 w-4" /></button>
                               <button onClick={() => onDeleteVisit(v.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
                             </div>
                           </td>
@@ -1372,7 +1371,7 @@ export function AdminPanel({
         {tab === 'commandants' && (
           <div className="view-enter">
             {!showFormC && (
-              <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-4 mb-4">
+              <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-4 mb-4">
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col lg:flex-row lg:items-center gap-3">
                     <input
@@ -1380,12 +1379,12 @@ export function AdminPanel({
                       value={commandantSearch}
                       onChange={e => setCommandantSearch(e.target.value)}
                       placeholder="Search by name, title, year, decoration, or bio"
-                      className="w-full lg:max-w-md bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                      className="w-full lg:max-w-md bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50"
                     />
                     <select
                       value={commandantStatusFilter}
                       onChange={e => setCommandantStatusFilter(e.target.value as CommandantStatusFilter)}
-                      className="w-full sm:w-auto bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                      className="w-full sm:w-auto bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50"
                     >
                       <option value="all">All Status</option>
                       <option value="current">Current Only</option>
@@ -1400,14 +1399,14 @@ export function AdminPanel({
                     <button
                       type="button"
                       onClick={selectAllVisibleCommandants}
-                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                      className="px-3 py-1.5 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                     >
                       Select Visible
                     </button>
                     <button
                       type="button"
                       onClick={clearCommandantSelection}
-                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                      className="px-3 py-1.5 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                     >
                       Clear Selection
                     </button>
@@ -1415,7 +1414,7 @@ export function AdminPanel({
                       type="button"
                       onClick={startCommandantBatchEdit}
                       disabled={selectedCommandantIds.length === 0}
-                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Batch Edit Selected ({selectedCommandantIds.length})
                     </button>
@@ -1427,7 +1426,7 @@ export function AdminPanel({
             {showFormC ? (
               <>
                 {commandantBatchQueue.length > 0 && (
-                  <div className="mb-3 rounded-lg border border-[#f4c866]/20 bg-[#f4c866]/10 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="mb-3 rounded-lg border border-[#002060]/20 bg-[#002060]/10 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <p className="text-xs text-foreground">
                       Batch edit in progress: {Math.min(commandantBatchIndex + 1, commandantBatchQueue.length)} of {commandantBatchQueue.length}
                     </p>
@@ -1435,7 +1434,7 @@ export function AdminPanel({
                       <button
                         type="button"
                         onClick={openNextCommandantInBatch}
-                        className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                        className="px-3 py-1.5 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                       >
                         Skip To Next
                       </button>
@@ -1446,7 +1445,7 @@ export function AdminPanel({
                           setShowFormC(false);
                           setEditingC(null);
                         }}
-                        className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                        className="px-3 py-1.5 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                       >
                         Exit Batch
                       </button>
@@ -1483,7 +1482,7 @@ export function AdminPanel({
             ) : commandants.length === 0 ? (
               <EmptyState message="No commandants on record." onAdd={() => setShowFormC(true)} />
             ) : selectedCommandant ? (
-              <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 sm:p-6 view-enter">
+              <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 sm:p-6 view-enter">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Commandant Profile</p>
@@ -1493,13 +1492,13 @@ export function AdminPanel({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedCommandantId(null)}
-                      className="px-3 py-2 rounded-md border border-[#f4c866]/20 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      className="px-3 py-2 rounded-md border border-[#002060]/20 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     >
                       Back To List
                     </button>
                     <button
                       onClick={() => { setEditingC(selectedCommandant); resetCommandantBatch(); setShowFormC(true); }}
-                      className="px-3 py-2 rounded-md bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground text-xs font-semibold hover:bg-[#f4c866] text-[#0a0d14]/90"
+                      className="px-3 py-2 rounded-md bg-[#002060] text-[#0a0d14] text-[#002060]-foreground text-xs font-semibold hover:bg-[#002060] text-[#0a0d14]/90"
                     >
                       Edit Profile
                     </button>
@@ -1516,78 +1515,78 @@ export function AdminPanel({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Name</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.name}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.rank || 'N/A'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Title</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.title}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Post Nominals</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.postNominals || 'N/A'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tenure</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.tenureStart} - {selectedCommandant.tenureEnd ?? 'Present'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Years Experience</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.yearsExperience ?? 'N/A'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</p>
                     <p className="font-medium text-foreground mt-1">{selectedCommandant.isCurrent ? 'Current' : 'Past'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Summary</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.bioSummary || 'No summary available.'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Biography</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.biographyFull || selectedCommandant.description || 'No bio available.'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Education</p>
                     <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.education ?? []).join(' | ') || 'N/A'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Training</p>
                     <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.training ?? []).join(' | ') || 'N/A'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Past Appointments</p>
                     <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.pastAppointments ?? []).join(' | ') || 'N/A'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Honours</p>
                     <p className="text-foreground mt-1 leading-relaxed">{(selectedCommandant.honours ?? []).join(' | ') || 'N/A'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Family Note</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.familyNote || 'N/A'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Impact Statement</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.impactStatement || 'N/A'}</p>
                   </div>
-                  <div className="rounded-lg border border-primary/10 bg-card/50 px-3 py-2 md:col-span-2">
+                  <div className="rounded-lg border border-slate-300/10 bg-white/50 px-3 py-2 md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Decoration</p>
                     <p className="text-foreground mt-1 leading-relaxed">{selectedCommandant.decoration || 'N/A'}</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl overflow-hidden">
+              <div className="rounded-[24px] border border-slate-200 bg-white shadow-md overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-muted/40 text-[#f4c866] text-xs uppercase tracking-wider border-b border-primary/10">
+                      <tr className="bg-gradient-to-r from-slate-100 to-slate-50 text-[#002060] text-xs uppercase tracking-wider border-b border-slate-300">
                         <th className="px-4 py-4 text-left font-semibold">Select</th>
                         <th className="px-4 py-4 text-left font-semibold">Name</th>
                         <th className="px-4 py-4 text-left font-semibold">Tenure</th>
@@ -1595,9 +1594,9 @@ export function AdminPanel({
                         <th className="px-4 py-4 text-center font-semibold text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-primary/5">
+                    <tbody className="divide-y divide-slate-200">
                       {filteredCommandants.map(c => (
-                        <tr key={c.id} className="hover:bg-muted/30 transition-colors group cursor-pointer" onClick={() => setSelectedCommandantId(c.id)}>
+                        <tr key={c.id} className="hover:bg-slate-50 transition-colors group cursor-pointer" onClick={() => setSelectedCommandantId(c.id)}>
                           <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                             <input
                               type="checkbox"
@@ -1618,7 +1617,7 @@ export function AdminPanel({
                           <td className="px-4 py-3 text-muted-foreground">{c.tenureStart} – {c.tenureEnd ?? 'Present'}</td>
                           <td className="px-4 py-3">
                             {c.isCurrent ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold bg-[#f4c866] text-[#0a0d14]/20 text-[#f4c866] border border-primary/30">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold bg-[#002060] text-[#0a0d14]/20 text-[#002060] border border-slate-300/30">
                                 Current
                               </span>
                             ) : (
@@ -1629,7 +1628,7 @@ export function AdminPanel({
                           </td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={(e) => { e.stopPropagation(); setEditingC(c); resetCommandantBatch(); setShowFormC(true); }} className="p-1.5 rounded-md hover:bg-[#f4c866]/10 text-muted-foreground hover:text-[#f4c866] transition-colors"><Pencil className="h-4 w-4" /></button>
+                              <button onClick={(e) => { e.stopPropagation(); setEditingC(c); resetCommandantBatch(); setShowFormC(true); }} className="p-1.5 rounded-md hover:bg-[#002060]/10 text-muted-foreground hover:text-[#002060] transition-colors"><Pencil className="h-4 w-4" /></button>
                               <button onClick={(e) => { e.stopPropagation(); onDeleteCommandant(c.id); }} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
                             </div>
                           </td>
@@ -1669,11 +1668,12 @@ export function AdminPanel({
           </div>
         )}
 
-        {tab === 'museum' && (
+        {/* Museum Section - Hidden for now */}
+        {/* {tab === 'museum' && (
           <div className="view-enter">
             <MuseumAdmin />
           </div>
-        )}
+        )} */}
 
         {tab === 'devices' && (
           <div className="view-enter">
@@ -1708,9 +1708,9 @@ export function AdminPanel({
 
         {tab === 'guide' && (
           <div className="view-enter">
-            <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 md:p-6 space-y-6">
+            <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 md:p-6 space-y-6">
               <div>
-                <h4 className="text-base font-semibold text-[#f4c866]">Admin Helper Guide</h4>
+                <h4 className="text-base font-semibold text-[#002060]">Admin Helper Guide</h4>
                 <p className="text-xs text-muted-foreground mt-1">
                   Simple guide: read what a feature does, then use the "Try This Now" button to test it immediately.
                 </p>
@@ -1721,7 +1721,7 @@ export function AdminPanel({
                         setGuideFlowActive(false);
                         setGuideNextSectionId(null);
                       }}
-                      className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                      className="px-3 py-1.5 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                     >
                       Finish Guide Session
                     </button>
@@ -1738,11 +1738,11 @@ export function AdminPanel({
                   <div
                     id={`guide-card-${section.id}`}
                     key={section.id}
-                    className={`rounded-lg border bg-card/60 p-4 transition-all ${isNextTarget ? 'border-primary/60 ring-1 ring-primary/40 shadow-md shadow-primary/20' : 'border-primary/15'}`}
+                    className={`rounded-lg border bg-white/60 p-4 transition-all ${isNextTarget ? 'border-slate-300/60 ring-1 ring-primary/40 shadow-md shadow-primary/20' : 'border-slate-300/15'}`}
                   >
                     <p className="text-sm font-semibold text-foreground">{section.title}</p>
                     {isNextTarget && (
-                      <p className="text-[11px] uppercase tracking-wider text-[#f4c866] mt-1">Next Step</p>
+                      <p className="text-[11px] uppercase tracking-wider text-[#002060] mt-1">Next Step</p>
                     )}
                     <div className="mt-2">
                       <p className="text-[11px] uppercase tracking-wider text-muted-foreground">What it is</p>
@@ -1759,7 +1759,7 @@ export function AdminPanel({
                           <button
                             key={`${section.id}-${action.label}`}
                             onClick={() => openGuideLink(action.tab, action.panel, nextSectionId ?? section.id)}
-                            className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                            className="px-3 py-1.5 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                           >
                             {action.label}
                           </button>
@@ -1770,7 +1770,7 @@ export function AdminPanel({
                 )})}
               </div>
 
-              <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+              <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
                 <h5 className="text-sm font-semibold text-foreground">Transitions: Logical Operating Guide</h5>
                 <p className="text-xs text-muted-foreground mt-2">
                   Step 1: Turn ON the transition styles you want in Transition Library.
@@ -1794,22 +1794,22 @@ export function AdminPanel({
                   Step 7: Click Apply & Save Transitions to keep changes permanently.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button onClick={() => openGuideLink('transitions', 'library')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10">Open Transition Library</button>
-                  <button onClick={() => openGuideLink('transitions', 'categoryApplied')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10">Open Category Transition</button>
-                  <button onClick={() => openGuideLink('transitions', 'actions')} className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10">Open Save Section</button>
+                  <button onClick={() => openGuideLink('transitions', 'library')} className="px-3 py-1.5 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10">Open Transition Library</button>
+                  <button onClick={() => openGuideLink('transitions', 'categoryApplied')} className="px-3 py-1.5 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10">Open Category Transition</button>
+                  <button onClick={() => openGuideLink('transitions', 'actions')} className="px-3 py-1.5 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10">Open Save Section</button>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+              <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
                 <h5 className="text-sm font-semibold text-foreground">Transition Types: Detailed Guide</h5>
                 <div className="space-y-4 mt-3">
                   {GROUPED_TRANSITIONS.map(group => (
-                    <div key={`helper-group-${group.id}`} className="rounded-md border border-primary/10 p-3 bg-background/40">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-[#f4c866]">{group.label}</p>
+                    <div key={`helper-group-${group.id}`} className="rounded-md border border-slate-300/10 p-3 bg-background/40">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[#002060]">{group.label}</p>
                       <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                         {group.entries.map(item => (
-                          <div key={`helper-${item.id}`} className="rounded-md border border-primary/10 p-3 bg-background/50">
+                          <div key={`helper-${item.id}`} className="rounded-md border border-slate-300/10 p-3 bg-background/50">
                             <p className="text-xs font-semibold uppercase tracking-wider text-foreground">{item.label}</p>
                             <p className="text-[11px] text-muted-foreground mt-1">Best for: {TRANSITION_USAGE_GUIDES[item.id].bestFor}</p>
                             <p className="text-[11px] text-muted-foreground mt-1">How to use: {TRANSITION_USAGE_GUIDES[item.id].tip}</p>
@@ -1826,9 +1826,9 @@ export function AdminPanel({
 
         {tab === 'theme' && (
           <div className="view-enter">
-            <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 md:p-6">
+            <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 md:p-6">
               <div className="mb-5">
-                <h4 className="text-base font-semibold text-[#f4c866]">Display Theme Control</h4>
+                <h4 className="text-base font-semibold text-[#002060]">Display Theme Control</h4>
                 <p className="text-xs text-muted-foreground mt-1">
                   The selected theme is saved and reused whenever the application starts until an admin changes it.
                 </p>
@@ -1843,18 +1843,18 @@ export function AdminPanel({
                       onClick={() => setThemeDraft(option.mode)}
                       className={`relative text-left rounded-lg border p-4 transition-all ${
                         isActive
-                          ? 'border-primary/60 bg-[#f4c866]/10 shadow-md shadow-primary/10'
-                          : 'border-primary/15 bg-card/50 hover:border-primary/35 hover:bg-muted/30'
+                          ? 'border-slate-300/60 bg-[#002060]/10 shadow-md shadow-primary/10'
+                          : 'border-slate-300/15 bg-white/50 hover:border-slate-300/35 hover:bg-muted/30'
                       }`}
                     >
                       {isActive && (
-                        <span className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] uppercase tracking-[0.12em] font-bold bg-[#f4c866] text-[#0d1016] border border-[#f4c866]/50 shadow-[0_0_10px_rgba(244,200,102,0.2)]">
+                        <span className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] uppercase tracking-[0.12em] font-bold bg-[#002060] text-[#0d1016] border border-[#002060]/50 shadow-[0_0_10px_rgba(244,200,102,0.2)]">
                           Active Mode
                         </span>
                       )}
                       <p className="text-sm font-semibold text-foreground">{option.label}</p>
                       <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{option.description}</p>
-                      <p className={`mt-3 text-[10px] uppercase tracking-wider font-semibold ${isActive ? 'text-[#f4c866]' : 'text-muted-foreground'}`}>
+                      <p className={`mt-3 text-[10px] uppercase tracking-wider font-semibold ${isActive ? 'text-[#002060]' : 'text-muted-foreground'}`}>
                         {isActive ? 'Currently Applied' : 'Click to Activate'}
                       </p>
                     </button>
@@ -1865,14 +1865,14 @@ export function AdminPanel({
               <div className="mt-5 flex flex-wrap gap-2">
                 <button
                   onClick={() => setThemeDraft('indoor-defence-classic')}
-                  className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
+                  className="px-4 py-2 rounded-md text-sm font-medium border border-slate-300/25 text-foreground bg-white hover:bg-muted/40 transition-colors"
                 >
                   Reset Draft to Default (Indoor 1)
                 </button>
                 <button
                   onClick={applyThemeSettings}
                   disabled={!isThemeDirty}
-                  className="px-4 py-2 rounded-md text-sm font-medium border border-primary/40 text-[#f4c866] bg-[#f4c866]/10 hover:bg-[#f4c866] text-[#0a0d14]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-md text-sm font-medium border border-slate-300/40 text-[#002060] bg-[#002060]/10 hover:bg-[#002060] text-[#0a0d14]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Apply & Save Theme
                 </button>
@@ -1883,28 +1883,28 @@ export function AdminPanel({
 
         {tab === 'transitions' && (
           <div className="view-enter">
-            <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 md:p-6">
+            <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 md:p-6">
               <div className="mb-5">
-                <h4 className="text-base font-semibold text-[#f4c866]">Transition & Boot Experience</h4>
+                <h4 className="text-base font-semibold text-[#002060]">Transition & Boot Experience</h4>
                 <p className="text-xs text-muted-foreground mt-1">
                   Control boot timing, transition styles, and sequence behavior. Open any section to configure only what you need.
                 </p>
               </div>
 
-              <div className="rounded-lg border border-primary/15 bg-card/60 p-4 mb-4">
+              <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 mb-4">
                 <h5 className="text-sm font-semibold text-foreground">Transition Categories Overview</h5>
                 <p className="text-xs text-muted-foreground mt-1">All transition controls below are grouped by these categories for easier setup and review.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
                   {GROUPED_TRANSITIONS.map(group => (
-                    <div key={`overview-${group.id}`} className="rounded border border-primary/10 bg-background/40 p-2">
-                      <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
+                    <div key={`overview-${group.id}`} className="rounded border border-slate-300/10 bg-background/40 p-2">
+                      <p className="text-[11px] uppercase tracking-wider text-[#002060] font-semibold">{group.label}</p>
                       <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="rounded-lg border border-primary/15 bg-card/60 p-4 mb-4">
+              <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 mb-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
                     <h5 className="text-sm font-semibold text-foreground">All Transitions At A Glance</h5>
@@ -1913,7 +1913,7 @@ export function AdminPanel({
                   <button
                     type="button"
                     onClick={() => setShowAdvancedTransitionPanels(prev => !prev)}
-                    className="px-3 py-2 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                    className="px-3 py-2 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                   >
                     {showAdvancedTransitionPanels ? 'Hide Advanced Sections' : 'Show Advanced Sections'}
                   </button>
@@ -1921,11 +1921,11 @@ export function AdminPanel({
 
                 <div className="space-y-3 mt-3">
                   {GROUPED_TRANSITIONS.map(group => (
-                    <div key={`glance-${group.id}`} className="rounded border border-primary/10 bg-background/40 p-3">
-                      <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
+                    <div key={`glance-${group.id}`} className="rounded border border-slate-300/10 bg-background/40 p-3">
+                      <p className="text-[11px] uppercase tracking-wider text-[#002060] font-semibold">{group.label}</p>
                       <div className="space-y-2 mt-2">
                         {group.entries.map(transition => (
-                          <div key={`glance-row-${transition.id}`} className="rounded border border-primary/10 bg-card/40 px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <div key={`glance-row-${transition.id}`} className="rounded border border-slate-300/10 bg-white/40 px-3 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div>
                               <p className="text-xs font-semibold text-foreground">{transition.label}</p>
                               <p className="text-[11px] text-muted-foreground">
@@ -1935,7 +1935,7 @@ export function AdminPanel({
                             <button
                               type="button"
                               onClick={() => openTransitionPreview(transition.id, `${group.label} Preview`)}
-                              className="px-3 py-1.5 rounded border border-primary/25 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                              className="px-3 py-1.5 rounded border border-slate-300/25 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                             >
                               Preview
                             </button>
@@ -1949,18 +1949,18 @@ export function AdminPanel({
 
               {showAdvancedTransitionPanels && (
               <div className="space-y-3 mt-3">
-                <button onClick={() => setActiveTransitionPanel('guide')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('guide')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Transition Usage Guide</span>
                 </button>
                 {activeTransitionPanel === 'guide' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 space-y-3">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
                       <div>
                         <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Select Transition</label>
                         <select
                           value={previewTransition}
                           onChange={e => setPreviewTransition(e.target.value as AutoDisplayTransitionType)}
-                          className="w-full mt-1 bg-background border border-[#f4c866]/20 rounded-md px-2 py-2 text-xs text-foreground"
+                          className="w-full mt-1 bg-background border border-[#002060]/20 rounded-md px-2 py-2 text-xs text-foreground"
                         >
                           {GROUPED_TRANSITIONS.map(group => (
                             <optgroup key={`guide-group-${group.id}`} label={group.label}>
@@ -1974,12 +1974,12 @@ export function AdminPanel({
                       <button
                         type="button"
                         onClick={() => openTransitionPreview(previewTransition, 'Guide Preview')}
-                        className="px-3 py-2 rounded border border-primary/25 text-xs uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                        className="px-3 py-2 rounded border border-slate-300/25 text-xs uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                       >
                         Preview From Center
                       </button>
                     </div>
-                    <div className="rounded border border-primary/15 bg-slate-950/60 p-3">
+                    <div className="rounded border border-slate-300/15 bg-slate-950/60 p-3">
                       <p className="text-xs text-muted-foreground">Best For</p>
                       <p className="text-sm text-foreground mt-1">{TRANSITION_USAGE_GUIDES[previewTransition].bestFor}</p>
                       <p className="text-xs text-muted-foreground mt-3">How To Use</p>
@@ -1988,27 +1988,27 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('cinematic')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('cinematic')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Cinematic Experience Preset</span>
                 </button>
                 {activeTransitionPanel === 'cinematic' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 space-y-3">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 space-y-3">
                     <p className="text-xs text-muted-foreground">
                       Enables defence-grade pacing: commandant cards transition at 0.7-1.0s, image-heavy categories at 0.4-0.6s,
                       with Pro Slider layered motion, synchronized whoosh/chime audio cues, ambient fade, and auto-pause on user interaction.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <div className="rounded border border-primary/15 bg-background/50 p-3">
-                        <p className="text-[11px] uppercase tracking-wider text-[#f4c866]">Authority Motion Rules</p>
+                      <div className="rounded border border-slate-300/15 bg-background/50 p-3">
+                        <p className="text-[11px] uppercase tracking-wider text-[#002060]">Authority Motion Rules</p>
                         <p className="text-xs text-muted-foreground mt-2">Ken Burns background zoom, foreground card lift, delayed text reveal, and reduced-motion fallback.</p>
                       </div>
-                      <div className="rounded border border-primary/15 bg-background/50 p-3">
-                        <p className="text-[11px] uppercase tracking-wider text-[#f4c866]">Audio Sync Rules</p>
+                      <div className="rounded border border-slate-300/15 bg-background/50 p-3">
+                        <p className="text-[11px] uppercase tracking-wider text-[#002060]">Audio Sync Rules</p>
                         <p className="text-xs text-muted-foreground mt-2">Whoosh on slide start, soft chime on completion, ambient loop with fade-in/out, cooldown anti-spam protection.</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                      <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
                         <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
                           <span>Whoosh Cooldown</span>
                           <span>{cinematicSettings.whooshCooldownMs}ms</span>
@@ -2023,7 +2023,7 @@ export function AdminPanel({
                           className="w-full"
                         />
                       </div>
-                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                      <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
                         <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
                           <span>Ambient Level</span>
                           <span>{Math.round(cinematicSettings.ambientLevel * 100)}%</span>
@@ -2038,7 +2038,7 @@ export function AdminPanel({
                           className="w-full"
                         />
                       </div>
-                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                      <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
                         <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
                           <span>Ambient Fade In</span>
                           <span>{cinematicSettings.ambientFadeInMs}ms</span>
@@ -2053,7 +2053,7 @@ export function AdminPanel({
                           className="w-full"
                         />
                       </div>
-                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                      <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
                         <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
                           <span>Ambient Fade Out</span>
                           <span>{cinematicSettings.ambientFadeOutMs}ms</span>
@@ -2068,7 +2068,7 @@ export function AdminPanel({
                           className="w-full"
                         />
                       </div>
-                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                      <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
                         <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
                           <span>Commandant Duration</span>
                           <span>{cinematicSettings.commandantDurationMs}ms</span>
@@ -2083,7 +2083,7 @@ export function AdminPanel({
                           className="w-full"
                         />
                       </div>
-                      <div className="space-y-1.5 rounded border border-primary/15 bg-background/50 p-3">
+                      <div className="space-y-1.5 rounded border border-slate-300/15 bg-background/50 p-3">
                         <div className="flex justify-between text-[11px] text-muted-foreground uppercase tracking-wider">
                           <span>Image Duration</span>
                           <span>{cinematicSettings.imageDurationMs}ms</span>
@@ -2103,21 +2103,21 @@ export function AdminPanel({
                       <button
                         type="button"
                         onClick={applyCinematicPreset}
-                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                        className="px-4 py-2 rounded border border-slate-300/30 text-xs uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                       >
                         Apply Cinematic Preset
                       </button>
                       <button
                         type="button"
                         onClick={() => openTransitionPreview('pro-slider', 'Cinematic Preset')}
-                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                        className="px-4 py-2 rounded border border-slate-300/30 text-xs uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                       >
                         Preview Pro Slider
                       </button>
                       <button
                         type="button"
                         onClick={resetCinematicSettings}
-                        className="px-4 py-2 rounded border border-primary/30 text-xs uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                        className="px-4 py-2 rounded border border-slate-300/30 text-xs uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                       >
                         Reset Cinematic Controls
                       </button>
@@ -2125,11 +2125,11 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('boot')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('boot')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Boot Sequence Timing</span>
                 </button>
                 {activeTransitionPanel === 'boot' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Archive Transition</label>
@@ -2147,12 +2147,12 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('idle')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('idle')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Idle Stage (Isolation Mode)</span>
                 </button>
                 {activeTransitionPanel === 'idle' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 space-y-4">
-                    <div className="rounded border border-primary/10 p-3 bg-background/40 flex flex-col gap-2">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 space-y-4">
+                    <div className="rounded border border-slate-300/10 p-3 bg-background/40 flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-foreground">Enable Idle Stage</p>
@@ -2169,7 +2169,7 @@ export function AdminPanel({
                       </div>
                     </div>
 
-                    <div className="rounded border border-primary/10 p-3 bg-background/40 space-y-2">
+                    <div className="rounded border border-slate-300/10 p-3 bg-background/40 space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Idle Activation Delay</label>
                         <span className="text-xs text-foreground">{Math.round(idleStageDraft.activationDelayMs / 1000)} sec</span>
@@ -2185,12 +2185,12 @@ export function AdminPanel({
                       />
                     </div>
 
-                    <div className="rounded border border-primary/10 p-3 bg-background/40 space-y-2">
+                    <div className="rounded border border-slate-300/10 p-3 bg-background/40 space-y-2">
                       <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Idle Design Type</label>
                       <select
                         value={idleStageDraft.design}
                         onChange={e => setIdleStageDraft(prev => ({ ...prev, design: e.target.value as IdleStageSettings['design'] }))}
-                        className="w-full bg-background border border-[#f4c866]/20 rounded-md px-2 py-2 text-xs text-foreground"
+                        className="w-full bg-background border border-[#002060]/20 rounded-md px-2 py-2 text-xs text-foreground"
                       >
                         {IDLE_STAGE_DESIGNS.map(design => (
                           <option key={design.id} value={design.id}>{design.label}</option>
@@ -2203,11 +2203,11 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('globalTiming')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('globalTiming')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Global Timing</span>
                 </button>
                 {activeTransitionPanel === 'globalTiming' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between"><label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Global Slide Time</label><span className="text-xs text-foreground">{autoDisplayDraft.global.slideDurationMs} ms</span></div>
                       <input type="range" min={3000} max={30000} step={250} value={autoDisplayDraft.global.slideDurationMs} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, global: { ...prev.global, slideDurationMs: Number(e.target.value) } }))} className="w-full" />
@@ -2219,13 +2219,13 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('categoryTiming')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('categoryTiming')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Category-Specific Timing</span>
                 </button>
                 {activeTransitionPanel === 'categoryTiming' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
                     {AUTO_DISPLAY_CONTEXTS.map(context => (
-                      <div key={context.key} className="rounded-lg border border-primary/15 bg-card/50 p-3 space-y-3">
+                      <div key={context.key} className="rounded-lg border border-slate-300/15 bg-white/50 p-3 space-y-3">
                         <p className="text-sm font-semibold text-foreground">{context.label}</p>
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between"><label className="text-[11px] uppercase tracking-wider text-muted-foreground">Slide Time</label><span className="text-[11px] text-foreground">{autoDisplayDraft.byContext[context.key].slideDurationMs} ms</span></div>
@@ -2240,21 +2240,21 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('library')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('library')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Transition Library (Multi-Select)</span>
                 </button>
                 {activeTransitionPanel === 'library' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
                     <div className="space-y-4">
                       {GROUPED_TRANSITIONS.map(group => (
-                        <div key={`library-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
-                          <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
+                        <div key={`library-group-${group.id}`} className="rounded border border-slate-300/10 p-3 bg-background/40">
+                          <p className="text-[11px] uppercase tracking-wider text-[#002060] font-semibold">{group.label}</p>
                           <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                             {group.entries.map(transition => {
                               const enabled = autoDisplayDraft.transitionSequence.includes(transition.id);
                               return (
-                                <label key={transition.id} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
+                                <label key={transition.id} className="flex items-center justify-between gap-2 rounded border border-slate-300/10 px-2 py-1.5 text-xs">
                                   <span className="text-foreground">{transition.label}</span>
                                   <input type="checkbox" checked={enabled} onChange={e => toggleTransitionInSequence(transition.id, e.target.checked)} />
                                 </label>
@@ -2267,45 +2267,45 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('sequence')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('sequence')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Global Sequence Order (Multi-Select)</span>
                 </button>
                 {activeTransitionPanel === 'sequence' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 space-y-2 max-h-72 overflow-y-auto">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 space-y-2 max-h-72 overflow-y-auto">
                     {autoDisplayDraft.transitionSequence.map((transition, index) => {
                       const label = TRANSITION_TYPES.find(item => item.id === transition)?.label ?? transition;
                       return (
-                        <div key={`${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
+                        <div key={`${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-slate-300/10 px-2 py-1.5 text-xs">
                           <span className="text-foreground">{index + 1}. {label}</span>
-                          <div className="flex gap-1"><button type="button" onClick={() => moveTransitionInSequence(transition, -1)} className="px-2 py-1 rounded border border-[#f4c866]/20 hover:bg-muted/40">Up</button><button type="button" onClick={() => moveTransitionInSequence(transition, 1)} className="px-2 py-1 rounded border border-[#f4c866]/20 hover:bg-muted/40">Down</button></div>
+                          <div className="flex gap-1"><button type="button" onClick={() => moveTransitionInSequence(transition, -1)} className="px-2 py-1 rounded border border-[#002060]/20 hover:bg-muted/40">Up</button><button type="button" onClick={() => moveTransitionInSequence(transition, 1)} className="px-2 py-1 rounded border border-[#002060]/20 hover:bg-muted/40">Down</button></div>
                         </div>
                       );
                     })}
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('categorySequence')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('categorySequence')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Per-Category Sequence (Multi-Select)</span>
                 </button>
                 {activeTransitionPanel === 'categorySequence' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                       <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Selected Category</p>
-                      <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="bg-background border border-[#f4c866]/20 rounded-md px-2 py-1 text-xs text-foreground">
+                      <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="bg-background border border-[#002060]/20 rounded-md px-2 py-1 text-xs text-foreground">
                         {AUTO_DISPLAY_CONTEXTS.map(context => <option key={context.key} value={context.key}>{context.label}</option>)}
                       </select>
                     </div>
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                       <div className="space-y-3">
                         {GROUPED_TRANSITIONS.map(group => (
-                          <div key={`${sequenceContext}-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
-                            <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
+                          <div key={`${sequenceContext}-group-${group.id}`} className="rounded border border-slate-300/10 p-3 bg-background/40">
+                            <p className="text-[11px] uppercase tracking-wider text-[#002060] font-semibold">{group.label}</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                               {group.entries.map(transition => {
                                 const activeSequence = autoDisplayDraft.transitionSequenceByContext[sequenceContext] ?? autoDisplayDraft.transitionSequence;
                                 const enabled = activeSequence.includes(transition.id);
                                 return (
-                                  <label key={`${sequenceContext}-${transition.id}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
+                                  <label key={`${sequenceContext}-${transition.id}`} className="flex items-center justify-between gap-2 rounded border border-slate-300/10 px-2 py-1.5 text-xs">
                                     <span className="text-foreground">{transition.label}</span>
                                     <input type="checkbox" checked={enabled} onChange={e => toggleTransitionInContextSequence(sequenceContext, transition.id, e.target.checked)} />
                                   </label>
@@ -2319,9 +2319,9 @@ export function AdminPanel({
                         {(autoDisplayDraft.transitionSequenceByContext[sequenceContext] ?? autoDisplayDraft.transitionSequence).map((transition, index) => {
                           const label = TRANSITION_TYPES.find(item => item.id === transition)?.label ?? transition;
                           return (
-                            <div key={`${sequenceContext}-${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-primary/10 px-2 py-1.5 text-xs">
+                            <div key={`${sequenceContext}-${transition}-${index}`} className="flex items-center justify-between gap-2 rounded border border-slate-300/10 px-2 py-1.5 text-xs">
                               <span className="text-foreground">{index + 1}. {label}</span>
-                              <div className="flex gap-1"><button type="button" onClick={() => moveTransitionInContextSequence(sequenceContext, transition, -1)} className="px-2 py-1 rounded border border-[#f4c866]/20 hover:bg-muted/40">Up</button><button type="button" onClick={() => moveTransitionInContextSequence(sequenceContext, transition, 1)} className="px-2 py-1 rounded border border-[#f4c866]/20 hover:bg-muted/40">Down</button></div>
+                              <div className="flex gap-1"><button type="button" onClick={() => moveTransitionInContextSequence(sequenceContext, transition, -1)} className="px-2 py-1 rounded border border-[#002060]/20 hover:bg-muted/40">Up</button><button type="button" onClick={() => moveTransitionInContextSequence(sequenceContext, transition, 1)} className="px-2 py-1 rounded border border-[#002060]/20 hover:bg-muted/40">Down</button></div>
                             </div>
                           );
                         })}
@@ -2330,15 +2330,15 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('categoryApplied')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('categoryApplied')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Per-Category Applied Transition (Single Choice)</span>
                 </button>
                 {activeTransitionPanel === 'categoryApplied' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
                     <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
                       <div>
                         <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Category</label>
-                        <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="w-full mt-1 bg-background border border-[#f4c866]/20 rounded-md px-2 py-2 text-xs text-foreground">
+                        <select value={sequenceContext} onChange={e => setSequenceContext(e.target.value as AutoDisplayContextKey)} className="w-full mt-1 bg-background border border-[#002060]/20 rounded-md px-2 py-2 text-xs text-foreground">
                           {AUTO_DISPLAY_CONTEXTS.map(context => <option key={`apply-${context.key}`} value={context.key}>{context.label}</option>)}
                         </select>
                       </div>
@@ -2360,7 +2360,7 @@ export function AdminPanel({
                               openTransitionPreview(value as AutoDisplayTransitionType, contextLabel);
                             }
                           }}
-                          className="w-full mt-1 bg-background border border-[#f4c866]/20 rounded-md px-2 py-2 text-xs text-foreground"
+                          className="w-full mt-1 bg-background border border-[#002060]/20 rounded-md px-2 py-2 text-xs text-foreground"
                         >
                           <option value="sequence">Use Sequence</option>
                           {GROUPED_TRANSITIONS.map(group => (
@@ -2376,25 +2376,25 @@ export function AdminPanel({
                         const selected = autoDisplayDraft.appliedTransitionByContext[sequenceContext] ?? 'fade-zoom';
                         const contextLabel = AUTO_DISPLAY_CONTEXTS.find(item => item.key === sequenceContext)?.label ?? sequenceContext;
                         openTransitionPreview(selected, contextLabel);
-                      }} className="px-3 py-2 rounded border border-primary/25 text-xs uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10">Preview</button>
+                      }} className="px-3 py-2 rounded border border-slate-300/25 text-xs uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10">Preview</button>
                     </div>
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('durations')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('durations')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Individual Transition Times</span>
                 </button>
                 {activeTransitionPanel === 'durations' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
                     <div className="space-y-4">
                       {GROUPED_TRANSITIONS.map(group => (
-                        <div key={`duration-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
+                        <div key={`duration-group-${group.id}`} className="rounded border border-slate-300/10 p-3 bg-background/40">
                           <button
                             type="button"
                             onClick={() => setActiveDurationGroup(prev => (prev === group.id ? null : group.id))}
                             className="w-full flex items-center justify-between gap-3 text-left"
                           >
-                            <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
+                            <p className="text-[11px] uppercase tracking-wider text-[#002060] font-semibold">{group.label}</p>
                             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                               {activeDurationGroup === group.id ? 'Hide' : 'Show'}
                             </span>
@@ -2402,10 +2402,10 @@ export function AdminPanel({
                           {activeDurationGroup === group.id && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                               {group.entries.map(transition => (
-                                <div key={transition.id} className="space-y-1.5 rounded border border-primary/10 p-2">
+                                <div key={transition.id} className="space-y-1.5 rounded border border-slate-300/10 p-2">
                                   <div className="flex items-center justify-between"><label className="text-[11px] text-foreground">{transition.label}</label><span className="text-[11px] text-muted-foreground">{autoDisplayDraft.transitionDurationByTypeMs[transition.id]} ms</span></div>
                                   <input type="range" min={250} max={3000} step={50} value={autoDisplayDraft.transitionDurationByTypeMs[transition.id]} onChange={e => setAutoDisplayDraft(prev => ({ ...prev, transitionDurationByTypeMs: { ...prev.transitionDurationByTypeMs, [transition.id]: Number(e.target.value) } }))} className="w-full" />
-                                  <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-[#f4c866]/20 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10">Preview</button>
+                                  <button type="button" onClick={() => openTransitionPreview(transition.id, 'Duration Preview')} className="w-full mt-1 px-2 py-1 rounded border border-[#002060]/20 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10">Preview</button>
                                 </div>
                               ))}
                             </div>
@@ -2416,19 +2416,19 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('soundPairing')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('soundPairing')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Transition Sound Pairing</span>
                 </button>
                 {activeTransitionPanel === 'soundPairing' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
                     <p className="text-xs text-muted-foreground mb-3">Assign a cue sound profile to each transition. These cues play at transition start in auto display.</p>
                     <div className="space-y-4">
                       {GROUPED_TRANSITIONS.map(group => (
-                        <div key={`cue-group-${group.id}`} className="rounded border border-primary/10 p-3 bg-background/40">
-                          <p className="text-[11px] uppercase tracking-wider text-[#f4c866] font-semibold">{group.label}</p>
+                        <div key={`cue-group-${group.id}`} className="rounded border border-slate-300/10 p-3 bg-background/40">
+                          <p className="text-[11px] uppercase tracking-wider text-[#002060] font-semibold">{group.label}</p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                             {group.entries.map((transition) => (
-                              <div key={`cue-${transition.id}`} className="space-y-1.5 rounded border border-primary/10 p-2">
+                              <div key={`cue-${transition.id}`} className="space-y-1.5 rounded border border-slate-300/10 p-2">
                                 <label className="text-[11px] text-foreground font-medium">{transition.label}</label>
                                 <div className="flex items-center gap-2">
                                   <select
@@ -2440,7 +2440,7 @@ export function AdminPanel({
                                         [transition.id]: e.target.value as (typeof TRANSITION_CUE_TYPES)[number]['id'],
                                       },
                                     }))}
-                                    className="w-full bg-background border border-[#f4c866]/20 rounded-md px-2 py-1.5 text-xs text-foreground"
+                                    className="w-full bg-background border border-[#002060]/20 rounded-md px-2 py-1.5 text-xs text-foreground"
                                   >
                                     {TRANSITION_CUE_TYPES.map(cue => (
                                       <option key={`cue-opt-${transition.id}-${cue.id}`} value={cue.id}>{cue.label}</option>
@@ -2449,7 +2449,7 @@ export function AdminPanel({
                                   <button
                                     type="button"
                                     onClick={() => playTransitionCue(autoDisplayDraft.transitionCueByType[transition.id], true)}
-                                    className="px-2 py-1 rounded border border-[#f4c866]/20 text-[11px] uppercase tracking-wider text-[#f4c866] hover:bg-[#f4c866]/10"
+                                    className="px-2 py-1 rounded border border-[#002060]/20 text-[11px] uppercase tracking-wider text-[#002060] hover:bg-[#002060]/10"
                                   >
                                     Test
                                   </button>
@@ -2463,16 +2463,16 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('commandantLayout')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('commandantLayout')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Commandant Auto-Display Layout</span>
                 </button>
                 {activeTransitionPanel === 'commandantLayout' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4 space-y-4">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 space-y-4">
                     <p className="text-xs text-muted-foreground">Select the layout style used for Commandants when the Auto Rotation Display is running.</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <button 
                         onClick={() => setAutoDisplayDraft(prev => ({ ...prev, commandantLayout: 'standard' }))}
-                        className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'standard' || !autoDisplayDraft.commandantLayout ? 'border-primary/60 bg-[#f4c866]/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-[#f4c866]/20 bg-background/50 hover:bg-muted/30'}`}
+                        className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'standard' || !autoDisplayDraft.commandantLayout ? 'border-slate-300/60 bg-[#002060]/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-[#002060]/20 bg-background/50 hover:bg-muted/30'}`}
                       >
                         <h4 className="text-sm font-bold text-foreground">Standard Layout</h4>
                         <p className="text-[11px] text-muted-foreground mt-1">Portrait on top, centered identity plate underneath.</p>
@@ -2480,7 +2480,7 @@ export function AdminPanel({
                       
                       <button 
                         onClick={() => setAutoDisplayDraft(prev => ({ ...prev, commandantLayout: 'split' }))}
-                        className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'split' ? 'border-primary/60 bg-[#f4c866]/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-[#f4c866]/20 bg-background/50 hover:bg-muted/30'}`}
+                        className={`p-4 rounded-lg border text-left transition-all ${autoDisplayDraft.commandantLayout === 'split' ? 'border-slate-300/60 bg-[#002060]/10 shadow-[0_0_15px_rgba(0,32,96,0.15)]' : 'border-[#002060]/20 bg-background/50 hover:bg-muted/30'}`}
                       >
                         <h4 className="text-sm font-bold text-foreground">Split (Side-by-Side) Layout</h4>
                         <p className="text-[11px] text-muted-foreground mt-1">Portrait on one side, write-up and bio details on the other.</p>
@@ -2489,19 +2489,19 @@ export function AdminPanel({
                   </div>
                 )}
 
-                <button onClick={() => setActiveTransitionPanel('actions')} className="w-full text-left px-4 py-3 rounded-lg border border-[#f4c866]/20 bg-card/60 hover:bg-muted/40">
+                <button onClick={() => setActiveTransitionPanel('actions')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Save / Import / Export</span>
                 </button>
                 {activeTransitionPanel === 'actions' && (
-                  <div className="rounded-lg border border-primary/15 bg-card/60 p-4">
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4">
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={exportSettingsBundle}
-                        className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
+                        className="px-4 py-2 rounded-md text-sm font-medium border border-slate-300/25 text-foreground bg-white hover:bg-muted/40 transition-colors"
                       >
                         Export UI Settings
                       </button>
-                      <label className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors cursor-pointer">
+                      <label className="px-4 py-2 rounded-md text-sm font-medium border border-slate-300/25 text-foreground bg-white hover:bg-muted/40 transition-colors cursor-pointer">
                         Import UI Settings
                         <input
                           type="file"
@@ -2519,36 +2519,36 @@ export function AdminPanel({
                           setAutoDisplayDraft(DEFAULT_AUTO_DISPLAY_SETTINGS);
                           setIdleStageDraft(DEFAULT_IDLE_STAGE_SETTINGS);
                         }}
-                        className="px-4 py-2 rounded-md text-sm font-medium border border-primary/25 text-foreground bg-card hover:bg-muted/40 transition-colors"
+                        className="px-4 py-2 rounded-md text-sm font-medium border border-slate-300/25 text-foreground bg-white hover:bg-muted/40 transition-colors"
                       >
                         Reset Auto Display Defaults
                       </button>
                       <button
                         onClick={applyBootAndTransitionsSettings}
                         disabled={!isBootDirty && !isAutoDisplayDirty && !isIdleStageDirty}
-                        className="px-4 py-2 rounded-md text-sm font-medium border border-primary/40 text-[#f4c866] bg-[#f4c866]/10 hover:bg-[#f4c866] text-[#0a0d14]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 rounded-md text-sm font-medium border border-slate-300/40 text-[#002060] bg-[#002060]/10 hover:bg-[#002060] text-[#0a0d14]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Apply & Save Transitions
                       </button>
                     </div>
                   </div>
                 )}
-                {settingsImportStatus && <p className="text-xs text-[#f4c866] mt-3">{settingsImportStatus}</p>}
+                {settingsImportStatus && <p className="text-xs text-[#002060] mt-3">{settingsImportStatus}</p>}
               </div>
               )}
 
               {previewModalOpen && (
                 <div className="fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center px-4">
-                  <div className="w-full max-w-lg rounded-xl border border-primary/25 bg-card/95 p-5 shadow-2xl">
+                  <div className="w-full max-w-lg rounded-xl border border-slate-300/25 bg-white/95 p-5 shadow-2xl">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className="text-xs uppercase tracking-wider text-muted-foreground">Transition Preview</p>
                         <p className="text-sm font-semibold text-foreground">{previewContextLabel}</p>
                       </div>
-                      <button onClick={() => setPreviewModalOpen(false)} className="px-3 py-1 rounded border border-[#f4c866]/20 text-xs hover:bg-muted/40">Close</button>
+                      <button onClick={() => setPreviewModalOpen(false)} className="px-3 py-1 rounded border border-[#002060]/20 text-xs hover:bg-muted/40">Close</button>
                     </div>
-                    <div className="h-44 rounded-lg border border-[#f4c866]/20 bg-slate-950/70 overflow-hidden relative flex items-center justify-center">
-                      <div key={`${previewTransition}-${previewNonce}`} className={`px-6 py-3 rounded-md border border-primary/35 bg-[#f4c866] text-[#0a0d14]/15 text-[#f4c866] font-semibold tracking-wider ${getPreviewTransitionClasses(previewTransition)}`}>
+                    <div className="h-44 rounded-lg border border-[#002060]/20 bg-slate-950/70 overflow-hidden relative flex items-center justify-center">
+                      <div key={`${previewTransition}-${previewNonce}`} className={`px-6 py-3 rounded-md border border-slate-300/35 bg-[#002060] text-[#0a0d14]/15 text-[#002060] font-semibold tracking-wider ${getPreviewTransitionClasses(previewTransition)}`}>
                         {TRANSITION_TYPES.find(item => item.id === previewTransition)?.label ?? previewTransition}
                       </div>
                     </div>
@@ -2648,11 +2648,11 @@ function PersonnelForm({ initial, onSave, onCancel }: {
   };
 
   return (
-    <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 mb-6 view-enter relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-1 h-full bg-[#f4c866] text-[#0a0d14]" />
+    <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 mb-6 view-enter relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-1 h-full bg-[#002060] text-[#0a0d14]" />
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h4 className="text-base font-semibold text-[#f4c866]">{initial ? 'Edit' : 'Add'} Personnel</h4>
+          <h4 className="text-base font-semibold text-[#002060]">{initial ? 'Edit' : 'Add'} Personnel</h4>
           <p className="text-xs text-muted-foreground mt-1">Enter the details for this personnel record.</p>
         </div>
         <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
@@ -2660,46 +2660,46 @@ function PersonnelForm({ initial, onSave, onCancel }: {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Full Name</label>
-          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Rank / Title</label>
-          <input placeholder="Rank" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Rank" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Category</label>
-          <select value={form.category} onChange={e => update('category', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30">
+          <select value={form.category} onChange={e => update('category', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30">
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Service Branch</label>
-          <select value={form.service} onChange={e => update('service', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30">
+          <select value={form.service} onChange={e => update('service', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30">
             {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Period Start (Year)</label>
-          <input type="number" placeholder="Period Start" value={form.periodStart} onChange={e => update('periodStart', parseInt(e.target.value))} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="number" placeholder="Period Start" value={form.periodStart} onChange={e => update('periodStart', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Period End (Year)</label>
-          <input type="number" placeholder="Period End" value={form.periodEnd} onChange={e => update('periodEnd', parseInt(e.target.value))} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="number" placeholder="Period End" value={form.periodEnd} onChange={e => update('periodEnd', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Seniority Order</label>
-          <input type="number" placeholder="Order (1=highest)" value={form.seniorityOrder} onChange={e => update('seniorityOrder', parseInt(e.target.value))} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="number" placeholder="Order (1=highest)" value={form.seniorityOrder} onChange={e => update('seniorityOrder', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
           <div className="flex items-center gap-2">
-            <label className="px-3 py-1.5 text-xs rounded border border-primary/25 bg-card hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
+            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
               Upload Image / GIF
               <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
             </label>
             {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#f4c866]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
                 Clear
               </button>
             )}
@@ -2709,16 +2709,16 @@ function PersonnelForm({ initial, onSave, onCancel }: {
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Citation / Bio</label>
-          <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+          <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
-          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
       </div>
-      <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
+      <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-slate-300/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={handleSave} className="px-6 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-md text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-[#002060] text-[#0a0d14] text-[#002060]-foreground rounded-md text-sm font-medium hover:bg-[#002060] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
@@ -2775,11 +2775,11 @@ function VisitForm({ initial, onSave, onCancel }: {
   };
 
   return (
-    <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 mb-6 view-enter relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-1 h-full bg-[#f4c866] text-[#0a0d14]" />
+    <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 mb-6 view-enter relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-1 h-full bg-[#002060] text-[#0a0d14]" />
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h4 className="text-base font-semibold text-[#f4c866]">{initial ? 'Edit' : 'Add'} Visit</h4>
+          <h4 className="text-base font-semibold text-[#002060]">{initial ? 'Edit' : 'Add'} Visit</h4>
           <p className="text-xs text-muted-foreground mt-1">Enter the details for this distinguished visit.</p>
         </div>
         <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
@@ -2787,30 +2787,30 @@ function VisitForm({ initial, onSave, onCancel }: {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Visitor Name</label>
-          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Title / Position</label>
-          <input placeholder="Title/Position" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Title/Position" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Country</label>
-          <input placeholder="Country" value={form.country} onChange={e => update('country', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Country" value={form.country} onChange={e => update('country', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Date of Visit</label>
-          <input type="date" value={form.date} onChange={e => update('date', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="date" value={form.date} onChange={e => update('date', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
           <div className="flex items-center gap-2">
-            <label className="px-3 py-1.5 text-xs rounded border border-primary/25 bg-card hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
+            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
               Upload Image / GIF
               <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
             </label>
             {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#f4c866]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
                 Clear
               </button>
             )}
@@ -2820,16 +2820,16 @@ function VisitForm({ initial, onSave, onCancel }: {
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Visit Description / Context</label>
-          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
-          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
       </div>
-      <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
+      <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-slate-300/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={handleSave} className="px-6 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-md text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-[#002060] text-[#0a0d14] text-[#002060]-foreground rounded-md text-sm font-medium hover:bg-[#002060] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
@@ -2913,11 +2913,11 @@ function CommandantForm({ initial, onSave, onCancel }: {
   };
 
   return (
-    <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#131722_0%,#0a0d13_100%)] shadow-xl p-5 mb-6 view-enter relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-1 h-full bg-[#f4c866] text-[#0a0d14]" />
+    <div className="rounded-[24px] border border-slate-200 bg-white shadow-md p-5 mb-6 view-enter relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-1 h-full bg-[#002060] text-[#0a0d14]" />
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h4 className="text-base font-semibold text-[#f4c866]">{initial ? 'Edit' : 'Add'} Commandant</h4>
+          <h4 className="text-base font-semibold text-[#002060]">{initial ? 'Edit' : 'Add'} Commandant</h4>
           <p className="text-xs text-muted-foreground mt-1">Manage commandant records and tenure details.</p>
         </div>
         <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
@@ -2925,38 +2925,38 @@ function CommandantForm({ initial, onSave, onCancel }: {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Commandant Name</label>
-          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Rank</label>
-          <input placeholder="Rear Admiral" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Rear Admiral" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Title</label>
-          <input placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Title" value={form.title} onChange={e => update('title', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Post Nominals</label>
-          <input placeholder="GSS psc(+) fdc(+) ..." value={form.postNominals} onChange={e => update('postNominals', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="GSS psc(+) fdc(+) ..." value={form.postNominals} onChange={e => update('postNominals', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tenure Start</label>
-          <input type="number" placeholder="Tenure Start" value={form.tenureStart} onChange={e => update('tenureStart', parseInt(e.target.value))} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="number" placeholder="Tenure Start" value={form.tenureStart} onChange={e => update('tenureStart', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5 flex flex-col">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tenure End</label>
-          <input type="number" disabled={form.isCurrent} placeholder={form.isCurrent ? 'Present' : 'Tenure End'} value={form.isCurrent ? '' : form.tenureEnd} onChange={e => update('tenureEnd', e.target.value ? parseInt(e.target.value) : '')} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 disabled:opacity-50 disabled:cursor-not-allowed" />
+          <input type="number" disabled={form.isCurrent} placeholder={form.isCurrent ? 'Present' : 'Tenure End'} value={form.isCurrent ? '' : form.tenureEnd} onChange={e => update('tenureEnd', e.target.value ? parseInt(e.target.value) : '')} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 disabled:opacity-50 disabled:cursor-not-allowed" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
           <div className="flex items-center gap-2">
-            <label className="px-3 py-1.5 text-xs rounded border border-primary/25 bg-card hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
+            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-muted-foreground hover:text-foreground">
               Upload Image / GIF
               <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
             </label>
             {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#f4c866]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
                 Clear
               </button>
             )}
@@ -2966,62 +2966,62 @@ function CommandantForm({ initial, onSave, onCancel }: {
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Biography / Description</label>
-          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Bio Summary (short)</label>
-          <textarea placeholder="Short profile summary used in compact profile cards" value={form.bioSummary} onChange={e => update('bioSummary', e.target.value)} rows={2} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+          <textarea placeholder="Short profile summary used in compact profile cards" value={form.bioSummary} onChange={e => update('bioSummary', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Full Biography</label>
-          <textarea placeholder="Detailed biography for full profile view" value={form.biographyFull} onChange={e => update('biographyFull', e.target.value)} rows={6} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <textarea placeholder="Detailed biography for full profile view" value={form.biographyFull} onChange={e => update('biographyFull', e.target.value)} rows={6} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Years Experience</label>
-          <input type="number" min={0} placeholder="32" value={form.yearsExperience} onChange={e => update('yearsExperience', e.target.value ? parseInt(e.target.value, 10) : '')} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input type="number" min={0} placeholder="32" value={form.yearsExperience} onChange={e => update('yearsExperience', e.target.value ? parseInt(e.target.value, 10) : '')} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Education (one per line)</label>
-          <textarea placeholder="BSc...\nMSc..." value={form.educationText} onChange={e => update('educationText', e.target.value)} rows={3} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <textarea placeholder="BSc...\nMSc..." value={form.educationText} onChange={e => update('educationText', e.target.value)} rows={3} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Training (one per line)</label>
-          <textarea placeholder="Chevening Scholar\nInternational Cyber Policy" value={form.trainingText} onChange={e => update('trainingText', e.target.value)} rows={3} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <textarea placeholder="Chevening Scholar\nInternational Cyber Policy" value={form.trainingText} onChange={e => update('trainingText', e.target.value)} rows={3} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Past Appointments (one per line)</label>
-          <textarea placeholder="Deputy Chief ...\nDirector ..." value={form.pastAppointmentsText} onChange={e => update('pastAppointmentsText', e.target.value)} rows={4} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <textarea placeholder="Deputy Chief ...\nDirector ..." value={form.pastAppointmentsText} onChange={e => update('pastAppointmentsText', e.target.value)} rows={4} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Honours (one per line)</label>
-          <textarea placeholder="GSS\npsc(+)" value={form.honoursText} onChange={e => update('honoursText', e.target.value)} rows={3} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <textarea placeholder="GSS\npsc(+)" value={form.honoursText} onChange={e => update('honoursText', e.target.value)} rows={3} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Family Note</label>
-          <input placeholder="Married with children" value={form.familyNote} onChange={e => update('familyNote', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Married with children" value={form.familyNote} onChange={e => update('familyNote', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Impact Statement</label>
-          <textarea placeholder="Expected strategic impact statement" value={form.impactStatement} onChange={e => update('impactStatement', e.target.value)} rows={2} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30 resize-none" />
+          <textarea placeholder="Expected strategic impact statement" value={form.impactStatement} onChange={e => update('impactStatement', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Decoration</label>
-          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#f4c866]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-primary/30" />
+          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
-        <label className="flex items-center gap-3 text-sm text-foreground sm:col-span-2 p-3 rounded-md bg-[#f4c866] text-[#0a0d14]/5 border border-primary/10 cursor-pointer hover:bg-[#f4c866]/10 transition-colors">
-          <div className={`w-5 h-5 rounded border ${form.isCurrent ? 'bg-[#f4c866] text-[#0a0d14] border-primary text-[#f4c866]-foreground' : 'border-primary/30 bg-background'} flex items-center justify-center transition-colors`}>
+        <label className="flex items-center gap-3 text-sm text-foreground sm:col-span-2 p-3 rounded-md bg-[#002060] text-[#0a0d14]/5 border border-slate-300/10 cursor-pointer hover:bg-[#002060]/10 transition-colors">
+          <div className={`w-5 h-5 rounded border ${form.isCurrent ? 'bg-[#002060] text-[#0a0d14] border-slate-300 text-[#002060]-foreground' : 'border-slate-300/30 bg-background'} flex items-center justify-center transition-colors`}>
             {form.isCurrent && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-3.5 h-3.5"><polyline points="20 6 9 17 4 12" /></svg>}
           </div>
           <input type="checkbox" checked={form.isCurrent} onChange={e => update('isCurrent', e.target.checked)} className="sr-only" />
           <div>
-            <p className="font-medium text-[#f4c866]">Current Commandant</p>
+            <p className="font-medium text-[#002060]">Current Commandant</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">Check this if the commandant is currently serving.</p>
           </div>
         </label>
       </div>
-      <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-primary/10">
+      <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-slate-300/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
-        <button onClick={handleSave} className="px-6 py-2 bg-[#f4c866] text-[#0a0d14] text-[#f4c866]-foreground rounded-md text-sm font-medium hover:bg-[#f4c866] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
+        <button onClick={handleSave} className="px-6 py-2 bg-[#002060] text-[#0a0d14] text-[#002060]-foreground rounded-md text-sm font-medium hover:bg-[#002060] text-[#0a0d14]/90 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">
           {initial ? 'Save Changes' : 'Create Record'}
         </button>
       </div>
