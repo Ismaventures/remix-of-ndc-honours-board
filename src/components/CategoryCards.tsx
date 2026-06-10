@@ -33,7 +33,7 @@ const CARDS: {
 }[] = [
   {
     key: "commandants",
-    label: "Commandants",
+    label: "COMMANDANTS OF NDC",
     subtitle: "Leadership Chronicle",
     icon: Shield,
     color: "text-amber-600",
@@ -42,7 +42,7 @@ const CARDS: {
   },
   {
     key: "fwc",
-    label: "Distinguished Fellows (FWC)",
+    label: "DISTINGUISHED FELLOWS (FWC)",
     subtitle: "Fellows of the War College",
     icon: Shield,
     color: "text-blue-600",
@@ -51,7 +51,7 @@ const CARDS: {
   },
   {
     key: "fdc",
-    label: "Distinguished Fellows (FDC)",
+    label: "DISTINGUISHED FELLOWS (FDC)",
     subtitle: "Fellows of the Defence College",
     icon: Award,
     color: "text-sky-600",
@@ -60,7 +60,7 @@ const CARDS: {
   },
   {
     key: "directing",
-    label: "Directing Staff",
+    label: "DIRECTING STAFF",
     subtitle: "Chronicle of Excellence",
     icon: Users,
     color: "text-indigo-600",
@@ -69,7 +69,7 @@ const CARDS: {
   },
   {
     key: "allied",
-    label: "Allied Officers",
+    label: "ALLIED OFFICERS",
     subtitle: "International Partnerships",
     icon: Globe,
     color: "text-cyan-600",
@@ -78,21 +78,12 @@ const CARDS: {
   },
   {
     key: "visits",
-    label: "Distinguished Visits",
+    label: "DISTINGUISHED VISITS",
     subtitle: "Honours & Ceremonies",
     icon: Star,
     color: "text-blue-500",
     cardGradient: "from-[#1d3455] via-[#264570] to-[#30578a]",
     accentGlow: "shadow-[0_0_0_1px_rgba(0,32,96,0.2),0_18px_42px_rgba(38,69,112,0.2)]",
-  },
-  {
-    key: "admin",
-    label: "Admin Panel",
-    subtitle: "Manage Records",
-    icon: Settings,
-    color: "text-slate-600",
-    cardGradient: "from-[#2e3747] via-[#3a445d] to-[#475270]",
-    accentGlow: "shadow-[0_0_0_1px_rgba(71,82,112,0.24),0_18px_42px_rgba(24,35,53,0.2)]",
   },
 ];
 
@@ -198,12 +189,11 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
 
           <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 stagger-reveal">
             {CARDS.map((card) => {
-              const Icon = card.icon;
               return (
                 <div key={card.key} className="p-1.5 h-full">
                   <button
                     onClick={() => onSelect(card.key)}
-                    className={`relative w-full h-[clamp(230px,36vh,310px)] sm:h-[clamp(250px,34vh,320px)] lg:h-[clamp(270px,33vh,330px)] overflow-hidden rounded-2xl border text-left group transition-all duration-500 hover:-translate-y-2.5 hover:scale-[1.012] flex flex-col justify-end ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${card.accentGlow} ${
+                    className={`relative w-full h-[clamp(230px,36vh,310px)] sm:h-[clamp(250px,34vh,320px)] lg:h-[clamp(270px,33vh,330px)] overflow-hidden rounded-2xl border text-center group transition-all duration-500 hover:-translate-y-2.5 hover:scale-[1.012] flex flex-col items-center justify-center p-6 sm:p-8 ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${card.accentGlow} ${
                       isLightMode
                         ? "bg-[linear-gradient(160deg,#ffffff_0%,#f7faff_52%,#eef5ff_100%)] border-[#002060]/10 hover:shadow-[0_22px_48px_rgba(0,32,96,0.14)] hover:border-[#002060]/25"
                         : `bg-gradient-to-br ${card.cardGradient} border-white/10 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]`
@@ -222,56 +212,36 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                       <div className="flex-1 bg-[#00B0F0]" />
                     </div>
 
-                  {/* Gloss/Highlight Effect - Dark Mode Only */}
-                  {!isLightMode && (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700" />
-                      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/10 via-white/5 to-transparent opacity-80" />
-                    </>
-                  )}
+                    {/* Gloss/Highlight Effect - Dark Mode Only */}
+                    {!isLightMode && (
+                      <>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700" />
+                        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/10 via-white/5 to-transparent opacity-80" />
+                      </>
+                    )}
 
-                  {/* NDC Logo Background Watermark */}
-                  <div
-                    className={`absolute -right-16 -top-16 w-72 h-72 transition-all duration-700 pointer-events-none transform group-hover:scale-105 group-hover:rotate-6 ${
-                      isLightMode
-                        ? "opacity-[0.055] group-hover:opacity-[0.09] filter grayscale"
-                        : "opacity-[0.08] group-hover:opacity-[0.14] filter grayscale invert"
-                    }`}
-                  >
-                    <img
-                      src={ndcCrest}
-                      alt=""
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-
-                  {/* Background Icon — slightly inset and more refined */}
+                    {/* NDC Logo Background Watermark */}
                     <div
-                      className={`absolute top-6 right-5 sm:top-7 sm:right-6 transition-all duration-700 transform group-hover:scale-110 group-hover:-rotate-6 will-change-transform ${
-                      isLightMode
-                        ? "text-[#002060]/[0.05] group-hover:text-[#002060]/[0.08]"
-                        : "text-white/10 group-hover:text-white/20"
-                    }`}
-                  >
-                    <Icon
-                        className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28"
-                      strokeWidth={0.8}
-                    />
-                  </div>
+                      className={`absolute inset-0 m-auto w-56 h-56 transition-all duration-700 pointer-events-none transform group-hover:scale-105 group-hover:rotate-6 ${
+                        isLightMode
+                          ? "opacity-[0.035] group-hover:opacity-[0.06] filter grayscale"
+                          : "opacity-[0.05] group-hover:opacity-[0.09] filter grayscale invert"
+                      }`}
+                    >
+                      <img
+                        src={ndcCrest}
+                        alt=""
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
 
-                  <div
-                    className={`relative p-5 sm:p-6 z-10 w-full pt-12 sm:pt-16 ${
-                      !isLightMode
-                        ? "bg-gradient-to-t from-black/85 via-black/45 to-transparent"
-                        : "bg-gradient-to-t from-white/90 via-white/40 to-transparent"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 mb-4">
+                    {/* Larger Centered NDC Crest Logo */}
+                    <div className="relative z-10 flex flex-col items-center justify-center">
                       <div
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-105 transition-all duration-500 shadow-lg p-2 relative overflow-hidden ${
+                        className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-all duration-500 shadow-xl p-4 mb-6 relative overflow-hidden ${
                           isLightMode
-                            ? "bg-white border border-slate-200/80 shadow-slate-200/40"
-                            : "bg-black/30 border border-white/15 backdrop-blur-sm"
+                            ? "bg-white border border-slate-200/80 shadow-slate-200/50"
+                            : "bg-black/30 border border-white/15 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
                         }`}
                       >
                         {!isLightMode && (
@@ -280,53 +250,43 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                         <img
                           src={ndcCrest}
                           alt="NDC Crest"
-                          className="w-full h-full object-contain relative z-10 drop-shadow-sm"
+                          className="w-full h-full object-contain relative z-10 drop-shadow-md"
                         />
                       </div>
-                      <div
-                        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
-                          isLightMode
-                            ? "bg-[#002060]/[0.06] border border-[#002060]/10"
-                            : "bg-white/[0.08] border border-white/15"
-                        }`}
-                      >
-                        <Icon
-                          className={`h-4 w-4 ${isLightMode ? card.color : "text-white/90"}`}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <h3
-                        className={`text-lg sm:text-xl font-bold font-serif leading-tight mb-1 transition-colors tracking-tight ${
-                          isLightMode
-                            ? "text-[#0f2a5f]"
-                            : "text-white drop-shadow-md"
-                        }`}
-                      >
-                        {card.label}
-                      </h3>
-                      <p
-                        className={`text-[10px] sm:text-[11px] tracking-[0.18em] uppercase font-semibold ${
-                          isLightMode ? "text-slate-400" : "text-white/60"
-                        }`}
-                      >
-                        {card.subtitle}
-                      </p>
-                    </div>
 
-                    {/* Hover reveal accent line */}
-                    <div
-                      className={`h-[2px] w-full mt-4 overflow-hidden rounded-full ${isLightMode ? "bg-[#002060]/[0.06]" : "bg-white/[0.08]"}`}
-                    >
+                      {/* Upper Case Text Group */}
+                      <div className="flex flex-col items-center">
+                        <h3
+                          className={`text-base sm:text-lg lg:text-xl font-bold font-serif leading-tight mb-2 tracking-wide uppercase transition-colors text-center ${
+                            isLightMode
+                              ? "text-[#0f2a5f]"
+                              : "text-white drop-shadow-md"
+                          }`}
+                        >
+                          {card.label}
+                        </h3>
+                        <p
+                          className={`text-[9px] sm:text-[10px] tracking-[0.2em] uppercase font-semibold text-center ${
+                            isLightMode ? "text-slate-400" : "text-white/60"
+                          }`}
+                        >
+                          {card.subtitle}
+                        </p>
+                      </div>
+
+                      {/* Hover reveal accent line */}
                       <div
-                        className={`h-full w-0 group-hover:w-full transition-all duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                          isLightMode
-                            ? "bg-gradient-to-r from-transparent via-[#002060]/30 to-transparent"
-                            : "bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                        }`}
-                      />
+                        className={`h-[2px] w-32 mt-6 overflow-hidden rounded-full ${isLightMode ? "bg-[#002060]/[0.06]" : "bg-white/[0.08]"}`}
+                      >
+                        <div
+                          className={`h-full w-0 group-hover:w-full transition-all duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                            isLightMode
+                              ? "bg-gradient-to-r from-transparent via-[#002060]/30 to-transparent"
+                              : "bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                          }`}
+                        />
+                      </div>
                     </div>
-                  </div>
                   </button>
                 </div>
               );
@@ -334,7 +294,6 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
           </div>
         </div>
       </div>
-
     </section>
   );
 }

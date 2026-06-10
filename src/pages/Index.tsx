@@ -1,22 +1,24 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { SlidersHorizontal, ChevronLeft, ChevronRight, Play, Pause, X } from "lucide-react";
+import { SlidersHorizontal, ChevronLeft, ChevronRight, Play, Pause, X, Shield } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { CommandantHero } from "@/components/CommandantHero";
+import { CommandantSplitHero } from "@/components/CommandantSplitHero";
 import { PastCommandants } from "@/components/PastCommandants";
 import { CategoryCards, ViewKey } from "@/components/CategoryCards";
-import {
-  AboutNdcView,
-  GuidedToursView,
-  HallOfFameView,
-  MuseumCollectionsView,
-  MuseumExperienceSection,
-} from "@/components/MuseumExperience";
+import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
+// import {
+//   AboutNdcView,
+//   GuidedToursView,
+//   HallOfFameView,
+//   MuseumCollectionsView,
+//   MuseumExperienceSection,
+// } from "@/components/MuseumExperience";
 import { OrganogramView } from "@/components/OrganogramView";
 import { DirectingStaffByCourseYear } from "@/components/DirectingStaffByCourseYear";
 import { VisitsSection } from "@/components/VisitsSection";
 import { AdminPanel } from "@/components/AdminPanel";
 import { AdminLogin } from "@/components/AdminLogin";
-import { ArtifactFrameGallery } from "@/components/ArtifactFrameGallery";
+// import { ArtifactFrameGallery } from "@/components/ArtifactFrameGallery";
 import { AutoRotationDisplay } from "@/components/AutoRotationDisplay";
 import { BootSequence } from "@/components/BootSequence";
 import { AudioManager, playAudioTrack } from "@/components/AudioManager";
@@ -47,6 +49,7 @@ import { getSafeSupabaseSession, supabase } from "@/lib/supabaseClient";
 import { prefetchMediaReferences } from "@/lib/persistentMedia";
 import { prefetchAudioTrack, useAudioStore } from "@/hooks/useAudioStore";
 import ndcCrest from "/images/ndc-crest.png";
+import { getCommandantDisplayTitle } from "@/lib/utils";
 
 const SECTION_TITLES: Record<string, string> = {
   fwc: "Distinguished Fellows of the War College (FWC)",
@@ -73,7 +76,93 @@ const SUPER_ADMIN_EMAILS = (
 
 type GlobalSiteAction = "close-site" | "open-site";
 
-const Index = () => {
+interface GridCommandantCardProps {
+  commandant: Commandant;
+  onClick: () => void;
+  isLightMode: boolean;
+}
+
+function GridCommandantCard({ commandant, onClick, isLightMode }: GridCommandantCardProps) {
+  const resolvedSrc = useResolvedMediaUrl(commandant.imageUrl);
+
+  return (
+    <button
+      onClick={onClick}
+      className={`group relative overflow-hidden rounded-xl border text-left flex flex-col transition-all duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 w-full shadow-lg ${
+        isLightMode
+          ? "bg-white border-slate-200/80 hover:shadow-xl hover:border-slate-300"
+          : "bg-slate-950 border-slate-800 hover:shadow-2xl hover:border-slate-700"
+      }`}
+      style={{ minHeight: "410px" }}
+    >
+      {/* Top tri-service strip */}
+      <div className="absolute inset-x-0 top-0 h-[4px] flex z-20">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#00B0F0]" />
+      </div>
+
+      {/* Main card container with padding */}
+      <div className="p-3.5 pb-2.5 flex-1 flex flex-col justify-between w-full">
+        
+        {/* Frame for the photo */}
+        <div className={`w-full aspect-[4/5] rounded border border-slate-200 bg-white flex items-center justify-center relative overflow-hidden shadow-inner p-2`}>
+          {resolvedSrc ? (
+            <img
+              src={resolvedSrc}
+              alt={commandant.name}
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <Shield className="h-10 w-10 text-slate-300 animate-pulse" />
+          )}
+        </div>
+
+        {/* Plaque block (dark blue container) */}
+        <div className="bg-[#002060] border border-[#FFD700] rounded p-2.5 text-center mt-3 flex flex-col justify-center min-h-[110px] w-full shadow-[inset_0_0_15px_rgba(0,0,0,0.4)]">
+          <h4 className="text-amber-400 text-xs font-serif font-extrabold tracking-wide leading-tight line-clamp-1">
+            {commandant.name}
+          </h4>
+          
+          {(() => {
+            const displayTitle = getCommandantDisplayTitle(commandant, "");
+            return displayTitle ? (
+              <p className="text-[#FF0000] text-[8.5px] font-bold font-sans mt-1 leading-tight line-clamp-2 px-0.5">
+                {displayTitle}
+              </p>
+            ) : null;
+          })()}
+
+          <p className="text-slate-300 text-[7.5px] font-mono tracking-widest uppercase mt-1">
+            {commandant.isCurrent ? "CURRENT COMMANDANT" : "PAST COMMANDANT"}
+          </p>
+
+          <p className="text-slate-300 text-[8px] font-mono tracking-widest uppercase mt-0.5">
+            YEAR: {commandant.tenureStart} – {commandant.tenureEnd ?? "PRESENT"}
+          </p>
+        </div>
+
+        {/* Tap to open bar */}
+        <div className="py-2.5 text-center text-[9px] sm:text-[10px] font-extrabold tracking-wider text-sky-600 uppercase w-full">
+          TAP TO OPEN FULL DETAILS
+        </div>
+      </div>
+
+      {/* Bottom tri-service strip */}
+      <div className="absolute inset-x-0 bottom-0 h-[4px] flex z-20">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#00B0F0]" />
+      </div>
+    </button>
+  );
+}
+
+interface IndexProps {
+  defaultView?: ViewKey;
+}
+
+const Index = ({ defaultView = "home" }: IndexProps) => {
   const [isBooting, setIsBooting] = useState(true);
   const [idleStageActive, setIdleStageActive] = useState(false);
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
@@ -109,7 +198,7 @@ const Index = () => {
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousViewBeforeCommandantProfileRef = useRef<ViewKey | null>(null);
 
-  const [view, setView] = useState<ViewKey>("home");
+  const [view, setView] = useState<ViewKey>(defaultView);
   const [showStageConfig, setShowStageConfig] = useState(false);
 
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
@@ -680,84 +769,15 @@ const Index = () => {
 
       return (
         <div className="space-y-8 md:space-y-10">
-          {showCommandantShell && (
-            <section className="relative space-y-0 rounded-2xl md:rounded-3xl bg-white/95 overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
-              {/* Top defense strip */}
-              <div className="h-[7px] flex">
-                <div className="flex-1 bg-[#002060]" />
-                <div className="flex-1 bg-[#FF0000]" />
-                <div className="flex-1 bg-[#00B0F0]" />
-              </div>
-
-              <div className="px-4 sm:px-5 md:px-6 py-5 sm:py-6 md:py-7 space-y-5">
-
-              {isCommandantsLoading && (
-                <section className="rounded-xl border border-primary/20 bg-card/70 px-4 py-6 md:px-6 md:py-8 animate-pulse">
-                  <div className="mx-auto w-full max-w-5xl space-y-4">
-                    <div className="h-4 w-40 rounded bg-primary/20" />
-                    <div className="h-10 w-4/5 rounded bg-primary/20" />
-                    <div className="h-6 w-3/5 rounded bg-primary/15" />
-                    <div className="h-24 w-full rounded bg-primary/10" />
-                  </div>
-                </section>
-              )}
-
-              {false && currentCommandant && (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => openPastCommandantProfile(currentCommandant)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openPastCommandantProfile(currentCommandant);
-                    }
-                  }}
-                  className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 rounded-2xl group transition-all duration-300 hover:shadow-[0_4px_20px_rgba(0,32,96,0.08)]"
-                  aria-label={`Open full biography for ${currentCommandant.name}`}
-                >
-                  <CommandantHero
-                    commandant={currentCommandant}
-                    compactDescription
-                  />
-                  <div className="flex items-center justify-end px-4 pb-2 pt-3">
-                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-primary/70 group-hover:text-primary transition-colors duration-300">
-                      Read full biography
-                      <svg className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {false && commandants.length > 0 && (
-                <div className="rounded-xl md:rounded-2xl border border-[#d8e1ee]/80 bg-[#f8fafc] p-3 sm:p-4 md:p-5">
-                  <PastCommandants
-                    commandants={commandants}
-                    includeCurrent
-                    onSelectCommandant={(commandant) =>
-                      openPastCommandantProfile(commandant)
-                    }
-                  />
-                </div>
-              )}
-              </div>
-
-              {/* Bottom defense strip */}
-              <div className="h-[5px] flex">
-                <div className="flex-1 bg-[#002060]" />
-                <div className="flex-1 bg-[#FF0000]" />
-                <div className="flex-1 bg-[#00B0F0]" />
-              </div>
-            </section>
-          )}
-
+      
           <CategoryCards onSelect={setView} />
 
-          <MuseumExperienceSection onSelect={setView} />
+          {/* <MuseumExperienceSection onSelect={setView} /> */}
         </div>
       );
     }
 
+    /*
     if (view === "about-ndc") {
       return (
         <AboutNdcView
@@ -814,6 +834,7 @@ const Index = () => {
     if (view === "artifact-gallery") {
       return <ArtifactFrameGallery onBack={() => setView("home")} />;
     }
+    */
 
     if (view === "commandants") {
       if (isCommandantsLoading) {
@@ -838,6 +859,16 @@ const Index = () => {
         );
       }
 
+      const sortedCommandants = [...commandants].sort((a, b) => {
+        if (a.isCurrent) return -1;
+        if (b.isCurrent) return 1;
+        const startA = parseInt(a.tenureStart) || 0;
+        const startB = parseInt(b.tenureStart) || 0;
+        return startB - startA;
+      });
+
+      const isLightMode = themeMode.startsWith("outdoor");
+
       return (
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -861,22 +892,25 @@ const Index = () => {
             </button>
           </div>
 
-          {false && currentCommandant && (
-            <CommandantHero
-              commandant={currentCommandant}
-              compactDescription={false}
-            />
-          )}
+          {/* Centered page title matching the sample layout */}
+          <div className="text-center mt-8 mb-6">
+            <h2 className="text-lg sm:text-2xl font-bold font-serif uppercase tracking-wider text-slate-900 dark:text-white">
+              COMMANDANTS OF NATIONAL DEFENCE COLLEGE NIGERIA
+            </h2>
+            <div className="w-24 h-[2px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent mx-auto mt-2.5" />
+          </div>
 
-          {false && (
-            <PastCommandants
-              commandants={commandants}
-              includeCurrent
-              onSelectCommandant={(commandant) =>
-                openPastCommandantProfile(commandant)
-              }
-            />
-          )}
+          {/* Grid Layout for Commandants */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 sm:gap-6 mt-6 pb-8">
+            {sortedCommandants.map((cmd) => (
+              <GridCommandantCard
+                key={cmd.id}
+                commandant={cmd}
+                onClick={() => openPastCommandantProfile(cmd)}
+                isLightMode={isLightMode}
+              />
+            ))}
+          </div>
         </section>
       );
     }
@@ -1105,7 +1139,7 @@ const Index = () => {
       )}
 
       <div
-        className={`command-center-bg min-h-screen flex flex-col transition-opacity duration-1000 ${isBooting ? "opacity-0" : "opacity-100"}`}
+        className={`command-center-bg h-screen max-h-screen overflow-hidden flex flex-col transition-opacity duration-1000 ${isBooting ? "opacity-0" : "opacity-100"}`}
       >
         {!autoDisplayActive && view !== "admin" && <AppHeader onHomeClick={() => setView("home")} />}
 
@@ -1260,88 +1294,79 @@ const Index = () => {
       </div>
 
       {selectedPastCommandant && (
-        <div className="fixed inset-0 z-[70] bg-gradient-to-br from-[#000a1a] via-[#001030] to-[#000a1a] p-0 overflow-y-auto modal-backdrop-enter">
-          {/* Subtle diagonal texture */}
-          <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]">
-            <div className="absolute inset-0 bg-[repeating-linear-gradient(135deg,transparent,transparent_40px,rgba(255,255,255,0.08)_40px,rgba(255,255,255,0.08)_41px)]" />
-          </div>
-          <div className="max-w-5xl mx-auto modal-enter relative z-10 px-4 md:px-8 py-6 md:py-10">
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={closePastCommandantProfile}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all duration-200 border border-white/10"
-              >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                Close
-              </button>
+        <div className="fixed inset-0 z-[70] bg-white text-slate-900 flex flex-col modal-backdrop-enter overflow-hidden">
+          <div className="relative flex-1 min-h-0 flex flex-col">
+            {/* Close button - floating absolute on the top right, as shown in the screenshot */}
+            <button
+              onClick={closePastCommandantProfile}
+              className="absolute right-6 top-6 z-50 inline-flex items-center justify-center p-2 rounded-full bg-white/60 hover:bg-white/80 text-slate-800 transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-slate-300"
+              aria-label="Close details"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Prev / Next navigation arrows floating on left / right sides of the biography section */}
+            {(() => {
+              const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
+              const hasPrev = idx > 0;
+              const hasNext = idx >= 0 && idx < commandants.length - 1;
+              return (
+                <>
+                  {hasPrev && (
+                    <button
+                      onClick={() => navigateCommandantProfile("prev")}
+                      aria-label="Previous commandant"
+                      className="absolute left-6 top-1/2 -translate-y-1/2 z-50 flex items-center justify-center w-12 h-12 rounded-full bg-slate-900/10 hover:bg-slate-900/20 border border-slate-900/20 hover:border-slate-900/40 backdrop-blur-sm transition-all duration-300 group/nav"
+                    >
+                      <ChevronLeft className="h-6 w-6 text-slate-700 group-hover/nav:text-slate-900 transition-colors" />
+                    </button>
+                  )}
+                  {hasNext && (
+                    <button
+                      onClick={() => navigateCommandantProfile("next")}
+                      aria-label="Next commandant"
+                      className="absolute right-[37%] top-1/2 -translate-y-1/2 z-50 flex items-center justify-center w-12 h-12 rounded-full bg-slate-900/10 hover:bg-slate-900/20 border border-slate-900/20 hover:border-slate-900/40 backdrop-blur-sm transition-all duration-300 group/nav"
+                    >
+                      <ChevronRight className="h-6 w-6 text-slate-700 group-hover/nav:text-slate-900 transition-colors" />
+                    </button>
+                  )}
+                </>
+              );
+            })()}
+
+            <div
+              key={selectedPastCommandant.id}
+              className={`flex-1 min-h-0 flex flex-col ${
+                commandantSlideDir.current === 'left' ? 'profile-slide-left' : commandantSlideDir.current === 'right' ? 'profile-slide-right' : ''
+              }`}
+            >
+              <CommandantSplitHero commandant={selectedPastCommandant} />
             </div>
 
-            {/* Profile container with prev/next navigation */}
-            <div className="relative">
-              {/* Prev / Next arrows */}
-              {(() => {
-                const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
-                const hasPrev = idx > 0;
-                const hasNext = idx >= 0 && idx < commandants.length - 1;
-                return (
-                  <>
-                    {hasPrev && (
-                      <button
-                        onClick={() => navigateCommandantProfile("prev")}
-                        aria-label="Previous commandant"
-                        className="absolute -left-2 md:-left-6 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-11 h-11 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-[#FFD700]/20 hover:border-[#FFD700]/40 backdrop-blur-sm transition-all duration-300 group/nav"
-                      >
-                        <ChevronLeft className="h-5 w-5 text-[#FFD700]/60 group-hover/nav:text-[#FFD700] transition-colors" />
-                      </button>
-                    )}
-                    {hasNext && (
-                      <button
-                        onClick={() => navigateCommandantProfile("next")}
-                        aria-label="Next commandant"
-                        className="absolute -right-2 md:-right-6 top-1/2 -translate-y-1/2 z-30 hidden md:flex items-center justify-center w-11 h-11 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-[#FFD700]/20 hover:border-[#FFD700]/40 backdrop-blur-sm transition-all duration-300 group/nav"
-                      >
-                        <ChevronRight className="h-5 w-5 text-[#FFD700]/60 group-hover/nav:text-[#FFD700] transition-colors" />
-                      </button>
-                    )}
-                  </>
-                );
-              })()}
-
-              <div
-                key={selectedPastCommandant.id}
-                className={commandantSlideDir.current === 'left' ? 'profile-slide-left' : commandantSlideDir.current === 'right' ? 'profile-slide-right' : ''}
-              >
-                <CommandantHero
-                  commandant={selectedPastCommandant}
-                  compactDescription={false}
-                />
-              </div>
-
-              {/* Dot indicators */}
-              {(() => {
-                const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
-                if (idx === -1 || commandants.length <= 1) return null;
-                return (
-                  <div className="flex justify-center mt-6 gap-1.5">
-                    {commandants.map((c, i) => (
-                      <button
-                        key={c.id}
-                        onClick={() => {
-                          commandantSlideDir.current = i > idx ? 'left' : 'right';
-                          setSelectedPastCommandant(c);
-                        }}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${
-                          i === idx
-                            ? 'w-8 bg-[#FFD700]/80'
-                            : 'w-1.5 bg-white/20 hover:bg-white/40'
-                        }`}
-                        aria-label={`View ${c.name}`}
-                      />
-                    ))}
-                  </div>
-                );
-              })()}
-            </div>
+            {/* Dot indicators centered at the bottom of the biography column */}
+            {(() => {
+              const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
+              if (idx === -1 || commandants.length <= 1) return null;
+              return (
+                <div className="absolute left-[32.5%] -translate-x-1/2 bottom-6 z-50 flex justify-center gap-1.5 bg-slate-900/5 px-4 py-2 rounded-full backdrop-blur-sm border border-slate-200">
+                  {commandants.map((c, i) => (
+                    <button
+                      key={c.id}
+                      onClick={() => {
+                        commandantSlideDir.current = i > idx ? 'left' : 'right';
+                        setSelectedPastCommandant(c);
+                      }}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        i === idx
+                          ? 'w-8 bg-[#002060]'
+                          : 'w-1.5 bg-slate-400/50 hover:bg-slate-400'
+                      }`}
+                      aria-label={`View ${c.name}`}
+                    />
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

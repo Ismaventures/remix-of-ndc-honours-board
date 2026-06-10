@@ -1,5 +1,5 @@
-import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
+import { AnimatedPresence } from '@/lib/AnimatedPresence';
 import ndcCrest from '/images/ndc-crest.png';
 import type { IdleStageSettings } from '@/hooks/useIdleStageSettings';
 import type { Commandant } from '@/types/domain';
@@ -91,28 +91,18 @@ function IdleCommandantShowcase({ commandant }: { commandant: Commandant }) {
   const title = getCommandantDisplayTitle(commandant, 'Commandant');
 
   return (
-    <motion.div
-      className="absolute inset-0 z-20 pointer-events-none"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 1.1, ease: 'easeInOut' }}
-    >
+    <div className="absolute inset-0 z-20 pointer-events-none animate-fade-in" style={{ animationDuration: '1.1s' }}>
       <div className={`absolute inset-0 bg-gradient-to-br ${branchTheme.glow}`} />
 
-      <motion.img
+      <img
         src={branchTheme.logo}
         alt={branchTheme.badge}
-        className="absolute left-[-8vw] top-1/2 h-[72vh] w-[72vh] max-h-[760px] max-w-[760px] -translate-y-1/2 object-contain opacity-[0.14] blur-[1px]"
-        animate={{ rotate: [0, 6, 0], scale: [1, 1.04, 1] }}
-        transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute left-[-8vw] top-1/2 h-[72vh] w-[72vh] max-h-[760px] max-w-[760px] -translate-y-1/2 object-contain opacity-[0.14] blur-[1px] animate-branch-float-left"
       />
-      <motion.img
+      <img
         src={branchTheme.logo}
         alt={branchTheme.badge}
-        className="absolute right-[-10vw] top-1/2 h-[66vh] w-[66vh] max-h-[700px] max-w-[700px] -translate-y-1/2 object-contain opacity-[0.1] blur-[1px]"
-        animate={{ rotate: [0, -7, 0], scale: [1, 1.03, 1] }}
-        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute right-[-10vw] top-1/2 h-[66vh] w-[66vh] max-h-[700px] max-w-[700px] -translate-y-1/2 object-contain opacity-[0.1] blur-[1px] animate-branch-float-right"
       />
 
       <div className="absolute inset-x-4 bottom-16 md:inset-x-8 md:bottom-14">
@@ -141,7 +131,7 @@ function IdleCommandantShowcase({ commandant }: { commandant: Commandant }) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -280,10 +270,8 @@ export function IdleStageOverlay({ settings, commandants = [], onExit }: IdleSta
         }}
       />
 
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 180, repeat: Infinity, ease: 'linear' }}
+      <div
+        className="absolute inset-0 pointer-events-none animate-rotate-watermark"
       >
         <div
           className={`absolute -inset-[130%] ${design.watermarkOpacity}`}
@@ -294,22 +282,18 @@ export function IdleStageOverlay({ settings, commandants = [], onExit }: IdleSta
             filter: 'grayscale(100%)',
           }}
         />
-      </motion.div>
+      </div>
       {settings.design === 'preboot-sequence' && (
-        <motion.div
-          className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none mix-blend-plus-lighter"
-          animate={{ opacity: [0.2, 0.3, 0.2] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        <div
+          className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none mix-blend-plus-lighter animate-breathe-opacity"
         >
-          <AnimatePresence mode="popLayout">
-            <motion.div
+          <AnimatedPresence mode="popLayout" initial={false}>
+            <div
               key={currentPrebootLogo}
-              className="absolute w-[120vw] h-[120vw] md:w-[80vw] md:h-[80vw] max-w-[1000px] max-h-[1000px] rounded-full overflow-hidden flex items-center justify-center opacity-[0.25]"
-              initial={{ opacity: 0, scale: 0.8, filter: "blur(15px)" }}
-              animate={{ opacity: 0.25, scale: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, scale: 1.2, filter: "blur(15px)" }}
-              transition={{ duration: 1.8, ease: "easeInOut" }}
+              className="absolute w-[120vw] h-[120vw] md:w-[80vw] md:h-[80vw] max-w-[1000px] max-h-[1000px] rounded-full overflow-hidden flex items-center justify-center animate-fade-in"
               style={{
+                opacity: 0.25,
+                animationDuration: '1.8s',
                 WebkitMaskImage: 'radial-gradient(circle, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 70%)',
                 maskImage: 'radial-gradient(circle, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 70%)'
               }}
@@ -319,79 +303,64 @@ export function IdleStageOverlay({ settings, commandants = [], onExit }: IdleSta
                 className="w-full h-full object-contain p-8 md:p-12"
                 alt="background watermark"
               />
-            </motion.div>
-          </AnimatePresence>
-        </motion.div>
+            </div>
+          </AnimatedPresence>
+        </div>
       )}
 
       {settings.design === 'holographic-display' && (
         <>
-          <motion.div
-            className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.1),transparent_70%)] pointer-events-none"
-            animate={{ opacity: [0.4, 0.7, 0.4] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          <div
+            className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.1),transparent_70%)] pointer-events-none animate-glow-pulse"
           />
-          <motion.div
-             className="absolute left-[20%] top-[30%] w-64 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent shadow-[0_0_8px_rgba(34,211,238,0.8)] pointer-events-none"
-             animate={{ opacity: [0, 1, 0], scaleX: [0.5, 1.5, 0.5], translateX: [-50, 50, -50] }}
-             transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+          <div
+             className="absolute left-[20%] top-[30%] w-64 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent shadow-[0_0_8px_rgba(34,211,238,0.8)] pointer-events-none animate-holographic-scan"
           />
-          <motion.div
-             className="absolute right-[20%] bottom-[30%] w-64 h-[1px] bg-gradient-to-r from-transparent via-blue-400/50 to-transparent shadow-[0_0_8px_rgba(96,165,250,0.8)] pointer-events-none"
-             animate={{ opacity: [0, 1, 0], scaleX: [0.5, 1.5, 0.5], translateX: [50, -50, 50] }}
-             transition={{ duration: 5.5, repeat: Infinity, ease: 'linear' }}
+          <div
+             className="absolute right-[20%] bottom-[30%] w-64 h-[1px] bg-gradient-to-r from-transparent via-blue-400/50 to-transparent shadow-[0_0_8px_rgba(96,165,250,0.8)] pointer-events-none animate-holographic-scan"
+             style={{ animationDuration: '5.5s', animationDelay: '-1.2s' }}
           />
         </>
       )}
       {settings.design === 'flag-parade' && (
         <>
-          <motion.div
-            className="absolute inset-y-0 left-0 w-1/3 bg-red-600/22 pointer-events-none"
-            animate={{ opacity: [0.22, 0.4, 0.22] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+          <div
+            className="absolute inset-y-0 left-0 w-1/3 bg-red-600/22 pointer-events-none animate-flag-wave"
           />
-          <motion.div
-            className="absolute inset-y-0 left-1/3 w-1/3 bg-yellow-200/10 pointer-events-none"
-            animate={{ opacity: [0.08, 0.22, 0.08] }}
-            transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut' }}
+          <div
+            className="absolute inset-y-0 left-1/3 w-1/3 bg-yellow-200/10 pointer-events-none animate-flag-wave-subtle"
           />
-          <motion.div
-            className="absolute inset-y-0 right-0 w-1/3 bg-blue-700/24 pointer-events-none"
-            animate={{ opacity: [0.2, 0.38, 0.2] }}
-            transition={{ duration: 5.6, repeat: Infinity, ease: 'easeInOut' }}
+          <div
+            className="absolute inset-y-0 right-0 w-1/3 bg-blue-700/24 pointer-events-none animate-flag-wave"
+            style={{ animationDuration: '5.6s' }}
           />
         </>
       )}
 
       {settings.design === 'radar-grid' && (
         <>
-          <motion.div
-            className="absolute left-1/2 top-1/2 h-[150vmax] w-[150vmax] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-300/10 pointer-events-none"
-            animate={{ scale: [0.8, 1.15], opacity: [0.32, 0] }}
-            transition={{ duration: 4.2, repeat: Infinity, ease: 'linear' }}
+          <div
+            className="absolute left-1/2 top-1/2 h-[150vmax] w-[150vmax] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-300/10 pointer-events-none animate-radar-expand"
           />
-          <motion.div
-            className="absolute left-1/2 top-1/2 h-[150vmax] w-[150vmax] -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/10 pointer-events-none"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 7, repeat: Infinity, ease: 'linear' }}
+          <div
+            className="absolute left-1/2 top-1/2 h-[150vmax] w-[150vmax] -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/10 pointer-events-none animate-radar-rotate"
           >
             <div className="absolute left-1/2 top-1/2 h-1/2 w-1/2 origin-top-left bg-[conic-gradient(from_0deg,rgba(52,211,153,0.32),rgba(20,184,166,0.14)_35%,transparent_70%)]" />
-          </motion.div>
+          </div>
         </>
       )}
 
       {settings.design === 'commandant-honour-wall' && activeCommandant && (
-        <AnimatePresence mode="wait">
+        <AnimatedPresence mode="wait" initial={false}>
           <IdleCommandantShowcase key={activeCommandant.id} commandant={activeCommandant} />
-        </AnimatePresence>
+        </AnimatedPresence>
       )}
 
       {settings.design !== 'preboot-sequence' && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <motion.div
-            className="relative w-[300px] h-[300px] md:w-[560px] md:h-[560px]"    
-            animate={{ rotate: 360 }}
-            transition={{ duration: design.orbitDurationSec, repeat: Infinity, ease: 'linear' }}
+          <div
+            className="relative w-[300px] h-[300px] md:w-[560px] md:h-[560px] animate-spin-linear"
+            style={{ '--animate-duration': `${design.orbitDurationSec}s` } as React.CSSProperties}
           >
           <div className={`absolute inset-[7%] rounded-full border ${design.ringTone}`} />
           <div className={`absolute inset-[17%] rounded-full border ${design.innerRingTone} border-dashed`} />
@@ -404,10 +373,9 @@ export function IdleStageOverlay({ settings, commandants = [], onExit }: IdleSta
                 className="absolute inset-0"
                 style={{ transform: `rotate(${angle}deg)` }}
               >
-                <motion.div
-                  className="absolute left-1/2 top-[8%] -translate-x-1/2"
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: design.counterOrbitDurationSec, repeat: Infinity, ease: 'linear' }}
+                <div
+                  className="absolute left-1/2 top-[8%] -translate-x-1/2 animate-spin-counter"
+                  style={{ '--animate-duration': `${design.counterOrbitDurationSec}s` } as React.CSSProperties}
                 >
                   <div className={`w-20 h-20 md:w-28 md:h-28 rounded-full bg-slate-100/95 border-[3px] ${design.nodeTone} p-[7px] md:p-[9px]`}>
                     <div className="w-full h-full rounded-full overflow-hidden">
@@ -419,21 +387,19 @@ export function IdleStageOverlay({ settings, commandants = [], onExit }: IdleSta
                       />
                     </div>
                   </div>
-                </motion.div>
+                </div>
               </div>
             );
           })}
 
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            animate={{ scale: [1, 1.06, 1] }}
-            transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
+          <div
+            className="absolute inset-0 flex items-center justify-center animate-soft-breathe"
           >
             <div className="w-32 h-32 md:w-44 md:h-44 rounded-full border-2 border-[#ffd866aa] bg-[#010813e8] backdrop-blur-xl shadow-[0_0_35px_rgba(0,138,255,0.28)] flex items-center justify-center">
               <img src={ndcCrest} alt="NDC crest" className="w-[72%] h-[72%] object-contain" />
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
       )}
 

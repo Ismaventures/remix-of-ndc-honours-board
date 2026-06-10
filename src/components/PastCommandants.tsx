@@ -1,16 +1,9 @@
 import { useRef, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Shield } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
 import { Commandant } from "@/types/domain";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
 import { useThemeMode } from "@/hooks/useThemeMode";
-import {
-  activeCardStates,
-  CINEMATIC_EASE,
-  MOTION_TIMINGS,
-  textStaggerContainer,
-  textStaggerItem,
-} from "@/lib/cinematicMotion";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 interface PastCommandantsProps {
   commandants: Commandant[];
@@ -117,7 +110,6 @@ export function PastCommandants({
     const container = scrollRef.current;
     if (!container || past.length <= 1) return;
 
-    // Start from the middle copy to allow seamless wrap in both directions.
     const segmentWidth = container.scrollWidth / 3;
     container.scrollLeft = segmentWidth;
   }, [past.length, mounted]);
@@ -214,19 +206,16 @@ export function PastCommandants({
         </div>
       </div>
 
-      <motion.div
+      <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-hide px-1"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onFocus={() => setIsPaused(true)}
         onBlur={() => setIsPaused(false)}
-        variants={textStaggerContainer}
-        initial={prefersReducedMotion ? undefined : "initial"}
-        animate={prefersReducedMotion ? undefined : "animate"}
       >
         {loopedPast.map((cmd, i) => (
-          <motion.button
+          <button
             key={`${cmd.id}-${i}`}
             type="button"
             onClick={() => onSelectCommandant?.(cmd)}
@@ -235,25 +224,20 @@ export function PastCommandants({
             onMouseLeave={() => setActiveCardId(null)}
             onBlur={() => setActiveCardId(null)}
             aria-label={`Open profile for ${cmd.name}`}
-            className={`shrink-0 w-72 rounded-xl p-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 transition-all duration-300 ${
+            className={`shrink-0 w-72 rounded-xl p-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${
               isLightMode
                 ? "bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"
-                : "gold-border bg-card card-lift"
+                : "gold-border bg-card"
+            } ${
+              prefersReducedMotion ? "" : "hover-primary"
+            } ${
+              activeCardId && activeCardId !== cmd.id ? "card-inactive" : "card-active"
             }`}
             style={{
               opacity: mounted ? 1 : 0,
               transform: mounted ? "translateX(0)" : "translateX(30px)",
               transition: `all 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${0.4 + (i % Math.max(past.length, 1)) * 0.08}s`,
             }}
-            variants={textStaggerItem}
-            animate={
-              !activeCardId || activeCardId === cmd.id
-                ? activeCardStates.active
-                : activeCardStates.inactive
-            }
-            whileHover={prefersReducedMotion ? undefined : { y: MOTION_TIMINGS.microHoverY, scale: MOTION_TIMINGS.microHoverScale }}
-            whileTap={prefersReducedMotion ? undefined : { scale: MOTION_TIMINGS.microTapScale }}
-            transition={{ duration: 0.28, ease: CINEMATIC_EASE }}
           >
             <div className="flex items-start gap-4 mb-3">
               <div className={`w-14 h-14 rounded flex items-center justify-center shrink-0 overflow-hidden ${
@@ -273,9 +257,9 @@ export function PastCommandants({
             <p className={`text-xs leading-relaxed line-clamp-3 ${isLightMode ? "text-slate-600" : "text-muted-foreground"}`}>
               {cmd.description}
             </p>
-          </motion.button>
+          </button>
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 }

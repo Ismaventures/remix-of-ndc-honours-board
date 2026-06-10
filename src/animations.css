@@ -1,0 +1,611 @@
+/* ══════════════════════════════════════════════════
+   CSS Animation Classes (replacing framer-motion)
+   ══════════════════════════════════════════════════ */
+
+/* ── Ease curves as custom properties ── */
+:root {
+  --ease-cinematic: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-museum: cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-duration: 0.6s;
+  --animate-delay: 0s;
+  --slide-direction: 1;
+  --stagger-delay: 0.12s;
+  --stagger-offset: 0.3s;
+}
+
+/* ── Simple entry animations ── */
+.animate-fade-in {
+  animation: anim-fade-in var(--animate-duration, 0.6s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-up {
+  animation: anim-fade-up var(--animate-duration, 0.6s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up-sm {
+  animation: anim-fade-up-sm var(--animate-duration, 0.5s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-up-sm {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up-blur {
+  animation: anim-fade-up-blur var(--animate-duration, 0.82s) var(--ease-museum, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-up-blur {
+  from { opacity: 0; transform: translateY(28px); filter: blur(8px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+.animate-fade-down-sm {
+  animation: anim-fade-down-sm var(--animate-duration, 0.42s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-down-sm {
+  from { opacity: 0; transform: translateY(-10px); filter: blur(2px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+.animate-fade-left {
+  animation: anim-fade-left var(--animate-duration, 1s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-left {
+  from { opacity: 0; transform: translateX(-40px); filter: blur(8px); }
+  to { opacity: 1; transform: translateX(0); filter: blur(0); }
+}
+
+.animate-fade-right {
+  animation: anim-fade-right var(--animate-duration, 1s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-right {
+  from { opacity: 0; transform: translateX(40px); filter: blur(8px); }
+  to { opacity: 1; transform: translateX(0); filter: blur(0); }
+}
+
+.animate-fade-left-sm {
+  animation: anim-fade-left-sm var(--animate-duration, 0.55s) var(--ease-museum, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-left-sm {
+  from { opacity: 0; transform: translateX(-12px); filter: blur(6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Exit animations ── */
+.animate-fade-out {
+  animation: anim-fade-out var(--animate-duration, 0.3s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animate-fade-out-up {
+  animation: anim-fade-out-up var(--animate-duration, 0.42s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-out-up {
+  from { opacity: 1; transform: translateY(0); filter: blur(0); }
+  to { opacity: 0; transform: translateY(-8px); filter: blur(2px); }
+}
+
+.animate-fade-out-down {
+  animation: anim-fade-out-down var(--animate-duration, 0.48s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-out-down {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-6px); }
+}
+
+.animate-fade-out-up-sm {
+  animation: anim-fade-out-up-sm var(--animate-duration, 0.4s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-fade-out-up-sm {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-5px); }
+}
+
+.animate-scale-out-modal {
+  animation: anim-scale-out-modal 0.5s var(--ease-museum, ease) 0s forwards;
+}
+@keyframes anim-scale-out-modal {
+  from { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+  to { opacity: 0; transform: scale(0.94) translateY(20px); filter: blur(8px); }
+}
+
+.animate-scale-out {
+  animation: anim-scale-out var(--animate-duration, 0.4s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.8); }
+}
+
+/* ── Scale entry animations ── */
+.animate-scale-in {
+  animation: anim-scale-in var(--animate-duration, 0.7s) var(--ease-museum, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-scale-in {
+  from { opacity: 0; transform: scale(0.92) translateY(30px); filter: blur(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+
+.animate-scale-in-simple {
+  animation: anim-scale-in-simple var(--animate-duration, 0.6s) var(--ease-museum, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-scale-in-simple {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ── Directional slides (parameterised via --slide-direction) ── */
+.animate-slide-in {
+  animation: anim-slide-in var(--animate-duration, 1s) var(--ease-cinematic, ease) var(--animate-delay, 0s) forwards;
+}
+@keyframes anim-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--slide-direction, 1) * 210px)) translateY(14px) scale(0.94) rotateZ(calc(var(--slide-direction, 1) * 0.7deg));
+    filter: blur(11px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1) rotateZ(0);
+    filter: blur(0);
+  }
+}
+
+.animate-slide-out {
+  animation: anim-slide-out 0.8s var(--ease-cinematic, ease) 0s forwards;
+}
+@keyframes anim-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1) rotateZ(0);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--slide-direction, 1) * -170px)) translateY(-10px) scale(0.965) rotateZ(calc(var(--slide-direction, 1) * -0.45deg));
+    filter: blur(9px);
+  }
+}
+
+.animate-museum-slide-in {
+  animation: anim-museum-slide-in 0.82s var(--ease-museum, ease) 0s forwards;
+}
+@keyframes anim-museum-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--slide-direction, 1) * 70px)) translateY(12px) scale(0.985);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.animate-museum-slide-out {
+  animation: anim-museum-slide-out 0.45s var(--ease-museum, ease) 0s forwards;
+}
+@keyframes anim-museum-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--slide-direction, 1) * -50px)) translateY(-8px) scale(0.99);
+    filter: blur(8px);
+  }
+}
+
+/* ── Height expand/collapse (grid trick) ── */
+.expandable-grid {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s var(--ease-museum, ease);
+  overflow: hidden;
+}
+.expandable-grid.open {
+  grid-template-rows: 1fr;
+}
+.expandable-grid > .expandable-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Hover/tap interactive effects ── */
+.hover-lift-sm {
+  transition: transform 0.24s var(--ease-cinematic, ease);
+}
+.hover-lift-sm:hover {
+  transform: translateY(-5px) scale(1.03);
+}
+.hover-lift-sm:active {
+  transform: scale(0.97);
+}
+
+.hover-lift-md {
+  transition: transform 0.3s var(--ease-museum, ease);
+}
+.hover-lift-md:hover {
+  transform: translateY(-4px) scale(1.015);
+}
+.hover-lift-md:active {
+  transform: scale(0.985);
+}
+
+.hover-lift-lg {
+  transition: transform 0.3s var(--ease-museum, ease);
+}
+.hover-lift-lg:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+.hover-lift-lg:active {
+  transform: scale(0.98);
+}
+
+.hover-scale-sm {
+  transition: transform 0.24s var(--ease-cinematic, ease);
+}
+.hover-scale-sm:hover {
+  transform: scale(1.01);
+}
+.hover-scale-sm:active {
+  transform: scale(0.98);
+}
+
+.hover-primary {
+  transition: transform 0.24s var(--ease-cinematic, ease);
+}
+.hover-primary:hover {
+  transform: translateY(-5px) scale(1.01);
+}
+.hover-primary:active {
+  transform: scale(0.97);
+}
+
+.hover-close {
+  transition: transform 0.3s var(--ease-museum, ease);
+}
+.hover-close:hover {
+  transform: scale(1.1);
+}
+.hover-close:active {
+  transform: scale(0.92);
+}
+
+.hover-action {
+  transition: transform 0.3s var(--ease-museum, ease);
+}
+.hover-action:hover {
+  transform: scale(1.03) translateY(-1px);
+}
+.hover-action:active {
+  transform: scale(0.97);
+}
+
+.hover-gallery {
+  transition: transform 0.3s var(--ease-museum, ease);
+}
+.hover-gallery:hover {
+  transform: translateY(-4px) scale(1.015);
+}
+.hover-gallery:active {
+  transform: scale(0.988);
+}
+
+/* ── Active/inactive card states ── */
+.card-active {
+  opacity: 1;
+  transform: scale(1);
+}
+.card-inactive {
+  opacity: 0.55;
+  transform: scale(0.93);
+}
+
+/* ── Continuous / infinite animations ── */
+.animate-spin-linear {
+  animation: anim-spin-linear var(--animate-duration, 40s) linear infinite;
+}
+@keyframes anim-spin-linear {
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-counter {
+  animation: anim-spin-counter var(--animate-duration, 40s) linear infinite;
+}
+@keyframes anim-spin-counter {
+  to { transform: rotate(-360deg); }
+}
+
+.animate-breathe-opacity {
+  animation: anim-breathe-opacity var(--animate-duration, 8s) ease-in-out infinite;
+}
+@keyframes anim-breathe-opacity {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.3; }
+}
+
+.animate-glow-pulse {
+  animation: anim-glow-pulse var(--animate-duration, 3s) ease-in-out infinite;
+}
+@keyframes anim-glow-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+.animate-scan-beam {
+  animation: anim-scan-beam var(--animate-duration, 2.8s) ease-in-out infinite;
+}
+@keyframes anim-scan-beam {
+  0% { transform: translateX(-10%); }
+  100% { transform: translateX(360%); }
+}
+
+.animate-scan-beam-slow {
+  animation: anim-scan-beam-slow var(--animate-duration, 2.8s) ease-in-out infinite;
+}
+@keyframes anim-scan-beam-slow {
+  0% { transform: translateX(-10%); }
+  100% { transform: translateX(460%); }
+}
+
+.animate-parallax-bg {
+  animation: anim-parallax-bg 14s ease-in-out infinite;
+}
+@keyframes anim-parallax-bg {
+  0%, 100% { opacity: 0.2; transform: scale(1) translateX(0) translateY(0); }
+  33% { opacity: 0.32; transform: scale(1.03) translateX(10px) translateY(-6px); }
+  66% { opacity: 0.22; transform: scale(1.01) translateX(-6px) translateY(4px); }
+}
+
+.animate-parallax-bg-museum {
+  animation: anim-parallax-bg-museum 14s ease-in-out infinite;
+}
+@keyframes anim-parallax-bg-museum {
+  0%, 100% { opacity: 0.2; transform: scale(1) translateX(0) translateY(0); }
+  33% { opacity: 0.32; transform: scale(1.03) translateX(10px) translateY(-6px); }
+  66% { opacity: 0.22; transform: scale(1.01) translateX(-6px) translateY(4px); }
+}
+
+.animate-soft-breathe {
+  animation: anim-soft-breathe 3.4s ease-in-out infinite;
+}
+@keyframes anim-soft-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.animate-branch-float-left {
+  animation: anim-branch-float-left 14s ease-in-out infinite;
+}
+@keyframes anim-branch-float-left {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(6deg) scale(1.04); }
+}
+
+.animate-branch-float-right {
+  animation: anim-branch-float-right 15s ease-in-out infinite;
+}
+@keyframes anim-branch-float-right {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(-7deg) scale(1.03); }
+}
+
+.animate-rotate-watermark {
+  animation: anim-rotate-watermark 180s linear infinite;
+}
+@keyframes anim-rotate-watermark {
+  to { transform: rotate(360deg); }
+}
+
+.animate-radar-expand {
+  animation: anim-radar-expand 4.2s linear infinite;
+}
+@keyframes anim-radar-expand {
+  0% { transform: scale(0.8); opacity: 0.32; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+
+.animate-radar-rotate {
+  animation: anim-radar-rotate 7s linear infinite;
+}
+@keyframes anim-radar-rotate {
+  to { transform: rotate(360deg); }
+}
+
+.animate-flag-wave {
+  animation: anim-flag-wave 10s ease-in-out infinite;
+}
+@keyframes anim-flag-wave {
+  0%, 100% { opacity: 0.22; }
+  50% { opacity: 0.4; }
+}
+
+.animate-flag-wave-subtle {
+  animation: anim-flag-wave-subtle 8s ease-in-out infinite;
+}
+@keyframes anim-flag-wave-subtle {
+  0%, 100% { opacity: 0.08; }
+  50% { opacity: 0.22; }
+}
+
+.animate-holographic-scan {
+  animation: anim-holographic-scan 3s ease-in-out infinite;
+}
+@keyframes anim-holographic-scan {
+  0%, 100% { opacity: 0; transform: scaleX(0.5) translateX(-50px); }
+  50% { opacity: 1; transform: scaleX(1.5) translateX(50px); }
+}
+
+.animate-chevron-rotate {
+  transition: transform 0.3s ease;
+}
+.animate-chevron-rotate.open {
+  transform: rotate(180deg);
+}
+
+.animate-unlock-pulse {
+  animation: anim-unlock-pulse 0.6s var(--ease-cinematic, ease) infinite;
+}
+@keyframes anim-unlock-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* ── Stagger children (set --stagger-index on each child) ── */
+.stagger-container {
+  opacity: 0;
+  animation: anim-container-fade 0.01ms var(--stagger-offset, 0.3s) forwards;
+}
+@keyframes anim-container-fade {
+  to { opacity: 1; }
+}
+
+.stagger-item {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: anim-stagger-item 0.5s var(--ease-cinematic, ease) calc(var(--stagger-index, 0) * var(--stagger-delay, 0.12s) + var(--stagger-offset, 0.3s)) forwards;
+}
+@keyframes anim-stagger-item {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stagger-item-museum {
+  opacity: 0;
+  transform: translateY(20px);
+  filter: blur(6px);
+  animation: anim-stagger-item-museum 0.9s var(--ease-museum, ease) calc(var(--stagger-index, 0) * var(--stagger-delay, 0.14s) + var(--stagger-offset, 0.18s)) forwards;
+}
+@keyframes anim-stagger-item-museum {
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+.stagger-grid-item {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: anim-stagger-grid-item 0.5s var(--ease-cinematic, ease) calc(var(--stagger-index, 0) * var(--stagger-delay, 0.06s)) forwards;
+}
+@keyframes anim-stagger-grid-item {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Transition component animations ── */
+.animate-flash-overlay {
+  animation: anim-flash-overlay 1.2s ease-in-out forwards;
+}
+@keyframes anim-flash-overlay {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+
+.animate-salute-silhouette {
+  animation: anim-salute-silhouette 1s ease-in-out forwards;
+}
+@keyframes anim-salute-silhouette {
+  0% { opacity: 0; transform: scale(0.7); }
+  60% { opacity: 0.8; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.3); }
+}
+
+.animate-sweep-left-to-right {
+  animation: anim-sweep-left-to-right 0.8s var(--ease-cinematic, ease) forwards;
+}
+@keyframes anim-sweep-left-to-right {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+.animate-sweep-shimmer {
+  animation: anim-sweep-shimmer 1s ease-in-out forwards;
+}
+@keyframes anim-sweep-shimmer {
+  0% { opacity: 0; }
+  50% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+
+.animate-runway-sweep {
+  animation: anim-runway-sweep 0.7s var(--ease-cinematic, ease) forwards;
+}
+@keyframes anim-runway-sweep {
+  from { transform: translateX(-120%) rotate(-18deg); opacity: 0.1; }
+  to { transform: translateX(120%) rotate(18deg); opacity: 0.1; }
+}
+
+.animate-mission-scanlines {
+  animation: anim-mission-scanlines 1s ease-in-out forwards;
+}
+@keyframes anim-mission-scanlines {
+  0% { opacity: 0; }
+  20% { opacity: 0.5; }
+  70% { opacity: 0.2; }
+  100% { opacity: 0; }
+}
+
+.animate-classified-text {
+  animation: anim-classified-text 1s ease-in-out forwards;
+}
+@keyframes anim-classified-text {
+  0% { opacity: 0; transform: scale(0.8); }
+  60% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.3); }
+}
+
+.animate-barracks-door {
+  animation: anim-barracks-door 0.7s var(--ease-cinematic, ease) forwards;
+}
+@keyframes anim-barracks-door {
+  from { transform: translateX(0); }
+  to { transform: translateX(-110%); }
+}
+
+.animate-sparks {
+  animation: anim-sparks 1s ease-in-out forwards;
+}
+@keyframes anim-sparks {
+  0% { opacity: 0; transform: translateY(40px); }
+  60% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
+.animate-card-focus {
+  animation: anim-card-focus 1.5s ease-in-out forwards;
+}
+@keyframes anim-card-focus {
+  0% { opacity: 0; }
+  60% { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+
+/* ── PreBootVault pulse ring ── */
+.animate-burst-out {
+  animation: anim-burst-out 0.6s ease-in forwards;
+}
+@keyframes anim-burst-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* ── Image breathe for IdleStageOverlay ── */
+.animate-image-breathe {
+  animation: anim-image-breathe 4.2s ease-in-out infinite;
+}
+@keyframes anim-image-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.03); opacity: 0.92; }
+}

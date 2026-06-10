@@ -11,7 +11,7 @@ export function AppHeader({ onHomeClick }: AppHeaderProps) {
 
   return (
     <header 
-      className={`header-shine sticky top-0 z-40 min-h-16 sm:min-h-20 flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-2 border-b backdrop-blur-md overflow-x-hidden transition-colors duration-500 ${
+      className={`header-shine sticky top-0 z-40 relative min-h-16 sm:min-h-20 flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-2 border-b backdrop-blur-md overflow-x-hidden transition-colors duration-500 ${
         isLightMode 
           ? "bg-white/90 border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)]" 
           : "bg-navy-deep/92 border-primary/25 shadow-[0_1px_0_hsl(var(--primary)/0.1),0_10px_30px_rgba(0,0,0,0.25)]"
@@ -56,6 +56,13 @@ export function AppHeader({ onHomeClick }: AppHeaderProps) {
           </div>
         </div>
       </button>
+
+      {/* Tri-service defense strip at the bottom of the header */}
+      <div className="absolute inset-x-0 bottom-0 h-[4px] flex">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#00B0F0]" />
+      </div>
     </header>
   );
 }

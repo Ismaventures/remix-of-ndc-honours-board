@@ -12,7 +12,6 @@ import {
   Shield,
   SkipForward,
 } from "lucide-react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Category,
   Personnel,
@@ -29,12 +28,9 @@ import { prefetchAudioTrack, useAudioStore } from "@/hooks/useAudioStore";
 import { playAudioTrack } from "@/components/AudioManager";
 import { useSliderControl } from "@/hooks/useSliderControl";
 import { useThemeMode } from "@/hooks/useThemeMode";
-import {
-  cinematicTransition,
-  layeredSlideVariants,
-  textStaggerContainer,
-  textStaggerItem,
-} from "@/lib/cinematicMotion";
+import { AnimatedPresence } from "@/lib/AnimatedPresence";
+import { useReducedMotion } from "@/lib/useReducedMotion";
+import { slideDirectionStyle } from "@/lib/animation";
 import { playTransitionCue } from "@/lib/transitionCues";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
 import { useCinematicExperienceSettings } from "@/hooks/useCinematicExperienceSettings";
@@ -1182,7 +1178,7 @@ export function AutoRotationDisplay({
           ? "opacity-100 translate-x-0 scale-100 blur-0"
           : "opacity-0 -translate-x-14 scale-[0.98] blur-[7px]";
       case "pro-slider":
-        return "opacity-100"; // Handled by framer-motion AnimatePresence
+        return "opacity-100"; // Handled by AnimatedPresence + CSS slide
       case "fade-zoom":
       default:
         return fadeState === "in"
@@ -1194,26 +1190,14 @@ export function AutoRotationDisplay({
   const renderSlideContent = () => (
     <>
       {slide.type === "commandant" && (
-        <motion.button
+        <button
           onClick={() => setSelectedCommandant(slide.commandant)}
-          className="w-full h-full min-h-0 max-h-full flex flex-col text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 relative overflow-x-hidden overflow-y-auto"
+          className={`w-full h-full min-h-0 max-h-full flex flex-col text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 relative overflow-x-hidden overflow-y-auto ${prefersReducedMotion ? "" : "hover-primary"}`}
           aria-label={`Open profile for ${slide.commandant.name}`}
-          whileHover={prefersReducedMotion ? undefined : { y: -5, scale: 1.01 }}
-          whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
-          transition={cinematicTransition(0.24)}
         >
-          <motion.div
+          <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-primary/20 to-transparent"
-            animate={prefersReducedMotion ? undefined : { x: ["-10%", "360%"] }}
-            transition={
-              prefersReducedMotion
-                ? undefined
-                : cinematicTransition(2.8, {
-                    repeat: Infinity,
-                    repeatDelay: 2.4,
-                  })
-            }
+            className={`pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-primary/20 to-transparent ${prefersReducedMotion ? "" : "animate-scan-beam"}`}
           />
           {effectiveSettings.commandantLayout === "split" ? (
             <CommandantSplitHero commandant={slide.commandant} isAutoDisplay />
@@ -1224,41 +1208,35 @@ export function AutoRotationDisplay({
               isAutoDisplay
             />
           )}
-        </motion.button>
+        </button>
       )}
 
       {slide.type === "personnel" && (
-        <motion.button
+        <button
           onClick={() => setSelectedPerson(slide.person)}
-          className="w-full text-left relative overflow-hidden focus-visible:outline-none"
+          className={`w-full text-left relative overflow-hidden focus-visible:outline-none ${prefersReducedMotion ? "" : "hover-scale-sm"}`}
           aria-label={`Open profile for ${slide.person.name}`}
-          whileHover={prefersReducedMotion ? undefined : { scale: 1.01 }}
-          whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-          transition={cinematicTransition(0.24)}
         >
           <UnifiedAutoCard
             type="personnel"
             data={slide.person}
             id={`p-${slide.person.id}`}
           />
-        </motion.button>
+        </button>
       )}
 
       {slide.type === "visit" && (
-        <motion.button
+        <button
           onClick={() => setSelectedVisit(slide.visit)}
-          className="w-full text-center relative overflow-hidden focus-visible:outline-none"
+          className={`w-full text-center relative overflow-hidden focus-visible:outline-none ${prefersReducedMotion ? "" : "hover-scale-sm"}`}
           aria-label={`Open profile for ${slide.visit.name}`}
-          whileHover={prefersReducedMotion ? undefined : { scale: 1.01 }}
-          whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-          transition={cinematicTransition(0.24)}
         >
           <UnifiedAutoCard
             type="visit"
             data={slide.visit}
             id={`v-${slide.visit.id}`}
           />
-        </motion.button>
+        </button>
       )}
     </>
   );
@@ -1288,11 +1266,9 @@ export function AutoRotationDisplay({
   const sectionDescriptor = getSectionDescriptor();
 
   const renderedContinuousContent = (
-    <motion.div
-      className="relative mx-auto flex flex-1 h-full min-h-0 w-full max-w-[1900px] flex-col justify-start"
-      initial={prefersReducedMotion ? undefined : { opacity: 0, y: 20 }}
-      animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
-      transition={cinematicTransition(0.6)}
+    <div
+      className={`relative mx-auto flex flex-1 h-full min-h-0 w-full max-w-[1900px] flex-col justify-start ${prefersReducedMotion ? "" : "animate-fade-up"}`}
+      style={{ animationDuration: "0.6s" }}
     >
       <div className="auto-scroll-heading mb-1.5 sm:mb-2 px-1 sm:px-2 shrink-0">
         <div className="overflow-hidden rounded-xl border border-[#002060]/20 bg-card/90 backdrop-blur">
@@ -1308,31 +1284,24 @@ export function AutoRotationDisplay({
                 {getSectionTitle()}
               </p>
             )}
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.h2
+            <AnimatedPresence mode="wait" initial={false}>
+              <h2
                 key={`subtitle-${sectionSubtitle}`}
-                className="auto-scroll-heading-subtitle mx-auto mt-1 max-w-[96vw] sm:max-w-5xl text-[clamp(1.2rem,3vw,1.8rem)] sm:text-[clamp(1.4rem,3vw,2.2rem)] md:text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold uppercase tracking-[0.02em] text-[#d4af37] drop-shadow-[0_0_6px_rgba(212,175,55,0.25)] leading-tight break-words"
-                initial={{ opacity: 0, y: 10, filter: "blur(2px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -8, filter: "blur(2px)" }}
-                transition={cinematicTransition(0.42)}
+                className="auto-scroll-heading-subtitle mx-auto mt-1 max-w-[96vw] sm:max-w-5xl text-[clamp(1.2rem,3vw,1.8rem)] sm:text-[clamp(1.4rem,3vw,2.2rem)] md:text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold uppercase tracking-[0.02em] text-[#d4af37] drop-shadow-[0_0_6px_rgba(212,175,55,0.25)] leading-tight break-words animate-fade-down-sm"
               >
                 {sectionSubtitle}
-              </motion.h2>
-            </AnimatePresence>
+              </h2>
+            </AnimatedPresence>
             {sectionDescriptor && (
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.p
+              <AnimatedPresence mode="wait" initial={false}>
+                <p
                   key={`descriptor-${sectionDescriptor}`}
-                  className="mx-auto mt-1 max-w-[95vw] sm:max-w-3xl text-[10px] sm:text-[11px] tracking-[0.05em] leading-relaxed text-white/90"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={cinematicTransition(0.48, { delay: 0.08 })}
+                  className="mx-auto mt-1 max-w-[95vw] sm:max-w-3xl text-[10px] sm:text-[11px] tracking-[0.05em] leading-relaxed text-white/90 animate-fade-up-sm"
+                  style={{ animationDuration: "0.48s", animationDelay: "0.08s" }}
                 >
                   {sectionDescriptor}
-                </motion.p>
-              </AnimatePresence>
+                </p>
+              </AnimatedPresence>
             )}
           </div>
           <div className="h-[2px] w-full bg-[#FF0000]" />
@@ -1376,7 +1345,7 @@ export function AutoRotationDisplay({
           );
         })}
       </div>
-    </motion.div>
+    </div>
   );
 
   return (
@@ -1499,32 +1468,9 @@ export function AutoRotationDisplay({
           ) : (
             <>
               {slideImageUrl && (
-                <motion.div
+                <div
                   aria-hidden="true"
-                  className="absolute inset-0 -z-10 rounded-xl overflow-hidden"
-                  initial={{
-                    opacity: 0.12,
-                    scale: isPortraitSlide ? 1 : 1.03,
-                    x: 0,
-                    y: 0,
-                  }}
-                  animate={
-                    prefersReducedMotion
-                      ? { opacity: 0.24, scale: isPortraitSlide ? 1.01 : 1.03 }
-                      : {
-                          opacity: [0.2, 0.32, 0.22],
-                          scale: isPortraitSlide
-                            ? [1, 1.03, 1.01]
-                            : [1.04, 1.08, 1.05],
-                          x: isPortraitSlide ? [0, 10, -6, 0] : [0, 16, -10, 0],
-                          y: isPortraitSlide ? [0, -6, 4, 0] : [0, -8, 6, 0],
-                        }
-                  }
-                  transition={cinematicTransition(14, {
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                  })}
-                  style={{ willChange: "transform" }}
+                  className={`absolute inset-0 -z-10 rounded-xl overflow-hidden ${prefersReducedMotion ? "" : "animate-parallax-bg"}`}
                 >
                   <img
                     src={slideImageUrl}
@@ -1533,44 +1479,18 @@ export function AutoRotationDisplay({
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-slate-950/76 via-slate-950/68 to-slate-950/82" />
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,hsl(var(--primary)/0.22)_0%,transparent_40%),radial-gradient(circle_at_85%_78%,hsl(var(--primary)/0.16)_0%,transparent_44%)]" />
-                </motion.div>
+                </div>
               )}
               {transitionType === "pro-slider" ? (
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
+                <AnimatedPresence mode="wait" initial={false}>
+                  <div
                     key={`${slide.type}-${currentIndex}`}
-                    custom={transitionDirectionRef.current}
-                    variants={layeredSlideVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    transition={cinematicTransition(
-                      slide.type === "commandant"
-                        ? Math.max(
-                            0.9,
-                            Math.min(
-                              1.8,
-                              cinematicSettings.commandantDurationMs / 1000,
-                            ),
-                          )
-                        : Math.max(
-                            0.65,
-                            Math.min(
-                              1.4,
-                              cinematicSettings.imageDurationMs / 1000,
-                            ),
-                          ),
-                    )}
-                    className={
-                      slide.type === "commandant"
-                        ? "flex min-h-0 flex-1 flex-col"
-                        : undefined
-                    }
-                    style={{ willChange: "transform" }}
+                    className={`animate-slide-in ${slide.type === "commandant" ? "flex min-h-0 flex-1 flex-col" : ""}`}
+                    style={slideDirectionStyle(transitionDirectionRef.current)}
                   >
                     {renderSlideContent()}
-                  </motion.div>
-                </AnimatePresence>
+                  </div>
+                </AnimatedPresence>
               ) : slide.type === "commandant" ? (
                 <div className="flex min-h-0 flex-1 flex-col">
                   {renderSlideContent()}
