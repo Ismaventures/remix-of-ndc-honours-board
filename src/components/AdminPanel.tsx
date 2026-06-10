@@ -2709,7 +2709,7 @@ function PersonnelForm({ initial, onSave, onCancel }: {
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Citation / Bio</label>
-          <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
+          <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-base text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Decoration</label>
@@ -2820,7 +2820,7 @@ function VisitForm({ initial, onSave, onCancel }: {
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Visit Description / Context</label>
-          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
+          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-base text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Decoration</label>
@@ -2966,11 +2966,11 @@ function CommandantForm({ initial, onSave, onCancel }: {
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Biography / Description</label>
-          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
+          <textarea placeholder="Description" value={form.description} onChange={e => update('description', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-base text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Bio Summary (short)</label>
-          <textarea placeholder="Short profile summary used in compact profile cards" value={form.bioSummary} onChange={e => update('bioSummary', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
+          <textarea placeholder="Short profile summary used in compact profile cards" value={form.bioSummary} onChange={e => update('bioSummary', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-base text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Full Biography</label>
@@ -3002,7 +3002,7 @@ function CommandantForm({ initial, onSave, onCancel }: {
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Impact Statement</label>
-          <textarea placeholder="Expected strategic impact statement" value={form.impactStatement} onChange={e => update('impactStatement', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 resize-none" />
+          <textarea placeholder="Expected strategic impact statement" value={form.impactStatement} onChange={e => update('impactStatement', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-base text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Decoration</label>
