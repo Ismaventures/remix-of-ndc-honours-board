@@ -1,4 +1,4 @@
-export type Category = 'FWC' | 'FDC' | 'Directing Staff' | 'Allied' | 'fwc+' | 'fdc+' | 'Staff';
+export type Category = 'FWC' | 'FDC' | 'Directing Staff' | 'Allied' | 'fwc+' | 'fdc+' | 'Staff' | 'Participants' | 'Faculty' | 'Directorate';
 export type MuseumLinkedView =
   | 'home'
   | 'about-ndc'
@@ -6,9 +6,9 @@ export type MuseumLinkedView =
   | 'guided-tours'
   | 'hall-of-fame'
   | 'commandants'
-  | 'fwc'
-  | 'fdc'
-  | 'directing'
+  | 'faculty'
+  | 'participants'
+  | 'directorate'
   | 'allied'
   | 'visits';
 

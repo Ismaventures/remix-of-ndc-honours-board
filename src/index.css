@@ -1129,4 +1129,118 @@
     height: 0 !important;
     display: none !important;
   }
+
+  /* NDC Logo Animations */
+  @keyframes fadeInOutFloat {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    15% {
+      opacity: 0.15;
+      transform: translateY(0px);
+    }
+    85% {
+      opacity: 0.15;
+      transform: translateY(0px);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  }
+
+  @keyframes gentleFloat {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% {
+      opacity: 0.12;
+    }
+    50% {
+      opacity: 0.18;
+    }
+  }
+
+  @keyframes scatteredFloat {
+    0% {
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.15;
+    }
+    90% {
+      opacity: 0.15;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* Apply animations to NDC logo elements */
+  .ndc-logo-floating {
+    animation: fadeInOutFloat 8s ease-in-out infinite;
+  }
+
+  .ndc-logo-floating:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  .ndc-logo-floating:nth-child(2) {
+    animation-delay: 2s;
+  }
+
+  .ndc-logo-floating:nth-child(3) {
+    animation-delay: 4s;
+  }
+
+  .ndc-logo-floating:nth-child(4) {
+    animation-delay: 6s;
+  }
+
+  .ndc-logo-watermark {
+    animation: pulseGlow 4s ease-in-out infinite;
+  }
+
+  .ndc-logo-scattered {
+    animation: scatteredFloat 10s ease-in-out infinite;
+  }
+
+  .ndc-logo-scattered:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  .ndc-logo-scattered:nth-child(2) {
+    animation-delay: 1.25s;
+  }
+
+  .ndc-logo-scattered:nth-child(3) {
+    animation-delay: 2.5s;
+  }
+
+  .ndc-logo-scattered:nth-child(4) {
+    animation-delay: 3.75s;
+  }
+
+  .ndc-logo-scattered:nth-child(5) {
+    animation-delay: 5s;
+  }
+
+  .ndc-logo-scattered:nth-child(6) {
+    animation-delay: 6.25s;
+  }
+
+  .ndc-logo-scattered:nth-child(7) {
+    animation-delay: 7.5s;
+  }
+
+  .ndc-logo-scattered:nth-child(8) {
+    animation-delay: 8.75s;
+  }
 }
