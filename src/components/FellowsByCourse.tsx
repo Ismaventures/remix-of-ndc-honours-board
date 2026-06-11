@@ -248,14 +248,14 @@ export function FellowsByCourse({
             </div>
           )}
 
-          {/* Header section */}
+          {/* Header section - Single unified heading */}
           {title && (
-            <div className={`rounded-lg border p-6 ${isLightMode ? 'bg-slate-50 border-slate-200' : 'bg-slate-800 border-slate-700'}`}>
-              <h1 className={`text-2xl font-bold ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
-                {title}
+            <div className={`rounded-lg border p-4 ${isLightMode ? 'bg-slate-50 border-slate-200' : 'bg-slate-800 border-slate-700'}`}>
+              <h1 className={`text-3xl md:text-4xl font-bold text-center uppercase tracking-wider ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
+                {title.replace(' (FWC)', '').replace(' (FDC)', '')}
               </h1>
               {description && (
-                <p className={`mt-2 text-sm ${isLightMode ? 'text-slate-600' : 'text-slate-300'}`}>
+                <p className={`mt-2 text-sm text-center ${isLightMode ? 'text-slate-600' : 'text-slate-300'}`}>
                   {description}
                 </p>
               )}
@@ -275,12 +275,6 @@ export function FellowsByCourse({
             )}
 
             <div className="relative z-10">
-              <h2 className={cn(
-                'text-2xl md:text-3xl font-bold mb-2 text-center',
-                isLightMode ? 'text-[#002060]' : 'text-[#00B0F0]'
-              )}>
-                {category === 'FWC' ? 'FELLOW OF WAR COLLEGE' : 'FELLOW OF NATIONAL DEFENCE COLLEGE'}
-              </h2>
               <p className={cn(
                 'text-sm mb-3 text-center',
                 isLightMode ? 'text-[#6f7682]' : 'text-white/70'
