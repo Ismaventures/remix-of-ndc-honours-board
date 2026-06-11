@@ -150,22 +150,13 @@ export function PersonnelPortraitCard({
       >
         <p
           className={cn(
-            'text-[11px] md:text-xs font-bold text-center uppercase leading-snug tracking-wide line-clamp-2',
+            'text-[10px] md:text-xs font-bold text-center uppercase leading-snug tracking-wide line-clamp-2',
             isLightMode ? 'text-[#002060]' : 'text-white'
           )}
         >
+          {person.rank && `${person.rank} `}
           {person.name}
         </p>
-        {person.rank && (
-          <p
-            className={cn(
-              'text-[9px] md:text-[10px] font-semibold text-center uppercase leading-snug tracking-wide line-clamp-1 mt-0.5',
-              isLightMode ? 'text-[#002060]/75' : 'text-white/80'
-            )}
-          >
-            {person.rank}
-          </p>
-        )}
         {person.periodStart && (
           <p
             className={cn(
