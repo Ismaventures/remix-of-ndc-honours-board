@@ -156,6 +156,26 @@ export function PersonnelPortraitCard({
         >
           {person.name}
         </p>
+        {person.rank && (
+          <p
+            className={cn(
+              'text-[9px] md:text-[10px] font-semibold text-center uppercase leading-snug tracking-wide line-clamp-1 mt-0.5',
+              isLightMode ? 'text-[#002060]/75' : 'text-white/80'
+            )}
+          >
+            {person.rank}
+          </p>
+        )}
+        {person.periodStart && (
+          <p
+            className={cn(
+              'text-[8px] md:text-[9px] text-center leading-snug tracking-wide mt-0.5',
+              isLightMode ? 'text-slate-600' : 'text-white/60'
+            )}
+          >
+            {person.periodStart}–{person.periodEnd || ''}
+          </p>
+        )}
       </div>
     </div>
   );
