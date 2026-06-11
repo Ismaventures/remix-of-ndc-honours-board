@@ -368,7 +368,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
       {selectedGroupId && (
         <div className="space-y-3">
           {/* Enhanced Header with tri-color and scattered NDC logos */}
-          <div className={`relative overflow-hidden rounded-xl border-2 p-6 ${
+          <div className={`relative overflow-hidden rounded-xl border-2 p-3 ${
             isLightMode
               ? 'bg-slate-50 border-slate-200'
               : 'bg-gradient-to-br from-[#001a40] via-[#002060] to-[#001030] border-[#00B0F0]/40'
@@ -380,8 +380,8 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
                 alt=""
                 className="ndc-logo-watermark absolute"
                 style={{
-                  width: '280px',
-                  height: '280px',
+                  width: '180px',
+                  height: '180px',
                 }}
               />
             </div>
@@ -395,8 +395,8 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
                   alt=""
                   className="ndc-logo-scattered absolute"
                   style={{
-                    width: '120px',
-                    height: '120px',
+                    width: '80px',
+                    height: '80px',
                     left: `${(i % 4) * 28 + 8}%`,
                     top: `${i < 2 ? 8 : 65}%`,
                     transform: `rotate(${(i * 30) % 360}deg)`,
@@ -413,13 +413,13 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
             </div>
 
             {/* Content */}
-            <div className="relative z-10 space-y-4">
-              <div className="flex items-center justify-center gap-4">
-                <img src={ndcCrest} alt="NDC" className={`${isLightMode ? 'h-12 w-12' : 'h-14 w-14'} object-contain`} />
+            <div className="relative z-10 space-y-1">
+              <div className="flex items-center justify-center gap-2">
+                <img src={ndcCrest} alt="NDC" className={`${isLightMode ? 'h-8 w-8' : 'h-9 w-9'} object-contain`} />
               </div>
 
-              <div className="space-y-2">
-                <h1 className={`text-3xl md:text-4xl font-bold text-center uppercase tracking-widest leading-tight ${
+              <div className="space-y-1">
+                <h1 className={`text-2xl md:text-3xl font-bold text-center uppercase tracking-widest leading-tight ${
                   isLightMode ? 'text-[#002060]' : 'text-white'
                 }`}>
                   DIRECTING STAFF
@@ -433,8 +433,8 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
                 </div>
               </div>
 
-              <div className="space-y-3 pt-2">
-                <p className={`text-center font-bold text-xl ${isLightMode ? 'text-[#002060]' : 'text-[#FFD700]'}`}>
+              <div className="space-y-1 pt-1">
+                <p className={`text-center font-bold text-lg ${isLightMode ? 'text-[#002060]' : 'text-[#FFD700]'}`}>
                   {activeGroup?.designation}
                 </p>
                 <p className={`text-center text-sm font-semibold ${isLightMode ? 'text-slate-600' : 'text-white/70'}`}>
