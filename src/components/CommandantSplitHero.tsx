@@ -2,7 +2,7 @@ import { Commandant } from "@/types/domain";
 import ndcCrest from "/images/ndc-crest.png";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
 import { getCommandantDisplayTitle } from "@/lib/utils";
-import { Shield } from "lucide-react";
+import { ProfilePortraitFrame } from "./ProfilePortraitFrame";
 
 interface CommandantSplitHeroProps {
   commandant?: Commandant;
@@ -79,29 +79,10 @@ export function CommandantSplitHero({ commandant, isAutoDisplay = false }: Comma
           )}
         </div>
 
-        {/* Right Side: Full-Height Portrait */}
-        <div className="w-[35%] shrink-0 bg-slate-900 flex h-full relative p-0 overflow-hidden">
-          {/* Vertical Defence Strip on the left side */}
-          <div className="w-[8px] h-full flex flex-col shrink-0">
-            <div className="flex-1 bg-[#002060]" title="Navy" />
-            <div className="flex-1 bg-[#FF0000]" title="Army" />
-            <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
-          </div>
-
-          {/* Image container */}
-          <div className="flex-1 h-full relative overflow-hidden flex items-center justify-center">
-            {commandantImageUrl ? (
-              <img
-                src={commandantImageUrl}
-                alt={name}
-                className="h-full w-full object-cover object-top transition-transform duration-700 ease-out"
-                loading="eager"
-              />
-            ) : (
-              <Shield className="h-20 w-20 text-slate-500 opacity-30" />
-            )}
-          </div>
-        </div>
+        <ProfilePortraitFrame
+          imageUrl={commandantImageUrl || undefined}
+          alt={name}
+        />
       </div>
 
       {/* Bottom Defence Colors Strip */}

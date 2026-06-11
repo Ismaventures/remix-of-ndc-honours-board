@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { SlidersHorizontal, ChevronLeft, ChevronRight, Play, Pause, X, Shield, ArrowLeft } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { CommandantHero } from "@/components/CommandantHero";
-import { CommandantSplitHero } from "@/components/CommandantSplitHero";
+import { CommandantProfileOverlay } from "@/components/CommandantProfileOverlay";
 import { PastCommandants } from "@/components/PastCommandants";
 import { CategoryCards, ViewKey } from "@/components/CategoryCards";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
@@ -194,7 +194,6 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
   const [commandantsAutoDisplayActive, setCommandantsAutoDisplayActive] = useState(false);
   const [commandantsAutoDisplayIndex, setCommandantsAutoDisplayIndex] = useState(0);
   const [isCommandantsAutoPlaying, setIsCommandantsAutoPlaying] = useState(true);
-  const commandantSlideDir = useRef<'left' | 'right' | null>(null);
   const globalCommandRef = useRef<number | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousViewBeforeCommandantProfileRef = useRef<ViewKey | null>(null);
@@ -400,16 +399,6 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
     if (previousView) {
       setView(previousView);
     }
-  };
-
-  const navigateCommandantProfile = (direction: "prev" | "next") => {
-    if (!selectedPastCommandant) return;
-    const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
-    if (idx === -1) return;
-    const nextIdx = direction === "next" ? idx + 1 : idx - 1;
-    if (nextIdx < 0 || nextIdx >= commandants.length) return;
-    commandantSlideDir.current = direction === "next" ? "left" : "right";
-    setSelectedPastCommandant(commandants[nextIdx]);
   };
 
   useEffect(() => {
@@ -1370,81 +1359,12 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
       </div>
 
       {selectedPastCommandant && (
-        <div className="fixed inset-0 z-[70] bg-white text-slate-900 flex flex-col modal-backdrop-enter overflow-hidden">
-          <div className="relative flex-1 min-h-0 flex flex-col">
-            {/* Close button - floating absolute on the top right, as shown in the screenshot */}
-            <button
-              onClick={closePastCommandantProfile}
-              className="absolute right-6 top-6 z-50 inline-flex items-center justify-center p-2 rounded-full bg-white/60 hover:bg-white/80 text-slate-800 transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-slate-300"
-              aria-label="Close details"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            {/* Prev / Next navigation arrows floating on left / right sides of the biography section */}
-            {(() => {
-              const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
-              const hasPrev = idx > 0;
-              const hasNext = idx >= 0 && idx < commandants.length - 1;
-              return (
-                <>
-                  {hasPrev && (
-                    <button
-                      onClick={() => navigateCommandantProfile("prev")}
-                      aria-label="Previous commandant"
-                      className="absolute left-6 top-1/2 -translate-y-1/2 z-50 flex items-center justify-center w-12 h-12 rounded-full bg-slate-900/10 hover:bg-slate-900/20 border border-slate-900/20 hover:border-slate-900/40 backdrop-blur-sm transition-all duration-300 group/nav"
-                    >
-                      <ChevronLeft className="h-6 w-6 text-slate-700 group-hover/nav:text-slate-900 transition-colors" />
-                    </button>
-                  )}
-                  {hasNext && (
-                    <button
-                      onClick={() => navigateCommandantProfile("next")}
-                      aria-label="Next commandant"
-                      className="absolute right-[37%] top-1/2 -translate-y-1/2 z-50 flex items-center justify-center w-12 h-12 rounded-full bg-slate-900/10 hover:bg-slate-900/20 border border-slate-900/20 hover:border-slate-900/40 backdrop-blur-sm transition-all duration-300 group/nav"
-                    >
-                      <ChevronRight className="h-6 w-6 text-slate-700 group-hover/nav:text-slate-900 transition-colors" />
-                    </button>
-                  )}
-                </>
-              );
-            })()}
-
-            <div
-              key={selectedPastCommandant.id}
-              className={`flex-1 min-h-0 flex flex-col ${
-                commandantSlideDir.current === 'left' ? 'profile-slide-left' : commandantSlideDir.current === 'right' ? 'profile-slide-right' : ''
-              }`}
-            >
-              <CommandantSplitHero commandant={selectedPastCommandant} />
-            </div>
-
-            {/* Dot indicators centered at the bottom of the biography column */}
-            {(() => {
-              const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
-              if (idx === -1 || commandants.length <= 1) return null;
-              return (
-                <div className="absolute left-[32.5%] -translate-x-1/2 bottom-6 z-50 flex justify-center gap-1.5 bg-slate-900/5 px-4 py-2 rounded-full backdrop-blur-sm border border-slate-200">
-                  {commandants.map((c, i) => (
-                    <button
-                      key={c.id}
-                      onClick={() => {
-                        commandantSlideDir.current = i > idx ? 'left' : 'right';
-                        setSelectedPastCommandant(c);
-                      }}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        i === idx
-                          ? 'w-8 bg-[#002060]'
-                          : 'w-1.5 bg-slate-400/50 hover:bg-slate-400'
-                      }`}
-                      aria-label={`View ${c.name}`}
-                    />
-                  ))}
-                </div>
-              );
-            })()}
-          </div>
-        </div>
+        <CommandantProfileOverlay
+          commandant={selectedPastCommandant}
+          commandants={commandants}
+          onClose={closePastCommandantProfile}
+          onSelectCommandant={setSelectedPastCommandant}
+        />
       )}
 
       {/* Commandants Auto-Display Modal */}

@@ -117,3 +117,35 @@ export function useResolvedMediaUrls(sources?: Array<string | null | undefined>)
 
   return resolvedUrls;
 }
+
+/** Resolves a media ref with explicit pending state for loading UI. */
+export function useMediaUrlResolution(source?: string | null) {
+  const [url, setUrl] = useState('');
+  const [pending, setPending] = useState(Boolean(source?.trim()));
+
+  useEffect(() => {
+    let disposed = false;
+
+    const load = async () => {
+      if (!source?.trim()) {
+        setUrl('');
+        setPending(false);
+        return;
+      }
+
+      setPending(true);
+      const next = await resolveMediaSource(source);
+      if (disposed) return;
+      setUrl(next ?? '');
+      setPending(false);
+    };
+
+    load();
+
+    return () => {
+      disposed = true;
+    };
+  }, [source]);
+
+  return { url, pending };
+}

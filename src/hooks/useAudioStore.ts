@@ -34,6 +34,7 @@ export interface AudioAssignments {
   collection_regional: string | null;
   collection_world: string | null;
   collection_archives: string | null;
+  portrait_preload_complete: string | null;
 }
 
 const AUDIO_LOCAL_KEY_PREFIX = 'audio_';
@@ -141,6 +142,7 @@ export const useAudioStore = create<AudioState>()(
         collection_regional: null,
         collection_world: null,
         collection_archives: null,
+        portrait_preload_complete: null,
       },
       masterVolume: 0.3,
       isMuted: true,

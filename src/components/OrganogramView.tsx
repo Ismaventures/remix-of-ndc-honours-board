@@ -14,7 +14,8 @@ import {
   X,
 } from "lucide-react";
 import { Personnel, Category } from "@/types/domain";
-import { ProfileModal } from "./ProfileModal";
+import { PersonnelProfileModal } from './FellowProfileModal';
+import { PersonnelPortraitGrid } from './PersonnelPortraitCard';
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
 import ndcCrest from "/images/ndc-crest.png";
 import { useThemeMode } from "@/hooks/useThemeMode";
@@ -363,6 +364,8 @@ export function OrganogramView({
     return filtered.slice(start, start + itemsPerPage);
   }, [filtered, currentPage, itemsPerPage]);
 
+  const usePortraitGrid = category === "Allied";
+
   const loopedRecords = useMemo(() => {
     if (filtered.length <= 1) return filtered;
     return [...filtered, ...filtered, ...filtered];
@@ -565,6 +568,7 @@ export function OrganogramView({
           </button>
         </div>
 
+        {!usePortraitGrid && (
         <div className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-background/70 p-1 w-full md:w-auto">
           <button
             onClick={() => setDisplayMode("scroll")}
@@ -587,6 +591,7 @@ export function OrganogramView({
             List View
           </button>
         </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* RANK FILTER COMBOBOX */}
@@ -773,7 +778,7 @@ export function OrganogramView({
         </div>
       </div>
 
-      <div className={`rounded-xl p-3 md:p-6 ${displayMode === "scroll" ? "min-h-[300px]" : "min-h-[520px]"} relative overflow-hidden flex flex-col border border-[#002060]/30 bg-[linear-gradient(165deg,#f9fbff_0%,#eef3fb_55%,#e6f8ff_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7),inset_0_0_28px_rgba(0,32,96,0.08),0_16px_45px_rgba(0,0,0,0.16)]`}>
+      <div className={`rounded-xl p-3 md:p-6 ${usePortraitGrid ? "min-h-[520px]" : displayMode === "scroll" ? "min-h-[300px]" : "min-h-[520px]"} relative overflow-hidden flex flex-col border border-[#002060]/30 bg-[linear-gradient(165deg,#f9fbff_0%,#eef3fb_55%,#e6f8ff_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7),inset_0_0_28px_rgba(0,32,96,0.08),0_16px_45px_rgba(0,0,0,0.16)]`}>
         <div className="absolute top-0 inset-x-0 h-[7px] flex">
           <div className="flex-1 bg-[#002060]" />
           <div className="flex-1 bg-[#FF0000]" />
@@ -788,7 +793,61 @@ export function OrganogramView({
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(140%_100%_at_50%_0%,rgba(0,32,96,0.1),transparent_60%)]" />
         {filtered.length > 0 ? (
           <>
-            {displayMode === "scroll" ? (
+            {usePortraitGrid ? (
+              <>
+                <div className="relative z-10 mb-4 rounded-xl border p-4 bg-white/90 border-[#002060]/15 shadow-sm">
+                  <div className="h-1.5 flex rounded-full overflow-hidden mb-3">
+                    <div className="flex-1 bg-[#002060]" />
+                    <div className="flex-1 bg-[#FF0000]" />
+                    <div className="flex-1 bg-[#00B0F0]" />
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-bold font-serif text-center uppercase tracking-wider text-[#002060]">
+                    International Allied Officers
+                  </h3>
+                  <p className="text-sm text-center text-slate-600 mt-1">
+                    {filtered.length} {filtered.length === 1 ? "Officer" : "Officers"} — tap a portrait for full biography
+                  </p>
+                </div>
+
+                <PersonnelPortraitGrid
+                  personnel={paginatedRecords}
+                  isLightMode={isLightMode}
+                  onSelectPerson={(person) => setSelectedId(person.id)}
+                />
+
+                {totalPages > 1 && (
+                  <div className="pt-6 mt-4 border-t border-primary/10 relative z-10">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            className={
+                              currentPage === 1
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                        <div className="flex items-center mx-2 text-sm text-muted-foreground font-medium">
+                          Page {currentPage} of {totalPages}
+                        </div>
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            className={
+                              currentPage === totalPages
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
+            ) : displayMode === "scroll" ? (
               <>
                 <div className="flex items-center justify-end gap-1 mb-3">
                   <button
@@ -985,9 +1044,12 @@ export function OrganogramView({
       </div>
 
       {selectedPerson && (
-        <ProfileModal
+        <PersonnelProfileModal
           person={selectedPerson}
+          fellows={filtered}
+          category={category}
           onClose={() => setSelectedId(null)}
+          onSelectPerson={(next) => setSelectedId(next.id)}
         />
       )}
 

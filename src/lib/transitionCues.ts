@@ -74,3 +74,23 @@ export function playTransitionCue(cue: TransitionCueType, enabled: boolean) {
       break;
   }
 }
+
+/** Windows-style "tudun" notification when portrait preload batch completes. */
+export function playWindowsTudunSound() {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  if (ctx.state === "suspended") {
+    void ctx.resume();
+  }
+
+  // Classic two-tone descending chime (Windows device/notification style)
+  playOscillator(ctx, "sine", 988, 988, 0.06, 0.045);
+  setTimeout(() => playOscillator(ctx, "sine", 784, 698, 0.1, 0.038), 85);
+  setTimeout(() => playOscillator(ctx, "sine", 523, 523, 0.14, 0.028), 175);
+}
+
+/** @deprecated Use playWindowsTudunSound */
+export function playLoadCompleteBeep() {
+  playWindowsTudunSound();
+}
