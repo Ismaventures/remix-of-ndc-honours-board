@@ -264,7 +264,7 @@ export function FellowsByCourse({
 
           {/* Course Selection Box */}
           <div className={cn(
-            'relative overflow-hidden rounded-2xl border p-8 md:p-12',
+            'relative overflow-hidden rounded-xl border p-6',
             isLightMode
               ? 'border-[#FFD700]/30 bg-slate-50'
               : 'border-[#00B0F0]/40 bg-[linear-gradient(135deg,rgba(0,40,80,0.95)_0%,rgba(0,80,120,0.9)_100%)]'

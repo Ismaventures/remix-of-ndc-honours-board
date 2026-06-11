@@ -254,7 +254,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
 
       {/* Course Selection Box with NDC Logo Grid - Physical Display Style */}
       <div className={cn(
-        'relative overflow-hidden rounded-2xl border p-8 md:p-12',
+        'relative overflow-hidden rounded-xl border p-6',
         isLightMode
           ? 'border-[#FFD700]/30 bg-slate-50'
           : 'border-[#00FF00]/40 bg-[linear-gradient(135deg,rgba(0,50,0,0.95)_0%,rgba(0,80,0,0.9)_100%)]'
