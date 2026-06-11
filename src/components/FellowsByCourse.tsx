@@ -227,7 +227,7 @@ export function FellowsByCourse({
   const currentAutoDisplayPerson = autoDisplayActive && activeFellows[autoDisplayIndex] ? activeFellows[autoDisplayIndex] : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* When no course selected - show course selection grid */}
       {!selectedGroupId && (
         <>
@@ -282,7 +282,7 @@ export function FellowsByCourse({
                 {category === 'FWC' ? 'FELLOW OF WAR COLLEGE' : 'FELLOW OF NATIONAL DEFENCE COLLEGE'}
               </h2>
               <p className={cn(
-                'text-sm mb-8 text-center',
+                'text-sm mb-3 text-center',
                 isLightMode ? 'text-[#6f7682]' : 'text-white/70'
               )}>
                 Click on a CSE course to view fellows
@@ -360,7 +360,7 @@ export function FellowsByCourse({
           </div>
 
           {/* Header with category title - Enhanced with tri-color and scattered NDC logos */}
-          <div className={`relative overflow-hidden rounded-xl border-2 p-12 ${
+          <div className={`relative overflow-hidden rounded-xl border-2 p-6 ${
             isLightMode
               ? 'bg-slate-50 border-slate-200'
               : 'bg-gradient-to-br from-[#001a40] via-[#002060] to-[#001030] border-[#00B0F0]/40'

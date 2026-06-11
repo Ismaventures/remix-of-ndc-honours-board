@@ -220,7 +220,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
   const currentAutoDisplayPerson = autoDisplayActive && activeStaff[autoDisplayIndex] ? activeStaff[autoDisplayIndex] : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Back button */}
       {onBack && (
         <div className="flex items-center gap-2">
@@ -272,7 +272,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
             Select Course Year
           </h2>
           <p className={cn(
-            'text-sm mb-8 text-center',
+            'text-sm mb-3 text-center',
             isLightMode ? 'text-[#6f7682]' : 'text-white/70'
           )}>
             Click on a course to view participants in auto-display
@@ -366,9 +366,9 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
 
       {/* Staff Gallery - Only Show When Course Selected */}
       {selectedGroupId && (
-        <div className="space-y-6">
+        <div className="space-y-3">
           {/* Enhanced Header with tri-color and scattered NDC logos */}
-          <div className={`relative overflow-hidden rounded-xl border-2 p-12 ${
+          <div className={`relative overflow-hidden rounded-xl border-2 p-6 ${
             isLightMode
               ? 'bg-slate-50 border-slate-200'
               : 'bg-gradient-to-br from-[#001a40] via-[#002060] to-[#001030] border-[#00B0F0]/40'
