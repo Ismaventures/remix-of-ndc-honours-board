@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Personnel, Category } from '@/types/domain';
-import { ChevronLeft, ChevronRight, ArrowLeft, Shield, Play, Pause, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, Shield, X } from 'lucide-react';
 import { ProfileModal } from './ProfileModal';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
@@ -343,7 +343,7 @@ export function FellowsByCourse({
 
       {/* When course selected - show full page view */}
       {selectedGroupId && (
-        <div className="space-y-6">
+        <div className="space-y-2">
           {/* Back button to course selection */}
           <div className="flex items-center gap-2">
             <button
@@ -442,28 +442,6 @@ export function FellowsByCourse({
               <div className="flex-1 bg-[#002060]" />
             </div>
           </div>
-
-          {/* Auto-Display Button */}
-          {activeFellows.length > 0 && (
-            <div className="flex justify-end">
-              <button
-                onClick={() => {
-                  setAutoDisplayActive(true);
-                  setAutoDisplayIndex(0);
-                  setIsAutoPlaying(true);
-                }}
-                className={cn(
-                  'inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all',
-                  isLightMode
-                    ? 'bg-[#002060] text-white hover:bg-[#003080]'
-                    : 'bg-[#002060] text-white hover:bg-[#003080]'
-                )}
-              >
-                <Play className="h-5 w-5" />
-                Auto Display
-              </button>
-            </div>
-          )}
 
           {/* Fellows Grid */}
           {activeFellows.length > 0 ? (

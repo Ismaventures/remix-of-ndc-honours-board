@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Personnel } from '@/types/domain';
-import { ChevronLeft, ChevronRight, ArrowLeft, Shield, Play, Pause, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, Shield, X } from 'lucide-react';
 import { ProfileModal } from './ProfileModal';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
@@ -451,8 +451,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
             </div>
           </div>
 
-        <div className={`flex flex-col gap-6 p-6 rounded-lg ${isLightMode ? 'bg-white border border-slate-200' : 'bg-slate-900 border border-slate-700'}`}>
-          <div className="flex items-start justify-between gap-4">
+        <div className={`flex flex-col gap-2 p-4 rounded-lg ${isLightMode ? 'bg-white border border-slate-200' : 'bg-slate-900 border border-slate-700'}`}>
             <div>
               <h3 className={`text-lg font-bold uppercase tracking-widest ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
                 Participants
@@ -462,28 +461,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
               </p>
             </div>
 
-            {/* Auto-Display Button */}
-            {activeStaff.length > 0 && (
-              <button
-                onClick={() => {
-                  setAutoDisplayActive(true);
-                  setAutoDisplayIndex(0);
-                  setIsAutoPlaying(true);
-                }}
-                className={cn(
-                  'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all',
-                  isLightMode
-                    ? 'bg-[#002060] text-white hover:bg-[#003080]'
-                    : 'bg-[#00FF00] text-[#002060] hover:bg-[#00FF00]/90'
-                )}
-              >
-                <Play className="h-4 w-4" />
-                Auto Display
-              </button>
-            )}
-          </div>
-
-          {activeStaff.length > 0 ? (
+            {activeStaff.length > 0 ? (
             <div className="relative">
               {/* Large Animated Background NDC Logo */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
