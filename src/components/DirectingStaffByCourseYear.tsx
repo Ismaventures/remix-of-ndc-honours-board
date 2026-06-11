@@ -102,7 +102,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
   const [autoDisplayIndex, setAutoDisplayIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
-  // Group personnel by course year and course number (to handle multiple CSE courses in same year)
+  // Group personnel by course year and course number (to handle multiple courses in same year)
   const courseGroups = useMemo(() => {
     const dirStaff = personnel.filter(p => p.category === 'Directing Staff');
     const grouped: Record<string, { year: number; courseNumber: number; staff: Personnel[] }> = {};
@@ -113,16 +113,25 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
       let courseNum = 1;
       let hasCSEData = false;
 
+      // Try to parse CSE format: "CSE X/YYYY"
       if (person.decoration && person.decoration.includes('CSE')) {
-        // Parse "CSE X/YYYY" format - try multiple patterns
         let match = person.decoration.match(/CSE\s*(\d+)\s*\/\s*(\d{4})/);
         if (!match) {
-          // Try alternative format: "CSEX/YYYY" without spaces
           match = person.decoration.match(/CSE(\d+)\/(\d{4})/);
         }
         if (match) {
           courseNum = parseInt(match[1], 10);
           year = parseInt(match[2], 10);
+          hasCSEData = true;
+        }
+      }
+
+      // Try to parse NWC format: "NWC Course X" and use period_start as year
+      if (!hasCSEData && person.decoration && person.decoration.includes('NWC Course')) {
+        let match = person.decoration.match(/NWC\s+Course\s+(\d+)/i);
+        if (match) {
+          courseNum = parseInt(match[1], 10);
+          year = person.periodStart || year;
           hasCSEData = true;
         }
       }
@@ -141,7 +150,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
     });
 
     if (noCSEData.length > 0) {
-      console.warn(`⚠️ Directing Staff without CSE data (grouped by year): ${noCSEData.join(', ')}`);
+      console.warn(`⚠️ Directing Staff without course data (grouped by year): ${noCSEData.join(', ')}`);
     }
 
     console.log('✅ DirectingStaff Grouping Complete:', { 
@@ -150,7 +159,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
       groupedYears: Object.keys(grouped).sort(),
       groups: Object.keys(grouped).map(key => {
         const g = grouped[key];
-        return `CSE ${g.courseNumber}/${g.year} (${g.staff.length} staff)`;
+        return `Course ${g.courseNumber}/${g.year} (${g.staff.length} staff)`;
       })
     });
 
@@ -159,7 +168,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
       .map(([groupId, data]) => ({
         year: data.year,
         courseNumber: data.courseNumber,
-        designation: `CSE ${data.courseNumber}/${data.year}`,
+        designation: `Course ${data.courseNumber}/${data.year}`,
         staff: data.staff.sort((a, b) => {
           // Sort by seniority order first (most senior = lower number)
           if (a.seniorityOrder !== b.seniorityOrder) {
@@ -266,7 +275,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
             'text-sm mb-8 text-center',
             isLightMode ? 'text-[#6f7682]' : 'text-white/70'
           )}>
-            Click on a CSE course to view participants in auto-display
+            Click on a course to view participants in auto-display
           </p>
           {courseGroups.length === 0 && (
             <p className={cn(
@@ -275,7 +284,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
                 ? 'border-orange-300 bg-orange-50 text-orange-700'
                 : 'border-orange-500/30 bg-orange-500/10 text-orange-300'
             )}>
-              📌 Note: CSE course data not found. Add CSE designation (e.g., "CSE 1/2017") to the decoration field in Admin Panel.
+              📌 Note: Course data not found. Add course designation (e.g., "CSE 1/2017" or "NWC Course 1") to the decoration field in Admin Panel.
             </p>
           )}
 

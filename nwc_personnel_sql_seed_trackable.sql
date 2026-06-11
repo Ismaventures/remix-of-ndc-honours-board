@@ -17,23 +17,23 @@ INSERT INTO personnel (id, name, rank, category, service, period_start, period_e
 ('nwc-006-abdulkadir', 'G Abdulkadir', 'Brigadier General', 'FDC', 'Nigerian Army', 1993, 1994, 'Deputy Commandant and Director of Studies', 'NWC Course 2; Course 3', 6),
 
 -- COURSE 3 FACULTY
-('nwc-007-suara', 'R.B. Suara', 'Air Commodore', 'FDC', 'Nigerian Air Force', 1994, 1995, 'Directing Staff member', 'NWC Course 3', 7),
-('nwc-008-odedina', 'T. A. Odedina', 'Commodore', 'FDC', 'Nigerian Navy', 1994, 1995, 'Directing Staff member', 'NWC Course 3', 8),
-('nwc-009-fayomi', 'A. O. Fayomi', 'Brigadier General', 'FDC', 'Nigerian Army', 1994, 1995, 'Course 3 Faculty', 'NWC Course 3', 9),
+('nwc-007-suara', 'R.B. Suara', 'Air Commodore', 'FDC', 'Nigerian Air Force', 1995, 1996, 'Directing Staff member', 'NWC Course 3', 7),
+('nwc-008-odedina', 'T. A. Odedina', 'Commodore', 'FDC', 'Nigerian Navy', 1995, 1996, 'Directing Staff member', 'NWC Course 3', 8),
+('nwc-009-fayomi', 'A. O. Fayomi', 'Brigadier General', 'FDC', 'Nigerian Army', 1995, 1996, 'Course 3 Faculty', 'NWC Course 3', 9),
 
 -- COURSE 5 FACULTY
-('nwc-011-igoche', 'JI Igoche', 'Brigadier General', 'FDC', 'Nigerian Army', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 11),
-('nwc-012-ogundana', 'AO Ogundana', 'Air Commodore', 'FDC', 'Nigerian Air Force', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 12),
-('nwc-013-martins', 'E Martins', 'Ambassador', 'FDC', 'Civilian', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 13),
-('nwc-014-gbor', 'JW Gbor', 'Colonel', 'FDC', 'Nigerian Army', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 14),
-('nwc-015-edokpayi', 'JIO Edokpayi', 'Brigadier General', 'FDC', 'Nigerian Army', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 15),
-('nwc-016-enahoro', 'DO Enahoro', 'Brigadier General', 'FDC', 'Nigerian Army', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 16),
-('nwc-017-ogomudia', 'AO Ogomudia', 'Brigadier General', 'FDC', 'Nigerian Army', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 17),
-('nwc-018-okon', 'OE Okon', 'Brigadier General', 'FDC', 'Nigerian Army', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 18),
-('nwc-019-ogundele', 'B Ogundele', 'Commodore', 'FDC', 'Nigerian Navy', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 19),
-('nwc-020-abdulrahim', 'I A Abdulrahim', 'Air Commodore', 'FDC', 'Nigerian Air Force', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 20),
-('nwc-021-agboneni', 'G.O Agboneni', 'Air Commodore', 'FDC', 'Nigerian Air Force', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 21),
-('nwc-022-adedeji', 'AG Adedeji', 'Captain', 'FDC', 'Nigerian Navy', 1996, 1997, 'Course 5 Faculty', 'NWC Course 5', 22),
+('nwc-011-igoche', 'JI Igoche', 'Brigadier General', 'FDC', 'Nigerian Army', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 11),
+('nwc-012-ogundana', 'AO Ogundana', 'Air Commodore', 'FDC', 'Nigerian Air Force', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 12),
+('nwc-013-martins', 'E Martins', 'Ambassador', 'FDC', 'Civilian', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 13),
+('nwc-014-gbor', 'JW Gbor', 'Colonel', 'FDC', 'Nigerian Army', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 14),
+('nwc-015-edokpayi', 'JIO Edokpayi', 'Brigadier General', 'FDC', 'Nigerian Army', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 15),
+('nwc-016-enahoro', 'DO Enahoro', 'Brigadier General', 'FDC', 'Nigerian Army', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 16),
+('nwc-017-ogomudia', 'AO Ogomudia', 'Brigadier General', 'FDC', 'Nigerian Army', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 17),
+('nwc-018-okon', 'OE Okon', 'Brigadier General', 'FDC', 'Nigerian Army', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 18),
+('nwc-019-ogundele', 'B Ogundele', 'Commodore', 'FDC', 'Nigerian Navy', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 19),
+('nwc-020-abdulrahim', 'I A Abdulrahim', 'Air Commodore', 'FDC', 'Nigerian Air Force', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 20),
+('nwc-021-agboneni', 'G.O Agboneni', 'Air Commodore', 'FDC', 'Nigerian Air Force', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 21),
+('nwc-022-adedeji', 'AG Adedeji', 'Captain', 'FDC', 'Nigerian Navy', 1999, 2000, 'Course 5 Faculty', 'NWC Course 5', 22),
 
 -- COURSE 1 STAFF & LEADERSHIP (1992-1993)
 ('nwc-023-momah', 'S Momah', 'Brigadier General', 'FDC', 'Nigerian Army', 1992, 1993, 'Staff Member - National War College', 'NWC Course 1 Staff', 23),

@@ -128,8 +128,8 @@ export function FellowsByCourse({
       let courseNum = 1;
       let hasCourseData = false;
 
+      // Try to parse CSE format: "CSE X/YYYY"
       if (person.decoration && person.decoration.includes('CSE')) {
-        // Parse "CSE X/YYYY" format
         let match = person.decoration.match(/CSE\s*(\d+)\s*\/\s*(\d{4})/);
         if (!match) {
           match = person.decoration.match(/CSE(\d+)\/(\d{4})/);
@@ -137,6 +137,16 @@ export function FellowsByCourse({
         if (match) {
           courseNum = parseInt(match[1], 10);
           year = parseInt(match[2], 10);
+          hasCourseData = true;
+        }
+      }
+
+      // Try to parse NWC format: "NWC Course X" and use period_start as year
+      if (!hasCourseData && person.decoration && person.decoration.includes('NWC Course')) {
+        let match = person.decoration.match(/NWC\s+Course\s+(\d+)/i);
+        if (match) {
+          courseNum = parseInt(match[1], 10);
+          year = person.periodStart || year;
           hasCourseData = true;
         }
       }
@@ -162,7 +172,7 @@ export function FellowsByCourse({
       uniqueGroups: Object.keys(grouped).length,
       groups: Object.keys(grouped).map(key => {
         const g = grouped[key];
-        return `CSE ${g.courseNumber}/${g.year} (${g.fellows.length} fellows)`;
+        return `Course ${g.courseNumber}/${g.year} (${g.fellows.length} fellows)`;
       })
     });
 
@@ -170,7 +180,7 @@ export function FellowsByCourse({
       .map(([groupId, data]) => ({
         year: data.year,
         courseNumber: data.courseNumber,
-        designation: `CSE ${data.courseNumber}/${data.year}`,
+        designation: `Course ${data.courseNumber}/${data.year}`,
         fellows: data.fellows.sort((a, b) => {
           if (a.seniorityOrder !== b.seniorityOrder) {
             return a.seniorityOrder - b.seniorityOrder;
