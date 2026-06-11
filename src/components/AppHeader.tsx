@@ -1,7 +1,5 @@
 import ndcCrest from "/images/ndc-crest.png";
 import { useThemeMode } from "@/hooks/useThemeMode";
-import { useNavigate } from "react-router-dom";
-import { Settings } from "lucide-react";
 
 interface AppHeaderProps {
   onHomeClick?: () => void;
@@ -9,7 +7,6 @@ interface AppHeaderProps {
 
 export function AppHeader({ onHomeClick }: AppHeaderProps) {
   const { themeMode } = useThemeMode();
-  const navigate = useNavigate();
   const isLightMode = themeMode.startsWith("outdoor");
 
   return (
@@ -67,19 +64,7 @@ export function AppHeader({ onHomeClick }: AppHeaderProps) {
         <div className="flex-1 bg-[#00B0F0]" />
       </div>
 
-      {/* Admin Button */}
-      <button
-        onClick={() => navigate("/admin")}
-        className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg transition-all duration-300 active:scale-[0.98] ${
-          isLightMode
-            ? "hover:bg-slate-100 text-slate-700 hover:text-slate-900"
-            : "hover:bg-white/[0.08] text-white/70 hover:text-white"
-        }`}
-        title="Admin Panel"
-      >
-        <Settings size={20} />
-        <span className="text-xs sm:text-sm font-semibold hidden sm:inline">Admin</span>
-      </button>
+
     </header>
   );
 }

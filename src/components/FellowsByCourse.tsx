@@ -3,8 +3,88 @@ import { Personnel, Category } from '@/types/domain';
 import { ChevronLeft, ChevronRight, ArrowLeft, Shield, Play, Pause, X } from 'lucide-react';
 import { ProfileModal } from './ProfileModal';
 import { useThemeMode } from '@/hooks/useThemeMode';
+import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
 import ndcCrest from '/images/ndc-crest.png';
 import { cn } from '@/lib/utils';
+
+interface CourseGroup {
+  year: number;
+  courseNumber: number;
+  designation: string;
+  fellows: Personnel[];
+  groupId: string;
+}
+
+// Helper component for individual card to use the media URL hook
+function FellowCard({ person, isLightMode, onSelect }: { person: Personnel; isLightMode: boolean; onSelect: () => void }) {
+  const resolvedImageUrl = useResolvedMediaUrl(person.imageUrl);
+  
+  return (
+    <div
+      className={`group flex flex-col gap-0 rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-2xl hover:scale-105 ${
+        isLightMode
+          ? 'bg-white border border-slate-200'
+          : 'bg-slate-800 border border-slate-700'
+      }`}
+      onClick={onSelect}
+    >
+      {/* Tri-Color Strip */}
+      <div className="h-2 flex">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#00B0F0]" />
+      </div>
+
+      {/* Profile Image - Larger */}
+      <div className={`aspect-square w-full overflow-hidden flex items-center justify-center ${isLightMode ? 'bg-slate-100' : 'bg-slate-700'}`}>
+        {resolvedImageUrl ? (
+          <img
+            src={resolvedImageUrl}
+            alt={person.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <Shield className={`h-16 w-16 ${isLightMode ? 'text-slate-300' : 'text-slate-500'}`} />
+        )}
+      </div>
+
+      {/* Info Section - Bottom Navy Bar */}
+      <div className="bg-[#002060] p-3 flex flex-col gap-2 text-white">
+        {/* Name */}
+        <div className="text-sm font-bold text-center line-clamp-2">
+          {person.name}
+        </div>
+
+        {/* Rank */}
+        {person.rank && (
+          <div className="text-xs text-center font-semibold line-clamp-2 text-[#FFD700]">
+            {person.rank}
+          </div>
+        )}
+
+        {/* Service Years */}
+        {person.periodStart && (
+          <div className="text-[10px] text-center text-white/80">
+            {person.periodStart} - {person.periodEnd}
+          </div>
+        )}
+      </div>
+
+      {/* Tap to Open */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
+        className={`px-3 py-2 text-center border-t ${isLightMode ? 'border-slate-200 bg-slate-50 hover:bg-slate-100' : 'border-slate-700 bg-slate-900 hover:bg-slate-800'}`}
+      >
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[#002060]">
+          TAP TO OPEN FULL DETAILS
+        </span>
+      </button>
+    </div>
+  );
+}
 
 interface FellowsByCourseProps {
   personnel: Personnel[];
@@ -393,70 +473,12 @@ export function FellowsByCourse({
 
               <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {activeFellows.map((person) => (
-                <div
+                <FellowCard 
                   key={person.id}
-                  className={`group flex flex-col gap-0 rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-2xl hover:scale-105 ${
-                    isLightMode
-                      ? 'bg-white border border-slate-200'
-                      : 'bg-slate-800 border border-slate-700'
-                  }`}
-                  onClick={() => setSelectedPerson(person)}
-                >
-                  {/* Tri-Color Strip */}
-                  <div className="h-2 flex">
-                    <div className="flex-1 bg-[#002060]" />
-                    <div className="flex-1 bg-[#FF0000]" />
-                    <div className="flex-1 bg-[#00B0F0]" />
-                  </div>
-
-                  {/* Profile Image - Larger */}
-                  <div className={`aspect-square w-full overflow-hidden flex items-center justify-center ${isLightMode ? 'bg-slate-100' : 'bg-slate-700'}`}>
-                    {person.imageUrl ? (
-                      <img
-                        src={person.imageUrl}
-                        alt={person.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Shield className={`h-16 w-16 ${isLightMode ? 'text-slate-300' : 'text-slate-500'}`} />
-                    )}
-                  </div>
-
-                  {/* Info Section - Bottom Navy Bar */}
-                  <div className="bg-[#002060] p-3 flex flex-col gap-2 text-white">
-                    {/* Name */}
-                    <div className="text-sm font-bold text-center line-clamp-2">
-                      {person.name}
-                    </div>
-
-                    {/* Rank */}
-                    {person.rank && (
-                      <div className="text-xs text-center font-semibold line-clamp-2 text-[#FFD700]">
-                        {person.rank}
-                      </div>
-                    )}
-
-                    {/* Service Years */}
-                    {person.periodStart && (
-                      <div className="text-[10px] text-center text-white/80">
-                        {person.periodStart} - {person.periodEnd}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Tap to Open */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedPerson(person);
-                    }}
-                    className={`px-3 py-2 text-center border-t ${isLightMode ? 'border-slate-200 bg-slate-50 hover:bg-slate-100' : 'border-slate-700 bg-slate-900 hover:bg-slate-800'}`}
-                  >
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#002060]">
-                      TAP TO OPEN FULL DETAILS
-                    </span>
-                  </button>
-                </div>
+                  person={person}
+                  isLightMode={isLightMode}
+                  onSelect={() => setSelectedPerson(person)}
+                />
               ))}
               </div>
             </div>

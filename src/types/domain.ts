@@ -21,6 +21,10 @@ export type Service =
   | 'Foreign Service'
   | 'Academic';
 
+// Export valid values for dropdowns and validation
+export const VALID_CATEGORIES: Category[] = ['FWC', 'FDC', 'Directing Staff', 'Allied'];
+export const VALID_SERVICES: Service[] = ['Nigerian Army', 'Nigerian Navy', 'Nigerian Air Force', 'Civilian', 'Foreign', 'Foreign Service', 'Academic'];
+
 export interface Personnel {
   id: string;
   name: string;

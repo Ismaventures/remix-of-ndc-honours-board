@@ -883,17 +883,6 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
               Previous
             </button>
-            <button
-              onClick={() => {
-                setCommandantsAutoDisplayActive(true);
-                setCommandantsAutoDisplayIndex(0);
-                setIsCommandantsAutoPlaying(true);
-              }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#002060] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#003080] transition-all duration-200"
-            >
-              <Play className="h-3.5 w-3.5" />
-              Auto Display
-            </button>
           </div>
 
           {/* Centered page title matching the sample layout */}
