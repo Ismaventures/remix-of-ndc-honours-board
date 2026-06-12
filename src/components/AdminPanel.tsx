@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, X, ArrowLeft } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, ArrowLeft, Upload } from 'lucide-react';
 import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/types/domain';
 import { AdvancedAudioAdmin } from './AdvancedAudioAdmin';
 import { DeviceControlPanel } from './DeviceControlPanel';
@@ -8,6 +8,9 @@ import { DisplayFrameAdmin } from './DisplayFrameAdmin';
 import { TourNarrationAdmin } from './TourNarrationAdmin';
 import { MuseumContentAdmin } from './MuseumContentAdmin';
 import { MuseumAdmin } from './MuseumAdmin';
+import { BatchUploadAdmin } from './BatchUploadAdmin';
+import { BatchImageUploadEnhanced } from './BatchImageUploadEnhanced';
+import { UnifiedPersonnelManagement } from './UnifiedPersonnelManagement';
 import { saveMediaFile } from '@/lib/persistentMedia';
 import { ThemeMode } from '@/hooks/useThemeMode';
 import { BootSequenceSettings } from '@/hooks/useBootSequenceSettings';
@@ -386,7 +389,10 @@ export function AdminPanel({
   const [editingP, setEditingP] = useState<Personnel | null>(null);
   const [editingV, setEditingV] = useState<DistinguishedVisit | null>(null);
   const [editingC, setEditingC] = useState<Commandant | null>(null);
+  const [showUnifiedPersonnelP, setShowUnifiedPersonnelP] = useState(false);
   const [showFormP, setShowFormP] = useState(false);
+  const [showBatchUploadP, setShowBatchUploadP] = useState(false);
+  const [showBatchImageUploadP, setShowBatchImageUploadP] = useState(false);
   const [showFormV, setShowFormV] = useState(false);
   const [showFormC, setShowFormC] = useState(false);
   const [personnelCategoryFilter, setPersonnelCategoryFilter] = useState<Category | 'All'>('All');
@@ -1103,15 +1109,40 @@ export function AdminPanel({
 
         {tab === 'personnel' && (
           <div className="view-enter">
-            {!showFormP && (
-              <div className="flex justify-end mb-4">
-                <button onClick={() => { setEditingP(null); setSelectedPersonnelId(null); setShowFormP(true); }} className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#002060] text-[#002060] rounded-full text-sm font-medium hover:bg-slate-50 transition-all hover:shadow-lg hover:shadow-[#002060]/20 active:scale-[0.97]">
-                  <Plus className="h-4 w-4" /> Add Personnel
+            {!showUnifiedPersonnelP && !showFormP && !showBatchUploadP && !showBatchImageUploadP && (
+              <div className="flex gap-3 justify-end mb-4">
+                <button onClick={() => { setShowUnifiedPersonnelP(true); }} className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#002060] text-[#002060] rounded-full text-sm font-medium hover:bg-slate-50 transition-all hover:shadow-lg hover:shadow-[#002060]/20 active:scale-[0.97]">
+                  <Upload className="h-4 w-4" /> Manage Personnel
                 </button>
               </div>
             )}
             
-            {showFormP ? (
+            {showUnifiedPersonnelP ? (
+              <UnifiedPersonnelManagement
+                personnel={personnel}
+                onAddPersonnel={onAddPersonnel}
+                onUpdatePersonnel={onUpdatePersonnel}
+                onBack={() => setShowUnifiedPersonnelP(false)}
+                categories={personnelCategories}
+                categoryCountsByCategory={personnelCountsByCategory}
+              />
+            ) : showBatchImageUploadP ? (
+              <BatchImageUploadEnhanced
+                personnel={personnel}
+                onClose={() => { setShowBatchImageUploadP(false); }}
+                onUploadComplete={() => {
+                  setShowBatchImageUploadP(false);
+                }}
+                onUpdatePersonnel={async (id, data) => onUpdatePersonnel(id, data)}
+              />
+            ) : showBatchUploadP ? (
+              <BatchUploadAdmin
+                onClose={() => { setShowBatchUploadP(false); }}
+                onUploadComplete={() => {
+                  setShowBatchUploadP(false);
+                }}
+              />
+            ) : showFormP ? (
               <PersonnelForm
                 initial={editingP}
                 onSave={(data) => {
@@ -2578,6 +2609,7 @@ export function AdminPanel({
         `}</style>
       </div>
       </div>
+
       </main>
     </div>
   );
@@ -2614,7 +2646,24 @@ function PersonnelForm({ initial, onSave, onCancel }: {
     imageUrl: initial?.imageUrl || '',
     seniorityOrder: initial?.seniorityOrder || 10,
   });
+
+  const [courseInfo, setCourseInfo] = useState({
+    courseClassification: (initial?.decoration?.split(' ')[0] === 'CSE' ? 'FDC' : initial?.category) as Category,
+    courseNumber: initial?.decoration?.match(/\d+/)?.[0] || '',
+    courseYear: initial?.periodStart || 2020,
+  });
+
+  const [useCourseFormat, setUseCourseFormat] = useState(!!initial?.decoration?.includes('/'));
+
   const update = (key: string, value: string | number) => setForm(prev => ({ ...prev, [key]: value }));
+  const updateCourse = (key: string, value: string | number) => setCourseInfo(prev => ({ ...prev, [key]: value }));
+
+  const generateDecorationFromCourse = () => {
+    if (courseInfo.courseNumber) {
+      return `CSE ${courseInfo.courseNumber}/${courseInfo.courseYear}`;
+    }
+    return form.decoration;
+  };
 
   const handleSave = () => {
     if (isInlineDataImageUrl(form.imageUrl)) {
@@ -2622,7 +2671,11 @@ function PersonnelForm({ initial, onSave, onCancel }: {
       return;
     }
 
-    onSave(form);
+    const finalDecoration = useCourseFormat && courseInfo.courseNumber
+      ? generateDecorationFromCourse()
+      : form.decoration;
+
+    onSave({ ...form, decoration: finalDecoration });
   };
 
   const onUploadImage = async (file: File | null) => {
@@ -2657,65 +2710,174 @@ function PersonnelForm({ initial, onSave, onCancel }: {
         </div>
         <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-muted text-slate-600 hover:text-foreground transition-colors"><X className="h-4 w-4" /></button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Full Name</label>
-          <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Rank / Title</label>
-          <input placeholder="Rank" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Category</label>
-          <select value={form.category} onChange={e => update('category', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30">
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Service Branch</label>
-          <select value={form.service} onChange={e => update('service', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30">
-            {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Period Start (Year)</label>
-          <input type="number" placeholder="Period Start" value={form.periodStart} onChange={e => update('periodStart', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Period End (Year)</label>
-          <input type="number" placeholder="Period End" value={form.periodEnd} onChange={e => update('periodEnd', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Seniority Order</label>
-          <input type="number" placeholder="Order (1=highest)" value={form.seniorityOrder} onChange={e => update('seniorityOrder', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
-          <div className="flex items-center gap-2">
-            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-slate-600 hover:text-foreground">
-              Upload Image / GIF
-              <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
-            </label>
-            {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-slate-600 hover:text-foreground hover:bg-muted/40 transition-colors">
-                Clear
-              </button>
-            )}
+      <div className="space-y-6">
+        {/* Section 1: Basic Information */}
+        <div>
+          <h5 className="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-[#002060] text-white text-[10px] flex items-center justify-center font-bold">1</span>
+            Basic Information
+          </h5>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Full Name</label>
+              <input placeholder="Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Rank / Title</label>
+              <input placeholder="Rank" value={form.rank} onChange={e => update('rank', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Category</label>
+              <select value={form.category} onChange={e => update('category', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30">
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Service Branch</label>
+              <select value={form.service} onChange={e => update('service', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30">
+                {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
           </div>
-          {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
-          <p className="text-[10px] text-slate-600">Stored locally with public fallback when cloud storage is configured.</p>
         </div>
-        <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Citation / Bio</label>
-          <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-base text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+
+        {/* Section 2: Period & Seniority */}
+        <div>
+          <h5 className="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-[#002060] text-white text-[10px] flex items-center justify-center font-bold">2</span>
+            Service Period & Seniority
+          </h5>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Period Start (Year)</label>
+              <input type="number" placeholder="Period Start" value={form.periodStart} onChange={e => update('periodStart', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Period End (Year)</label>
+              <input type="number" placeholder="Period End" value={form.periodEnd} onChange={e => update('periodEnd', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Seniority Order</label>
+              <input type="number" placeholder="Order (1=highest)" value={form.seniorityOrder} onChange={e => update('seniorityOrder', parseInt(e.target.value))} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+            </div>
+          </div>
         </div>
-        <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Decoration</label>
-          <input placeholder="Decoration / Honours" value={form.decoration} onChange={e => update('decoration', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+
+        {/* Section 3: Course Information */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-5 h-5 rounded-full bg-[#002060] text-white text-[10px] flex items-center justify-center font-bold">3</span>
+            <h5 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Course Information</h5>
+            <label className="ml-auto flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useCourseFormat}
+                onChange={e => setUseCourseFormat(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2"
+              />
+              <span className="text-xs font-medium text-blue-700">Use CSE Format</span>
+            </label>
+          </div>
+
+          {useCourseFormat ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Course Classification</label>
+                  <select
+                    value={courseInfo.courseClassification}
+                    onChange={e => updateCourse('courseClassification', e.target.value)}
+                    className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="FDC">FDC - Fellows of Defence College</option>
+                    <option value="FWC">FWC - Fellows of War College</option>
+                    <option value="Directing Staff">Directing Staff</option>
+                    <option value="Allied">Allied</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Course Number *</label>
+                  <input
+                    type="number"
+                    placeholder="E.g., 1, 42"
+                    value={courseInfo.courseNumber}
+                    onChange={e => updateCourse('courseNumber', e.target.value)}
+                    className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="1"
+                    max="999"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Graduation Year *</label>
+                  <input
+                    type="number"
+                    placeholder="E.g., 1993, 2020"
+                    value={courseInfo.courseYear}
+                    onChange={e => updateCourse('courseYear', parseInt(e.target.value))}
+                    className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="1900"
+                    max="2100"
+                  />
+                </div>
+              </div>
+              {courseInfo.courseNumber && (
+                <div className="bg-white rounded border border-blue-300 p-3 flex items-center gap-3">
+                  <span className="text-xs font-semibold text-blue-900">📌 Auto-generated:</span>
+                  <span className="text-base font-bold text-blue-600">CSE {courseInfo.courseNumber}/{courseInfo.courseYear}</span>
+                </div>
+              )}
+              <p className="text-xs text-blue-600">
+                Format: CSE [course_number]/[graduation_year] - automatically populates Decoration field
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Decoration / Honours (Manual)</label>
+              <input
+                placeholder="e.g., CSE 42/2020, NWC Course 5"
+                value={form.decoration}
+                onChange={e => update('decoration', e.target.value)}
+                className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-blue-600">
+                Enable "Use CSE Format" above to auto-generate from course info
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Section 4: Additional Information */}
+        <div>
+          <h5 className="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-[#002060] text-white text-[10px] flex items-center justify-center font-bold">4</span>
+            Additional Information
+          </h5>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Image URL</label>
+              <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+              <div className="flex items-center gap-2">
+                <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-slate-600 hover:text-foreground">
+                  Upload Image / GIF
+                  <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
+                </label>
+                {form.imageUrl && (
+                  <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-slate-600 hover:text-foreground hover:bg-muted/40 transition-colors">
+                    Clear
+                  </button>
+                )}
+              </div>
+              {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
+              <p className="text-[10px] text-slate-600">Stored locally with public fallback when cloud storage is configured.</p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Citation / Bio</label>
+              <textarea placeholder="Citation" value={form.citation} onChange={e => update('citation', e.target.value)} rows={2} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-base text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
+            </div>
+          </div>
         </div>
       </div>
+
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-5 border-t border-slate-300/10">
         <button onClick={onCancel} className="px-5 py-2 text-sm font-medium text-slate-600 hover:text-foreground hover:bg-muted/50 rounded-md transition-colors order-2 sm:order-1">Cancel</button>
         <button onClick={handleSave} className="px-6 py-2 bg-white border-2 border-[#002060] text-[#002060] rounded-md text-sm font-medium hover:bg-slate-50 transition-all hover:shadow-lg shadow-primary/20 active:scale-[0.98] order-1 sm:order-2">

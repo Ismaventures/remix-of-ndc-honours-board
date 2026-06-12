@@ -11,6 +11,7 @@ export function BootSequence({
   const assignments = useAudioStore((s) => s.assignments);
   const tracks = useAudioStore((s) => s.tracks);
   const loadTracks = useAudioStore((s) => s.loadTracks);
+  const setMuted = useAudioStore((s) => s.setMuted);
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
@@ -20,16 +21,22 @@ export function BootSequence({
 
   useEffect(() => { void loadTracks(); }, [loadTracks]);
 
-  // Play preloader audio track if configured
+  // Unmute audio when boot sequence starts
   useEffect(() => {
-    if (!assignments.preloader) return;
-    const hasTrack = tracks.some((t) => t.id === assignments.preloader);
-    if (!hasTrack) return;
-    playAudioTrack(assignments.preloader, true, false, { fadeMs: 420 });
-  }, [assignments.preloader, tracks]);
+    setMuted(false);
+  }, [setMuted]);
 
   const handleEnter = () => {
     if (leaving) return;
+    
+    // Play preloader audio AFTER PreBootVault transition completes
+    if (assignments.preloader) {
+      const hasTrack = tracks.some((t) => t.id === assignments.preloader);
+      if (hasTrack) {
+        playAudioTrack(assignments.preloader, true, false, { fadeMs: 420 });
+      }
+    }
+    
     setLeaving(true);
     // Smoothly transition and call onComplete once fade-out completes
     setTimeout(() => { if (onComplete) onComplete(); }, 1200);

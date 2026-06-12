@@ -15,7 +15,8 @@ import {
   Shield,
 } from "lucide-react";
 import { Personnel, Category } from "@/types/domain";
-import { ProfileModal } from "./ProfileModal";
+import { PersonnelProfileModal } from './FellowProfileModal';
+import { PersonnelPortraitGrid } from './PersonnelPortraitCard';
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
 import ndcCrest from "/images/ndc-crest.png";
 import { useThemeMode } from "@/hooks/useThemeMode";
@@ -398,6 +399,132 @@ export function OrganogramView({
     yearFilter,
   ]);
 
+<<<<<<< HEAD
+=======
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+
+  useEffect(() => {
+    if (totalPages === 0 && currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedRecords = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(start, start + itemsPerPage);
+  }, [filtered, currentPage, itemsPerPage]);
+
+  const usePortraitGrid = category === "Allied";
+
+  const loopedRecords = useMemo(() => {
+    if (filtered.length <= 1) return filtered;
+    return [...filtered, ...filtered, ...filtered];
+  }, [filtered]);
+
+  const normalizeLoopPosition = () => {
+    const container = scrollRef.current;
+    if (!container || filtered.length <= 1) return;
+
+    const segmentWidth = container.scrollWidth / 3;
+
+    while (container.scrollLeft >= segmentWidth * 2) {
+      container.scrollLeft -= segmentWidth;
+    }
+
+    while (container.scrollLeft < segmentWidth) {
+      container.scrollLeft += segmentWidth;
+    }
+  };
+
+  const scrollCarousel = (dir: "left" | "right") => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    normalizeLoopPosition();
+    autoPauseUntilRef.current = performance.now() + 900;
+
+    if (navRafRef.current) {
+      window.cancelAnimationFrame(navRafRef.current);
+      navRafRef.current = null;
+    }
+
+    const delta = dir === "left" ? -360 : 360;
+    const start = container.scrollLeft;
+    const end = start + delta;
+    const durationMs = 420;
+    const startAt = performance.now();
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+    const step = (now: number) => {
+      const progress = Math.min(1, (now - startAt) / durationMs);
+      const eased = easeOutCubic(progress);
+
+      container.scrollLeft = start + (end - start) * eased;
+      normalizeLoopPosition();
+
+      if (progress < 1) {
+        navRafRef.current = window.requestAnimationFrame(step);
+      } else {
+        navRafRef.current = null;
+      }
+    };
+
+    navRafRef.current = window.requestAnimationFrame(step);
+  };
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || filtered.length <= 1 || displayMode !== "scroll") return;
+
+    const segmentWidth = container.scrollWidth / 3;
+    container.scrollLeft = segmentWidth;
+  }, [filtered.length, mounted, displayMode]);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || filtered.length <= 1 || displayMode !== "scroll") return;
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (prefersReducedMotion) return;
+
+    let rafId = 0;
+    let last = performance.now();
+    const speedPxPerMs = 0.03;
+
+    const tick = (now: number) => {
+      const elapsed = now - last;
+      last = now;
+
+      if (!isCarouselPaused) {
+        if (now < autoPauseUntilRef.current) {
+          rafId = window.requestAnimationFrame(tick);
+          return;
+        }
+
+        container.scrollLeft += elapsed * speedPxPerMs;
+        normalizeLoopPosition();
+      }
+
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    rafId = window.requestAnimationFrame(tick);
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      if (navRafRef.current) {
+        window.cancelAnimationFrame(navRafRef.current);
+        navRafRef.current = null;
+      }
+    };
+  }, [isCarouselPaused, filtered.length, displayMode]);
+
+>>>>>>> 5150c0706c6226fe7946678363018ec35443990a
   const selectedPerson = useMemo(
     () => filtered.find((p) => p.id === selectedId) || null,
     [filtered, selectedId],
@@ -501,7 +628,34 @@ export function OrganogramView({
           </button>
         </div>
 
+<<<<<<< HEAD
         {/* displayMode toggle removed */}
+=======
+        {!usePortraitGrid && (
+        <div className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-background/70 p-1 w-full md:w-auto">
+          <button
+            onClick={() => setDisplayMode("scroll")}
+            className={`px-3 py-2 text-xs font-semibold rounded-md transition-colors ${
+              displayMode === "scroll"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Scrolling View
+          </button>
+          <button
+            onClick={() => setDisplayMode("list")}
+            className={`px-3 py-2 text-xs font-semibold rounded-md transition-colors ${
+              displayMode === "list"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            List View
+          </button>
+        </div>
+        )}
+>>>>>>> 5150c0706c6226fe7946678363018ec35443990a
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* RANK FILTER COMBOBOX */}
@@ -688,7 +842,11 @@ export function OrganogramView({
         </div>
       </div>
 
+<<<<<<< HEAD
       <div className="rounded-xl p-3 md:p-6 relative overflow-hidden flex flex-col border border-[#002060]/30 bg-[linear-gradient(165deg,#f9fbff_0%,#eef3fb_55%,#e6f8ff_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7),inset_0_0_28px_rgba(0,32,96,0.08),0_16px_45px_rgba(0,0,0,0.16)]">
+=======
+      <div className={`rounded-xl p-3 md:p-6 ${usePortraitGrid ? "min-h-[520px]" : displayMode === "scroll" ? "min-h-[300px]" : "min-h-[520px]"} relative overflow-hidden flex flex-col border border-[#002060]/30 bg-[linear-gradient(165deg,#f9fbff_0%,#eef3fb_55%,#e6f8ff_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7),inset_0_0_28px_rgba(0,32,96,0.08),0_16px_45px_rgba(0,0,0,0.16)]`}>
+>>>>>>> 5150c0706c6226fe7946678363018ec35443990a
         <div className="absolute top-0 inset-x-0 h-[7px] flex">
           <div className="flex-1 bg-[#002060]" />
           <div className="flex-1 bg-[#FF0000]" />
@@ -702,6 +860,7 @@ export function OrganogramView({
         <div className="absolute inset-0 pointer-events-none opacity-[0.1] bg-[linear-gradient(45deg,rgba(0,32,96,0.06)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.06)_75%),linear-gradient(45deg,rgba(0,32,96,0.06)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.06)_75%)] bg-[length:52px_52px] bg-[position:0_0,26px_26px]" />
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(140%_100%_at_50%_0%,rgba(0,32,96,0.1),transparent_60%)]" />
         {filtered.length > 0 ? (
+<<<<<<< HEAD
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 sm:gap-6 mt-6 pb-8">
             {filtered.map((person) => (
               <GridAlliedCard
@@ -712,6 +871,247 @@ export function OrganogramView({
               />
             ))}
           </div>
+=======
+          <>
+            {usePortraitGrid ? (
+              <>
+                <div className="relative z-10 mb-4 rounded-xl border p-4 bg-white/90 border-[#002060]/15 shadow-sm">
+                  <div className="h-1.5 flex rounded-full overflow-hidden mb-3">
+                    <div className="flex-1 bg-[#002060]" />
+                    <div className="flex-1 bg-[#FF0000]" />
+                    <div className="flex-1 bg-[#00B0F0]" />
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-bold font-serif text-center uppercase tracking-wider text-[#002060]">
+                    International Allied Officers
+                  </h3>
+                  <p className="text-sm text-center text-slate-600 mt-1">
+                    {filtered.length} {filtered.length === 1 ? "Officer" : "Officers"} — tap a portrait for full biography
+                  </p>
+                </div>
+
+                <PersonnelPortraitGrid
+                  personnel={paginatedRecords}
+                  isLightMode={isLightMode}
+                  onSelectPerson={(person) => setSelectedId(person.id)}
+                />
+
+                {totalPages > 1 && (
+                  <div className="pt-6 mt-4 border-t border-primary/10 relative z-10">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            className={
+                              currentPage === 1
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                        <div className="flex items-center mx-2 text-sm text-muted-foreground font-medium">
+                          Page {currentPage} of {totalPages}
+                        </div>
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            className={
+                              currentPage === totalPages
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
+            ) : displayMode === "scroll" ? (
+              <>
+                <div className="flex items-center justify-end gap-1 mb-3">
+                  <button
+                    onClick={() => scrollCarousel("left")}
+                    type="button"
+                    aria-label="Scroll to previous personnel"
+                    className="p-2 rounded transition-all active:scale-95 border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => scrollCarousel("right")}
+                    type="button"
+                    aria-label="Scroll to next personnel"
+                    className="p-2 rounded transition-all active:scale-95 border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div
+                  ref={scrollRef}
+                  className="flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-hide px-1"
+                  onMouseEnter={() => setIsCarouselPaused(true)}
+                  onMouseLeave={() => setIsCarouselPaused(false)}
+                  onFocus={() => setIsCarouselPaused(true)}
+                  onBlur={() => setIsCarouselPaused(false)}
+                >
+                  {loopedRecords.map((person, index) => (
+                    <button
+                      key={`${person.id}-${index}`}
+                      onClick={() => setSelectedId(person.id)}
+                      className="group relative w-[340px] md:w-[380px] shrink-0 text-left rounded-xl border border-[#002060]/20 bg-white p-3.5 sm:p-4 transition-all duration-300 hover:border-[#00B0F0] hover:shadow-[0_12px_38px_rgba(0,32,96,0.22)] overflow-hidden flex flex-col"
+                    >
+                      <div className="absolute top-0 inset-x-0 h-[6px] flex z-20">
+                        <div className="flex-1 bg-[#002060]" />
+                        <div className="flex-1 bg-[#FF0000]" />
+                        <div className="flex-1 bg-[#00B0F0]" />
+                      </div>
+                      <div className="absolute inset-0 pointer-events-none opacity-[0.08] bg-[linear-gradient(45deg,rgba(0,32,96,0.08)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.08)_75%),linear-gradient(45deg,rgba(0,32,96,0.08)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.08)_75%)] bg-[length:34px_34px] bg-[position:0_0,17px_17px]" />
+                      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120%_100%_at_0%_0%,rgba(0,176,240,0.14),transparent_55%)]" />
+                      <div className="absolute inset-x-0 top-0 h-16 pointer-events-none bg-gradient-to-b from-white/[0.07] to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00B0F0]/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-[#002060]/70 via-[#FF0000]/70 to-[#00B0F0]/70 opacity-80 group-hover:opacity-100 transition-opacity" />
+
+                      <div className="relative z-10 flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold opacity-75 text-[#002060]/75 group-hover:text-[#002060] transition-colors">
+                          #{(index % Math.max(filtered.length, 1)) + 1}
+                        </span>
+                        <span className="px-3 py-1.5 rounded-md border border-[#002060]/35 bg-[#002060]/8 text-[#002060] font-bold shadow-[0_0_16px_rgba(0,32,96,0.18)] whitespace-nowrap text-xs">
+                          {person.periodStart} - {person.periodEnd}
+                        </span>
+                      </div>
+
+                      <div className="relative z-10 flex items-start gap-4 sm:gap-5 flex-1 min-h-0">
+                        <div className="shrink-0 pt-0.5">
+                          <ArchiveProfileImage person={person} />
+                        </div>
+
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <h4 className="text-base sm:text-lg font-bold font-serif text-[#0f172a] leading-tight group-hover:text-[#002060] transition-colors drop-shadow-sm flex items-center flex-wrap">
+                            <span className="text-[#002060] text-[11px] sm:text-xs mr-2 uppercase tracking-widest font-sans">
+                              {person.rank}
+                            </span>
+                            {person.name}
+                          </h4>
+                          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2 max-w-2xl">
+                            {person.citation}
+                          </p>
+
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            <span className="px-2.5 py-1 rounded border border-[#002060]/20 bg-[#002060]/5 text-[#002060]/80 font-semibold uppercase tracking-wider text-[10px]">
+                              {person.service}
+                            </span>
+                            <span className="px-2.5 py-1 rounded border border-[#00B0F0]/30 bg-[#00B0F0]/8 text-[#005f7e] font-semibold uppercase tracking-wider text-[10px]">
+                              {person.category}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4 md:gap-5 flex-1 auto-rows-fr">
+                  {paginatedRecords.map((person, index) => (
+                    <button
+                      key={person.id}
+                      onClick={() => setSelectedId(person.id)}
+                      className="group relative w-full h-full text-left rounded-xl border border-[#002060]/20 bg-white p-3.5 sm:p-4 transition-all duration-300 hover:border-[#00B0F0] hover:shadow-[0_12px_38px_rgba(0,32,96,0.22)] overflow-hidden flex flex-col"
+                    >
+                      <div className="absolute top-0 inset-x-0 h-[6px] flex z-20">
+                        <div className="flex-1 bg-[#002060]" />
+                        <div className="flex-1 bg-[#FF0000]" />
+                        <div className="flex-1 bg-[#00B0F0]" />
+                      </div>
+                      <div className="absolute inset-0 pointer-events-none opacity-[0.08] bg-[linear-gradient(45deg,rgba(0,32,96,0.08)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.08)_75%),linear-gradient(45deg,rgba(0,32,96,0.08)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.08)_75%)] bg-[length:34px_34px] bg-[position:0_0,17px_17px]" />
+                      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120%_100%_at_0%_0%,rgba(0,176,240,0.14),transparent_55%)]" />
+                      <div className="absolute inset-x-0 top-0 h-16 pointer-events-none bg-gradient-to-b from-white/[0.07] to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00B0F0]/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-[#002060]/70 via-[#FF0000]/70 to-[#00B0F0]/70 opacity-80 group-hover:opacity-100 transition-opacity" />
+
+                      <div className="relative z-10 flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold opacity-75 text-[#002060]/75 group-hover:text-[#002060] transition-colors">
+                          #{(currentPage - 1) * itemsPerPage + index + 1}
+                        </span>
+                        <span className="px-3 py-1.5 rounded-md border border-[#002060]/35 bg-[#002060]/8 text-[#002060] font-bold shadow-[0_0_16px_rgba(0,32,96,0.18)] whitespace-nowrap text-xs">
+                          {person.periodStart} - {person.periodEnd}
+                        </span>
+                      </div>
+
+                      <div className="relative z-10 flex items-start gap-4 sm:gap-5 flex-1 min-h-0">
+                        <div className="shrink-0 pt-0.5">
+                          <ArchiveProfileImage person={person} />
+                        </div>
+
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <h4 className="text-base sm:text-lg font-bold font-serif text-[#0f172a] leading-tight group-hover:text-[#002060] transition-colors drop-shadow-sm flex items-center flex-wrap">
+                            <span className="text-[#002060] text-[11px] sm:text-xs mr-2 uppercase tracking-widest font-sans">
+                              {person.rank}
+                            </span>
+                            {person.name}
+                          </h4>
+                          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2 max-w-2xl">
+                            {person.citation}
+                          </p>
+
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            <span className="px-2.5 py-1 rounded border border-[#002060]/20 bg-[#002060]/5 text-[#002060]/80 font-semibold uppercase tracking-wider text-[10px]">
+                              {person.service}
+                            </span>
+                            <span className="px-2.5 py-1 rounded border border-[#00B0F0]/30 bg-[#00B0F0]/8 text-[#005f7e] font-semibold uppercase tracking-wider text-[10px]">
+                              {person.category}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="pt-6 mt-4 border-t border-primary/10">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() =>
+                              setCurrentPage((p) => Math.max(1, p - 1))
+                            }
+                            className={
+                              currentPage === 1
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+
+                        <div className="flex items-center mx-2 text-sm text-muted-foreground font-medium">
+                          Page {currentPage} of {totalPages}
+                        </div>
+
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() =>
+                              setCurrentPage((p) => Math.min(totalPages, p + 1))
+                            }
+                            className={
+                              currentPage === totalPages
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
+            )}
+          </>
+>>>>>>> 5150c0706c6226fe7946678363018ec35443990a
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-12">
             <div className="w-16 h-16 rounded-full gold-border flex items-center justify-center bg-muted/20 mb-4 animate-pulse-slow">
@@ -725,9 +1125,12 @@ export function OrganogramView({
       </div>
 
       {selectedPerson && (
-        <ProfileModal
+        <PersonnelProfileModal
           person={selectedPerson}
+          fellows={filtered}
+          category={category}
           onClose={() => setSelectedId(null)}
+          onSelectPerson={(next) => setSelectedId(next.id)}
         />
       )}
 

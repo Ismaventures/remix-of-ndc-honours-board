@@ -609,3 +609,28 @@
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.03); opacity: 0.92; }
 }
+
+/* ── Auto-display slide progress bar ── */
+@keyframes autoProgress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+/* ── Fellow card preload shimmer ── */
+@keyframes fellowCardShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-fellow-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
+  );
+  animation: fellowCardShimmer 1.6s ease-in-out infinite;
+}

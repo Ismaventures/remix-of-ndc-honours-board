@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { SlidersHorizontal, ChevronLeft, ChevronRight, Play, Pause, X, Shield, ArrowLeft } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { CommandantHero } from "@/components/CommandantHero";
-import { CommandantSplitHero } from "@/components/CommandantSplitHero";
+import { CommandantProfileOverlay } from "@/components/CommandantProfileOverlay";
 import { PastCommandants } from "@/components/PastCommandants";
 import { CategoryCards, ViewKey } from "@/components/CategoryCards";
 import { useResolvedMediaUrl } from "@/hooks/useResolvedMediaUrl";
@@ -194,7 +194,6 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
   const [commandantsAutoDisplayActive, setCommandantsAutoDisplayActive] = useState(false);
   const [commandantsAutoDisplayIndex, setCommandantsAutoDisplayIndex] = useState(0);
   const [isCommandantsAutoPlaying, setIsCommandantsAutoPlaying] = useState(true);
-  const commandantSlideDir = useRef<'left' | 'right' | null>(null);
   const globalCommandRef = useRef<number | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousViewBeforeCommandantProfileRef = useRef<ViewKey | null>(null);
@@ -401,16 +400,6 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
     if (previousView) {
       setView(previousView);
     }
-  };
-
-  const navigateCommandantProfile = (direction: "prev" | "next") => {
-    if (!selectedPastCommandant) return;
-    const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
-    if (idx === -1) return;
-    const nextIdx = direction === "next" ? idx + 1 : idx - 1;
-    if (nextIdx < 0 || nextIdx >= commandants.length) return;
-    commandantSlideDir.current = direction === "next" ? "left" : "right";
-    setSelectedPastCommandant(commandants[nextIdx]);
   };
 
   useEffect(() => {
@@ -886,6 +875,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               Back
             </button>
+<<<<<<< HEAD
             <button
               onClick={() => {
                 setCommandantsAutoDisplayActive(true);
@@ -897,6 +887,8 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
               <Play className="h-3.5 w-3.5" />
               Auto Display
             </button>
+=======
+>>>>>>> 5150c0706c6226fe7946678363018ec35443990a
           </div>
 
           {/* Centered page title matching the sample layout */}
@@ -1391,6 +1383,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
       </div>
 
       {selectedPastCommandant && (
+<<<<<<< HEAD
         <div className="fixed inset-0 z-[70] bg-white text-slate-900 flex flex-col modal-backdrop-enter overflow-hidden">
           <div className="relative flex-1 min-h-0 flex flex-col">
             {/* Back button - floating absolute on the top left, standardized */}
@@ -1471,6 +1464,14 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
             })()}
           </div>
         </div>
+=======
+        <CommandantProfileOverlay
+          commandant={selectedPastCommandant}
+          commandants={commandants}
+          onClose={closePastCommandantProfile}
+          onSelectCommandant={setSelectedPastCommandant}
+        />
+>>>>>>> 5150c0706c6226fe7946678363018ec35443990a
       )}
 
       {/* Commandants Auto-Display Modal */}

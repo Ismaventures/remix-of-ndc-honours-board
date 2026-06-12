@@ -1,8 +1,9 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Personnel } from '@/types/domain';
-import { ChevronLeft, ChevronRight, ArrowLeft, Shield, Play, Pause, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, Shield, X } from 'lucide-react';
 import { ProfileModal } from './ProfileModal';
 import { useThemeMode } from '@/hooks/useThemeMode';
+import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
 import ndcCrest from '/images/ndc-crest.png';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +22,77 @@ interface CourseGroup {
   groupId: string; // year-courseNumber unique identifier
 }
 
+// Helper component for individual card to use the media URL hook
+function StaffCard({ person, isLightMode, onSelect }: { person: Personnel; isLightMode: boolean; onSelect: () => void }) {
+  const resolvedImageUrl = useResolvedMediaUrl(person.imageUrl);
+  
+  return (
+    <div
+      className={`group flex flex-col gap-0 rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-2xl hover:scale-105 ${
+        isLightMode
+          ? 'bg-white border border-slate-200'
+          : 'bg-slate-800 border border-slate-700'
+      }`}
+      onClick={onSelect}
+    >
+      {/* Tri-Color Strip */}
+      <div className="h-2 flex">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#00B0F0]" />
+      </div>
+
+      {/* Profile Image - Larger */}
+      <div className={`aspect-square w-full overflow-hidden flex items-center justify-center ${isLightMode ? 'bg-slate-100' : 'bg-slate-700'}`}>
+        {resolvedImageUrl ? (
+          <img
+            src={resolvedImageUrl}
+            alt={person.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <Shield className={`h-16 w-16 ${isLightMode ? 'text-slate-300' : 'text-slate-500'}`} />
+        )}
+      </div>
+
+      {/* Info Section - Bottom Navy Bar */}
+      <div className="bg-[#002060] p-3 flex flex-col gap-2 text-white">
+        {/* Name */}
+        <div className="text-sm font-bold text-center line-clamp-2">
+          {person.name}
+        </div>
+
+        {/* Rank */}
+        {person.rank && (
+          <div className="text-xs text-center font-semibold line-clamp-2 text-[#FFD700]">
+            {person.rank}
+          </div>
+        )}
+
+        {/* Service Years */}
+        {person.periodStart && (
+          <div className="text-[10px] text-center text-white/80">
+            {person.periodStart} - {person.periodEnd}
+          </div>
+        )}
+      </div>
+
+      {/* Tap to Open */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
+        className={`px-3 py-2 text-center border-t ${isLightMode ? 'border-slate-200 bg-slate-50 hover:bg-slate-100' : 'border-slate-700 bg-slate-900 hover:bg-slate-800'}`}
+      >
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[#002060]">
+          TAP TO OPEN FULL DETAILS
+        </span>
+      </button>
+    </div>
+  );
+}
+
 export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directing Staff by Course Year', description }: DirectingStaffByCourseYearProps) {
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith('outdoor');
@@ -30,7 +102,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
   const [autoDisplayIndex, setAutoDisplayIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
-  // Group personnel by course year and course number (to handle multiple CSE courses in same year)
+  // Group personnel by course year and course number (to handle multiple courses in same year)
   const courseGroups = useMemo(() => {
     const dirStaff = personnel.filter(p => p.category === 'Directing Staff');
     const grouped: Record<string, { year: number; courseNumber: number; staff: Personnel[] }> = {};
@@ -41,16 +113,25 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
       let courseNum = 1;
       let hasCSEData = false;
 
+      // Try to parse CSE format: "CSE X/YYYY"
       if (person.decoration && person.decoration.includes('CSE')) {
-        // Parse "CSE X/YYYY" format - try multiple patterns
         let match = person.decoration.match(/CSE\s*(\d+)\s*\/\s*(\d{4})/);
         if (!match) {
-          // Try alternative format: "CSEX/YYYY" without spaces
           match = person.decoration.match(/CSE(\d+)\/(\d{4})/);
         }
         if (match) {
           courseNum = parseInt(match[1], 10);
           year = parseInt(match[2], 10);
+          hasCSEData = true;
+        }
+      }
+
+      // Try to parse NWC format: "NWC Course X" and use period_start as year
+      if (!hasCSEData && person.decoration && person.decoration.includes('NWC Course')) {
+        let match = person.decoration.match(/NWC\s+Course\s+(\d+)/i);
+        if (match) {
+          courseNum = parseInt(match[1], 10);
+          year = person.periodStart || year;
           hasCSEData = true;
         }
       }
@@ -69,7 +150,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
     });
 
     if (noCSEData.length > 0) {
-      console.warn(`⚠️ Directing Staff without CSE data (grouped by year): ${noCSEData.join(', ')}`);
+      console.warn(`⚠️ Directing Staff without course data (grouped by year): ${noCSEData.join(', ')}`);
     }
 
     console.log('✅ DirectingStaff Grouping Complete:', { 
@@ -78,7 +159,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
       groupedYears: Object.keys(grouped).sort(),
       groups: Object.keys(grouped).map(key => {
         const g = grouped[key];
-        return `CSE ${g.courseNumber}/${g.year} (${g.staff.length} staff)`;
+        return `Course ${g.courseNumber}/${g.year} (${g.staff.length} staff)`;
       })
     });
 
@@ -87,7 +168,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
       .map(([groupId, data]) => ({
         year: data.year,
         courseNumber: data.courseNumber,
-        designation: `CSE ${data.courseNumber}/${data.year}`,
+        designation: `Course ${data.courseNumber}/${data.year}`,
         staff: data.staff.sort((a, b) => {
           // Sort by seniority order first (most senior = lower number)
           if (a.seniorityOrder !== b.seniorityOrder) {
@@ -139,7 +220,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
   const currentAutoDisplayPerson = autoDisplayActive && activeStaff[autoDisplayIndex] ? activeStaff[autoDisplayIndex] : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Back button */}
       {onBack && (
         <div className="flex items-center justify-between gap-4 mb-6">
@@ -173,7 +254,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
 
       {/* Course Selection Box with NDC Logo Grid - Physical Display Style */}
       <div className={cn(
-        'relative overflow-hidden rounded-2xl border p-8 md:p-12',
+        'relative overflow-hidden rounded-xl border p-6',
         isLightMode
           ? 'border-[#FFD700]/30 bg-slate-50'
           : 'border-[#00FF00]/40 bg-[linear-gradient(135deg,rgba(0,50,0,0.95)_0%,rgba(0,80,0,0.9)_100%)]'
@@ -191,10 +272,10 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
             Select Course Year
           </h2>
           <p className={cn(
-            'text-sm mb-8 text-center',
+            'text-sm mb-3 text-center',
             isLightMode ? 'text-[#6f7682]' : 'text-white/70'
           )}>
-            Click on a CSE course to view participants in auto-display
+            Click on a course to view participants in auto-display
           </p>
           {courseGroups.length === 0 && (
             <p className={cn(
@@ -203,7 +284,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
                 ? 'border-orange-300 bg-orange-50 text-orange-700'
                 : 'border-orange-500/30 bg-orange-500/10 text-orange-300'
             )}>
-              📌 Note: CSE course data not found. Add CSE designation (e.g., "CSE 1/2017") to the decoration field in Admin Panel.
+              📌 Note: Course data not found. Add course designation (e.g., "CSE 1/2017" or "NWC Course 1") to the decoration field in Admin Panel.
             </p>
           )}
 
@@ -285,9 +366,9 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
 
       {/* Staff Gallery - Only Show When Course Selected */}
       {selectedGroupId && (
-        <div className="space-y-6">
+        <div className="space-y-3">
           {/* Enhanced Header with tri-color and scattered NDC logos */}
-          <div className={`relative overflow-hidden rounded-xl border-2 p-12 ${
+          <div className={`relative overflow-hidden rounded-xl border-2 p-3 ${
             isLightMode
               ? 'bg-slate-50 border-slate-200'
               : 'bg-gradient-to-br from-[#001a40] via-[#002060] to-[#001030] border-[#00B0F0]/40'
@@ -299,8 +380,8 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
                 alt=""
                 className="ndc-logo-watermark absolute"
                 style={{
-                  width: '280px',
-                  height: '280px',
+                  width: '180px',
+                  height: '180px',
                 }}
               />
             </div>
@@ -314,8 +395,8 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
                   alt=""
                   className="ndc-logo-scattered absolute"
                   style={{
-                    width: '120px',
-                    height: '120px',
+                    width: '80px',
+                    height: '80px',
                     left: `${(i % 4) * 28 + 8}%`,
                     top: `${i < 2 ? 8 : 65}%`,
                     transform: `rotate(${(i * 30) % 360}deg)`,
@@ -332,13 +413,13 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
             </div>
 
             {/* Content */}
-            <div className="relative z-10 space-y-4">
-              <div className="flex items-center justify-center gap-4">
-                <img src={ndcCrest} alt="NDC" className={`${isLightMode ? 'h-12 w-12' : 'h-14 w-14'} object-contain`} />
+            <div className="relative z-10 space-y-1">
+              <div className="flex items-center justify-center gap-2">
+                <img src={ndcCrest} alt="NDC" className={`${isLightMode ? 'h-8 w-8' : 'h-9 w-9'} object-contain`} />
               </div>
 
-              <div className="space-y-2">
-                <h1 className={`text-3xl md:text-4xl font-bold text-center uppercase tracking-widest leading-tight ${
+              <div className="space-y-1">
+                <h1 className={`text-2xl md:text-3xl font-bold text-center uppercase tracking-widest leading-tight ${
                   isLightMode ? 'text-[#002060]' : 'text-white'
                 }`}>
                   DIRECTING STAFF
@@ -352,8 +433,8 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
                 </div>
               </div>
 
-              <div className="space-y-3 pt-2">
-                <p className={`text-center font-bold text-xl ${isLightMode ? 'text-[#002060]' : 'text-[#FFD700]'}`}>
+              <div className="space-y-1 pt-1">
+                <p className={`text-center font-bold text-lg ${isLightMode ? 'text-[#002060]' : 'text-[#FFD700]'}`}>
                   {activeGroup?.designation}
                 </p>
                 <p className={`text-center text-sm font-semibold ${isLightMode ? 'text-slate-600' : 'text-white/70'}`}>
@@ -370,8 +451,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
             </div>
           </div>
 
-        <div className={`flex flex-col gap-6 p-6 rounded-lg ${isLightMode ? 'bg-white border border-slate-200' : 'bg-slate-900 border border-slate-700'}`}>
-          <div className="flex items-start justify-between gap-4">
+        <div className={`flex flex-col gap-2 p-4 rounded-lg ${isLightMode ? 'bg-white border border-slate-200' : 'bg-slate-900 border border-slate-700'}`}>
             <div>
               <h3 className={`text-lg font-bold uppercase tracking-widest ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
                 Participants
@@ -381,28 +461,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
               </p>
             </div>
 
-            {/* Auto-Display Button */}
-            {activeStaff.length > 0 && (
-              <button
-                onClick={() => {
-                  setAutoDisplayActive(true);
-                  setAutoDisplayIndex(0);
-                  setIsAutoPlaying(true);
-                }}
-                className={cn(
-                  'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all',
-                  isLightMode
-                    ? 'bg-[#002060] text-white hover:bg-[#003080]'
-                    : 'bg-[#00FF00] text-[#002060] hover:bg-[#00FF00]/90'
-                )}
-              >
-                <Play className="h-4 w-4" />
-                Auto Display
-              </button>
-            )}
-          </div>
-
-          {activeStaff.length > 0 ? (
+            {activeStaff.length > 0 ? (
             <div className="relative">
               {/* Large Animated Background NDC Logo */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
@@ -417,51 +476,14 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
                 />
               </div>
 
-              <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {activeStaff.map((person) => (
-                <button
+                <StaffCard 
                   key={person.id}
-                  onClick={() => setSelectedPerson(person)}
-                  className={`group flex flex-col gap-2 p-2 rounded-lg cursor-pointer transition-all hover:scale-105 relative ${
-                    isLightMode
-                      ? 'bg-slate-50 hover:bg-slate-100 border border-slate-200'
-                      : 'bg-slate-800 hover:bg-slate-700 border border-slate-700'
-                  }`}
-                >
-                  {/* Seniority Badge */}
-                  <div className={`absolute top-1 right-1 h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                    isLightMode
-                      ? 'bg-[#002060] text-white'
-                      : 'bg-[#00FF00] text-[#002060]'
-                  }`}>
-                    {person.seniorityOrder}
-                  </div>
-
-                  {/* Avatar/Placeholder */}
-                  <div className={`aspect-square rounded-lg overflow-hidden flex items-center justify-center ${isLightMode ? 'bg-slate-100' : 'bg-slate-700'}`}>
-                    {person.imageUrl ? (
-                      <img
-                        src={person.imageUrl}
-                        alt={person.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Shield className={`h-8 w-8 ${isLightMode ? 'text-slate-300' : 'text-slate-500'}`} />
-                    )}
-                  </div>
-
-                  {/* Name */}
-                  <div className={`text-xs font-bold text-center line-clamp-2 ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
-                    {person.name}
-                  </div>
-
-                  {/* Rank */}
-                  {person.rank && (
-                    <div className={`text-[10px] text-center font-semibold line-clamp-1 ${isLightMode ? 'text-slate-600' : 'text-slate-300'}`}>
-                      {person.rank}
-                    </div>
-                  )}
-                </button>
+                  person={person}
+                  isLightMode={isLightMode}
+                  onSelect={() => setSelectedPerson(person)}
+                />
               ))}
               </div>
             </div>

@@ -231,6 +231,7 @@ export function AdvancedAudioAdmin() {
               <AssignmentSelector label="FDC (Fellows) Context" contextKey="distinguished_fellows_fdc" />
               <AssignmentSelector label="Directing Staff Context" contextKey="directing_staff" />
               <AssignmentSelector label="Allied Officers Context" contextKey="allied_officers" />
+              <AssignmentSelector label="Portrait Preload Complete Sound" contextKey="portrait_preload_complete" />
            </div>
            <h4 className="text-md font-semibold text-primary/80 uppercase tracking-widest border-b border-primary/20 pb-2 pt-4">Collection Background Audio</h4>
            <p className="text-xs text-muted-foreground">Background music that plays while artefacts in each collection are displayed.</p>

@@ -29,12 +29,12 @@ export function AudioManager() {
     }
   };
 
-  const setAudioSource = (audio: HTMLAudioElement, nextSrc: string | null) => {
+  const setAudioSource = (audio: HTMLAudioElement, nextSrc: string | null, loop = true) => {
     clearBlobUrl(audio);
     audio.pause();
     audio.src = nextSrc ?? '';
     audio.preload = 'auto';
-    audio.loop = Boolean(nextSrc);
+    audio.loop = Boolean(nextSrc) && loop;
   };
 
   const attemptRecovery = (audio: HTMLAudioElement) => {
@@ -100,8 +100,9 @@ export function AudioManager() {
         preloader?: boolean;
         userInitiated?: boolean;
         fadeMs?: number;
+        loop?: boolean;
       }>;
-      const { targetId, preloader, userInitiated = false, fadeMs } = customEvent.detail;
+      const { targetId, preloader, userInitiated = false, fadeMs, loop = true } = customEvent.detail;
 
       const a1 = audio1Ref.current;
       const a2 = audio2Ref.current;
@@ -137,7 +138,7 @@ export function AudioManager() {
       const hasOutgoingAudio = Boolean(outAudio.src) && !outAudio.paused;
 
       if (nextUrl && !hasOutgoingAudio) {
-        setAudioSource(inAudio, nextUrl);
+        setAudioSource(inAudio, nextUrl, loop);
         inAudio.volume = nextVolume;
         retryCountRef.current = 0;
         void playIfAllowed(inAudio, userInitiated);
@@ -147,7 +148,7 @@ export function AudioManager() {
       }
       
       if (nextUrl) {
-        setAudioSource(inAudio, nextUrl);
+        setAudioSource(inAudio, nextUrl, loop);
         inAudio.volume = 0;
         retryCountRef.current = 0;
         void playIfAllowed(inAudio, userInitiated);
@@ -309,11 +310,17 @@ export const playAudioTrack = (
   targetId: string | null,
   preloader = false,
   userInitiated = false,
-  options?: { fadeMs?: number },
+  options?: { fadeMs?: number; loop?: boolean },
 ) => {
   customAudioThemeEvent.dispatchEvent(
     new CustomEvent('playTrack', {
-      detail: { targetId, preloader, userInitiated, fadeMs: options?.fadeMs },
+      detail: {
+        targetId,
+        preloader,
+        userInitiated,
+        fadeMs: options?.fadeMs,
+        loop: options?.loop,
+      },
     }),
   );
 };

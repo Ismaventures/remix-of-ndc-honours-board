@@ -61,15 +61,6 @@ const CARDS: {
     accentGlow: "shadow-[0_0_0_1px_rgba(0,176,240,0.2),0_18px_42px_rgba(0,83,120,0.2)]",
   },
   {
-    key: "participants",
-    label: "PARTICIPANTS",
-    subtitle: "Participants",
-    icon: Users,
-    color: "text-indigo-600",
-    cardGradient: "from-[#1a365d] via-[#214373] to-[#2a528a]",
-    accentGlow: "shadow-[0_0_0_1px_rgba(0,32,96,0.2),0_18px_42px_rgba(33,67,115,0.18)]",
-  },
-  {
     key: "allied",
     label: "ALLIED OFFICERS",
     subtitle: "International Partnerships",
@@ -77,15 +68,6 @@ const CARDS: {
     color: "text-cyan-600",
     cardGradient: "from-[#112f4f] via-[#19406b] to-[#205285]",
     accentGlow: "shadow-[0_0_0_1px_rgba(0,176,240,0.2),0_18px_42px_rgba(19,64,107,0.2)]",
-  },
-  {
-    key: "visits",
-    label: "DISTINGUISHED VISITS",
-    subtitle: "Honours & Ceremonies",
-    icon: Star,
-    color: "text-blue-500",
-    cardGradient: "from-[#1d3455] via-[#264570] to-[#30578a]",
-    accentGlow: "shadow-[0_0_0_1px_rgba(0,32,96,0.2),0_18px_42px_rgba(38,69,112,0.2)]",
   },
   {
     key: "ndc-events",
