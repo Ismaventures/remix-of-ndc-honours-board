@@ -31,18 +31,21 @@ export function VisitsSection({ visits, onBack }: VisitsSectionProps) {
 
   return (
     <div className="scroll-reveal">
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="p-2 rounded gold-border text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all active:scale-95"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-          )}
-          <h2 className="text-2xl font-bold font-serif gold-text">Distinguished Visits & Honours</h2>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        {onBack ? (
+          <button
+            onClick={onBack}
+            className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
+              isLightMode
+                ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
+                : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
+            }`}
+          >
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            Back
+          </button>
+        ) : <div />}
+        
         {visits.length > 0 && (
           <button
             onClick={() => {
@@ -50,12 +53,16 @@ export function VisitsSection({ visits, onBack }: VisitsSectionProps) {
               setAutoDisplayIndex(0);
               setIsAutoPlaying(true);
             }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#002060] text-white font-semibold text-sm hover:bg-[#003080] transition-all"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#002060] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#003080] transition-all duration-200 shadow-sm"
           >
-            <Play className="h-4 w-4" />
+            <Play className="h-3.5 w-3.5" />
             Auto Display
           </button>
         )}
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold font-serif gold-text">Distinguished Visits & Honours</h2>
       </div>
       <div className="space-y-6">
         {visits.map((visit, i) => (

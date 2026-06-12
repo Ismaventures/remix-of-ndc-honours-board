@@ -143,16 +143,16 @@ export function FellowsByCourse({
         <>
           {/* Back button */}
           {onBack && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-4 mb-6">
               <button
                 onClick={onBack}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
+                className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
                   isLightMode
-                    ? 'border-[#002060]/25 text-[#002060] hover:bg-[#002060]/10 hover:border-[#002060]/40'
-                    : 'border-white/10 text-white/75 hover:bg-white/[0.08] hover:border-white/20'
+                    ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
+                    : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
                 }`}
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
+                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                 Back
               </button>
             </div>
@@ -255,16 +255,16 @@ export function FellowsByCourse({
       {selectedGroupId && (
         <div className="space-y-6">
           {/* Back button to course selection */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-4 mb-6">
             <button
               onClick={() => setSelectedGroupId(null)}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
+              className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
                 isLightMode
-                  ? 'border-[#002060]/25 text-[#002060] hover:bg-[#002060]/10 hover:border-[#002060]/40'
-                  : 'border-white/10 text-white/75 hover:bg-white/[0.08] hover:border-white/20'
+                  ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
+                  : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
               }`}
             >
-              <ArrowLeft className="h-3.5 w-3.5" />
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               Back to Courses
             </button>
           </div>

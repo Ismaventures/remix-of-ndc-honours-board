@@ -12,6 +12,7 @@ import {
   Play,
   Pause,
   X,
+  Shield,
 } from "lucide-react";
 import { Personnel, Category } from "@/types/domain";
 import { ProfileModal } from "./ProfileModal";
@@ -171,6 +172,96 @@ function ArchiveProfileImage({ person }: { person: Personnel }) {
   );
 }
 
+function GridAlliedCard({
+  person,
+  onClick,
+  isLightMode,
+}: {
+  person: Personnel;
+  onClick: () => void;
+  isLightMode: boolean;
+}) {
+  const resolvedSrc = useResolvedMediaUrl(person.imageUrl);
+
+  const normalizedRank = person.rank?.trim() || "";
+  const normalizedName = person.name?.trim() || "";
+  const hasRankPrefix =
+    normalizedRank.length > 0 &&
+    normalizedName.toLowerCase().startsWith(normalizedRank.toLowerCase());
+  const displayName =
+    normalizedRank.length > 0 && normalizedName.length > 0 && !hasRankPrefix
+      ? `${normalizedRank} ${normalizedName}`
+      : normalizedName || "Name unavailable";
+
+  return (
+    <button
+      onClick={onClick}
+      className={`group relative overflow-hidden rounded-xl border text-left flex flex-col transition-all duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 w-full shadow-lg ${
+        isLightMode
+          ? "bg-white border-slate-200/80 hover:shadow-xl hover:border-slate-300"
+          : "bg-slate-950 border-slate-800 hover:shadow-2xl hover:border-slate-700"
+      }`}
+      style={{ minHeight: "410px" }}
+    >
+      {/* Top tri-service strip */}
+      <div className="absolute inset-x-0 top-0 h-[4px] flex z-20">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#00B0F0]" />
+      </div>
+
+      {/* Main card container with padding */}
+      <div className="p-3.5 pb-2.5 flex-1 flex flex-col justify-between w-full">
+        {/* Frame for the photo */}
+        <div className="w-full aspect-[4/5] rounded border border-slate-200 bg-white flex items-center justify-center relative overflow-hidden shadow-inner p-2">
+          {resolvedSrc ? (
+            <img
+              src={resolvedSrc}
+              alt={person.name}
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <Shield className="h-10 w-10 text-slate-300 animate-pulse" />
+          )}
+        </div>
+
+        {/* Plaque block (dark blue container) */}
+        <div className="bg-[#002060] border border-[#FFD700] rounded p-2.5 text-center mt-3 flex flex-col justify-center min-h-[110px] w-full shadow-[inset_0_0_15px_rgba(0,0,0,0.4)]">
+          <h4 className="text-amber-400 text-xs font-serif font-extrabold tracking-wide leading-tight line-clamp-2 px-0.5">
+            {displayName}
+          </h4>
+
+          {person.service && (
+            <p className="text-[#FF0000] text-[8.5px] font-bold font-sans mt-1 leading-tight line-clamp-1">
+              {person.service}
+            </p>
+          )}
+
+          <p className="text-slate-300 text-[7.5px] font-mono tracking-widest uppercase mt-1">
+            {person.category}
+          </p>
+
+          <p className="text-slate-300 text-[8px] font-mono tracking-widest uppercase mt-0.5">
+            YEAR: {person.periodStart} – {person.periodEnd}
+          </p>
+        </div>
+
+        {/* Tap to open bar */}
+        <div className="py-2.5 text-center text-[9px] sm:text-[10px] font-extrabold tracking-wider text-sky-600 uppercase w-full">
+          TAP TO OPEN FULL DETAILS
+        </div>
+      </div>
+
+      {/* Bottom tri-service strip */}
+      <div className="absolute inset-x-0 bottom-0 h-[4px] flex z-20">
+        <div className="flex-1 bg-[#00B0F0]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#002060]" />
+      </div>
+    </button>
+  );
+}
+
 export function OrganogramView({
   data,
   title,
@@ -188,8 +279,6 @@ export function OrganogramView({
   const [rankFilter, setRankFilter] = useState<string>("all");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
-  const [displayMode, setDisplayMode] = useState<"scroll" | "list">("scroll");
-
   // Auto-display states
   const [autoDisplayActive, setAutoDisplayActive] = useState(false);
   const [autoDisplayIndex, setAutoDisplayIndex] = useState(0);
@@ -198,41 +287,10 @@ export function OrganogramView({
   const [rankOpen, setRankOpen] = useState(false);
   const [serviceOpen, setServiceOpen] = useState(false);
   const [yearOpen, setYearOpen] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const autoPauseUntilRef = useRef(0);
-  const navRafRef = useRef<number | null>(null);
-  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
-
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(12);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    const updateItemsPerPage = () => {
-      const width = window.innerWidth;
-      if (width < 640) {
-        setItemsPerPage(6);
-        return;
-      }
-      if (width < 1024) {
-        setItemsPerPage(8);
-        return;
-      }
-      if (width < 1440) {
-        setItemsPerPage(12);
-        return;
-      }
-      setItemsPerPage(16);
-    };
-
-    updateItemsPerPage();
-    window.addEventListener("resize", updateItemsPerPage);
-    return () => window.removeEventListener("resize", updateItemsPerPage);
   }, []);
 
   useEffect(() => {
@@ -241,14 +299,8 @@ export function OrganogramView({
     setRankFilter("all");
     setServiceFilter("all");
     setYearFilter("all");
-    setCurrentPage(1);
     setSelectedId(forcedSelectedId);
   }, [forcedSelectedId, forcedSelectionNonce]);
-
-  // Reset page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, rankFilter, serviceFilter, yearFilter, sortMode]);
 
   const categoryRecords = useMemo(
     () => data.filter((p) => p.category === category),
@@ -346,127 +398,6 @@ export function OrganogramView({
     yearFilter,
   ]);
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-
-  useEffect(() => {
-    if (totalPages === 0 && currentPage !== 1) {
-      setCurrentPage(1);
-      return;
-    }
-    if (totalPages > 0 && currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
-  const paginatedRecords = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filtered.slice(start, start + itemsPerPage);
-  }, [filtered, currentPage, itemsPerPage]);
-
-  const loopedRecords = useMemo(() => {
-    if (filtered.length <= 1) return filtered;
-    return [...filtered, ...filtered, ...filtered];
-  }, [filtered]);
-
-  const normalizeLoopPosition = () => {
-    const container = scrollRef.current;
-    if (!container || filtered.length <= 1) return;
-
-    const segmentWidth = container.scrollWidth / 3;
-
-    while (container.scrollLeft >= segmentWidth * 2) {
-      container.scrollLeft -= segmentWidth;
-    }
-
-    while (container.scrollLeft < segmentWidth) {
-      container.scrollLeft += segmentWidth;
-    }
-  };
-
-  const scrollCarousel = (dir: "left" | "right") => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    normalizeLoopPosition();
-    autoPauseUntilRef.current = performance.now() + 900;
-
-    if (navRafRef.current) {
-      window.cancelAnimationFrame(navRafRef.current);
-      navRafRef.current = null;
-    }
-
-    const delta = dir === "left" ? -360 : 360;
-    const start = container.scrollLeft;
-    const end = start + delta;
-    const durationMs = 420;
-    const startAt = performance.now();
-    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-
-    const step = (now: number) => {
-      const progress = Math.min(1, (now - startAt) / durationMs);
-      const eased = easeOutCubic(progress);
-
-      container.scrollLeft = start + (end - start) * eased;
-      normalizeLoopPosition();
-
-      if (progress < 1) {
-        navRafRef.current = window.requestAnimationFrame(step);
-      } else {
-        navRafRef.current = null;
-      }
-    };
-
-    navRafRef.current = window.requestAnimationFrame(step);
-  };
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container || filtered.length <= 1 || displayMode !== "scroll") return;
-
-    const segmentWidth = container.scrollWidth / 3;
-    container.scrollLeft = segmentWidth;
-  }, [filtered.length, mounted, displayMode]);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container || filtered.length <= 1 || displayMode !== "scroll") return;
-
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (prefersReducedMotion) return;
-
-    let rafId = 0;
-    let last = performance.now();
-    const speedPxPerMs = 0.03;
-
-    const tick = (now: number) => {
-      const elapsed = now - last;
-      last = now;
-
-      if (!isCarouselPaused) {
-        if (now < autoPauseUntilRef.current) {
-          rafId = window.requestAnimationFrame(tick);
-          return;
-        }
-
-        container.scrollLeft += elapsed * speedPxPerMs;
-        normalizeLoopPosition();
-      }
-
-      rafId = window.requestAnimationFrame(tick);
-    };
-
-    rafId = window.requestAnimationFrame(tick);
-    return () => {
-      window.cancelAnimationFrame(rafId);
-      if (navRafRef.current) {
-        window.cancelAnimationFrame(navRafRef.current);
-        navRafRef.current = null;
-      }
-    };
-  }, [isCarouselPaused, filtered.length, displayMode]);
-
   const selectedPerson = useMemo(
     () => filtered.find((p) => p.id === selectedId) || null,
     [filtered, selectedId],
@@ -476,21 +407,19 @@ export function OrganogramView({
     <div
       className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
     >
-      <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-full hover:bg-muted/50 transition-colors gold-border bg-background"
-          >
-            <ArrowLeft className="h-4 w-4 text-primary" />
-          </button>
-          <div>
-            <h2 className="text-2xl font-bold font-serif text-[#002060]">{title}</h2>
-            <p className="text-xs text-[#002060]/80 uppercase tracking-widest mt-1 min-h-[16px] font-semibold">
-              Professional Archive List
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <button
+          onClick={onBack}
+          className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
+            isLightMode
+              ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
+              : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
+          }`}
+        >
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          Back
+        </button>
+
         <div className="flex items-center gap-4">
           <div className="text-xs uppercase tracking-widest text-[#002060]/80 font-semibold">
             {filtered.length} Records
@@ -502,13 +431,20 @@ export function OrganogramView({
                 setAutoDisplayIndex(0);
                 setIsAutoPlaying(true);
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#002060] text-white font-semibold text-sm hover:bg-[#003080] transition-all"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#002060] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#003080] transition-all duration-200 shadow-sm"
             >
-              <Play className="h-4 w-4" />
+              <Play className="h-3.5 w-3.5" />
               Auto Display
             </button>
           )}
         </div>
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold font-serif text-[#002060]">{title}</h2>
+        <p className="text-xs text-[#002060]/80 uppercase tracking-widest mt-1 min-h-[16px] font-semibold">
+          Professional Archive List
+        </p>
       </div>
 
       <div className="mb-6 p-4 md:p-5 rounded-xl border border-[#002060]/25 bg-[linear-gradient(140deg,rgba(0,32,96,0.06)_0%,rgba(255,255,255,0.92)_42%,rgba(0,176,240,0.08)_100%)] shadow-[inset_0_0_20px_rgba(0,32,96,0.12)] space-y-4">
@@ -565,28 +501,7 @@ export function OrganogramView({
           </button>
         </div>
 
-        <div className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-background/70 p-1 w-full md:w-auto">
-          <button
-            onClick={() => setDisplayMode("scroll")}
-            className={`px-3 py-2 text-xs font-semibold rounded-md transition-colors ${
-              displayMode === "scroll"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Scrolling View
-          </button>
-          <button
-            onClick={() => setDisplayMode("list")}
-            className={`px-3 py-2 text-xs font-semibold rounded-md transition-colors ${
-              displayMode === "list"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            List View
-          </button>
-        </div>
+        {/* displayMode toggle removed */}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* RANK FILTER COMBOBOX */}
@@ -773,7 +688,7 @@ export function OrganogramView({
         </div>
       </div>
 
-      <div className={`rounded-xl p-3 md:p-6 ${displayMode === "scroll" ? "min-h-[300px]" : "min-h-[520px]"} relative overflow-hidden flex flex-col border border-[#002060]/30 bg-[linear-gradient(165deg,#f9fbff_0%,#eef3fb_55%,#e6f8ff_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7),inset_0_0_28px_rgba(0,32,96,0.08),0_16px_45px_rgba(0,0,0,0.16)]`}>
+      <div className="rounded-xl p-3 md:p-6 relative overflow-hidden flex flex-col border border-[#002060]/30 bg-[linear-gradient(165deg,#f9fbff_0%,#eef3fb_55%,#e6f8ff_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7),inset_0_0_28px_rgba(0,32,96,0.08),0_16px_45px_rgba(0,0,0,0.16)]">
         <div className="absolute top-0 inset-x-0 h-[7px] flex">
           <div className="flex-1 bg-[#002060]" />
           <div className="flex-1 bg-[#FF0000]" />
@@ -787,191 +702,16 @@ export function OrganogramView({
         <div className="absolute inset-0 pointer-events-none opacity-[0.1] bg-[linear-gradient(45deg,rgba(0,32,96,0.06)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.06)_75%),linear-gradient(45deg,rgba(0,32,96,0.06)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.06)_75%)] bg-[length:52px_52px] bg-[position:0_0,26px_26px]" />
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(140%_100%_at_50%_0%,rgba(0,32,96,0.1),transparent_60%)]" />
         {filtered.length > 0 ? (
-          <>
-            {displayMode === "scroll" ? (
-              <>
-                <div className="flex items-center justify-end gap-1 mb-3">
-                  <button
-                    onClick={() => scrollCarousel("left")}
-                    type="button"
-                    aria-label="Scroll to previous personnel"
-                    className="p-2 rounded transition-all active:scale-95 border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => scrollCarousel("right")}
-                    type="button"
-                    aria-label="Scroll to next personnel"
-                    className="p-2 rounded transition-all active:scale-95 border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div
-                  ref={scrollRef}
-                  className="flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-hide px-1"
-                  onMouseEnter={() => setIsCarouselPaused(true)}
-                  onMouseLeave={() => setIsCarouselPaused(false)}
-                  onFocus={() => setIsCarouselPaused(true)}
-                  onBlur={() => setIsCarouselPaused(false)}
-                >
-                  {loopedRecords.map((person, index) => (
-                    <button
-                      key={`${person.id}-${index}`}
-                      onClick={() => setSelectedId(person.id)}
-                      className="group relative w-[340px] md:w-[380px] shrink-0 text-left rounded-xl border border-[#002060]/20 bg-white p-3.5 sm:p-4 transition-all duration-300 hover:border-[#00B0F0] hover:shadow-[0_12px_38px_rgba(0,32,96,0.22)] overflow-hidden flex flex-col"
-                    >
-                      <div className="absolute top-0 inset-x-0 h-[6px] flex z-20">
-                        <div className="flex-1 bg-[#002060]" />
-                        <div className="flex-1 bg-[#FF0000]" />
-                        <div className="flex-1 bg-[#00B0F0]" />
-                      </div>
-                      <div className="absolute inset-0 pointer-events-none opacity-[0.08] bg-[linear-gradient(45deg,rgba(0,32,96,0.08)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.08)_75%),linear-gradient(45deg,rgba(0,32,96,0.08)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.08)_75%)] bg-[length:34px_34px] bg-[position:0_0,17px_17px]" />
-                      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120%_100%_at_0%_0%,rgba(0,176,240,0.14),transparent_55%)]" />
-                      <div className="absolute inset-x-0 top-0 h-16 pointer-events-none bg-gradient-to-b from-white/[0.07] to-transparent" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00B0F0]/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-[#002060]/70 via-[#FF0000]/70 to-[#00B0F0]/70 opacity-80 group-hover:opacity-100 transition-opacity" />
-
-                      <div className="relative z-10 flex items-center justify-between mb-3">
-                        <span className="text-sm font-bold opacity-75 text-[#002060]/75 group-hover:text-[#002060] transition-colors">
-                          #{(index % Math.max(filtered.length, 1)) + 1}
-                        </span>
-                        <span className="px-3 py-1.5 rounded-md border border-[#002060]/35 bg-[#002060]/8 text-[#002060] font-bold shadow-[0_0_16px_rgba(0,32,96,0.18)] whitespace-nowrap text-xs">
-                          {person.periodStart} - {person.periodEnd}
-                        </span>
-                      </div>
-
-                      <div className="relative z-10 flex items-start gap-4 sm:gap-5 flex-1 min-h-0">
-                        <div className="shrink-0 pt-0.5">
-                          <ArchiveProfileImage person={person} />
-                        </div>
-
-                        <div className="flex flex-col gap-2 min-w-0">
-                          <h4 className="text-base sm:text-lg font-bold font-serif text-[#0f172a] leading-tight group-hover:text-[#002060] transition-colors drop-shadow-sm flex items-center flex-wrap">
-                            <span className="text-[#002060] text-[11px] sm:text-xs mr-2 uppercase tracking-widest font-sans">
-                              {person.rank}
-                            </span>
-                            {person.name}
-                          </h4>
-                          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2 max-w-2xl">
-                            {person.citation}
-                          </p>
-
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            <span className="px-2.5 py-1 rounded border border-[#002060]/20 bg-[#002060]/5 text-[#002060]/80 font-semibold uppercase tracking-wider text-[10px]">
-                              {person.service}
-                            </span>
-                            <span className="px-2.5 py-1 rounded border border-[#00B0F0]/30 bg-[#00B0F0]/8 text-[#005f7e] font-semibold uppercase tracking-wider text-[10px]">
-                              {person.category}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4 md:gap-5 flex-1 auto-rows-fr">
-                  {paginatedRecords.map((person, index) => (
-                    <button
-                      key={person.id}
-                      onClick={() => setSelectedId(person.id)}
-                      className="group relative w-full h-full text-left rounded-xl border border-[#002060]/20 bg-white p-3.5 sm:p-4 transition-all duration-300 hover:border-[#00B0F0] hover:shadow-[0_12px_38px_rgba(0,32,96,0.22)] overflow-hidden flex flex-col"
-                    >
-                      <div className="absolute top-0 inset-x-0 h-[6px] flex z-20">
-                        <div className="flex-1 bg-[#002060]" />
-                        <div className="flex-1 bg-[#FF0000]" />
-                        <div className="flex-1 bg-[#00B0F0]" />
-                      </div>
-                      <div className="absolute inset-0 pointer-events-none opacity-[0.08] bg-[linear-gradient(45deg,rgba(0,32,96,0.08)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.08)_75%),linear-gradient(45deg,rgba(0,32,96,0.08)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.08)_75%)] bg-[length:34px_34px] bg-[position:0_0,17px_17px]" />
-                      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120%_100%_at_0%_0%,rgba(0,176,240,0.14),transparent_55%)]" />
-                      <div className="absolute inset-x-0 top-0 h-16 pointer-events-none bg-gradient-to-b from-white/[0.07] to-transparent" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00B0F0]/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-[#002060]/70 via-[#FF0000]/70 to-[#00B0F0]/70 opacity-80 group-hover:opacity-100 transition-opacity" />
-
-                      <div className="relative z-10 flex items-center justify-between mb-3">
-                        <span className="text-sm font-bold opacity-75 text-[#002060]/75 group-hover:text-[#002060] transition-colors">
-                          #{(currentPage - 1) * itemsPerPage + index + 1}
-                        </span>
-                        <span className="px-3 py-1.5 rounded-md border border-[#002060]/35 bg-[#002060]/8 text-[#002060] font-bold shadow-[0_0_16px_rgba(0,32,96,0.18)] whitespace-nowrap text-xs">
-                          {person.periodStart} - {person.periodEnd}
-                        </span>
-                      </div>
-
-                      <div className="relative z-10 flex items-start gap-4 sm:gap-5 flex-1 min-h-0">
-                        <div className="shrink-0 pt-0.5">
-                          <ArchiveProfileImage person={person} />
-                        </div>
-
-                        <div className="flex flex-col gap-2 min-w-0">
-                          <h4 className="text-base sm:text-lg font-bold font-serif text-[#0f172a] leading-tight group-hover:text-[#002060] transition-colors drop-shadow-sm flex items-center flex-wrap">
-                            <span className="text-[#002060] text-[11px] sm:text-xs mr-2 uppercase tracking-widest font-sans">
-                              {person.rank}
-                            </span>
-                            {person.name}
-                          </h4>
-                          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2 max-w-2xl">
-                            {person.citation}
-                          </p>
-
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            <span className="px-2.5 py-1 rounded border border-[#002060]/20 bg-[#002060]/5 text-[#002060]/80 font-semibold uppercase tracking-wider text-[10px]">
-                              {person.service}
-                            </span>
-                            <span className="px-2.5 py-1 rounded border border-[#00B0F0]/30 bg-[#00B0F0]/8 text-[#005f7e] font-semibold uppercase tracking-wider text-[10px]">
-                              {person.category}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                {totalPages > 1 && (
-                  <div className="pt-6 mt-4 border-t border-primary/10">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                            onClick={() =>
-                              setCurrentPage((p) => Math.max(1, p - 1))
-                            }
-                            className={
-                              currentPage === 1
-                                ? "pointer-events-none opacity-50"
-                                : "cursor-pointer"
-                            }
-                          />
-                        </PaginationItem>
-
-                        <div className="flex items-center mx-2 text-sm text-muted-foreground font-medium">
-                          Page {currentPage} of {totalPages}
-                        </div>
-
-                        <PaginationItem>
-                          <PaginationNext
-                            onClick={() =>
-                              setCurrentPage((p) => Math.min(totalPages, p + 1))
-                            }
-                            className={
-                              currentPage === totalPages
-                                ? "pointer-events-none opacity-50"
-                                : "cursor-pointer"
-                            }
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
-              </>
-            )}
-          </>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 sm:gap-6 mt-6 pb-8">
+            {filtered.map((person) => (
+              <GridAlliedCard
+                key={person.id}
+                person={person}
+                onClick={() => setSelectedId(person.id)}
+                isLightMode={isLightMode}
+              />
+            ))}
+          </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-12">
             <div className="w-16 h-16 rounded-full gold-border flex items-center justify-center bg-muted/20 mb-4 animate-pulse-slow">

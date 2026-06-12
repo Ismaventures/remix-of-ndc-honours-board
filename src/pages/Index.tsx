@@ -203,6 +203,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
   const [showStageConfig, setShowStageConfig] = useState(false);
 
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
+  const isLightMode = themeMode.startsWith("outdoor");
   const {
     settings: bootSequenceSettings,
     setSettings: setBootSequenceSettings,
@@ -871,17 +872,19 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
         return startB - startA;
       });
 
-      const isLightMode = themeMode.startsWith("outdoor");
-
       return (
         <section className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <button
               onClick={() => setView("home")}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-primary/25 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/10 transition-all duration-200 hover:border-primary/40"
+              className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
+                isLightMode
+                  ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
+                  : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
+              }`}
             >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-              Previous
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              Back
             </button>
             <button
               onClick={() => {
@@ -889,7 +892,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
                 setCommandantsAutoDisplayIndex(0);
                 setIsCommandantsAutoPlaying(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#002060] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#003080] transition-all duration-200"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#002060] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#003080] transition-all duration-200 shadow-sm"
             >
               <Play className="h-3.5 w-3.5" />
               Auto Display
@@ -927,14 +930,21 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
       return (
         <section className="min-h-screen bg-white p-6 md:p-12">
           <div className="max-w-6xl mx-auto">
-            <div className="mb-12 flex flex-col items-start">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <button
                 onClick={() => setView("home")}
-                className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-6"
+                className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
+                  isLightMode
+                    ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
+                    : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
+                }`}
               >
-                <ChevronLeft size={20} />
-                Back to Home
+                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                Back
               </button>
+            </div>
+
+            <div className="mb-6 flex flex-col items-start">
               <h1 className="text-4xl md:text-5xl font-bold font-serif text-slate-900 mb-2">NDC Facilitated Events</h1>
               <p className="text-slate-600 text-lg">Seminars, Conferences & Professional Development</p>
               <div className="mt-4 h-1 w-24 bg-gradient-to-r from-[#002060] via-[#FF0000] to-[#00B0F0]"></div>
@@ -1383,13 +1393,18 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
       {selectedPastCommandant && (
         <div className="fixed inset-0 z-[70] bg-white text-slate-900 flex flex-col modal-backdrop-enter overflow-hidden">
           <div className="relative flex-1 min-h-0 flex flex-col">
-            {/* Close button - floating absolute on the top right, as shown in the screenshot */}
+            {/* Back button - floating absolute on the top left, standardized */}
             <button
               onClick={closePastCommandantProfile}
-              className="absolute right-6 top-6 z-50 inline-flex items-center justify-center p-2 rounded-full bg-white/60 hover:bg-white/80 text-slate-800 transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-slate-300"
-              aria-label="Close details"
+              className={`absolute left-6 top-6 z-50 group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-md ${
+                isLightMode
+                  ? 'border-[#002060]/20 text-[#002060] bg-white/80 hover:bg-[#002060]/10 hover:border-[#002060]/35 backdrop-blur-sm'
+                  : 'border-white/10 text-white/80 bg-slate-950/40 hover:bg-white/[0.08] hover:border-white/20 backdrop-blur-sm'
+              }`}
+              aria-label="Back to Commandants"
             >
-              <X className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              Back
             </button>
 
             {/* Prev / Next navigation arrows floating on left / right sides of the biography section */}

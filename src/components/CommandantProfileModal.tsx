@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Commandant } from "@/types/domain";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -53,12 +53,18 @@ export function CommandantProfileModal({ commandant, onClose, onNavigate }: Comm
         className={`w-full h-full overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.4)] modal-enter relative flex flex-col transition-all duration-500 border-0 ${isLightMode ? "bg-white" : "bg-card"}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="absolute top-3 right-3 z-50">
+        <div className="absolute top-6 left-6 z-50">
             <button
                 onClick={onClose}
-                className={`p-2 rounded-full transition-all active:scale-90 border shadow-sm ${isLightMode ? "hover:bg-slate-200 text-slate-500 hover:text-slate-800 bg-white border-slate-200" : "hover:bg-muted text-muted-foreground hover:text-foreground bg-background border-border"}`}
+                className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-md ${
+                  isLightMode
+                    ? 'border-[#002060]/20 text-[#002060] bg-white/80 hover:bg-[#002060]/10 hover:border-[#002060]/35 backdrop-blur-sm'
+                    : 'border-white/10 text-white/80 bg-slate-950/40 hover:bg-white/[0.08] hover:border-white/20 backdrop-blur-sm'
+                }`}
+                aria-label="Back to Honours Board"
             >
-                <X className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                Back
             </button>
         </div>
         <div className="flex-1 overflow-y-auto w-full h-full">
