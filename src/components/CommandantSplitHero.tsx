@@ -38,17 +38,17 @@ export function CommandantSplitHero({ commandant, isAutoDisplay = false }: Comma
             <div className="h-[1px] w-20 bg-slate-300" />
           </div>
 
-          {/* Name */}
-          <h2 className="text-2xl md:text-4xl font-serif font-extrabold mb-1 text-[#002060] uppercase tracking-wide text-center">
-            {name}
-          </h2>
-
           {/* Rank */}
           {commandant?.rank && (
-            <p className="text-xs md:text-sm text-slate-500 font-bold mb-3 uppercase tracking-widest text-center">
+            <p className="text-xs md:text-sm text-slate-500 font-bold mb-1 uppercase tracking-widest text-center">
               {commandant.rank}
             </p>
           )}
+
+          {/* Name */}
+          <h2 className="text-2xl md:text-4xl font-serif font-extrabold mb-3 text-[#002060] uppercase tracking-wide text-center">
+            {name}
+          </h2>
 
           {/* Red Credentials Line */}
           {(() => {

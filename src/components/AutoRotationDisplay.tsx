@@ -23,6 +23,7 @@ import { CommandantSplitHero } from "./CommandantSplitHero";
 import { UnifiedAutoCard } from "./UnifiedAutoCard";
 import { ProfileModal } from "./ProfileModal";
 import { CommandantProfileModal } from "./CommandantProfileModal";
+import { PersonnelSplitHeroModal } from "./PersonnelSplitHeroModal";
 import ndcCrest from "/images/ndc-crest.png";
 import { prefetchAudioTrack, useAudioStore } from "@/hooks/useAudioStore";
 import { playAudioTrack } from "@/components/AudioManager";
@@ -1271,40 +1272,22 @@ export function AutoRotationDisplay({
       style={{ animationDuration: "0.6s" }}
     >
       <div className="auto-scroll-heading mb-1.5 sm:mb-2 px-1 sm:px-2 shrink-0">
-        <div className="overflow-hidden rounded-xl border border-[#002060]/20 bg-card/90 backdrop-blur">
-          <div className="h-[6px] flex">
-            <div className="flex-1 bg-[#002060]" />
-            <div className="flex-1 bg-[#FF0000]" />
-            <div className="flex-1 bg-[#00B0F0]" />
-          </div>
-          <div className="h-[2px] w-full bg-[#FF0000]" />
-          <div className="auto-scroll-heading-body bg-[#002060] px-3 py-2 sm:px-4 sm:py-2.5 text-center">
+        <div className="bg-[#002060] border-b-[3px] border-[#FF0000]">
+          <div className="px-4 py-5 sm:px-6 sm:py-6 text-center">
             {getSectionTitle() && (
-              <p className="auto-scroll-heading-title mx-auto max-w-[92vw] sm:max-w-4xl text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90 leading-snug break-words">
+              <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-white/70 leading-snug break-words mb-1">
                 {getSectionTitle()}
               </p>
             )}
             <AnimatedPresence mode="wait" initial={false}>
               <h2
                 key={`subtitle-${sectionSubtitle}`}
-                className="auto-scroll-heading-subtitle mx-auto mt-1 max-w-[96vw] sm:max-w-5xl text-[clamp(1.2rem,3vw,1.8rem)] sm:text-[clamp(1.4rem,3vw,2.2rem)] md:text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold uppercase tracking-[0.02em] text-[#d4af37] drop-shadow-[0_0_6px_rgba(212,175,55,0.25)] leading-tight break-words animate-fade-down-sm"
+                className="mx-auto max-w-[96vw] text-[clamp(1.4rem,3.5vw,2.2rem)] font-bold uppercase tracking-[0.03em] text-[#d4af37] drop-shadow-md leading-tight break-words animate-fade-down-sm"
               >
                 {sectionSubtitle}
               </h2>
             </AnimatedPresence>
-            {sectionDescriptor && (
-              <AnimatedPresence mode="wait" initial={false}>
-                <p
-                  key={`descriptor-${sectionDescriptor}`}
-                  className="mx-auto mt-1 max-w-[95vw] sm:max-w-3xl text-[10px] sm:text-[11px] tracking-[0.05em] leading-relaxed text-white/90 animate-fade-up-sm"
-                  style={{ animationDuration: "0.48s", animationDelay: "0.08s" }}
-                >
-                  {sectionDescriptor}
-                </p>
-              </AnimatedPresence>
-            )}
           </div>
-          <div className="h-[2px] w-full bg-[#FF0000]" />
         </div>
       </div>
 
@@ -1520,10 +1503,19 @@ export function AutoRotationDisplay({
       )}
 
       {selectedPerson && (
-        <ProfileModal
-          person={selectedPerson}
-          onClose={() => setSelectedPerson(null)}
-        />
+        (activeCategory === "FWC" || activeCategory === "FDC") ? (
+          <PersonnelSplitHeroModal
+            person={selectedPerson}
+            category={activeCategory}
+            courseDesignation={selectedPerson.decoration}
+            onClose={() => setSelectedPerson(null)}
+          />
+        ) : (
+          <ProfileModal
+            person={selectedPerson}
+            onClose={() => setSelectedPerson(null)}
+          />
+        )
       )}
 
       {selectedCommandant && (
