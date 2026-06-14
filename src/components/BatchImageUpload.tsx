@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { Upload, X, AlertCircle, CheckCircle, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { Personnel } from '@/types/domain';
+import { findRelatedPersonnel } from '@/lib/personnelSync';
 
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -175,16 +176,30 @@ export function BatchImageUpload({ personnel, onClose, onUploadComplete, onUpdat
         const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/personnel-images`;
         const imageUrl = `${baseUrl}/${filePath}`;
 
-        // Update personnel record
-        onUpdatePersonnel(img.personnelId, { imageUrl });
+        // ⭐ NEW: Find related personnel with same name (different categories)
+        const selectedPerson = personnel.find(p => p.id === img.personnelId);
+        if (selectedPerson) {
+          const relatedPersonnel = findRelatedPersonnel(personnel, selectedPerson);
+          
+          // Update all related records with the same image
+          const allToUpdate = [selectedPerson, ...relatedPersonnel];
+          for (const person of allToUpdate) {
+            await onUpdatePersonnel(person.id, { imageUrl });
+            if (!uploadedPersonnelIds.includes(person.id)) {
+              uploadedPersonnelIds.push(person.id);
+            }
+          }
+        } else {
+          // Fallback: update only selected personnel
+          await onUpdatePersonnel(img.personnelId, { imageUrl });
+          uploadedPersonnelIds.push(img.personnelId);
+        }
 
         setImages(prev =>
           prev.map((image, idx) =>
             idx === i ? { ...image, status: 'success' } : image
           )
         );
-
-        uploadedPersonnelIds.push(img.personnelId);
       } catch (error) {
         setImages(prev =>
           prev.map((image, idx) =>
