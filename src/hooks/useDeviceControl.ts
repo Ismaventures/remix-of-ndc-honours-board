@@ -212,7 +212,7 @@ export function useDeviceControl({ currentView, autoDisplayEnabled, onCommand }:
 
     const interval = setInterval(() => {
       void poll();
-    }, 2000);
+    }, 15000);
 
     return () => {
       isMounted = false;
@@ -224,7 +224,7 @@ export function useDeviceControl({ currentView, autoDisplayEnabled, onCommand }:
     void refreshDevices();
     const interval = setInterval(() => {
       void refreshDevices();
-    }, 8000);
+    }, 30000);
     return () => clearInterval(interval);
   }, [refreshDevices]);
 

@@ -891,8 +891,10 @@ export function AutoRotationDisplay({
       return;
     }
 
-    setDisplayActive(false);
-  }, [forcedControl, sequence, setDisplayActive]);
+    if (isActive) {
+      setDisplayActive(false);
+    }
+  }, [forcedControl, sequence, setDisplayActive, isActive]);
 
   useEffect(() => {
     if (!forcedStep || slides.length <= 1) return;
