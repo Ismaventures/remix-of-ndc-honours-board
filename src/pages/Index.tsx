@@ -378,14 +378,8 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           : { enabled: true, nonce: prev.nonce + 1 },
       );
     } else {
-      setForcedAutoDisplay((prev) => {
-        if (prev.enabled) {
-          return prev;
-        }
-        return prev.enabled !== false || prev.nonce !== 0
-          ? { enabled: false, nonce: 0 }
-          : prev;
-      });
+      setPlayAllAutoDisplayActive(false);
+      setForcedAutoDisplay({ enabled: false, nonce: 0 });
     }
   };
 
