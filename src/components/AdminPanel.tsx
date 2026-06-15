@@ -33,6 +33,7 @@ import {
 } from '@/hooks/useIdleStageSettings';
 import { useCinematicExperienceSettings } from '@/hooks/useCinematicExperienceSettings';
 import { playTransitionCue } from '@/lib/transitionCues';
+import { supabase } from '@/lib/supabaseClient';
 import { findRelatedPersonnel } from '@/lib/personnelSync';
 
 interface AdminPanelProps {
@@ -1153,16 +1154,12 @@ export function AdminPanel({
                 onUpdatePersonnel={async (id, data) => onUpdatePersonnel(id, data)}
                 onDeletePersonnel={async (id) => onDeletePersonnel(id)}
                 onUploadImage={async (personnelIds, file) => {
-                  // Import Supabase dynamically to handle image upload
-                  const { createClient } = await import('@supabase/supabase-js');
                   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-                  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
                   
-                  if (!supabaseUrl || !supabaseAnonKey) {
+                  if (!supabaseUrl) {
                     throw new Error('Supabase configuration missing');
                   }
 
-                  const supabase = createClient(supabaseUrl, supabaseAnonKey);
                   const fileName = `${file.name}-${Date.now()}`;
                   const filePath = `personnel/${personnelIds[0]}-${fileName}`;
 

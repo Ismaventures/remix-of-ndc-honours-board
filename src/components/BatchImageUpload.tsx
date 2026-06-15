@@ -1,13 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Upload, X, AlertCircle, CheckCircle, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
 import { Personnel } from '@/types/domain';
 import { findRelatedPersonnel } from '@/lib/personnelSync';
-
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/lib/supabaseClient';
 
 interface ImageWithPersonnel {
   file: File;

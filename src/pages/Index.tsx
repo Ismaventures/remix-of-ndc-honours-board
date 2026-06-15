@@ -66,6 +66,13 @@ const SECTION_CATEGORIES: Record<string, Category | Category[]> = {
   allied: "Allied",
 };
 
+const AUTO_DISPLAY_PLAY_ALL_SEQUENCE: AutoDisplayContextKey[] = [
+  "commandants",
+  "FWC",
+  "FDC",
+  "Allied",
+];
+
 const SUPER_ADMIN_EMAILS = (
   import.meta.env.VITE_SUPER_ADMIN_EMAILS ||
   import.meta.env.VITE_QUICK_ADMIN_EMAIL ||
@@ -107,12 +114,12 @@ function GridCommandantCard({ commandant, onClick, isLightMode }: GridCommandant
       <div className="p-3.5 pb-2.5 flex-1 flex flex-col justify-between w-full">
         
         {/* Frame for the photo */}
-        <div className={`w-full aspect-[4/5] rounded border border-slate-200 bg-white flex items-center justify-center relative overflow-hidden shadow-inner p-2`}>
+        <div className="w-full aspect-[4/5] rounded border border-slate-200 bg-white flex items-center justify-center relative overflow-hidden shadow-inner">
           {resolvedSrc ? (
             <img
               src={resolvedSrc}
               alt={commandant.name}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain object-center"
             />
           ) : (
             <Shield className="h-10 w-10 text-slate-300 animate-pulse" />
@@ -170,6 +177,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [autoDisplayActive, setAutoDisplayActive] = useState(false);
+  const [playAllAutoDisplayActive, setPlayAllAutoDisplayActive] = useState(false);
   const [forcedAutoDisplay, setForcedAutoDisplay] = useState<{
     enabled: boolean;
     nonce: number;
@@ -202,6 +210,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
   const [showStageConfig, setShowStageConfig] = useState(false);
 
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
+  const isLightMode = themeMode.startsWith("outdoor");
   const {
     settings: bootSequenceSettings,
     setSettings: setBootSequenceSettings,
@@ -291,11 +300,61 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
     if (context === "FWC") return "fwc";
     if (context === "FDC") return "fdc";
     if (context === "Directing Staff") return "participants";
-    if (context === "Directorate") return "directorate";
     return "allied";
   };
 
+  const triggerAutoDisplayForContext = (context: AutoDisplayContextKey) => {
+    setView(contextToView(context));
+    setForcedAutoDisplay((prev) => ({
+      enabled: true,
+      nonce: prev.nonce + 1,
+    }));
+  };
+
+  const hasAutoDisplayItemsForContext = (context: AutoDisplayContextKey) => {
+    if (context === "commandants") return commandants.length > 0;
+    if (context === "visits") return visits.length > 0;
+    return personnel.some((person) => person.category === context);
+  };
+
+  const getNextPlayableAutoDisplayContext = (
+    context: AutoDisplayContextKey,
+  ): AutoDisplayContextKey | null => {
+    const currentSequenceIndex = AUTO_DISPLAY_PLAY_ALL_SEQUENCE.indexOf(context);
+    const startIndex = currentSequenceIndex >= 0 ? currentSequenceIndex + 1 : 0;
+    return (
+      AUTO_DISPLAY_PLAY_ALL_SEQUENCE.slice(startIndex).find(
+        hasAutoDisplayItemsForContext,
+      ) ?? null
+    );
+  };
+
+  const startPlayAllAutoDisplays = () => {
+    const startContext = "commandants";
+    const playableStart = hasAutoDisplayItemsForContext(startContext)
+      ? startContext
+      : getNextPlayableAutoDisplayContext(startContext);
+    if (!playableStart) return;
+
+    setPlayAllAutoDisplayActive(true);
+    triggerAutoDisplayForContext(playableStart);
+  };
+
   const handleAutoDisplayStageComplete = (context: AutoDisplayContextKey) => {
+    if (playAllAutoDisplayActive) {
+      const nextContext = getNextPlayableAutoDisplayContext(context);
+
+      if (!nextContext) {
+        setPlayAllAutoDisplayActive(false);
+        setAutoDisplayActive(false);
+        setForcedAutoDisplay({ enabled: false, nonce: 0 });
+        return;
+      }
+
+      triggerAutoDisplayForContext(nextContext);
+      return;
+    }
+
     const nextContext = autoDisplaySettings.nextContextByContext?.[context] ?? null;
     if (!nextContext || nextContext === context) {
       setAutoDisplayActive(false);
@@ -308,6 +367,26 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
       enabled: true,
       nonce: prev.nonce + 1,
     }));
+  };
+
+  const handleAutoDisplayActiveChange = (active: boolean) => {
+    setAutoDisplayActive(active);
+    if (active) {
+      setForcedAutoDisplay((prev) =>
+        prev.enabled && prev.nonce > 0
+          ? prev
+          : { enabled: true, nonce: prev.nonce + 1 },
+      );
+    } else {
+      setForcedAutoDisplay((prev) => {
+        if (prev.enabled) {
+          return prev;
+        }
+        return prev.enabled !== false || prev.nonce !== 0
+          ? { enabled: false, nonce: 0 }
+          : prev;
+      });
+    }
   };
 
   useEffect(() => {
@@ -875,11 +954,17 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           </div>
 
           {/* Centered page title matching the sample layout */}
-          <div className="text-center mt-8 mb-6">
-            <h2 className="text-lg sm:text-2xl font-bold font-serif uppercase tracking-wider text-slate-900 dark:text-white">
-              COMMANDANTS OF NATIONAL DEFENCE COLLEGE NIGERIA
+          <div className="text-center mt-8 mb-6 relative">
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-gradient-to-r from-transparent via-[#002060]/15 to-transparent" />
+            <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold font-serif uppercase tracking-wider relative z-10">
+              <span className="bg-gradient-to-r from-[#002060] via-[#003080] to-[#002060] bg-clip-text text-transparent">
+                Chronicles of Directing Staff
+              </span>
             </h2>
-            <div className="w-24 h-[2px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent mx-auto mt-2.5" />
+            <div className="w-20 h-[2px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent mx-auto mt-2 mb-2" />
+            <p className="text-sm sm:text-base lg:text-lg font-semibold font-serif uppercase tracking-[0.2em] text-[#FF0000]">
+              National Defence College
+            </p>
           </div>
 
           {/* Grid Layout for Commandants */}
@@ -899,48 +984,6 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
 
     if (view === "visits") {
       return <VisitsSection visits={visits} onBack={() => setView("home")} />;
-    }
-
-    if (view === "ndc-events") {
-      return (
-        <section className="min-h-screen bg-white p-6 md:p-12">
-          <div className="max-w-6xl mx-auto">
-            <div className="mb-12 flex flex-col items-start">
-              <button
-                onClick={() => setView("home")}
-                className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-6"
-              >
-                <ChevronLeft size={20} />
-                Back to Home
-              </button>
-              <h1 className="text-4xl md:text-5xl font-bold font-serif text-slate-900 mb-2">NDC Facilitated Events</h1>
-              <p className="text-slate-600 text-lg">Seminars, Conferences & Professional Development</p>
-              <div className="mt-4 h-1 w-24 bg-gradient-to-r from-[#002060] via-[#FF0000] to-[#00B0F0]"></div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 text-center group transition-all duration-500 hover:-translate-y-2.5 hover:scale-[1.012] flex flex-col items-center justify-center p-8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/30 bg-gradient-to-br from-[#1a4d1a] via-[#2d6b2d] to-[#408a40] hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]">
-                {/* Top tri-service accent */}
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[5px] flex z-20">
-                  <div className="flex-1 bg-[#002060]" />
-                  <div className="flex-1 bg-[#FF0000]" />
-                  <div className="flex-1 bg-[#00B0F0]" />
-                </div>
-
-                {/* Gloss/Highlight Effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-700" />
-                <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/10 via-white/5 to-transparent opacity-80" />
-
-                {/* Content */}
-                <div className="relative z-10 flex flex-col items-center justify-center text-white">
-                  <h2 className="text-3xl font-bold mb-4">Coming Soon</h2>
-                  <p className="text-lg text-white/90">Event information will be available shortly.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      );
     }
 
     if (view === "admin") {
@@ -1336,6 +1379,21 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
                     </>
                   )}
 
+                  {!autoDisplayActive && view !== "admin" && (
+                    <button
+                      type="button"
+                      onClick={startPlayAllAutoDisplays}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
+                        isLightMode
+                          ? "border border-[#002060]/20 bg-[#002060] text-white hover:bg-[#001848] shadow-sm"
+                          : "border border-primary/35 bg-primary/15 text-primary hover:bg-primary/25"
+                      }`}
+                    >
+                      <Play className="h-4 w-4" />
+                      <span>Play All Auto Displays</span>
+                    </button>
+                  )}
+
                 <AutoRotationDisplay
                   key={view}
                   personnel={personnel}
@@ -1346,7 +1404,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
                   settings={autoDisplaySettings}
                   forcedControl={forcedAutoDisplay}
                   forcedStep={forcedSlideStep}
-                  onActiveChange={setAutoDisplayActive}
+                  onActiveChange={handleAutoDisplayActiveChange}
                   onStageComplete={handleAutoDisplayStageComplete}
                 />
                 </div>

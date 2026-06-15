@@ -19,9 +19,9 @@ export function CommandantSplitHero({ commandant, isAutoDisplay = false }: Comma
     <section className="relative w-full h-full flex flex-col overflow-hidden bg-white text-slate-900">
       {/* Top Defence Colors Strip */}
       <div className="h-[8px] flex z-30 shrink-0">
-        <div className="flex-1 bg-[#002060]" title="Navy" />
-        <div className="flex-1 bg-[#FF0000]" title="Army" />
-        <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
+        <div className="flex-[32.5] bg-[#002060]" title="Navy" />
+        <div className="flex-[32.5] bg-[#FF0000]" title="Army" />
+        <div className="flex-[35] bg-[#00B0F0]" title="Air Force" />
       </div>
 
       {/* Main Content Container - Two Column Layout */}
@@ -37,13 +37,6 @@ export function CommandantSplitHero({ commandant, isAutoDisplay = false }: Comma
             </span>
             <div className="h-[1px] w-20 bg-slate-300" />
           </div>
-
-          {/* Rank */}
-          {commandant?.rank && (
-            <p className="text-xs md:text-sm text-slate-500 font-bold mb-1 uppercase tracking-widest text-center">
-              {commandant.rank}
-            </p>
-          )}
 
           {/* Name */}
           <h2 className="text-2xl md:text-4xl font-serif font-extrabold mb-3 text-[#002060] uppercase tracking-wide text-center">
@@ -87,9 +80,9 @@ export function CommandantSplitHero({ commandant, isAutoDisplay = false }: Comma
 
       {/* Bottom Defence Colors Strip */}
       <div className="h-[8px] flex z-30 shrink-0">
-        <div className="flex-1 bg-[#002060]" />
-        <div className="flex-1 bg-[#FF0000]" />
-        <div className="flex-1 bg-[#00B0F0]" />
+        <div className="flex-[32.5] bg-[#002060]" title="Navy" />
+        <div className="flex-[32.5] bg-[#FF0000]" title="Army" />
+        <div className="flex-[35] bg-[#00B0F0]" title="Air Force" />
       </div>
     </section>
   );

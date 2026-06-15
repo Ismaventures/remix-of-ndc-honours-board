@@ -67,6 +67,37 @@ type Slide =
   | { type: "personnel"; person: Personnel }
   | { type: "visit"; visit: DistinguishedVisit };
 
+type CourseMarker = {
+  markerType: "course";
+  id: string;
+  label: string;
+  count: number;
+};
+
+type ContinuousItem =
+  | Personnel
+  | DistinguishedVisit
+  | Commandant
+  | CourseMarker;
+
+const getCourseDesignation = (person: Personnel): string => {
+  const decoration = person.decoration?.trim() ?? "";
+  const cseMatch = decoration.match(/CSE\s*(\d+)\s*\/\s*(\d{4})/i);
+  if (cseMatch) return `CSE ${cseMatch[1]}/${cseMatch[2]}`;
+
+  const nwcMatch = decoration.match(/NWC\s+Course\s+(\d+)/i);
+  if (nwcMatch) {
+    return person.periodStart
+      ? `NWC Course ${nwcMatch[1]}/${person.periodStart}`
+      : `NWC Course ${nwcMatch[1]}`;
+  }
+
+  return decoration || (person.periodStart ? `Course ${person.periodStart}` : "Course");
+};
+
+const isCourseMarker = (item: ContinuousItem): item is CourseMarker =>
+  "markerType" in item && item.markerType === "course";
+
 const resolveDisplayContext = (
   activeCategory: Category | null,
   activeView: "home" | "visits" | "admin" | "category",
@@ -159,9 +190,9 @@ function ContinuousSlideCard({
       onClick={() => onSelect(item as any)}
       className={`auto-scroll-card group relative ${
         isCommandant
-          ? "commandant-auto-card w-[85vw] sm:w-[50vw] md:w-[45vw] lg:w-[35vw] xl:w-[28vw] max-w-[480px]"
-          : "w-[80vw] sm:w-[45vw] md:w-[40vw] lg:w-[30vw] xl:w-[24vw] max-w-[420px]"
-      } self-center h-[90%] sm:h-[94%] max-h-[85vh] shrink-0 overflow-hidden rounded-2xl p-2.5 sm:p-3 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
+          ? "commandant-auto-card w-[70vw] sm:w-[38vw] md:w-[32vw] lg:w-[26vw] xl:w-[21vw] max-w-[360px]"
+          : "w-[65vw] sm:w-[35vw] md:w-[28vw] lg:w-[22vw] xl:w-[18vw] max-w-[320px]"
+      } self-center h-[92%] sm:h-[95%] max-h-[88vh] shrink-0 overflow-hidden rounded-2xl p-1.5 sm:p-2 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
           ? "bg-white border border-[#002060]/20 shadow-[0_12px_36px_rgba(0,32,96,0.14)]"
           : "bg-slate-950/90 border border-slate-500/35 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
@@ -187,9 +218,9 @@ function ContinuousSlideCard({
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
-      <div className="relative z-10 mb-2 sm:mb-3 flex flex-col flex-1 min-h-0 w-full">
-        <div className="portrait-photo-mat rounded-sm p-[2px] shadow-xl flex flex-col flex-1 min-h-0 w-full">
-          <div className="rounded-[2px] bg-white p-[2px] shadow-inner flex flex-col flex-1 min-h-0 w-full">
+      <div className="relative z-10 mb-1 sm:mb-1.5 flex flex-col flex-1 min-h-0 w-full">
+        <div className="portrait-photo-mat rounded-sm p-[2px] shadow-xl flex flex-col flex-1 min-h-0 w-full items-center justify-center">
+          <div className={`rounded-[2px] bg-white p-[2px] shadow-inner flex flex-col min-h-0 w-full`}>
             <div className="portrait-photo-mat-inner rounded-[1px] bg-neutral-100/90 p-px flex flex-col flex-1 min-h-0 w-full">
               <div
                 className={`auto-scroll-image-frame relative flex-1 min-h-0 overflow-hidden w-full ${
@@ -204,18 +235,6 @@ function ContinuousSlideCard({
                 )}
                 {imageUrl ? (
                   <>
-                    {/* Blurred Background Fallback to flawlessly fill empty space */}
-                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                      <img
-                        src={imageUrl}
-                        alt=""
-                        className="absolute inset-0 h-full w-full object-cover blur-2xl scale-[1.15] opacity-75"
-                        aria-hidden="true"
-                        loading="eager"
-                      />
-                      <div className={`absolute inset-0 ${isLightMode ? "bg-slate-100/30 backdrop-blur-[4px]" : "bg-black/50 backdrop-blur-[4px]"}`} />
-                    </div>
-                    {/* Primary Contained Formage */}
                     <img
                       src={imageUrl}
                       alt={`${imageAltTitle} ${safeName}`}
@@ -242,42 +261,42 @@ function ContinuousSlideCard({
           className={`auto-scroll-plate bg-[#002060] ${
             isVisit
               ? "px-3 py-2.5 sm:px-4 sm:py-3"
-              : "px-2.5 py-2 sm:px-[0.8rem] sm:py-2.5"
+              : "px-2 py-1.5 sm:px-3 sm:py-2"
           } text-center shadow-xl flex flex-col items-center justify-center`}
         >
           <h3 
-            className="auto-scroll-name font-extrabold leading-tight break-words [overflow-wrap:anywhere] text-[#FFD700] max-h-[3.3em] overflow-y-auto w-full"
-            style={{ fontSize: "clamp(1rem, 6.5cqi, 1.5rem)" }}
+            className="auto-scroll-name font-extrabold leading-tight break-words [overflow-wrap:anywhere] text-[#FFD700] max-h-[2.8em] overflow-y-auto w-full"
+            style={{ fontSize: "clamp(0.85rem, 5.5cqi, 1.25rem)" }}
           >
             {safeName}
           </h3>
           {title && (
             <p 
-              className="auto-scroll-title mt-1.5 font-extrabold tracking-[0.06em] text-[#FF3B30] break-words [overflow-wrap:anywhere] leading-tight max-h-[3.8em] overflow-y-auto w-full"
-              style={{ fontSize: "clamp(0.85rem, 4.5cqi, 1.25rem)" }}
+              className="auto-scroll-title mt-1 font-extrabold tracking-[0.06em] text-[#FF3B30] break-words [overflow-wrap:anywhere] leading-tight max-h-[3em] overflow-y-auto w-full"
+              style={{ fontSize: "clamp(0.75rem, 4cqi, 1.1rem)" }}
             >
               {title}
             </p>
           )}
           {isCommandant && safeDecoration && (
-            <div className="mt-2 inline-flex max-w-full items-center justify-center rounded-md border border-white/35 bg-gradient-to-br from-neutral-50 via-white to-neutral-200/90 px-2.5 py-1 shadow-[0_2px_12px_rgba(0,0,0,0.12)]">
+            <div className="mt-1 inline-flex max-w-full items-center justify-center rounded-md border border-white/35 bg-gradient-to-br from-neutral-50 via-white to-neutral-200/90 px-2 py-0.5 shadow-[0_2px_12px_rgba(0,0,0,0.12)]">
               <p 
                 className="font-bold tracking-[0.07em] text-[#1f2937] break-words"
-                style={{ fontSize: "clamp(10px, 3.2cqi, 14px)" }}
+                style={{ fontSize: "clamp(9px, 2.8cqi, 12px)" }}
               >
                 {safeDecoration}
               </p>
             </div>
           )}
           <p 
-            className="auto-scroll-meta mt-1.5 uppercase tracking-[0.1em] text-white/95 break-words leading-tight w-full"
-            style={{ fontSize: "clamp(10px, 3cqi, 13px)" }}
+            className="auto-scroll-meta mt-1 uppercase tracking-[0.1em] text-white/95 break-words leading-tight w-full"
+            style={{ fontSize: "clamp(9px, 2.5cqi, 11px)" }}
           >
             {subtitle}
           </p>
           <p 
-            className="auto-scroll-year mt-1.5 text-[#f0ebe3] font-semibold tracking-[0.07em] uppercase leading-tight w-full"
-            style={{ fontSize: "clamp(11px, 3.5cqi, 15px)" }}
+            className="auto-scroll-year mt-1 text-[#f0ebe3] font-semibold tracking-[0.07em] uppercase leading-tight w-full"
+            style={{ fontSize: "clamp(9px, 2.8cqi, 12px)" }}
           >
             Year: {yearLabel}
           </p>
@@ -285,7 +304,7 @@ function ContinuousSlideCard({
         <div className="h-[2px] w-full bg-[#FF0000]" />
       </div>
 
-      <p className="relative z-10 mt-2.5 mb-1 sm:mt-3 text-[11px] sm:text-xs uppercase tracking-[0.18em] text-primary/80 font-semibold text-center">
+      <p className="relative z-10 mt-1.5 mb-0.5 sm:mt-2 text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-primary/80 font-semibold text-center">
         Tap to open full details
       </p>
     </button>
@@ -318,6 +337,7 @@ export function AutoRotationDisplay({
   const [selectedVisit, setSelectedVisit] = useState<DistinguishedVisit | null>(
     null,
   );
+  const [activeCourseLabel, setActiveCourseLabel] = useState<string>("");
   const prefersReducedMotion = useReducedMotion();
   const { settings: cinematicSettings } = useCinematicExperienceSettings();
   const { themeMode } = useThemeMode();
@@ -400,8 +420,17 @@ export function AutoRotationDisplay({
     if (activeCategory) {
       const categoryPersonnel = personnel
         .filter((p) => p.category === activeCategory)
-        .sort((a, b) => a.seniorityOrder - b.seniorityOrder)
-        .slice(0, 12)
+        .sort((a, b) => {
+          if (activeCategory === "FWC" || activeCategory === "FDC") {
+            const courseCompare = getCourseDesignation(a).localeCompare(
+              getCourseDesignation(b),
+              undefined,
+              { numeric: true },
+            );
+            if (courseCompare !== 0) return courseCompare;
+          }
+          return a.seniorityOrder - b.seniorityOrder;
+        })
         .map((person) => ({ type: "personnel" as const, person }));
       return categoryPersonnel;
     }
@@ -473,12 +502,15 @@ export function AutoRotationDisplay({
     [selectedCommandant, commandants],
   );
 
-  const continuousItems = useMemo(() => {
+  const continuousItems = useMemo<ContinuousItem[]>(() => {
     if (activeView === "visits") return visitSlides.map((s) => s.visit);
     if (commandantSlides.length > 0)
       return commandantSlides.map((s) => s.commandant);
+    if (activeCategory === "FWC" || activeCategory === "FDC") {
+      return personnelSlides.map((s) => s.person);
+    }
     return personnelSlides.map((s) => s.person);
-  }, [activeView, visitSlides, personnelSlides, commandantSlides]);
+  }, [activeCategory, activeView, visitSlides, personnelSlides, commandantSlides]);
 
   const loopedContinuousItems = useMemo(() => {
     if (continuousItems.length === 0) return [];
@@ -778,10 +810,80 @@ export function AutoRotationDisplay({
     prefersReducedMotion,
   ]);
 
+  const courseLabels = useMemo(() => {
+    if (activeCategory !== "FWC" && activeCategory !== "FDC") return [];
+    const labels: string[] = [];
+    let lastLabel = "";
+    for (const person of continuousItems) {
+      if ("decoration" in person) {
+        const label = getCourseDesignation(person as Personnel);
+        if (label !== lastLabel) {
+          labels.push(label);
+          lastLabel = label;
+        }
+      }
+    }
+    return labels;
+  }, [activeCategory, continuousItems]);
+
+  const detectCurrentCourse = useCallback(() => {
+    const container = fdcScrollRef.current;
+    if (!container || courseLabels.length === 0) return;
+
+    const cards = container.querySelectorAll<HTMLElement>(".auto-scroll-card");
+    if (cards.length === 0) return;
+
+    const containerCenter = container.scrollLeft + container.clientWidth / 2;
+    let closestCard: HTMLElement | null = null;
+    let closestDist = Infinity;
+
+    cards.forEach((card) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const dist = Math.abs(cardCenter - containerCenter);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestCard = card;
+      }
+    });
+
+    if (!closestCard) return;
+
+    const allItems = Array.from(container.querySelectorAll<HTMLElement>(".auto-scroll-card"));
+    const idx = allItems.indexOf(closestCard);
+    const itemCount = continuousItems.length;
+    const segmentIdx = itemCount > 0 ? idx % itemCount : 0;
+    const item = continuousItems[segmentIdx];
+
+    if (item && "decoration" in item) {
+      const label = getCourseDesignation(item as Personnel);
+      setActiveCourseLabel((prev) => (prev !== label ? label : prev));
+    }
+  }, [courseLabels.length, continuousItems]);
+
+  useEffect(() => {
+    if (!isContinuousMode || (activeCategory !== "FWC" && activeCategory !== "FDC")) return;
+    const container = fdcScrollRef.current;
+    if (!container) return;
+
+    let rafId = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(detectCurrentCourse);
+    };
+
+    container.addEventListener("scroll", onScroll, { passive: true });
+    detectCurrentCourse();
+    return () => {
+      container.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, [isContinuousMode, activeCategory, detectCurrentCourse]);
+
   useEffect(() => {
     if (!forcedControl) return;
 
     if (forcedControl.enabled) {
+      stageCompleteFiredRef.current = false;
       setTransitionType(sequence[0] ?? "fade-zoom");
       transitionStepRef.current = 0;
       setCurrentIndex(0);
@@ -1072,6 +1174,7 @@ export function AutoRotationDisplay({
           if (slides.length === 0) {
             return;
           }
+          stageCompleteFiredRef.current = false;
           const initialTrackId = resolveTrackIdForSlide(slides[0]);
           if (isMuted) {
             setMuted(false);
@@ -1243,6 +1346,9 @@ export function AutoRotationDisplay({
   );
 
   const getSectionTitle = () => {
+    if (activeView !== "visits" && !activeCategory) return "Chronicles of Commandants";
+    if (activeCategory === "FWC" && activeCourseLabel) return activeCourseLabel;
+    if (activeCategory === "FDC" && activeCourseLabel) return activeCourseLabel;
     return "";
   };
 
@@ -1256,7 +1362,7 @@ export function AutoRotationDisplay({
       return "Chronicles of Directing Staff (Directing Staff)";
     if (activeCategory === "Allied")
       return "International Allied Officers (Allied)";
-    return "Chronicles of Past Commandants";
+    return "National Defence College";
   };
 
   const getSectionDescriptor = () => {
@@ -1271,18 +1377,23 @@ export function AutoRotationDisplay({
       className={`relative mx-auto flex flex-1 h-full min-h-0 w-full max-w-[1900px] flex-col justify-start ${prefersReducedMotion ? "" : "animate-fade-up"}`}
       style={{ animationDuration: "0.6s" }}
     >
-      <div className="auto-scroll-heading mb-1.5 sm:mb-2 px-1 sm:px-2 shrink-0">
-        <div className="bg-[#002060] border-b-[3px] border-[#FF0000]">
-          <div className="px-4 py-5 sm:px-6 sm:py-6 text-center">
-            {getSectionTitle() && (
-              <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-white/70 leading-snug break-words mb-1">
-                {getSectionTitle()}
-              </p>
-            )}
+      <div className="auto-scroll-heading mb-1 sm:mb-1.5 px-1 sm:px-2 shrink-0">
+        <div className="bg-[#002060] border-b-[2px] border-[#FF0000]">
+          <div className="px-3 py-3 sm:px-4 sm:py-3.5 text-center">
+            <AnimatedPresence mode="wait" initial={false}>
+              {getSectionTitle() && (
+                <p
+                  key={`title-${getSectionTitle()}`}
+                  className="mx-auto max-w-[96vw] text-[clamp(1rem,2.5vw,1.5rem)] font-bold uppercase tracking-[0.04em] text-[#d4af37] drop-shadow-sm leading-tight break-words mb-1 animate-fade-down-sm"
+                >
+                  {getSectionTitle()}
+                </p>
+              )}
+            </AnimatedPresence>
             <AnimatedPresence mode="wait" initial={false}>
               <h2
                 key={`subtitle-${sectionSubtitle}`}
-                className="mx-auto max-w-[96vw] text-[clamp(1.4rem,3.5vw,2.2rem)] font-bold uppercase tracking-[0.03em] text-[#d4af37] drop-shadow-md leading-tight break-words animate-fade-down-sm"
+                className="mx-auto max-w-[96vw] text-[clamp(0.8rem,1.8vw,1.1rem)] font-semibold uppercase tracking-[0.06em] text-white/80 drop-shadow-sm leading-tight break-words animate-fade-down-sm"
               >
                 {sectionSubtitle}
               </h2>

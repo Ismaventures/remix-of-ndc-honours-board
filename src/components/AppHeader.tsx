@@ -50,7 +50,7 @@ export function AppHeader({ onHomeClick }: AppHeaderProps) {
                 ? "bg-slate-50 text-slate-500 border border-slate-200/80" 
                 : "bg-white/[0.06] text-white/80 border border-white/[0.08]"
             }`}>
-              Intellect · Courage · Patriotism
+              Excellence · Courage · Patriotism · Integrity
             </p>
             <div className={`h-px flex-1 max-w-8 ${isLightMode ? "bg-slate-300" : "bg-white/15"}`} />
           </div>
