@@ -3,15 +3,10 @@
  * Handles personnel creation, image uploads, and course category management
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { BatchPersonnelRecord, BatchUploadConfig, BatchUploadResult, GeneratedCourseCategory } from '@/types/batchUpload';
 import { Personnel } from '@/types/domain';
 import { generateCSEDecoration, generateCourseId, generateCourseDesignation } from './batchUploadUtils';
-
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from './supabaseClient';
 
 /**
  * Upload batch of personnel records to database

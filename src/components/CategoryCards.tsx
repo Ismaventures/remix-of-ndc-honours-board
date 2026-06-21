@@ -11,7 +11,6 @@ export type ViewKey =
   | "participants"
   | "allied"
   | "visits"
-  | "ndc-events"
   | "directing"
   | "admin"
   | "about-ndc"
@@ -69,15 +68,6 @@ const CARDS: {
     cardGradient: "from-[#112f4f] via-[#19406b] to-[#205285]",
     accentGlow: "shadow-[0_0_0_1px_rgba(0,176,240,0.2),0_18px_42px_rgba(19,64,107,0.2)]",
   },
-  {
-    key: "ndc-events",
-    label: "NDC FACILITATED EVENTS",
-    subtitle: "Seminars & Conferences",
-    icon: Award,
-    color: "text-green-600",
-    cardGradient: "from-[#1a4d1a] via-[#2d6b2d] to-[#408a40]",
-    accentGlow: "shadow-[0_0_0_1px_rgba(34,197,94,0.3),0_18px_42px_rgba(34,197,94,0.2)]",
-  },
 ];
 
 type CrestParticle = {
@@ -134,8 +124,9 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
   return (
     <section className="mb-8 sm:mb-10">
       <div className="mb-8 flex flex-col items-center">
-        <h2 className="heading-accent text-2xl sm:text-3xl lg:text-4xl font-bold font-serif text-foreground tracking-wider uppercase text-center mt-6 sm:mt-8">
-          Chronicles of Directing Staff
+        <h2 className="heading-accent text-2xl sm:text-3xl lg:text-4xl font-bold font-serif text-foreground tracking-wider uppercase text-center mt-6 sm:mt-8 relative">
+          <span className="relative z-10">Chronicles of Directing Staff</span>
+          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-[#002060]/10 to-transparent -z-10" />
         </h2>
         <div className="ornament-divider mt-4 mb-2">
           <div className="ornament-divider-diamond" />
@@ -259,7 +250,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                           {card.label}
                         </h3>
                         <p
-                          className={`text-[9px] sm:text-[10px] tracking-[0.2em] uppercase font-semibold text-center ${
+                          className={`text-[10px] sm:text-xs tracking-[0.2em] uppercase font-semibold text-center ${
                             isLightMode ? "text-slate-400" : "text-white/60"
                           }`}
                         >

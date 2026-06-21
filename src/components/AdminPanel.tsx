@@ -11,6 +11,7 @@ import { MuseumAdmin } from './MuseumAdmin';
 import { BatchUploadAdmin } from './BatchUploadAdmin';
 import { BatchImageUploadEnhanced } from './BatchImageUploadEnhanced';
 import { UnifiedPersonnelManagement } from './UnifiedPersonnelManagement';
+import { UnifiedPersonnelEditor } from './UnifiedPersonnelEditor';
 import { saveMediaFile } from '@/lib/persistentMedia';
 import { ThemeMode } from '@/hooks/useThemeMode';
 import { BootSequenceSettings } from '@/hooks/useBootSequenceSettings';
@@ -32,6 +33,8 @@ import {
 } from '@/hooks/useIdleStageSettings';
 import { useCinematicExperienceSettings } from '@/hooks/useCinematicExperienceSettings';
 import { playTransitionCue } from '@/lib/transitionCues';
+import { supabase } from '@/lib/supabaseClient';
+import { findRelatedPersonnel } from '@/lib/personnelSync';
 
 interface AdminPanelProps {
   personnel: Personnel[];
@@ -390,6 +393,7 @@ export function AdminPanel({
   const [editingV, setEditingV] = useState<DistinguishedVisit | null>(null);
   const [editingC, setEditingC] = useState<Commandant | null>(null);
   const [showUnifiedPersonnelP, setShowUnifiedPersonnelP] = useState(false);
+  const [showUnifiedEditorP, setShowUnifiedEditorP] = useState(false);
   const [showFormP, setShowFormP] = useState(false);
   const [showBatchUploadP, setShowBatchUploadP] = useState(false);
   const [showBatchImageUploadP, setShowBatchImageUploadP] = useState(false);
@@ -1109,7 +1113,7 @@ export function AdminPanel({
 
         {tab === 'personnel' && (
           <div className="view-enter">
-            {!showUnifiedPersonnelP && !showFormP && !showBatchUploadP && !showBatchImageUploadP && (
+            {!showUnifiedPersonnelP && !showUnifiedEditorP && !showFormP && !showBatchUploadP && !showBatchImageUploadP && (
               <div className="flex gap-3 justify-end mb-4">
                 <button onClick={() => { setShowUnifiedPersonnelP(true); }} className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#002060] text-[#002060] rounded-full text-sm font-medium hover:bg-slate-50 transition-all hover:shadow-lg hover:shadow-[#002060]/20 active:scale-[0.97]">
                   <Upload className="h-4 w-4" /> Manage Personnel
@@ -1142,6 +1146,40 @@ export function AdminPanel({
                   setShowBatchUploadP(false);
                 }}
               />
+            ) : showUnifiedEditorP && editingP ? (
+              <UnifiedPersonnelEditor
+                personnel={editingP}
+                allPersonnel={personnel}
+                onClose={() => { setShowUnifiedEditorP(false); setEditingP(null); }}
+                onUpdatePersonnel={async (id, data) => onUpdatePersonnel(id, data)}
+                onDeletePersonnel={async (id) => onDeletePersonnel(id)}
+                onUploadImage={async (personnelIds, file) => {
+                  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                  
+                  if (!supabaseUrl) {
+                    throw new Error('Supabase configuration missing');
+                  }
+
+                  const fileName = `${file.name}-${Date.now()}`;
+                  const filePath = `personnel/${personnelIds[0]}-${fileName}`;
+
+                  const { error: uploadError } = await supabase.storage
+                    .from('personnel-images')
+                    .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+                  if (uploadError) {
+                    throw uploadError;
+                  }
+
+                  const baseUrl = `${supabaseUrl}/storage/v1/object/public/personnel-images`;
+                  const imageUrl = `${baseUrl}/${filePath}`;
+
+                  // Update all related personnel with the image
+                  for (const id of personnelIds) {
+                    onUpdatePersonnel(id, { imageUrl });
+                  }
+                }}
+              />
             ) : showFormP ? (
               <PersonnelForm
                 initial={editingP}
@@ -1172,7 +1210,16 @@ export function AdminPanel({
                       Back To List
                     </button>
                     <button
-                      onClick={() => { setEditingP(selectedPersonnel); setShowFormP(true); }}
+                      onClick={() => {
+                        setEditingP(selectedPersonnel);
+                        // Check if person has multiple categories
+                        const hasMultipleCategories = findRelatedPersonnel(personnel, selectedPersonnel).length > 0;
+                        if (hasMultipleCategories) {
+                          setShowUnifiedEditorP(true);
+                        } else {
+                          setShowFormP(true);
+                        }
+                      }}
                       className="px-3 py-2 rounded-md bg-[#002060] text-white text-xs font-semibold hover:bg-[#003080]"
                     >
                       Edit Profile
@@ -1312,7 +1359,17 @@ export function AdminPanel({
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
-                                onClick={(e) => { e.stopPropagation(); setEditingP(p); setShowFormP(true); }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingP(p);
+                                  // Check if person has multiple categories
+                                  const hasMultipleCategories = findRelatedPersonnel(personnel, p).length > 0;
+                                  if (hasMultipleCategories) {
+                                    setShowUnifiedEditorP(true);
+                                  } else {
+                                    setShowFormP(true);
+                                  }
+                                }}
                                 className="p-1.5 rounded-md hover:bg-[#002060]/10 text-slate-600 hover:text-[#002060] transition-colors"
                               >
                                 <Pencil className="h-4 w-4" />

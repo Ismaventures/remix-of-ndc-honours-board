@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Personnel, DistinguishedVisit, Commandant } from '@/types/domain';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, withRequestQueue } from '@/lib/supabaseClient';
 
 type PersonnelRow = {
   id: string;
@@ -317,28 +317,33 @@ export function usePersonnelStore() {
       if (inFlight || disposed) return;
       inFlight = true;
 
-      const { data, error } = await supabase
-        .from('personnel')
-        .select('*')
-        .order('seniority_order', { ascending: true });
+      try {
+        const result = await withRequestQueue(async () => {
+          const { data, error } = await supabase
+            .from('personnel')
+            .select('*')
+            .order('seniority_order', { ascending: true });
 
-      if (error) {
-        console.error('Failed to load personnel from Supabase:', error.message);
+          if (error) {
+            throw error;
+          }
+
+          return (data as PersonnelRow[] | null) ?? [];
+        }, 3);
+
+        if (!disposed) {
+          setPersonnel((prev) => {
+            const mergedRows = applyRemoteRowsOrFallback(result, prev.map(mapPersonnelToRow));
+            personnelHasDataRef.current = mergedRows.length > 0;
+            writeCollectionCache(PERSONNEL_CACHE_KEY, mergedRows);
+            return mergedRows.map(mapRowToPersonnel);
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load personnel from Supabase:', error);
         if (!personnelHasDataRef.current && !disposed) {
           setPersonnel([]);
         }
-        inFlight = false;
-        return;
-      }
-
-      const rows = (data as PersonnelRow[] | null) ?? [];
-      if (!disposed) {
-        setPersonnel((prev) => {
-          const mergedRows = applyRemoteRowsOrFallback(rows, prev.map(mapPersonnelToRow));
-          personnelHasDataRef.current = mergedRows.length > 0;
-          writeCollectionCache(PERSONNEL_CACHE_KEY, mergedRows);
-          return mergedRows.map(mapRowToPersonnel);
-        });
       }
 
       inFlight = false;
@@ -442,45 +447,49 @@ export function useCommandantsStore() {
     const fetchCommandants = async (): Promise<CommandantRow[]> => {
       // Fetch lightweight fields first so commandant records remain available
       // even if heavy columns (large image payloads) trigger DB timeouts.
-      const rows: CommandantRow[] = [];
+      return withRequestQueue(async () => {
+        const rows: CommandantRow[] = [];
 
-      for (let from = 0; from < 400; from += COMMANDANTS_FETCH_PAGE_SIZE) {
-        const to = from + COMMANDANTS_FETCH_PAGE_SIZE - 1;
-        const page = await supabase
-          .from('commandants')
-          .select('id,name,rank,title,post_nominals,tenure_start,tenure_end,years_experience,is_current,decoration,image_url,description,bio_summary,biography_full,education,training,past_appointments,honours,family_note,impact_statement')
-          .order('tenure_start', { ascending: false })
-          .range(from, to);
+        for (let from = 0; from < 400; from += COMMANDANTS_FETCH_PAGE_SIZE) {
+          const to = from + COMMANDANTS_FETCH_PAGE_SIZE - 1;
+          const page = await supabase
+            .from('commandants')
+            .select('id,name,rank,title,post_nominals,tenure_start,tenure_end,years_experience,is_current,decoration,image_url,description,bio_summary,biography_full,education,training,past_appointments,honours,family_note,impact_statement')
+            .order('tenure_start', { ascending: false })
+            .range(from, to);
 
-        if (page.error) {
-          throw page.error;
+          if (page.error) {
+            throw page.error;
+          }
+
+          const pageRows = (page.data as CommandantRow[] | null) ?? [];
+          rows.push(...pageRows);
+
+          if (pageRows.length < COMMANDANTS_FETCH_PAGE_SIZE) {
+            break;
+          }
         }
 
-        const pageRows = (page.data as CommandantRow[] | null) ?? [];
-        rows.push(...pageRows);
-
-        if (pageRows.length < COMMANDANTS_FETCH_PAGE_SIZE) {
-          break;
-        }
-      }
-
-      return rows;
+        return rows;
+      }, 4);
     };
 
     const fetchCommandantsFallback = async (): Promise<CommandantRow[]> => {
-      const { data, error } = await supabase
-        .from('commandants')
-        .select('id,name,rank,title,post_nominals,tenure_start,tenure_end,years_experience,is_current,decoration,description,image_url,bio_summary,biography_full,education,training,past_appointments,honours,family_note,impact_statement')
-        .order('tenure_start', { ascending: false });
+      return withRequestQueue(async () => {
+        const { data, error } = await supabase
+          .from('commandants')
+          .select('id,name,rank,title,post_nominals,tenure_start,tenure_end,years_experience,is_current,decoration,description,image_url,bio_summary,biography_full,education,training,past_appointments,honours,family_note,impact_statement')
+          .order('tenure_start', { ascending: false });
 
-      if (error) {
-        throw error;
-      }
+        if (error) {
+          throw error;
+        }
 
-      return ((data as CommandantRow[] | null) ?? []).map((row) => ({
-        ...row,
-        description: row.description ?? '',
-      }));
+        return ((data as CommandantRow[] | null) ?? []).map((row) => ({
+          ...row,
+          description: row.description ?? '',
+        }));
+      }, 4);
     };
 
     const loadCommandants = async () => {
@@ -683,28 +692,33 @@ export function useVisitsStore() {
       if (inFlight || disposed) return;
       inFlight = true;
 
-      const { data, error } = await supabase
-        .from('visits')
-        .select('*')
-        .order('date', { ascending: false });
+      try {
+        const result = await withRequestQueue(async () => {
+          const { data, error } = await supabase
+            .from('visits')
+            .select('*')
+            .order('date', { ascending: false });
 
-      if (error) {
-        console.error('Failed to load visits from Supabase:', error.message);
+          if (error) {
+            throw error;
+          }
+
+          return (data as VisitRow[] | null) ?? [];
+        }, 3);
+
+        if (!disposed) {
+          setVisits((prev) => {
+            const mergedRows = applyRemoteRowsOrFallback(result, prev.map(mapRowToVisit));
+            visitsHasDataRef.current = mergedRows.length > 0;
+            writeCollectionCache(VISITS_CACHE_KEY, mergedRows);
+            return mergedRows.map(mapRowToVisit);
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load visits from Supabase:', error);
         if (!visitsHasDataRef.current && !disposed) {
           setVisits([]);
         }
-        inFlight = false;
-        return;
-      }
-
-      const rows = (data as VisitRow[] | null) ?? [];
-      if (!disposed) {
-        setVisits((prev) => {
-          const mergedRows = applyRemoteRowsOrFallback(rows, prev.map(mapRowToVisit));
-          visitsHasDataRef.current = mergedRows.length > 0;
-          writeCollectionCache(VISITS_CACHE_KEY, mergedRows);
-          return mergedRows.map(mapRowToVisit);
-        });
       }
 
       inFlight = false;

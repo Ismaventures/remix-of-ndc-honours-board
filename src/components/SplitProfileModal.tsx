@@ -82,10 +82,10 @@ export function SplitProfileModal({
   if (!portalReady) return null;
 
   const navButtonClass = cn(
-    'absolute top-1/2 -translate-y-1/2 z-50 flex items-center justify-center w-12 h-12 rounded-full',
-    'bg-slate-900/10 hover:bg-slate-900/20 border border-slate-900/20 hover:border-slate-900/40 backdrop-blur-sm',
+    'absolute top-1/2 -translate-y-1/2 z-50 flex items-center justify-center w-10 h-10 md:w-11 md:h-11 rounded-full',
+    'bg-black/5 hover:bg-black/10 border border-black/10 hover:border-black/20 backdrop-blur-sm',
     'transition-all duration-500 group/nav',
-    navVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+    navVisible ? 'opacity-70 pointer-events-auto hover:opacity-100' : 'opacity-0 pointer-events-none'
   );
 
   return createPortal(
@@ -107,9 +107,9 @@ export function SplitProfileModal({
           <button
             onClick={handlePrev}
             aria-label="Previous profile"
-            className={cn(navButtonClass, 'left-6')}
+            className={cn(navButtonClass, 'left-3')}
           >
-            <ChevronLeft className="h-6 w-6 text-slate-700 group-hover/nav:text-slate-900 transition-colors" />
+            <ChevronLeft className="h-5 w-5 text-slate-600 group-hover/nav:text-slate-900 transition-colors" />
           </button>
         )}
 
@@ -117,9 +117,9 @@ export function SplitProfileModal({
           <button
             onClick={handleNext}
             aria-label="Next profile"
-            className={cn(navButtonClass, 'right-[37%]')}
+            className={cn(navButtonClass, 'right-3')}
           >
-            <ChevronRight className="h-6 w-6 text-slate-700 group-hover/nav:text-slate-900 transition-colors" />
+            <ChevronRight className="h-5 w-5 text-slate-600 group-hover/nav:text-slate-900 transition-colors" />
           </button>
         )}
 
@@ -137,8 +137,8 @@ export function SplitProfileModal({
         {currentIndex >= 0 && totalCount > 1 && (
           <div
             className={cn(
-              'absolute left-[32.5%] -translate-x-1/2 bottom-6 z-50 flex justify-center gap-1.5',
-              'bg-slate-900/5 px-4 py-2 rounded-full backdrop-blur-sm border border-slate-200',
+              'absolute left-[30%] -translate-x-1/2 bottom-6 z-50 flex justify-center gap-1.5',
+              'bg-slate-900/5 px-4 py-2 rounded-full backdrop-blur-sm border border-slate-200/60',
               'transition-opacity duration-500',
               navVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
             )}

@@ -34,21 +34,23 @@ export function FellowSplitHero({ person, category, courseDesignation }: FellowS
         <div className="flex-1 overflow-y-auto pr-6 pl-8 py-8 flex flex-col items-center scrollbar-hide border-r-4 border-[#FF0000]/80">
           <div className="flex items-center gap-4 mb-4 w-full justify-center">
             <div className="h-px w-20 bg-slate-300" />
-            <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-[#002060] font-bold text-center">
+            <span className="text-sm md:text-base lg:text-lg uppercase tracking-[0.05em] text-[#FF0000] font-extrabold text-center drop-shadow-sm">
               {categoryLabel}
             </span>
             <div className="h-px w-20 bg-slate-300" />
           </div>
 
-          <h2 className="text-2xl md:text-4xl font-serif font-extrabold mb-1 text-[#002060] uppercase tracking-wide text-center leading-tight">
-            {person.name}
-          </h2>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3">
+            {person.rank && (
+              <p className="text-xs md:text-sm text-slate-500 font-bold uppercase tracking-widest">
+                {person.rank}
+              </p>
+            )}
 
-          {person.rank && (
-            <p className="text-xs md:text-sm text-slate-500 font-bold mb-3 uppercase tracking-widest text-center">
-              {person.rank}
-            </p>
-          )}
+            <h2 className="text-2xl md:text-4xl font-serif font-extrabold text-[#002060] uppercase tracking-wide leading-tight">
+              {person.name}
+            </h2>
+          </div>
 
           {person.decoration && (
             <div className="flex items-center gap-2.5 mb-4 justify-center max-w-2xl">

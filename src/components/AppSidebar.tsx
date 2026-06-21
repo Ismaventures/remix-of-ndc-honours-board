@@ -69,7 +69,7 @@ export function AppSidebar({ active, onNavigate }: AppSidebarProps) {
         <div className="flex items-center justify-center gap-2">
           <div className="h-px flex-1 bg-sidebar-border" />
           <p className="text-[10px] text-sidebar-foreground/85 tracking-[0.12em] uppercase font-semibold whitespace-nowrap">
-            Intellect · Courage · Patriotism
+            Excellence · Courage · Patriotism · Integrity
           </p>
           <div className="h-px flex-1 bg-sidebar-border" />
         </div>

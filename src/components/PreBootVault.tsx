@@ -66,7 +66,7 @@ export const PreBootVault: React.FC<PreBootVaultProps> = ({ onComplete }) => {
         <div className="flex items-center gap-3 mt-4 w-full justify-center opacity-80">
           <div className="h-[1px] w-8 bg-white/10" />
           <span className="text-[9px] uppercase tracking-[0.25em] text-white/70 font-semibold font-mono">
-            Intellect · Courage · Patriotism
+            Excellence · Courage · Patriotism · Integrity
           </span>
           <div className="h-[1px] w-8 bg-white/10" />
         </div>

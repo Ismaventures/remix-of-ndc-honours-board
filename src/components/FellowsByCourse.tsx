@@ -272,31 +272,6 @@ export function FellowsByCourse({
                 Back
               </button>
             )}
-            
-            {/* Auto Display All Courses Button */}
-            {courseGroups.length > 0 && (
-              <button
-                onClick={() => {
-                  setAutoDisplayActive(true);
-                  setAutoDisplayIndex(0);
-                  setIsAutoPlaying(true);
-                  setAutoDisplayMode('all-courses');
-                }}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-200',
-                  autoDisplayActive && autoDisplayMode === 'all-courses'
-                    ? isLightMode
-                      ? 'bg-[#002060] text-white shadow-md'
-                      : 'bg-[#00B0F0] text-[#002060] shadow-[0_0_20px_rgba(0,176,240,0.3)]'
-                    : isLightMode
-                      ? 'border border-[#002060]/25 text-[#002060] hover:bg-[#002060]/10'
-                      : 'border border-[#00B0F0]/30 text-[#00B0F0] hover:bg-[#00B0F0]/10'
-                )}
-              >
-                <Monitor className="h-3.5 w-3.5" />
-                Auto Display All
-              </button>
-            )}
           </div>
 
           {/* Header section - Single unified heading */}
@@ -450,26 +425,6 @@ export function FellowsByCourse({
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               Back to Courses
             </button>
-
-            {activeFellows.length > 0 && (
-              <button
-                onClick={() => {
-                  setAutoDisplayActive(true);
-                  setAutoDisplayIndex(0);
-                  setIsAutoPlaying(true);
-                  setAutoDisplayMode('single-course');
-                }}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-200',
-                  isLightMode
-                    ? 'border border-[#002060]/25 text-[#002060] hover:bg-[#002060]/10'
-                    : 'border border-[#00B0F0]/30 text-[#00B0F0] hover:bg-[#00B0F0]/10'
-                )}
-              >
-                <Monitor className="h-3.5 w-3.5" />
-                Auto Display
-              </button>
-            )}
           </div>
 
           {/* Header with category title - Enhanced with tri-color and scattered NDC logos */}
