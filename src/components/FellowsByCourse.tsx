@@ -242,27 +242,12 @@ export function FellowsByCourse({
       {/* When no course selected - show course selection grid */}
       {!selectedGroupId && (
         <>
-<<<<<<< HEAD
           {/* Back button */}
           {onBack && (
             <div className="flex items-center justify-between gap-4 mb-6">
               <button
                 onClick={onBack}
                 className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
-=======
-          {/* Back button and Auto Display - top sticky section */}
-          <div className={cn(
-            'flex items-center justify-between gap-2 sticky top-0 z-40 py-2 px-1 -mx-1',
-            'backdrop-blur-md border-b',
-            isLightMode
-              ? 'bg-slate-50/90 border-slate-200/60'
-              : 'bg-slate-950/80 border-white/10'
-          )}>
-            {onBack && (
-              <button
-                onClick={onBack}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
->>>>>>> 5150c0706c6226fe7946678363018ec35443990a
                   isLightMode
                     ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
                     : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
@@ -271,8 +256,8 @@ export function FellowsByCourse({
                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                 Back
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Header section - Single unified heading */}
           {title && (
@@ -409,11 +394,7 @@ export function FellowsByCourse({
       {selectedGroupId && (
         <div className="space-y-2">
           {/* Back button to course selection */}
-<<<<<<< HEAD
           <div className="flex items-center justify-between gap-4 mb-6">
-=======
-          <div className="flex items-center justify-between gap-2 flex-wrap">
->>>>>>> 5150c0706c6226fe7946678363018ec35443990a
             <button
               onClick={() => setSelectedGroupId(null)}
               className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${

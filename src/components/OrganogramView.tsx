@@ -277,9 +277,11 @@ export function OrganogramView({
   const [mounted, setMounted] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("oldest");
   const [searchQuery, setSearchQuery] = useState("");
+  const [displayMode, setDisplayMode] = useState<"scroll" | "list">("scroll");
   const [rankFilter, setRankFilter] = useState<string>("all");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
+
   // Auto-display states
   const [autoDisplayActive, setAutoDisplayActive] = useState(false);
   const [autoDisplayIndex, setAutoDisplayIndex] = useState(0);
@@ -288,10 +290,41 @@ export function OrganogramView({
   const [rankOpen, setRankOpen] = useState(false);
   const [serviceOpen, setServiceOpen] = useState(false);
   const [yearOpen, setYearOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const autoPauseUntilRef = useRef(0);
+  const navRafRef = useRef<number | null>(null);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const updateItemsPerPage = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setItemsPerPage(6);
+        return;
+      }
+      if (width < 1024) {
+        setItemsPerPage(8);
+        return;
+      }
+      if (width < 1440) {
+        setItemsPerPage(12);
+        return;
+      }
+      setItemsPerPage(16);
+    };
+
+    updateItemsPerPage();
+    window.addEventListener("resize", updateItemsPerPage);
+    return () => window.removeEventListener("resize", updateItemsPerPage);
   }, []);
 
   useEffect(() => {
@@ -300,8 +333,14 @@ export function OrganogramView({
     setRankFilter("all");
     setServiceFilter("all");
     setYearFilter("all");
+    setCurrentPage(1);
     setSelectedId(forcedSelectedId);
   }, [forcedSelectedId, forcedSelectionNonce]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, rankFilter, serviceFilter, yearFilter, sortMode]);
 
   const categoryRecords = useMemo(
     () => data.filter((p) => p.category === category),
@@ -399,8 +438,6 @@ export function OrganogramView({
     yearFilter,
   ]);
 
-<<<<<<< HEAD
-=======
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
   useEffect(() => {
@@ -524,7 +561,6 @@ export function OrganogramView({
     };
   }, [isCarouselPaused, filtered.length, displayMode]);
 
->>>>>>> 5150c0706c6226fe7946678363018ec35443990a
   const selectedPerson = useMemo(
     () => filtered.find((p) => p.id === selectedId) || null,
     [filtered, selectedId],
@@ -628,9 +664,6 @@ export function OrganogramView({
           </button>
         </div>
 
-<<<<<<< HEAD
-        {/* displayMode toggle removed */}
-=======
         {!usePortraitGrid && (
         <div className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-background/70 p-1 w-full md:w-auto">
           <button
@@ -655,7 +688,6 @@ export function OrganogramView({
           </button>
         </div>
         )}
->>>>>>> 5150c0706c6226fe7946678363018ec35443990a
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* RANK FILTER COMBOBOX */}
@@ -842,11 +874,7 @@ export function OrganogramView({
         </div>
       </div>
 
-<<<<<<< HEAD
-      <div className="rounded-xl p-3 md:p-6 relative overflow-hidden flex flex-col border border-[#002060]/30 bg-[linear-gradient(165deg,#f9fbff_0%,#eef3fb_55%,#e6f8ff_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7),inset_0_0_28px_rgba(0,32,96,0.08),0_16px_45px_rgba(0,0,0,0.16)]">
-=======
       <div className={`rounded-xl p-3 md:p-6 ${usePortraitGrid ? "min-h-[520px]" : displayMode === "scroll" ? "min-h-[300px]" : "min-h-[520px]"} relative overflow-hidden flex flex-col border border-[#002060]/30 bg-[linear-gradient(165deg,#f9fbff_0%,#eef3fb_55%,#e6f8ff_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.7),inset_0_0_28px_rgba(0,32,96,0.08),0_16px_45px_rgba(0,0,0,0.16)]`}>
->>>>>>> 5150c0706c6226fe7946678363018ec35443990a
         <div className="absolute top-0 inset-x-0 h-[7px] flex">
           <div className="flex-1 bg-[#002060]" />
           <div className="flex-1 bg-[#FF0000]" />
@@ -860,18 +888,6 @@ export function OrganogramView({
         <div className="absolute inset-0 pointer-events-none opacity-[0.1] bg-[linear-gradient(45deg,rgba(0,32,96,0.06)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.06)_75%),linear-gradient(45deg,rgba(0,32,96,0.06)_25%,transparent_25%,transparent_75%,rgba(0,32,96,0.06)_75%)] bg-[length:52px_52px] bg-[position:0_0,26px_26px]" />
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(140%_100%_at_50%_0%,rgba(0,32,96,0.1),transparent_60%)]" />
         {filtered.length > 0 ? (
-<<<<<<< HEAD
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 sm:gap-6 mt-6 pb-8">
-            {filtered.map((person) => (
-              <GridAlliedCard
-                key={person.id}
-                person={person}
-                onClick={() => setSelectedId(person.id)}
-                isLightMode={isLightMode}
-              />
-            ))}
-          </div>
-=======
           <>
             {usePortraitGrid ? (
               <>
@@ -1111,7 +1127,6 @@ export function OrganogramView({
               </>
             )}
           </>
->>>>>>> 5150c0706c6226fe7946678363018ec35443990a
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-12">
             <div className="w-16 h-16 rounded-full gold-border flex items-center justify-center bg-muted/20 mb-4 animate-pulse-slow">

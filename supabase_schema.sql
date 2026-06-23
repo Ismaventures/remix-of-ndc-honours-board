@@ -8,7 +8,20 @@ CREATE TABLE IF NOT EXISTS commandants (
   image_url text,
   description text,
   decoration text,
-  is_current boolean NOT NULL DEFAULT false
+  is_current boolean NOT NULL DEFAULT false,
+  post_nominals text,
+  rank text,
+  years_experience integer,
+  bio_summary text,
+  biography_full text,
+  education text,
+  training text,
+  past_appointments text,
+  honours text,
+  family_note text,
+  impact_statement text,
+  created_at timestamptz,
+  updated_at timestamptz
 );
 
 -- Table: personnel

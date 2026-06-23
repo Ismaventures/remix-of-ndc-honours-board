@@ -58,9 +58,7 @@ function normalizeFilename(filename: string): string {
 }
 
 function isSupabaseMediaReady(): boolean {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  return Boolean(url && key);
+  return true;
 }
 
 function parsePersistentMediaRef(ref: string): ParsedMediaRef | null {
@@ -198,6 +196,12 @@ async function fetchAndPersistRemoteMedia(url: string): Promise<StoredRemoteMedi
 }
 
 async function resolveRemoteMediaRefToObjectUrl(ref: string): Promise<string> {
+  if (ref.startsWith('local-media://')) {
+    if (typeof window !== 'undefined' && !(window as any).electronAPI) {
+      return ref.replace('local-media://', '/local_media/');
+    }
+    return ref;
+  }
   const absoluteUrl = toAbsoluteHttpUrl(ref);
   if (!absoluteUrl) return ref;
 
@@ -241,6 +245,7 @@ export async function prefetchMediaReferences(refs: Array<string | null | undefi
   );
 
   const warm = async (ref: string) => {
+    if (ref.startsWith('local-media://')) return;
     const parsedPersistentRef = parsePersistentMediaRef(ref);
     if (parsedPersistentRef) {
       if (!parsedPersistentRef.publicUrl) return;
@@ -304,6 +309,12 @@ export async function saveMediaFile(file: File): Promise<string> {
 export async function resolveMediaRefToObjectUrl(ref: string): Promise<string | null> {
   const parsedPersistentRef = parsePersistentMediaRef(ref);
   if (!parsedPersistentRef) {
+    if (ref.startsWith('local-media://')) {
+      if (typeof window !== 'undefined' && !(window as any).electronAPI) {
+        return ref.replace('local-media://', '/local_media/');
+      }
+      return ref;
+    }
     return resolveRemoteMediaRefToObjectUrl(ref);
   }
 
