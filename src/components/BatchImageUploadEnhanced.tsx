@@ -168,12 +168,7 @@ export function BatchImageUploadEnhanced({
         const fileName = `${img.file.name}-${Date.now()}`;
         const filePath = `personnel/${img.personnelId}-${fileName}`;
 
-        // Verify Supabase is configured
-        if (!supabaseUrl || !supabaseAnonKey) {
-          throw new Error('Supabase configuration missing. Please check environment variables.');
-        }
-
-        // Upload to Supabase storage
+        // Upload to storage
         const { error: uploadError } = await supabase.storage
           .from('personnel-images')
           .upload(filePath, img.file, {
@@ -182,16 +177,13 @@ export function BatchImageUploadEnhanced({
           });
 
         if (uploadError) {
-          // Provide helpful error messages
-          if (uploadError.message.includes('bucket') || uploadError.message.includes('not found')) {
-            throw new Error('Storage bucket "personnel-images" not found. Please ensure it exists in Supabase storage and is set to public.');
-          }
           throw uploadError;
         }
 
-        // Generate image URL
-        const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/personnel-images`;
-        const imageUrl = `${baseUrl}/${filePath}`;
+        // Generate image URL using public URL API
+        const { data: { publicUrl: imageUrl } } = supabase.storage
+          .from('personnel-images')
+          .getPublicUrl(filePath);
 
         setImages(prev =>
           prev.map((image, idx) =>

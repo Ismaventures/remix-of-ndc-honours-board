@@ -211,7 +211,6 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
 
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith("outdoor");
-  const isLightMode = themeMode.startsWith("outdoor");
   const {
     settings: bootSequenceSettings,
     setSettings: setBootSequenceSettings,
@@ -948,7 +947,6 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               Back
             </button>
-<<<<<<< HEAD
             <button
               onClick={() => {
                 setCommandantsAutoDisplayActive(true);
@@ -960,8 +958,6 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
               <Play className="h-3.5 w-3.5" />
               Auto Display
             </button>
-=======
->>>>>>> 5150c0706c6226fe7946678363018ec35443990a
           </div>
 
           {/* Centered page title matching the sample layout */}
@@ -1309,7 +1305,12 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
       <div
         className={`command-center-bg h-screen max-h-screen overflow-hidden flex flex-col transition-opacity duration-1000 ${isBooting ? "opacity-0" : "opacity-100"}`}
       >
-        {!autoDisplayActive && view !== "admin" && <AppHeader onHomeClick={() => setView("home")} />}
+        {!autoDisplayActive && view !== "admin" && (
+          <AppHeader
+            onHomeClick={() => setView("home")}
+            onAdminClick={() => setView("admin")}
+          />
+        )}
 
         <main className={`flex-1 overflow-y-auto overflow-x-hidden ${autoDisplayActive ? "p-0" : ""}`}>
           <div className={`${autoDisplayActive || view === "admin" || view === "artifact-gallery" ? "w-screen h-screen max-w-none p-0" : "max-w-[1840px] px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8"} mx-auto relative z-10`}>
@@ -1477,95 +1478,12 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
       </div>
 
       {selectedPastCommandant && (
-<<<<<<< HEAD
-        <div className="fixed inset-0 z-[70] bg-white text-slate-900 flex flex-col modal-backdrop-enter overflow-hidden">
-          <div className="relative flex-1 min-h-0 flex flex-col">
-            {/* Back button - floating absolute on the top left, standardized */}
-            <button
-              onClick={closePastCommandantProfile}
-              className={`absolute left-6 top-6 z-50 group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-md ${
-                isLightMode
-                  ? 'border-[#002060]/20 text-[#002060] bg-white/80 hover:bg-[#002060]/10 hover:border-[#002060]/35 backdrop-blur-sm'
-                  : 'border-white/10 text-white/80 bg-slate-950/40 hover:bg-white/[0.08] hover:border-white/20 backdrop-blur-sm'
-              }`}
-              aria-label="Back to Commandants"
-            >
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              Back
-            </button>
-
-            {/* Prev / Next navigation arrows floating on left / right sides of the biography section */}
-            {(() => {
-              const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
-              const hasPrev = idx > 0;
-              const hasNext = idx >= 0 && idx < commandants.length - 1;
-              return (
-                <>
-                  {hasPrev && (
-                    <button
-                      onClick={() => navigateCommandantProfile("prev")}
-                      aria-label="Previous commandant"
-                      className="absolute left-6 top-1/2 -translate-y-1/2 z-50 flex items-center justify-center w-12 h-12 rounded-full bg-slate-900/10 hover:bg-slate-900/20 border border-slate-900/20 hover:border-slate-900/40 backdrop-blur-sm transition-all duration-300 group/nav"
-                    >
-                      <ChevronLeft className="h-6 w-6 text-slate-700 group-hover/nav:text-slate-900 transition-colors" />
-                    </button>
-                  )}
-                  {hasNext && (
-                    <button
-                      onClick={() => navigateCommandantProfile("next")}
-                      aria-label="Next commandant"
-                      className="absolute right-[37%] top-1/2 -translate-y-1/2 z-50 flex items-center justify-center w-12 h-12 rounded-full bg-slate-900/10 hover:bg-slate-900/20 border border-slate-900/20 hover:border-slate-900/40 backdrop-blur-sm transition-all duration-300 group/nav"
-                    >
-                      <ChevronRight className="h-6 w-6 text-slate-700 group-hover/nav:text-slate-900 transition-colors" />
-                    </button>
-                  )}
-                </>
-              );
-            })()}
-
-            <div
-              key={selectedPastCommandant.id}
-              className={`flex-1 min-h-0 flex flex-col ${
-                commandantSlideDir.current === 'left' ? 'profile-slide-left' : commandantSlideDir.current === 'right' ? 'profile-slide-right' : ''
-              }`}
-            >
-              <CommandantSplitHero commandant={selectedPastCommandant} />
-            </div>
-
-            {/* Dot indicators centered at the bottom of the biography column */}
-            {(() => {
-              const idx = commandants.findIndex((c) => c.id === selectedPastCommandant.id);
-              if (idx === -1 || commandants.length <= 1) return null;
-              return (
-                <div className="absolute left-[32.5%] -translate-x-1/2 bottom-6 z-50 flex justify-center gap-1.5 bg-slate-900/5 px-4 py-2 rounded-full backdrop-blur-sm border border-slate-200">
-                  {commandants.map((c, i) => (
-                    <button
-                      key={c.id}
-                      onClick={() => {
-                        commandantSlideDir.current = i > idx ? 'left' : 'right';
-                        setSelectedPastCommandant(c);
-                      }}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        i === idx
-                          ? 'w-8 bg-[#002060]'
-                          : 'w-1.5 bg-slate-400/50 hover:bg-slate-400'
-                      }`}
-                      aria-label={`View ${c.name}`}
-                    />
-                  ))}
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-=======
         <CommandantProfileOverlay
           commandant={selectedPastCommandant}
           commandants={commandants}
           onClose={closePastCommandantProfile}
           onSelectCommandant={setSelectedPastCommandant}
         />
->>>>>>> 5150c0706c6226fe7946678363018ec35443990a
       )}
 
       {/* Commandants Auto-Display Modal */}

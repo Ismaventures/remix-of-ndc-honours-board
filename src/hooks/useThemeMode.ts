@@ -17,7 +17,7 @@ type ThemeTokenMap = Record<string, string>;
 
 const STORAGE_KEY = "ndc-theme-mode";
 const SUPABASE_SETTING_KEY = "theme_mode";
-export const DEFAULT_THEME_MODE: ThemeMode = "indoor-defence-classic";
+export const DEFAULT_THEME_MODE: ThemeMode = "outdoor-tactical-light";
 
 export const THEME_MODE_LABELS: Record<ThemeMode, string> = {
   "outdoor-tactical-light": "Outdoor 1 - Tactical Light",

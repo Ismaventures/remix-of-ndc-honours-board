@@ -5,9 +5,7 @@ const UI_SETTINGS_TABLE = 'ui_settings';
 const LOCAL_SETTINGS_PREFIX = 'ui_setting_';
 
 export function isSupabaseSettingsReady(): boolean {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  return Boolean(url && key);
+  return true;
 }
 
 /* ── Local (IndexedDB) helpers ── */

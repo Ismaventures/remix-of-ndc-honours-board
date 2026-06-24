@@ -12,9 +12,7 @@ let sharedSettingsTableMissing = false;
 let sharedSettingsTableWarningShown = false;
 
 export function isSupabaseSharedSettingsReady(): boolean {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  return Boolean(url && key);
+  return true;
 }
 
 function localKey(settingKey: string): string {
