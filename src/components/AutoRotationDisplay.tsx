@@ -476,6 +476,8 @@ export function AutoRotationDisplay({
     slides.length > 0 &&
     ((activeCategory !== null &&
       displayContext !== "commandants" &&
+      displayContext !== "FWC" &&
+      displayContext !== "FDC" &&
       !useAppliedTransitionOnly) ||
       appliedTransition === "continuous-scroll" ||
       sequence[0] === "continuous-scroll");
@@ -1408,7 +1410,7 @@ export function AutoRotationDisplay({
       {slide.type === "personnel" && (
         <button
           onClick={() => setSelectedPerson(slide.person)}
-          className={`w-full text-left relative overflow-hidden focus-visible:outline-none ${prefersReducedMotion ? "" : "hover-scale-sm"}`}
+          className={`w-full h-full min-h-0 max-h-full flex flex-col text-left relative overflow-hidden focus-visible:outline-none ${prefersReducedMotion ? "" : "hover-scale-sm"}`}
           aria-label={`Open profile for ${slide.person.name}`}
         >
           <UnifiedAutoCard
@@ -1637,7 +1639,7 @@ export function AutoRotationDisplay({
         </button>
 
         <div
-          className={`${slide.type === "commandant" || isContinuousMode ? "max-w-6xl xl:max-w-7xl 2xl:max-w-[1800px] h-full min-h-0 flex flex-col" : "max-w-6xl xl:max-w-7xl 2xl:max-w-[1800px]"} relative w-full max-h-full transition-all ease-out will-change-transform ${slide.type === "commandant" || isContinuousMode ? "" : "-translate-y-1 sm:-translate-y-2 md:-translate-y-3"} ${getTransitionClasses()}`}
+          className={`${slide.type === "commandant" || slide.type === "personnel" || isContinuousMode ? "max-w-6xl xl:max-w-7xl 2xl:max-w-[1800px] h-full min-h-0 flex flex-col" : "max-w-6xl xl:max-w-7xl 2xl:max-w-[1800px]"} relative w-full max-h-full transition-all ease-out will-change-transform ${slide.type === "commandant" || slide.type === "personnel" || isContinuousMode ? "" : "-translate-y-1 sm:-translate-y-2 md:-translate-y-3"} ${getTransitionClasses()}`}
           style={{ transitionDuration: `${currentTransitionDuration}ms` }}
         >
           {isContinuousMode && continuousItems.length > 0 ? (
