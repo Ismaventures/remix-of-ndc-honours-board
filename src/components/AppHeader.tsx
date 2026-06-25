@@ -1,13 +1,11 @@
 import ndcCrest from "/images/ndc-crest.png";
 import { useThemeMode } from "@/hooks/useThemeMode";
-import { Settings } from "lucide-react";
 
 interface AppHeaderProps {
   onHomeClick?: () => void;
-  onAdminClick?: () => void;
 }
 
-export function AppHeader({ onHomeClick, onAdminClick }: AppHeaderProps) {
+export function AppHeader({ onHomeClick }: AppHeaderProps) {
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith("outdoor");
 
@@ -58,23 +56,6 @@ export function AppHeader({ onHomeClick, onAdminClick }: AppHeaderProps) {
           </div>
         </div>
       </button>
-
-      {onAdminClick && (
-        <button
-          onClick={onAdminClick}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold tracking-wider uppercase transition-all duration-300 active:scale-[0.98] group cursor-pointer ${
-            isLightMode 
-              ? "bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200" 
-              : "bg-white/[0.04] hover:bg-primary/15 text-white/85 border border-white/[0.08] hover:border-primary/30"
-          }`}
-          title="Access Admin Panel"
-        >
-          <Settings className={`h-4 w-4 transition-transform duration-500 group-hover:rotate-45 ${
-            isLightMode ? "text-slate-500" : "text-primary"
-          }`} />
-          <span className="hidden sm:inline">Admin</span>
-        </button>
-      )}
 
       {/* Tri-service defense strip at the bottom of the header */}
       <div className="absolute inset-x-0 bottom-0 h-[4px] flex">

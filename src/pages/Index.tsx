@@ -21,6 +21,7 @@ import { AdminPanel } from "@/components/AdminPanel";
 import { AdminLogin } from "@/components/AdminLogin";
 // import { ArtifactFrameGallery } from "@/components/ArtifactFrameGallery";
 import { AutoRotationDisplay } from "@/components/AutoRotationDisplay";
+import { BottomDock } from "@/components/BottomDock";
 import { BootSequence } from "@/components/BootSequence";
 import { AudioManager, playAudioTrack } from "@/components/AudioManager";
 import { IdleStageOverlay } from "@/components/IdleStageOverlay";
@@ -1052,7 +1053,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
       }
 
       if (!adminAuthenticated) {
-        return <AdminLogin onSuccess={() => setAdminAuthenticated(true)} />;
+        return <AdminLogin onSuccess={() => setAdminAuthenticated(true)} onBack={() => setView("home")} />;
       }
 
       return (
@@ -1308,152 +1309,14 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
         {!autoDisplayActive && view !== "admin" && (
           <AppHeader
             onHomeClick={() => setView("home")}
-            onAdminClick={() => setView("admin")}
           />
         )}
 
         <main className={`flex-1 overflow-y-auto overflow-x-hidden ${autoDisplayActive ? "p-0" : ""}`}>
           <div className={`${autoDisplayActive || view === "admin" || view === "artifact-gallery" ? "w-screen h-screen max-w-none p-0" : "max-w-[1840px] px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8"} mx-auto relative z-10`}>
             <div className={`${autoDisplayActive || view === "admin" || view === "artifact-gallery" ? "bg-transparent border-none p-0 rounded-none shadow-none" : "app-shell-frame rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8"}`}>
-              <div className={`${autoDisplayActive ? "fixed top-4 right-4 z-[100]" : "flex justify-end mb-3 sm:mb-4"}`}>
+              <div className={`${autoDisplayActive ? "fixed top-4 right-4 z-[100]" : "flex justify-end mb-3 sm:mb-4"} ${view === "home" ? "hidden" : ""}`}>
                 <div className="relative flex items-center gap-2">
-                  {canConfigureStage && !autoDisplayActive && currentStageTiming && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setShowStageConfig((prev) => !prev)}
-                        aria-label="Configure auto-scroll stage"
-                        title="Configure auto-scroll stage"
-                        className="h-9 w-9 rounded-md border border-primary/25 bg-card/80 text-primary hover:bg-primary/10 transition-colors inline-flex items-center justify-center"
-                      >
-                        <SlidersHorizontal className="h-4 w-4" />
-                      </button>
-
-                      {showStageConfig && (
-                        <div className="absolute right-0 top-11 z-[120] w-[280px] rounded-xl border border-primary/20 bg-card/95 p-3 shadow-xl backdrop-blur-sm">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-[11px] uppercase tracking-[0.16em] text-primary/90 font-semibold">
-                                Auto-Scroll Stage
-                              </p>
-                              <p className="mt-1 text-[11px] text-muted-foreground">
-                                Tune this page timing.
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setShowStageConfig(false)}
-                              className="h-7 rounded-md border border-primary/20 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
-                            >
-                              Close
-                            </button>
-                          </div>
-
-                          <div className="mt-3 space-y-3">
-                            <div>
-                              <label className="text-xs font-semibold text-foreground">
-                                Next Slide Delay (seconds)
-                              </label>
-                              <div className="mt-1 flex items-center gap-2">
-                                <input
-                                  type="range"
-                                  min={3}
-                                  max={30}
-                                  step={1}
-                                  value={Math.round(currentStageTiming.slideDurationMs / 1000)}
-                                  onChange={(e) =>
-                                    updateStageTiming(
-                                      "slideDurationMs",
-                                      Number(e.target.value) * 1000,
-                                    )
-                                  }
-                                  className="w-full"
-                                />
-                                <span className="w-10 text-right text-xs text-muted-foreground">
-                                  {Math.round(currentStageTiming.slideDurationMs / 1000)}s
-                                </span>
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="text-xs font-semibold text-foreground">
-                                Transition Stage (milliseconds)
-                              </label>
-                              <div className="mt-1 flex items-center gap-2">
-                                <input
-                                  type="range"
-                                  min={250}
-                                  max={2600}
-                                  step={50}
-                                  value={currentStageTiming.transitionDurationMs}
-                                  onChange={(e) =>
-                                    updateStageTiming(
-                                      "transitionDurationMs",
-                                      Number(e.target.value),
-                                    )
-                                  }
-                                  className="w-full"
-                                />
-                                <span className="w-14 text-right text-xs text-muted-foreground">
-                                  {currentStageTiming.transitionDurationMs}ms
-                                </span>
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="text-xs font-semibold text-foreground inline-flex items-center gap-1">
-                                <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
-                                Next Auto Display Stage
-                              </label>
-                              <select
-                                value={
-                                  autoDisplaySettings.nextContextByContext?.[
-                                    stageConfigContext
-                                  ] ?? ""
-                                }
-                                onChange={(e) => {
-                                  const value = e.target.value as
-                                    | AutoDisplayContextKey
-                                    | "";
-                                  setAutoDisplayNextContext(
-                                    stageConfigContext,
-                                    value === "" ? null : value,
-                                  );
-                                }}
-                                className="mt-1 h-9 w-full rounded-md border border-primary/20 bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                              >
-                                <option value="">Stop After This Stage</option>
-                                {AUTO_DISPLAY_CONTEXTS.map((ctx) => (
-                                  <option
-                                    key={ctx.key}
-                                    value={ctx.key}
-                                    disabled={ctx.key === stageConfigContext}
-                                  >
-                                    {ctx.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {!autoDisplayActive && view !== "admin" && (
-                    <button
-                      type="button"
-                      onClick={startPlayAllAutoDisplays}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
-                        isLightMode
-                          ? "border border-[#002060]/20 bg-[#002060] text-white hover:bg-[#001848] shadow-sm"
-                          : "border border-primary/35 bg-primary/15 text-primary hover:bg-primary/25"
-                      }`}
-                    >
-                      <Play className="h-4 w-4" />
-                      <span>Play All Auto Displays</span>
-                    </button>
-                  )}
 
                 <AutoRotationDisplay
                   key={view}
@@ -1467,14 +1330,134 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
                   forcedStep={forcedSlideStep}
                   onActiveChange={handleAutoDisplayActiveChange}
                   onStageComplete={handleAutoDisplayStageComplete}
+                  onPlayAll={!autoDisplayActive && view !== "admin" ? startPlayAllAutoDisplays : undefined}
+                  showSettings={canConfigureStage && !autoDisplayActive && !!currentStageTiming}
+                  onToggleSettings={canConfigureStage && !autoDisplayActive && currentStageTiming ? () => setShowStageConfig((prev) => !prev) : undefined}
+                  isAutoDisplayActive={autoDisplayActive}
+                  isViewAdmin={view === "admin"}
                 />
                 </div>
               </div>
+
+              {showStageConfig && canConfigureStage && !autoDisplayActive && currentStageTiming && (
+                <div className="fixed top-16 right-4 z-[120] w-[280px] rounded-xl border border-primary/20 bg-card/95 p-3 shadow-xl backdrop-blur-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-primary/90 font-semibold">
+                        Auto-Scroll Stage
+                      </p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        Tune this page timing.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowStageConfig(false)}
+                      className="h-7 rounded-md border border-primary/20 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <label className="text-xs font-semibold text-foreground">
+                        Next Slide Delay (seconds)
+                      </label>
+                      <div className="mt-1 flex items-center gap-2">
+                        <input
+                          type="range"
+                          min={3}
+                          max={30}
+                          step={1}
+                          value={Math.round(currentStageTiming.slideDurationMs / 1000)}
+                          onChange={(e) =>
+                            updateStageTiming(
+                              "slideDurationMs",
+                              Number(e.target.value) * 1000,
+                            )
+                          }
+                          className="w-full"
+                        />
+                        <span className="w-10 text-right text-xs text-muted-foreground">
+                          {Math.round(currentStageTiming.slideDurationMs / 1000)}s
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-foreground">
+                        Transition Stage (milliseconds)
+                      </label>
+                      <div className="mt-1 flex items-center gap-2">
+                        <input
+                          type="range"
+                          min={250}
+                          max={2600}
+                          step={50}
+                          value={currentStageTiming.transitionDurationMs}
+                          onChange={(e) =>
+                            updateStageTiming(
+                              "transitionDurationMs",
+                              Number(e.target.value),
+                            )
+                          }
+                          className="w-full"
+                        />
+                        <span className="w-14 text-right text-xs text-muted-foreground">
+                          {currentStageTiming.transitionDurationMs}ms
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-foreground inline-flex items-center gap-1">
+                        <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
+                        Next Auto Display Stage
+                      </label>
+                      <select
+                        value={
+                          autoDisplaySettings.nextContextByContext?.[
+                            stageConfigContext
+                          ] ?? ""
+                        }
+                        onChange={(e) => {
+                          const value = e.target.value as
+                            | AutoDisplayContextKey
+                            | "";
+                          setAutoDisplayNextContext(
+                            stageConfigContext,
+                            value === "" ? null : value,
+                          );
+                        }}
+                        className="mt-1 h-9 w-full rounded-md border border-primary/20 bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      >
+                        <option value="">Stop After This Stage</option>
+                        {AUTO_DISPLAY_CONTEXTS.map((ctx) => (
+                          <option
+                            key={ctx.key}
+                            value={ctx.key}
+                            disabled={ctx.key === stageConfigContext}
+                          >
+                            {ctx.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {!autoDisplayActive && renderContent()}
             </div>
           </div>
         </main>
+
+        <BottomDock
+          currentView={view}
+          onNavigate={setView}
+          hidden={autoDisplayActive}
+        />
       </div>
 
       {selectedPastCommandant && (

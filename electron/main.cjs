@@ -4,11 +4,6 @@ const fs = require('fs');
 const Database = require('better-sqlite3');
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
-<<<<<<< HEAD
-const WORKSPACE_DIR = process.cwd();
-const LOCAL_MEDIA_DIR = path.join(WORKSPACE_DIR, 'local_media');
-const DB_PATH = path.join(WORKSPACE_DIR, 'database.sqlite');
-=======
 const APP_PATH = app.getAppPath();
 
 // In development, keep writeable files in the workspace root.
@@ -20,7 +15,6 @@ const LOCAL_MEDIA_DIR = isDev
 const DB_PATH = isDev 
   ? path.join(process.cwd(), 'database.sqlite') 
   : path.join(app.getPath('userData'), 'database.sqlite');
->>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
 
 // Register local-media protocol privileges
 protocol.registerSchemesAsPrivileged([
@@ -49,11 +43,7 @@ function initializeDatabase() {
   `).run();
 
   // Read and run schema definitions from supabase_schema.sql
-<<<<<<< HEAD
-  const schemaSqlPath = path.join(WORKSPACE_DIR, 'supabase_schema.sql');
-=======
   const schemaSqlPath = path.join(APP_PATH, 'supabase_schema.sql');
->>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   if (fs.existsSync(schemaSqlPath)) {
     const schemaSql = fs.readFileSync(schemaSqlPath, 'utf8');
     const statements = schemaSql.split(';');
@@ -105,11 +95,7 @@ function initializeDatabase() {
   }
 
   // Seed default CMS records if empty
-<<<<<<< HEAD
-  const migrationSqlPath = path.join(WORKSPACE_DIR, 'supabase_cms_migration.sql');
-=======
   const migrationSqlPath = path.join(APP_PATH, 'supabase_cms_migration.sql');
->>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   if (fs.existsSync(migrationSqlPath)) {
     const migrationSql = fs.readFileSync(migrationSqlPath, 'utf8');
     const statements = migrationSql.split(';');
@@ -199,11 +185,7 @@ function initializeDatabase() {
   const personnelCount = db.prepare("SELECT COUNT(*) as count FROM personnel").get();
   if (personnelCount.count === 0) {
     console.log('Seeding default personnel records...');
-<<<<<<< HEAD
-    const seedSqlPath = path.join(WORKSPACE_DIR, 'nwc_personnel_sql_seed_trackable.sql');
-=======
     const seedSqlPath = path.join(APP_PATH, 'nwc_personnel_sql_seed_trackable.sql');
->>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
     if (fs.existsSync(seedSqlPath)) {
       const seedSql = fs.readFileSync(seedSqlPath, 'utf8');
       const statements = seedSql.split(';');
@@ -269,32 +251,32 @@ function serializeRowJsonColumns(table, row) {
   return serialized;
 }
 
+function normalizeSqliteValue(value) {
+  if (typeof value === 'boolean') return value ? 1 : 0;
+  if (value === undefined) return null;
+  return value;
+}
+
 function createWindow() {
-<<<<<<< HEAD
-=======
   // In production the preload script is unpacked from ASAR to the real filesystem
   // so the sandbox bundler can read it without byte-offset corruption.
   const preloadPath = isDev
     ? path.join(__dirname, 'preload.cjs')
     : path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'preload.cjs');
 
->>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
+    fullscreen: true,
+    autoHideMenuBar: true,
     webPreferences: {
-<<<<<<< HEAD
-      preload: path.join(__dirname, 'preload.cjs'),
-      contextIsolation: true,
-      nodeIntegration: false,
-=======
       preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
->>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
     },
   });
+  win.setMenuBarVisibility(false);
 
   // Forward renderer console messages to main terminal output
   win.webContents.on('console-message', (event, level, message, line, sourceId) => {
@@ -303,11 +285,7 @@ function createWindow() {
 
   if (isDev) {
     win.loadURL('http://localhost:8080');
-    win.webContents.openDevTools();
   } else {
-<<<<<<< HEAD
-    win.loadFile(path.join(WORKSPACE_DIR, 'dist', 'index.html'));
-=======
     win.loadFile(path.join(APP_PATH, 'dist', 'index.html'));
   }
 }
@@ -323,13 +301,10 @@ function copyDirRecursive(src, dest) {
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
->>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   }
 }
 
 app.whenReady().then(() => {
-<<<<<<< HEAD
-=======
   // Set up local media directory
   if (!fs.existsSync(LOCAL_MEDIA_DIR)) {
     fs.mkdirSync(LOCAL_MEDIA_DIR, { recursive: true });
@@ -369,7 +344,6 @@ app.whenReady().then(() => {
     }
   }
 
->>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   initializeDatabase();
 
   // Trigger background remote assets download and local migration
@@ -379,14 +353,6 @@ app.whenReady().then(() => {
     });
   }, 1000);
 
-<<<<<<< HEAD
-  // Set up local media directory
-  if (!fs.existsSync(LOCAL_MEDIA_DIR)) {
-    fs.mkdirSync(LOCAL_MEDIA_DIR, { recursive: true });
-  }
-
-=======
->>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   // Register modern protocol handle for local-media://
   protocol.handle('local-media', (request) => {
     let filePath = request.url.slice('local-media://'.length);
@@ -397,8 +363,6 @@ app.whenReady().then(() => {
     return net.fetch('file://' + absolutePath);
   });
 
-<<<<<<< HEAD
-=======
   // In production, intercept file:// requests for absolute paths like /images/...
   // and serve them from dist/ inside the app package. This is needed because many
   // React components use runtime string literals (e.g. "/images/ndc-crest.png")
@@ -423,7 +387,6 @@ app.whenReady().then(() => {
     });
   }
 
->>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   createWindow();
 
   app.on('activate', () => {
@@ -500,7 +463,7 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
           const serializedRecord = serializeRowJsonColumns(table, record);
           const keys = Object.keys(serializedRecord);
           const placeholders = keys.map(() => '?').join(',');
-          const values = Object.values(serializedRecord);
+          const values = Object.values(serializedRecord).map(normalizeSqliteValue);
 
           const sql = `INSERT INTO ${table} (${keys.join(',')}) VALUES (${placeholders})`;
           db.prepare(sql).run(...values);
@@ -515,7 +478,7 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
       const serializedPayload = serializeRowJsonColumns(table, payload);
       const setKeys = Object.keys(serializedPayload);
       const setClauses = setKeys.map(k => `${k} = ?`).join(',');
-      const params = Object.values(serializedPayload);
+      const params = Object.values(serializedPayload).map(normalizeSqliteValue);
 
       let sql = `UPDATE ${table} SET ${setClauses}`;
       const whereClauses = [];
@@ -593,15 +556,15 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
             const serializedRecord = serializeRowJsonColumns(table, record);
             const setKeys = Object.keys(serializedRecord).filter(k => k !== conflictKey && k !== 'user_id');
             const setClauses = setKeys.map(k => `${k} = ?`).join(',');
-            const values = setKeys.map(k => serializedRecord[k]);
+            const values = setKeys.map(k => normalizeSqliteValue(serializedRecord[k]));
 
             let updateSql = `UPDATE ${table} SET ${setClauses} WHERE `;
             if (table === 'ui_settings') {
               updateSql += `user_id = ? AND setting_key = ?`;
-              values.push(record.user_id, record.setting_key);
+              values.push(normalizeSqliteValue(record.user_id), normalizeSqliteValue(record.setting_key));
             } else {
               updateSql += `${conflictKey} = ?`;
-              values.push(record[conflictKey]);
+              values.push(normalizeSqliteValue(record[conflictKey]));
             }
 
             db.prepare(updateSql).run(...values);
@@ -609,7 +572,7 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
             const serializedRecord = serializeRowJsonColumns(table, record);
             const keys = Object.keys(serializedRecord);
             const placeholders = keys.map(() => '?').join(',');
-            const values = Object.values(serializedRecord);
+            const values = Object.values(serializedRecord).map(normalizeSqliteValue);
 
             const insertSql = `INSERT INTO ${table} (${keys.join(',')}) VALUES (${placeholders})`;
             db.prepare(insertSql).run(...values);

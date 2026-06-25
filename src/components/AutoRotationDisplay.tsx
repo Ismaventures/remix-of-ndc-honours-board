@@ -1,4 +1,5 @@
 import {
+  memo,
   useState,
   useEffect,
   useCallback,
@@ -11,6 +12,9 @@ import {
   Monitor,
   Shield,
   SkipForward,
+  X,
+  Play,
+  Settings,
 } from "lucide-react";
 import {
   Category,
@@ -60,6 +64,11 @@ interface AutoRotationDisplayProps {
   forcedStep?: { direction: "next" | "prev"; nonce: number };
   onActiveChange?: (active: boolean) => void;
   onStageComplete?: (context: AutoDisplayContextKey) => void;
+  onPlayAll?: () => void;
+  showSettings?: boolean;
+  onToggleSettings?: () => void;
+  isAutoDisplayActive?: boolean;
+  isViewAdmin?: boolean;
 }
 
 type Slide =
@@ -110,16 +119,18 @@ const resolveDisplayContext = (
   return "commandants";
 };
 
-function ContinuousSlideCard({
+const ContinuousSlideCard = memo(function ContinuousSlideCard({
   item,
   type,
   onSelect,
   isLightMode,
+  imageLoading,
 }: {
   item: Personnel | DistinguishedVisit | Commandant;
   type: "personnel" | "visit" | "commandant";
   onSelect: (item: Personnel | DistinguishedVisit | Commandant) => void;
   isLightMode: boolean;
+  imageLoading: "eager" | "lazy";
 }) {
   const rawUrl = item.imageUrl;
   const imageUrl = useResolvedMediaUrl(rawUrl);
@@ -192,10 +203,10 @@ function ContinuousSlideCard({
         isCommandant
           ? "commandant-auto-card w-[70vw] sm:w-[38vw] md:w-[32vw] lg:w-[26vw] xl:w-[21vw] max-w-[360px]"
           : "w-[65vw] sm:w-[35vw] md:w-[28vw] lg:w-[22vw] xl:w-[18vw] max-w-[320px]"
-      } self-center h-[92%] sm:h-[95%] max-h-[88vh] shrink-0 overflow-hidden rounded-2xl p-1.5 sm:p-2 text-left backdrop-blur-md transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
+      } self-center h-full max-h-[88vh] shrink-0 overflow-hidden rounded-2xl p-1.5 sm:p-2 text-left transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
-          ? "bg-white border border-[#002060]/20 shadow-[0_12px_36px_rgba(0,32,96,0.14)]"
-          : "bg-slate-950/90 border border-slate-500/35 shadow-[0_16px_46px_rgba(2,6,23,0.56)]"
+          ? "bg-white border border-[#002060]/20 shadow-[0_8px_22px_rgba(0,32,96,0.12)]"
+          : "bg-slate-950 border border-slate-500/35 shadow-[0_10px_26px_rgba(2,6,23,0.42)]"
       }`}
       aria-label={`${isCommandant ? "Commandant" : isVisit ? "Visit" : "Staff"} card for ${safeName}`}
     >
@@ -239,7 +250,7 @@ function ContinuousSlideCard({
                       src={imageUrl}
                       alt={`${imageAltTitle} ${safeName}`}
                       className="absolute inset-0 h-full w-full object-contain object-center transition-transform duration-500 group-hover:scale-[1.03]"
-                      loading="eager"
+                      loading={imageLoading}
                       decoding="async"
                       draggable={false}
                     />
@@ -309,7 +320,7 @@ function ContinuousSlideCard({
       </p>
     </button>
   );
-}
+});
 
 export function AutoRotationDisplay({
   personnel,
@@ -322,6 +333,11 @@ export function AutoRotationDisplay({
   forcedStep,
   onActiveChange,
   onStageComplete,
+  onPlayAll,
+  showSettings = false,
+  onToggleSettings,
+  isAutoDisplayActive = false,
+  isViewAdmin = false,
 }: AutoRotationDisplayProps) {
   const [isActive, setIsActive] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -330,6 +346,8 @@ export function AutoRotationDisplay({
     useState<AutoDisplayTransitionType>("fade-zoom");
   const [showNavControls, setShowNavControls] = useState(true);
   const [showInteractionHint, setShowInteractionHint] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [selectedPerson, setSelectedPerson] = useState<Personnel | null>(null);
   const [selectedCommandant, setSelectedCommandant] =
     useState<Commandant | null>(null);
@@ -362,6 +380,7 @@ export function AutoRotationDisplay({
   const transitionStepRef = useRef(0);
   const transitionDirectionRef = useRef<1 | -1>(1);
   const lastTransitionCueAtRef = useRef(0);
+  const lastCourseDetectionAtRef = useRef(0);
   const { isPaused, registerInteraction } = useSliderControl({
     resumeAfterMs: 4200,
   });
@@ -523,6 +542,21 @@ export function AutoRotationDisplay({
       ]; // More clones for very few items
     return [...continuousItems, ...continuousItems, ...continuousItems];
   }, [continuousItems]);
+
+  const handleContinuousSelect = useCallback(
+    (selected: Personnel | DistinguishedVisit | Commandant) => {
+      if ("isCurrent" in selected) {
+        setSelectedCommandant(selected);
+        return;
+      }
+      if ("category" in selected) {
+        setSelectedPerson(selected);
+        return;
+      }
+      setSelectedVisit(selected);
+    },
+    [],
+  );
 
   const normalizeFdcLoopPosition = useCallback(() => {
     const container = fdcScrollRef.current;
@@ -867,6 +901,9 @@ export function AutoRotationDisplay({
 
     let rafId = 0;
     const onScroll = () => {
+      const now = performance.now();
+      if (now - lastCourseDetectionAtRef.current < 300) return;
+      lastCourseDetectionAtRef.current = now;
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(detectCurrentCourse);
     };
@@ -1122,6 +1159,17 @@ export function AutoRotationDisplay({
     };
   }, []);
 
+  useEffect(() => {
+    if (!showMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMenu]);
+
   const onTouchStart = (x: number) => {
     touchStartXRef.current = x;
     revealControls();
@@ -1170,40 +1218,80 @@ export function AutoRotationDisplay({
   );
 
   if (!isActive) {
+    const buttonLabel = activeCategory
+      ? `${activeCategory} Auto Display`
+      : activeView === "visits"
+        ? "Visits Auto Display"
+        : "Commandants Auto Display";
+
+    const handleStartDisplay = () => {
+      if (slides.length === 0) return;
+      stageCompleteFiredRef.current = false;
+      const initialTrackId = resolveTrackIdForSlide(slides[0]);
+      if (isMuted) setMuted(false);
+      activationAudioPrimedRef.current = true;
+      playAudioTrack(initialTrackId, false, true);
+      setTransitionType(sequence[0] ?? "fade-zoom");
+      transitionStepRef.current = 0;
+      setCurrentIndex(0);
+      setDisplayActive(true);
+    };
+
+    const buttonBase = isLightMode
+      ? "border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300 shadow-sm"
+      : "gold-border text-muted-foreground hover:text-foreground hover:bg-muted/40";
+
+    const hasMenuOptions = !isAutoDisplayActive && !isViewAdmin && (onPlayAll || onToggleSettings);
+
     return (
-      <button
-        onClick={() => {
-          if (slides.length === 0) {
-            return;
-          }
-          stageCompleteFiredRef.current = false;
-          const initialTrackId = resolveTrackIdForSlide(slides[0]);
-          if (isMuted) {
-            setMuted(false);
-          }
-          activationAudioPrimedRef.current = true;
-          playAudioTrack(initialTrackId, false, true);
-          setTransitionType(sequence[0] ?? "fade-zoom");
-          transitionStepRef.current = 0;
-          setCurrentIndex(0);
-          setDisplayActive(true);
-        }}
-        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-all duration-200 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed ${
-          isLightMode
-            ? "border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300 shadow-sm"
-            : "gold-border text-muted-foreground hover:text-foreground hover:bg-muted/40"
-        }`}
-        disabled={slides.length === 0}
-      >
-        <Monitor className="h-4 w-4 text-primary" />
-        <span>
-          {activeCategory
-            ? `${activeCategory} Auto Display`
-            : activeView === "visits"
-              ? "Visits Auto Display"
-              : "Commandants Auto Display"}
-        </span>
-      </button>
+      <div className="relative flex items-stretch" ref={menuRef}>
+        <button
+          onClick={handleStartDisplay}
+          className={`flex items-center gap-2 px-4 py-2 rounded-l-md text-sm transition-all duration-200 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed ${buttonBase} ${
+            hasMenuOptions ? "rounded-r-none border-r-0" : "rounded-md"
+          }`}
+          disabled={slides.length === 0}
+        >
+          <Monitor className="h-4 w-4 text-primary" />
+          <span>{buttonLabel}</span>
+        </button>
+
+        {hasMenuOptions && (
+          <>
+            <button
+              onClick={() => setShowMenu((prev) => !prev)}
+              className={`flex items-center justify-center w-8 px-1 py-2 rounded-r-md text-sm transition-all duration-200 active:scale-[0.97] ${buttonBase}`}
+            >
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-60">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-1 z-50 min-w-[180px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden">
+                {onPlayAll && (
+                  <button
+                    onClick={() => { setShowMenu(false); onPlayAll(); }}
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <Play className="h-4 w-4 text-primary" />
+                    <span>Play All Auto Displays</span>
+                  </button>
+                )}
+                {onToggleSettings && (
+                  <button
+                    onClick={() => { setShowMenu(false); onToggleSettings(); }}
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <Settings className="h-4 w-4 text-muted-foreground" />
+                    <span>Settings</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     );
   }
 
@@ -1371,42 +1459,51 @@ export function AutoRotationDisplay({
     return "";
   };
 
+  const sectionTitle = getSectionTitle();
   const sectionSubtitle = getSectionSubtitle();
-  const sectionDescriptor = getSectionDescriptor();
+  const headingPrimary = sectionSubtitle;
+  const headingSecondary = sectionTitle || getSectionDescriptor();
 
   const renderedContinuousContent = (
     <div
       className={`relative mx-auto flex flex-1 h-full min-h-0 w-full max-w-[1900px] flex-col justify-start ${prefersReducedMotion ? "" : "animate-fade-up"}`}
       style={{ animationDuration: "0.6s" }}
     >
-      <div className="auto-scroll-heading mb-1 sm:mb-1.5 px-1 sm:px-2 shrink-0">
-        <div className="bg-[#002060] border-b-[2px] border-[#FF0000]">
-          <div className="px-3 py-3 sm:px-4 sm:py-3.5 text-center">
+      <div className="auto-scroll-heading mb-1 px-1 sm:px-2 shrink-0">
+        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white/95 px-3 py-1.5 shadow-sm md:px-4 md:py-2">
+          <div className="h-1 flex shrink-0">
+            <div className="flex-1 bg-[#002060]" />
+            <div className="flex-1 bg-[#FF0000]" />
+            <div className="flex-1 bg-[#00B0F0]" />
+          </div>
+          <div className="px-2 pb-0 pt-2 text-center">
             <AnimatedPresence mode="wait" initial={false}>
-              {getSectionTitle() && (
-                <p
-                  key={`title-${getSectionTitle()}`}
-                  className="mx-auto max-w-[96vw] text-[clamp(1rem,2.5vw,1.5rem)] font-bold uppercase tracking-[0.04em] text-[#d4af37] drop-shadow-sm leading-tight break-words mb-1 animate-fade-down-sm"
+              {headingPrimary && (
+                <h2
+                  key={`primary-${headingPrimary}`}
+                  className="heading-accent mx-auto max-w-[96vw] break-words font-serif text-[clamp(1.45rem,2.75vw,3.25rem)] font-bold uppercase leading-[0.98] tracking-[0.15em] text-[#002060] animate-fade-in"
                 >
-                  {getSectionTitle()}
-                </p>
+                  {headingPrimary.replace(" (FWC)", "").replace(" (FDC)", "")}
+                </h2>
               )}
             </AnimatedPresence>
-            <AnimatedPresence mode="wait" initial={false}>
-              <h2
-                key={`subtitle-${sectionSubtitle}`}
-                className="mx-auto max-w-[96vw] text-[clamp(0.8rem,1.8vw,1.1rem)] font-semibold uppercase tracking-[0.06em] text-white/80 drop-shadow-sm leading-tight break-words animate-fade-down-sm"
-              >
-                {sectionSubtitle}
-              </h2>
-            </AnimatedPresence>
+            {headingSecondary && (
+              <AnimatedPresence mode="wait" initial={false}>
+                <p
+                  key={`secondary-${headingSecondary}`}
+                  className="mx-auto mt-1.5 max-w-[82vw] break-words text-[clamp(0.95rem,1.35vw,1.45rem)] font-bold uppercase leading-none tracking-[0.08em] text-[#d4af37] animate-fade-in"
+                >
+                  {headingSecondary}
+                </p>
+              </AnimatedPresence>
+            )}
           </div>
         </div>
       </div>
 
       <div
         ref={fdcScrollRef}
-        className="relative flex flex-1 min-h-0 items-center justify-start gap-4 sm:gap-6 overflow-x-auto pb-6 px-3 sm:px-6 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_3%,black_97%,transparent)]"
+        className="relative flex flex-1 min-h-0 items-stretch justify-start gap-4 sm:gap-6 overflow-x-auto pb-3 px-3 sm:px-6 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_3%,black_97%,transparent)]"
         onMouseEnter={() =>
           (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
         }
@@ -1432,11 +1529,8 @@ export function AutoRotationDisplay({
               item={item as any}
               type={itemType}
               isLightMode={isLightMode}
-              onSelect={(selected) => {
-                if (isCommandant) setSelectedCommandant(selected as Commandant);
-                else if (isPersonnel) setSelectedPerson(selected as Personnel);
-                else setSelectedVisit(selected as DistinguishedVisit);
-              }}
+              imageLoading={i < continuousItems.length ? "eager" : "lazy"}
+              onSelect={handleContinuousSelect}
             />
           );
         })}
@@ -1512,19 +1606,6 @@ export function AutoRotationDisplay({
             </div>
           </div>
         </div>
-      )}
-
-      {/* Exit control row */}
-      {isActive && (
-        <header className="relative z-[100] flex shrink-0 items-center justify-end gap-2 border-b border-border/60 bg-background/90 px-3 py-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md sm:px-4 sm:py-3">
-          <button
-            type="button"
-            onClick={() => setDisplayActive(false)}
-            className="rounded-full border border-primary/25 bg-card/90 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-widest text-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-card"
-          >
-            Exit Display
-          </button>
-        </header>
       )}
 
       {/* Slide content */}
@@ -1613,6 +1694,18 @@ export function AutoRotationDisplay({
             />
           ))}
         </div>
+      )}
+
+      {isActive && (
+        <button
+          type="button"
+          onClick={() => setDisplayActive(false)}
+          className="fixed bottom-4 right-4 z-[120] flex h-11 w-11 items-center justify-center rounded-full border border-[#002060]/25 bg-white/90 text-[#002060] shadow-[0_8px_24px_rgba(0,0,0,0.16)] transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#002060]/45"
+          aria-label="Exit display"
+          title="Exit display"
+        >
+          <X className="h-5 w-5" />
+        </button>
       )}
 
       {selectedPerson && (

@@ -10,7 +10,7 @@ interface AnimatedPresenceProps {
 interface ChildEntry {
   key: string;
   element: ReactElement;
-  state: "entering" | "entered" | "exiting";
+  state: "entering" | "entered" | "exiting" | "pending-enter";
 }
 
 function childKey(child: ReactNode): string {
@@ -25,43 +25,54 @@ export function AnimatedPresence({
 }: AnimatedPresenceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [entries, setEntries] = useState<ChildEntry[]>([]);
-  const prevChildren = useRef<ReactNode>(children);
 
-  const currentKeys = new Set<string>();
-  const childArray = Children.toArray(children);
+  const entriesMatch = (
+    prev: ChildEntry[],
+    next: ChildEntry[],
+  ): boolean => {
+    if (prev.length !== next.length) return false;
+    return prev.every((entry, index) => {
+      const nextEntry = next[index];
+      return (
+        nextEntry &&
+        entry.key === nextEntry.key &&
+        entry.state === nextEntry.state
+      );
+    });
+  };
 
-  const buildEntries = useCallback(
-    (nextChildren: ReactNode) => {
-      const next = Children.toArray(nextChildren);
-      const nextKeys = new Set(next.map(childKey));
-      const prevKeys = new Map(entries.map((e) => [e.key, e]));
+  useEffect(() => {
+    setEntries((previousEntries) => {
+      const nextChildren = Children.toArray(children);
+      const nextKeys = new Set(nextChildren.map(childKey));
+      const prevKeys = new Map(previousEntries.map((e) => [e.key, e]));
 
       const merged: ChildEntry[] = [];
 
       if (mode === "wait") {
-        const exiting = entries.filter((e) => !nextKeys.has(e.key) && e.state !== "exiting");
+        const exiting = previousEntries.filter((e) => !nextKeys.has(e.key) && e.state !== "exiting");
         if (exiting.length > 0 && nextKeys.size > 0) {
-          for (const e of entries) {
+          for (const e of previousEntries) {
             if (!nextKeys.has(e.key)) {
               merged.push({ ...e, state: "exiting" });
             } else {
               merged.push({ ...e, state: "entered" });
             }
           }
-          for (const child of next) {
+          for (const child of nextChildren) {
             const k = childKey(child);
             if (!prevKeys.has(k)) {
               merged.push({ key: k, element: child as ReactElement, state: "pending-enter" });
             }
           }
-          return merged;
+          return entriesMatch(previousEntries, merged) ? previousEntries : merged;
         }
-        for (const e of entries) {
+        for (const e of previousEntries) {
           if (nextKeys.has(e.key)) {
             merged.push({ ...e, state: "entered" });
           }
         }
-        for (const child of next) {
+        for (const child of nextChildren) {
           const k = childKey(child);
           if (!prevKeys.has(k)) {
             merged.push({
@@ -71,10 +82,10 @@ export function AnimatedPresence({
             });
           }
         }
-        return merged;
+        return entriesMatch(previousEntries, merged) ? previousEntries : merged;
       }
 
-      for (const e of entries) {
+      for (const e of previousEntries) {
         if (nextKeys.has(e.key)) {
           merged.push({ ...e, state: "entered" });
         } else if (e.state !== "exiting") {
@@ -83,7 +94,7 @@ export function AnimatedPresence({
           merged.push(e);
         }
       }
-      for (const child of next) {
+      for (const child of nextChildren) {
         const k = childKey(child);
         if (!prevKeys.has(k)) {
           merged.push({
@@ -93,15 +104,9 @@ export function AnimatedPresence({
           });
         }
       }
-      return merged;
-    },
-    [entries, mode, initial],
-  );
-
-  useEffect(() => {
-    setEntries(buildEntries(children));
-    prevChildren.current = children;
-  }, [children, buildEntries]);
+      return entriesMatch(previousEntries, merged) ? previousEntries : merged;
+    });
+  }, [children, mode, initial]);
 
   const handleAnimationEnd = useCallback((key: string) => {
     setEntries((prev) => {

@@ -264,7 +264,7 @@
 
 @media (max-height: 820px) {
   .auto-scroll-heading {
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.5rem;
   }
 
   .auto-scroll-heading .auto-scroll-heading-body {
@@ -298,6 +298,22 @@
 
 .auto-scroll-card .auto-scroll-image-frame {
   aspect-ratio: 3 / 4;
+}
+
+.auto-scroll-card {
+  contain: layout paint style;
+}
+
+.auto-scroll-card .commandant-portrait-frame {
+  animation: none !important;
+  box-shadow:
+    0 0 0 1px hsl(var(--gold) / 0.22),
+    inset 0 0 0 1px hsl(var(--gold-bright) / 0.12) !important;
+}
+
+.auto-scroll-card img {
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 @layer utilities {
