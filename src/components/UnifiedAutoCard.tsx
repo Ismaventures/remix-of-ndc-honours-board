@@ -37,7 +37,7 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
 
   return (
     <section
-      className={`relative w-full h-full min-h-[320px] flex flex-col items-center justify-center overflow-hidden border ${
+      className={`relative w-full h-full flex-1 min-h-0 flex flex-col items-center justify-center overflow-hidden border ${
         isLightMode
           ? "auto-display-studio-surface text-slate-900 border-slate-200/80"
           : "bg-background text-foreground border-border"
