@@ -173,12 +173,14 @@ const ContinuousSlideCard = memo(function ContinuousSlideCard({
   onSelect,
   isLightMode,
   imageLoading,
+  onHover,
 }: {
   item: Personnel | DistinguishedVisit | Commandant;
   type: "personnel" | "visit" | "commandant";
   onSelect: (item: Personnel | DistinguishedVisit | Commandant) => void;
   isLightMode: boolean;
   imageLoading: "eager" | "lazy";
+  onHover?: (hovering: boolean) => void;
 }) {
   const rawUrl = item.imageUrl;
   const imageUrl = useResolvedMediaUrl(rawUrl);
@@ -259,6 +261,8 @@ const ContinuousSlideCard = memo(function ContinuousSlideCard({
     <button
       type="button"
       onClick={() => onSelect(item as any)}
+      onMouseEnter={() => onHover?.(true)}
+      onMouseLeave={() => onHover?.(false)}
       className={`auto-scroll-card group relative ${
         isCommandant
           ? "commandant-auto-card w-[75vw] sm:w-[42vw] md:w-[36vw] lg:w-[30vw] xl:w-[26vw] max-w-[420px] h-[clamp(440px,72vh,660px)]"
@@ -456,7 +460,7 @@ export function AutoRotationDisplay({
   const transitionDirectionRef = useRef<1 | -1>(1);
   const lastTransitionCueAtRef = useRef(0);
   const lastCourseDetectionAtRef = useRef(0);
-  const { isPaused, registerInteraction } = useSliderControl({
+  const { isPaused, registerInteraction, setHovering } = useSliderControl({
     resumeAfterMs: 4200,
   });
 
@@ -549,15 +553,7 @@ export function AutoRotationDisplay({
   const isContinuousMode =
     isActive &&
     slides.length > 0 &&
-<<<<<<< HEAD
-    ((displayContext !== "visits" &&
-=======
-    ((activeCategory !== null &&
-      displayContext !== "commandants" &&
-      displayContext !== "FWC" &&
-      displayContext !== "FDC" &&
->>>>>>> 5cc24f1d0af20028457fa01c6adb27471328d852
-      !useAppliedTransitionOnly) ||
+    ((displayContext !== "visits" && !useAppliedTransitionOnly) ||
       appliedTransition === "continuous-scroll" ||
       sequence[0] === "continuous-scroll");
 
@@ -975,7 +971,7 @@ export function AutoRotationDisplay({
 
     let rafId = 0;
     let last = performance.now();
-    const speedPxPerMs = 0.03;
+    const speedPxPerMs = 0.055;
     let lastDetectionAt = 0;
 
     const tick = (now: number) => {
@@ -1610,16 +1606,6 @@ export function AutoRotationDisplay({
       <div
         ref={fdcScrollRef}
         className="relative flex flex-1 min-h-0 items-stretch justify-start overflow-hidden pb-3 px-3 sm:px-6 [mask-image:linear-gradient(to_right,transparent,black_3%,black_97%,transparent)]"
-        onMouseEnter={() =>
-          (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
-        }
-        onMouseLeave={() =>
-          (fdcAutoPauseUntilRef.current = performance.now() + 180)
-        }
-        onFocus={() =>
-          (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
-        }
-        onBlur={() => (fdcAutoPauseUntilRef.current = performance.now() + 180)}
       >
         <div
           ref={fdcTrackRef}
@@ -1641,6 +1627,7 @@ export function AutoRotationDisplay({
                 isLightMode={isLightMode}
                 imageLoading={i < continuousItems.length ? "eager" : "lazy"}
                 onSelect={handleContinuousSelect}
+                onHover={setHovering}
               />
             );
           })}

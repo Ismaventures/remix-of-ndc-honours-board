@@ -27,12 +27,13 @@ export function useSliderControl(options: UseSliderControlOptions = {}) {
   const setHovering = useCallback((hovering: boolean) => {
     setIsHovering(hovering);
     if (!hovering) {
-      registerInteraction();
+      setIsInteracting(false);
+      clearResumeTimer();
     } else {
       setIsInteracting(true);
       clearResumeTimer();
     }
-  }, [clearResumeTimer, registerInteraction]);
+  }, [clearResumeTimer]);
 
   useEffect(() => {
     return () => {
