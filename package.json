@@ -23,7 +23,17 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "package.json"
+      "package.json",
+      "database.sqlite",
+      "local_media/**/*",
+      "supabase_schema.sql",
+      "supabase_cms_migration.sql",
+      "nwc_personnel_sql_seed_trackable.sql"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**/*",
+      "electron/preload.cjs"
     ],
     "directories": {
       "output": "dist-electron"

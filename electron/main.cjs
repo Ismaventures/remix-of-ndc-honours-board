@@ -4,9 +4,23 @@ const fs = require('fs');
 const Database = require('better-sqlite3');
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+<<<<<<< HEAD
 const WORKSPACE_DIR = process.cwd();
 const LOCAL_MEDIA_DIR = path.join(WORKSPACE_DIR, 'local_media');
 const DB_PATH = path.join(WORKSPACE_DIR, 'database.sqlite');
+=======
+const APP_PATH = app.getAppPath();
+
+// In development, keep writeable files in the workspace root.
+// In production, write them to standard user application support directory.
+const LOCAL_MEDIA_DIR = isDev 
+  ? path.join(process.cwd(), 'local_media') 
+  : path.join(app.getPath('userData'), 'local_media');
+
+const DB_PATH = isDev 
+  ? path.join(process.cwd(), 'database.sqlite') 
+  : path.join(app.getPath('userData'), 'database.sqlite');
+>>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
 
 // Register local-media protocol privileges
 protocol.registerSchemesAsPrivileged([
@@ -35,7 +49,11 @@ function initializeDatabase() {
   `).run();
 
   // Read and run schema definitions from supabase_schema.sql
+<<<<<<< HEAD
   const schemaSqlPath = path.join(WORKSPACE_DIR, 'supabase_schema.sql');
+=======
+  const schemaSqlPath = path.join(APP_PATH, 'supabase_schema.sql');
+>>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   if (fs.existsSync(schemaSqlPath)) {
     const schemaSql = fs.readFileSync(schemaSqlPath, 'utf8');
     const statements = schemaSql.split(';');
@@ -87,7 +105,11 @@ function initializeDatabase() {
   }
 
   // Seed default CMS records if empty
+<<<<<<< HEAD
   const migrationSqlPath = path.join(WORKSPACE_DIR, 'supabase_cms_migration.sql');
+=======
+  const migrationSqlPath = path.join(APP_PATH, 'supabase_cms_migration.sql');
+>>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   if (fs.existsSync(migrationSqlPath)) {
     const migrationSql = fs.readFileSync(migrationSqlPath, 'utf8');
     const statements = migrationSql.split(';');
@@ -177,7 +199,11 @@ function initializeDatabase() {
   const personnelCount = db.prepare("SELECT COUNT(*) as count FROM personnel").get();
   if (personnelCount.count === 0) {
     console.log('Seeding default personnel records...');
+<<<<<<< HEAD
     const seedSqlPath = path.join(WORKSPACE_DIR, 'nwc_personnel_sql_seed_trackable.sql');
+=======
+    const seedSqlPath = path.join(APP_PATH, 'nwc_personnel_sql_seed_trackable.sql');
+>>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
     if (fs.existsSync(seedSqlPath)) {
       const seedSql = fs.readFileSync(seedSqlPath, 'utf8');
       const statements = seedSql.split(';');
@@ -244,13 +270,29 @@ function serializeRowJsonColumns(table, row) {
 }
 
 function createWindow() {
+<<<<<<< HEAD
+=======
+  // In production the preload script is unpacked from ASAR to the real filesystem
+  // so the sandbox bundler can read it without byte-offset corruption.
+  const preloadPath = isDev
+    ? path.join(__dirname, 'preload.cjs')
+    : path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'preload.cjs');
+
+>>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
     webPreferences: {
+<<<<<<< HEAD
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
+=======
+      preload: preloadPath,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+>>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
     },
   });
 
@@ -263,11 +305,71 @@ function createWindow() {
     win.loadURL('http://localhost:8080');
     win.webContents.openDevTools();
   } else {
+<<<<<<< HEAD
     win.loadFile(path.join(WORKSPACE_DIR, 'dist', 'index.html'));
+=======
+    win.loadFile(path.join(APP_PATH, 'dist', 'index.html'));
+  }
+}
+
+function copyDirRecursive(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDirRecursive(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+>>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   }
 }
 
 app.whenReady().then(() => {
+<<<<<<< HEAD
+=======
+  // Set up local media directory
+  if (!fs.existsSync(LOCAL_MEDIA_DIR)) {
+    fs.mkdirSync(LOCAL_MEDIA_DIR, { recursive: true });
+  }
+
+  // Copy bundled local_media folder to user data directory if it's the first run
+  if (!isDev) {
+    const bundledMediaDir = path.join(APP_PATH, 'local_media');
+    if (fs.existsSync(bundledMediaDir)) {
+      const destExists = fs.existsSync(LOCAL_MEDIA_DIR);
+      const isDestEmpty = !destExists || fs.readdirSync(LOCAL_MEDIA_DIR).length === 0;
+      if (isDestEmpty) {
+        try {
+          copyDirRecursive(bundledMediaDir, LOCAL_MEDIA_DIR);
+          console.log('Successfully copied bundled local_media to user data.');
+        } catch (err) {
+          console.error('Failed to copy bundled local_media:', err);
+        }
+      }
+    }
+  }
+
+  // If DB doesn't exist in userData (production), copy the bundled pre-populated database
+  if (!isDev && !fs.existsSync(DB_PATH)) {
+    const dbDir = path.dirname(DB_PATH);
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+    const bundledDbPath = path.join(APP_PATH, 'database.sqlite');
+    if (fs.existsSync(bundledDbPath)) {
+      try {
+        fs.copyFileSync(bundledDbPath, DB_PATH);
+        console.log('Successfully copied bundled database.sqlite to user data.');
+      } catch (err) {
+        console.error('Failed to copy bundled database.sqlite:', err);
+      }
+    }
+  }
+
+>>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   initializeDatabase();
 
   // Trigger background remote assets download and local migration
@@ -277,11 +379,14 @@ app.whenReady().then(() => {
     });
   }, 1000);
 
+<<<<<<< HEAD
   // Set up local media directory
   if (!fs.existsSync(LOCAL_MEDIA_DIR)) {
     fs.mkdirSync(LOCAL_MEDIA_DIR, { recursive: true });
   }
 
+=======
+>>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   // Register modern protocol handle for local-media://
   protocol.handle('local-media', (request) => {
     let filePath = request.url.slice('local-media://'.length);
@@ -292,6 +397,33 @@ app.whenReady().then(() => {
     return net.fetch('file://' + absolutePath);
   });
 
+<<<<<<< HEAD
+=======
+  // In production, intercept file:// requests for absolute paths like /images/...
+  // and serve them from dist/ inside the app package. This is needed because many
+  // React components use runtime string literals (e.g. "/images/ndc-crest.png")
+  // which Vite doesn't rewrite to relative paths at build time.
+  if (!isDev) {
+    protocol.interceptFileProtocol('file', (request, callback) => {
+      let url = request.url;
+      // Convert file:// URL to a local path
+      let filePath = decodeURIComponent(new URL(url).pathname);
+
+      // Check if this is an absolute /images/... or /placeholder.svg etc. request
+      // that should be served from our dist/ directory
+      const publicAssetMatch = filePath.match(/^\/(images\/.*|placeholder\.svg|favicon\.ico|robots\.txt)$/);
+      if (publicAssetMatch) {
+        const assetPath = path.join(APP_PATH, 'dist', publicAssetMatch[0]);
+        callback({ path: assetPath });
+        return;
+      }
+
+      // For all other file:// requests, pass through normally
+      callback({ path: filePath });
+    });
+  }
+
+>>>>>>> 7dc2f2ad8071585f339b325f0784f7e6f9f54af3
   createWindow();
 
   app.on('activate', () => {
