@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Globe, Calendar, User, Play, Pause, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DistinguishedVisit } from '@/types/domain';
 import ndcCrest from "/images/ndc-crest.png";
@@ -7,14 +7,32 @@ import { useThemeMode } from "@/hooks/useThemeMode";
 interface VisitsSectionProps {
   visits: DistinguishedVisit[];
   onBack?: () => void;
+  backTriggerNonce?: number;
 }
 
-export function VisitsSection({ visits, onBack }: VisitsSectionProps) {
+export function VisitsSection({ visits, onBack, backTriggerNonce = 0 }: VisitsSectionProps) {
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith("outdoor");
   const [autoDisplayActive, setAutoDisplayActive] = useState(false);
   const [autoDisplayIndex, setAutoDisplayIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+  const lastProcessedBackNonce = useRef(backTriggerNonce);
+
+  // Handle universal back button trigger
+  useEffect(() => {
+    if (backTriggerNonce === 0 || backTriggerNonce === lastProcessedBackNonce.current) {
+      lastProcessedBackNonce.current = backTriggerNonce;
+      return;
+    }
+    lastProcessedBackNonce.current = backTriggerNonce;
+
+    if (autoDisplayActive) {
+      setAutoDisplayActive(false);
+    } else if (onBack) {
+      onBack();
+    }
+  }, [backTriggerNonce]);
 
   // Auto-cycling effect for autodisplay
   useEffect(() => {
@@ -31,21 +49,7 @@ export function VisitsSection({ visits, onBack }: VisitsSectionProps) {
 
   return (
     <div className="scroll-reveal">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        {onBack ? (
-          <button
-            onClick={onBack}
-            className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
-              isLightMode
-                ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
-                : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
-            }`}
-          >
-            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            Back
-          </button>
-        ) : <div />}
-        
+      <div className="flex flex-wrap items-center justify-end gap-4 mb-6">
         {visits.length > 0 && (
           <button
             onClick={() => {
@@ -96,6 +100,8 @@ export function VisitsSection({ visits, onBack }: VisitsSectionProps) {
           <p className="text-center text-muted-foreground py-12">No visits recorded.</p>
         )}
       </div>
+
+      {/* Removed bottom back button */}
 
       {/* Auto-Display Full-Screen Modal */}
       {autoDisplayActive && currentAutoDisplayVisit && (

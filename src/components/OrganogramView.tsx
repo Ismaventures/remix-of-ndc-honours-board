@@ -50,6 +50,7 @@ interface OrganogramViewProps {
   onBack: () => void;
   forcedSelectedId?: string | null;
   forcedSelectionNonce?: number;
+  backTriggerNonce?: number;
 }
 
 type SortMode = "oldest" | "rank";
@@ -270,6 +271,7 @@ export function OrganogramView({
   onBack,
   forcedSelectedId = undefined,
   forcedSelectionNonce = 0,
+  backTriggerNonce = 0,
 }: OrganogramViewProps) {
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith("outdoor");
@@ -290,6 +292,25 @@ export function OrganogramView({
   const [rankOpen, setRankOpen] = useState(false);
   const [serviceOpen, setServiceOpen] = useState(false);
   const [yearOpen, setYearOpen] = useState(false);
+
+  const lastProcessedBackNonce = useRef(backTriggerNonce);
+
+  // Handle universal back button trigger
+  useEffect(() => {
+    if (backTriggerNonce === 0 || backTriggerNonce === lastProcessedBackNonce.current) {
+      lastProcessedBackNonce.current = backTriggerNonce;
+      return;
+    }
+    lastProcessedBackNonce.current = backTriggerNonce;
+
+    if (autoDisplayActive) {
+      setAutoDisplayActive(false);
+    } else if (selectedId) {
+      setSelectedId(null);
+    } else if (onBack) {
+      onBack();
+    }
+  }, [backTriggerNonce]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoPauseUntilRef = useRef(0);
   const navRafRef = useRef<number | null>(null);
@@ -570,19 +591,7 @@ export function OrganogramView({
     <div
       className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <button
-          onClick={onBack}
-          className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
-            isLightMode
-              ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
-              : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
-          }`}
-        >
-          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-          Back
-        </button>
-
+      <div className="flex flex-wrap items-center justify-end gap-4 mb-6">
         <div className="flex items-center gap-4">
           <div className="text-xs uppercase tracking-widest text-[#002060]/80 font-semibold">
             {filtered.length} Records
@@ -1247,6 +1256,7 @@ export function OrganogramView({
           </div>
         </div>
       )}
+      {/* Removed bottom back button */}
     </div>
   );
 }

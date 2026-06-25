@@ -14,15 +14,37 @@ export function CommandantSplitHero({ commandant, isAutoDisplay = false }: Comma
   const titleText = getCommandantDisplayTitle(commandant);
   const isCurrent = commandant?.isCurrent ?? false;
   const commandantImageUrl = useResolvedMediaUrl(commandant?.imageUrl);
+  const rankLower = (commandant?.rank || "").toLowerCase();
+  const titleLower = (commandant?.title || "").toLowerCase();
+  const postNominalsLower = (commandant?.postNominals || "").toLowerCase();
+  let serviceColor = "#FF0000";
+  if (
+    rankLower.includes("admiral") ||
+    rankLower.includes("commodore") ||
+    rankLower.includes("cdre") ||
+    titleLower.includes("navy") ||
+    postNominalsLower.includes("nn")
+  ) {
+    serviceColor = "#002060";
+  } else if (
+    rankLower.includes("avm") ||
+    rankLower.includes("air vice marshal") ||
+    rankLower.includes("marshal") ||
+    rankLower.includes("air commodore") ||
+    rankLower.includes("air cdre") ||
+    titleLower.includes("air force") ||
+    postNominalsLower.includes("naf")
+  ) {
+    serviceColor = "#00B0F0";
+  }
 
   return (
     <section className="relative w-full h-full flex flex-col overflow-hidden bg-white text-slate-900">
       {/* Top Defence Colors Strip */}
-      <div className="h-[8px] flex z-30 shrink-0">
-        <div className="flex-[32.5] bg-[#002060]" title="Navy" />
-        <div className="flex-[32.5] bg-[#FF0000]" title="Army" />
-        <div className="flex-[35] bg-[#00B0F0]" title="Air Force" />
-      </div>
+      <div
+        className="h-[8px] z-30 shrink-0"
+        style={{ backgroundColor: serviceColor }}
+      />
 
       {/* Main Content Container - Two Column Layout */}
       <div className="relative flex flex-1 min-h-0 z-10">
@@ -79,11 +101,10 @@ export function CommandantSplitHero({ commandant, isAutoDisplay = false }: Comma
       </div>
 
       {/* Bottom Defence Colors Strip */}
-      <div className="h-[8px] flex z-30 shrink-0">
-        <div className="flex-[32.5] bg-[#002060]" title="Navy" />
-        <div className="flex-[32.5] bg-[#FF0000]" title="Army" />
-        <div className="flex-[35] bg-[#00B0F0]" title="Air Force" />
-      </div>
+      <div
+        className="h-[8px] z-30 shrink-0"
+        style={{ backgroundColor: serviceColor }}
+      />
     </section>
   );
 }

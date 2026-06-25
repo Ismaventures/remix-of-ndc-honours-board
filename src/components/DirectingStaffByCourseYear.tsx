@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Personnel } from '@/types/domain';
 import { ChevronLeft, ChevronRight, ArrowLeft, Shield, X } from 'lucide-react';
 import { ProfileModal } from './ProfileModal';
@@ -12,6 +12,8 @@ interface DirectingStaffByCourseYearProps {
   onBack?: () => void;
   title?: string;
   description?: string;
+  onCourseSelect?: (courseNumber: number | null) => void;
+  backTriggerNonce?: number;
 }
 
 interface CourseGroup {
@@ -93,7 +95,7 @@ function StaffCard({ person, isLightMode, onSelect }: { person: Personnel; isLig
   );
 }
 
-export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directing Staff by Course Year', description }: DirectingStaffByCourseYearProps) {
+export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directing Staff by Course Year', description, onCourseSelect, backTriggerNonce = 0 }: DirectingStaffByCourseYearProps) {
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith('outdoor');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -101,6 +103,27 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
   const [autoDisplayActive, setAutoDisplayActive] = useState(false);
   const [autoDisplayIndex, setAutoDisplayIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+  const lastProcessedBackNonce = useRef(backTriggerNonce);
+
+  // Handle universal back button trigger
+  useEffect(() => {
+    if (backTriggerNonce === 0 || backTriggerNonce === lastProcessedBackNonce.current) {
+      lastProcessedBackNonce.current = backTriggerNonce;
+      return;
+    }
+    lastProcessedBackNonce.current = backTriggerNonce;
+
+    if (autoDisplayActive) {
+      setAutoDisplayActive(false);
+    } else if (selectedPerson) {
+      setSelectedPerson(null);
+    } else if (selectedGroupId) {
+      setSelectedGroupId(null);
+    } else if (onBack) {
+      onBack();
+    }
+  }, [backTriggerNonce]);
 
   // Group personnel by course year and course number (to handle multiple courses in same year)
   const courseGroups = useMemo(() => {
@@ -198,6 +221,13 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
 
   const activeStaff = activeGroup?.staff ?? [];
 
+  // Notify parent of active course changes
+  useEffect(() => {
+    if (onCourseSelect) {
+      onCourseSelect(activeGroup ? activeGroup.courseNumber : null);
+    }
+  }, [activeGroup, onCourseSelect]);
+
   // Auto-cycling effect for autodisplay
   useEffect(() => {
     if (!autoDisplayActive || activeStaff.length === 0 || !isAutoPlaying) return;
@@ -221,22 +251,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
 
   return (
     <div className="space-y-3">
-      {/* Back button */}
-      {onBack && (
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <button
-            onClick={onBack}
-            className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
-              isLightMode
-                ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
-                : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
-            }`}
-          >
-            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            Back
-          </button>
-        </div>
-      )}
+      {/* Removed top back button */}
 
       {/* Header section */}
       {title && (
@@ -609,6 +624,8 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
       )}
 
       {/* Profile Modal */}
+      {/* Removed bottom back navigation */}
+
       {selectedPerson && (
         <ProfileModal person={selectedPerson} onClose={() => setSelectedPerson(null)} />
       )}

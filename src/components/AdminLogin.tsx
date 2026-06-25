@@ -91,16 +91,7 @@ export function AdminLogin({ onSuccess, onBack }: AdminLoginProps) {
 
   return (
     <div className="max-w-md mx-auto mt-8 rounded-xl border border-primary/30 bg-card p-6 md:p-8 shadow-[0_0_30px_rgba(0,0,0,0.2)]">
-      {onBack && (
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-4"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Home
-        </button>
-      )}
+      {/* Removed top back button */}
       <h2 className="text-2xl font-bold font-serif gold-text mb-2">Admin Access</h2>
       <p className="text-sm text-muted-foreground mb-6">
         Sign in with an authorized admin account to manage records and system settings.
@@ -141,6 +132,7 @@ export function AdminLogin({ onSuccess, onBack }: AdminLoginProps) {
           {loading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
+      {/* Removed bottom back button */}
     </div>
   );
 }

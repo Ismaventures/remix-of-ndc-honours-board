@@ -28,6 +28,29 @@ export function CommandantHero({
   const description =
     commandant?.description ??
     "No commandant biography is currently available from the database.";
+  const rankLower = (commandant?.rank || "").toLowerCase();
+  const titleLower = (commandant?.title || "").toLowerCase();
+  const postNominalsLower = (commandant?.postNominals || "").toLowerCase();
+  let serviceColor = "#FF0000";
+  if (
+    rankLower.includes("admiral") ||
+    rankLower.includes("commodore") ||
+    rankLower.includes("cdre") ||
+    titleLower.includes("navy") ||
+    postNominalsLower.includes("nn")
+  ) {
+    serviceColor = "#002060";
+  } else if (
+    rankLower.includes("avm") ||
+    rankLower.includes("air vice marshal") ||
+    rankLower.includes("marshal") ||
+    rankLower.includes("air commodore") ||
+    rankLower.includes("air cdre") ||
+    titleLower.includes("air force") ||
+    postNominalsLower.includes("naf")
+  ) {
+    serviceColor = "#00B0F0";
+  }
   const isCurrent = commandant?.isCurrent ?? false;
   const commandantImageUrl = useResolvedMediaUrl(commandant?.imageUrl);
   const tenureLabel = commandant
@@ -50,11 +73,10 @@ export function CommandantHero({
     return (
       <section className="relative w-full h-full min-h-0 max-h-full flex flex-col items-stretch overflow-hidden bg-white text-slate-900 border border-slate-200">
         {/* Top Defence Colors Strip */}
-        <div className="absolute top-0 inset-x-0 h-[8px] flex z-30">
-          <div className="flex-1 bg-[#002060]" title="Navy" />
-          <div className="flex-1 bg-[#FF0000]" title="Army" />
-          <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
-        </div>
+        <div
+          className="absolute top-0 inset-x-0 h-[8px] z-30"
+          style={{ backgroundColor: serviceColor }}
+        />
 
         {/* Background elements */}
         <div className="absolute inset-0 z-0 opacity-40">
@@ -138,11 +160,10 @@ export function CommandantHero({
         </div>
 
         {/* Bottom Defence Colors Strip */}
-          <div className="absolute bottom-0 inset-x-0 h-[8px] flex z-30">
-          <div className="flex-1 bg-[#002060]" title="Navy" />
-          <div className="flex-1 bg-[#FF0000]" title="Army" />
-          <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
-        </div>
+        <div
+          className="absolute bottom-0 inset-x-0 h-[8px] z-30"
+          style={{ backgroundColor: serviceColor }}
+        />
       </section>
     );
   }
@@ -163,11 +184,10 @@ export function CommandantHero({
         <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-[radial-gradient(ellipse_at_top_right,rgba(0,60,140,0.25),transparent_70%)] pointer-events-none z-0" />
 
         {/* Top defence colors strip */}
-        <div className="absolute top-0 inset-x-0 h-[6px] flex z-30">
-          <div className="flex-1 bg-[#002060]" />
-          <div className="flex-1 bg-[#FF0000]" />
-          <div className="flex-1 bg-[#00B0F0]" />
-        </div>
+        <div
+          className="absolute top-0 inset-x-0 h-[6px] z-30"
+          style={{ backgroundColor: serviceColor }}
+        />
 
         {/* Main two-column layout */}
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-[300px_1fr] gap-8 md:gap-10 p-8 md:p-12 pt-12 md:flex-1 md:min-h-0 md:overflow-hidden">
@@ -354,11 +374,10 @@ export function CommandantHero({
         </div>
 
         {/* Bottom defence colors strip */}
-        <div className="absolute bottom-0 inset-x-0 h-[6px] flex z-30">
-          <div className="flex-1 bg-[#002060]" />
-          <div className="flex-1 bg-[#FF0000]" />
-          <div className="flex-1 bg-[#00B0F0]" />
-        </div>
+        <div
+          className="absolute bottom-0 inset-x-0 h-[6px] z-30"
+          style={{ backgroundColor: serviceColor }}
+        />
       </section>
     );
   }

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Personnel, Category } from '@/types/domain';
 import { ChevronLeft, ChevronRight, ArrowLeft, X, Pause, Play, Monitor } from 'lucide-react';
 import { FellowProfileModal } from './FellowProfileModal';
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 interface CourseGroup {
   year: number;
   courseNumber: number;
+  academicYear: string;
   designation: string;
   fellows: Personnel[];
   groupId: string;
@@ -20,6 +21,7 @@ type FellowWithCourse = Personnel & {
   courseDesignation?: string;
   courseNumber?: number;
   courseYear?: number;
+  courseAcademicYear?: string;
 };
 
 const TRI_COLOR_BAR = (
@@ -89,6 +91,8 @@ interface FellowsByCourseProps {
   onBack?: () => void;
   title?: string;
   description?: string;
+  onCourseSelect?: (courseNumber: number | null) => void;
+  backTriggerNonce?: number;
 }
 
 export function FellowsByCourse({ 
@@ -96,7 +100,9 @@ export function FellowsByCourse({
   category, 
   onBack, 
   title = 'Fellows by Course',
-  description 
+  description,
+  onCourseSelect,
+  backTriggerNonce = 0
 }: FellowsByCourseProps) {
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith('outdoor');
@@ -106,71 +112,81 @@ export function FellowsByCourse({
   const [autoDisplayIndex, setAutoDisplayIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [autoDisplayMode, setAutoDisplayMode] = useState<'all-courses' | 'single-course'>('all-courses');
+  const [viewMode, setViewMode] = useState<'all' | 'courses'>('all');
 
   // Group fellows by course year and course number
   const courseGroups = useMemo(() => {
+    // 1. Pre-populate Course 1 to Course 34 mapping
+    const courseMap: Record<number, { year: number; courseNumber: number; academicYear: string; fellows: Personnel[] }> = {};
+    for (let c = 1; c <= 34; c++) {
+      const startYear = 1991 + c;
+      const endYear = 1992 + c;
+      courseMap[c] = {
+        year: startYear,
+        courseNumber: c,
+        academicYear: `${startYear}–${endYear}`,
+        fellows: []
+      };
+    }
+
     const fellows = personnel.filter(p => p.category === category);
-    const grouped: Record<string, { year: number; courseNumber: number; fellows: Personnel[] }> = {};
     const noCourseData: string[] = [];
 
     fellows.forEach(person => {
-      let year = person.periodStart;
-      let courseNum = 1;
-      let hasCourseData = false;
+      let courseNum = null;
 
-      // Try to parse CSE format: "CSE X/YYYY"
-      if (person.decoration && person.decoration.includes('CSE')) {
-        let match = person.decoration.match(/CSE\s*(\d+)\s*\/\s*(\d{4})/);
-        if (!match) {
-          match = person.decoration.match(/CSE(\d+)\/(\d{4})/);
-        }
+      // Try to parse CSE course number: "CSE X" or "CSE X/YYYY"
+      if (person.decoration) {
+        let match = person.decoration.match(/CSE\s*(\d+)/i);
         if (match) {
           courseNum = parseInt(match[1], 10);
-          year = parseInt(match[2], 10);
-          hasCourseData = true;
         }
       }
 
-      // Try to parse NWC format: "NWC Course X" and use period_start as year
-      if (!hasCourseData && person.decoration && person.decoration.includes('NWC Course')) {
+      // Try to parse NWC course number: "NWC Course X"
+      if (!courseNum && person.decoration) {
         let match = person.decoration.match(/NWC\s+Course\s+(\d+)/i);
         if (match) {
           courseNum = parseInt(match[1], 10);
-          year = person.periodStart || year;
-          hasCourseData = true;
         }
       }
 
-      if (!hasCourseData) {
-        noCourseData.push(`${person.name} (${year})`);
+      // Fallback: calculate course number based on periodStart (starts with Course 1 in 1992)
+      if (!courseNum && person.periodStart) {
+        courseNum = person.periodStart - 1991;
       }
 
-      const groupId = `${year}-${courseNum}`;
-
-      if (!grouped[groupId]) {
-        grouped[groupId] = { year, courseNumber: courseNum, fellows: [] };
+      if (!courseNum || isNaN(courseNum)) {
+        noCourseData.push(`${person.name} (${person.periodStart})`);
+        courseNum = 1; // Default fallback to prevent crash
       }
-      grouped[groupId].fellows.push(person);
+
+      // Map to course slot
+      if (courseMap[courseNum]) {
+        courseMap[courseNum].fellows.push(person);
+      } else {
+        // Dynamic course slot if outside 1-34
+        const startYear = 1991 + courseNum;
+        const endYear = 1992 + courseNum;
+        courseMap[courseNum] = {
+          year: startYear,
+          courseNumber: courseNum,
+          academicYear: `${startYear}–${endYear}`,
+          fellows: [person]
+        };
+      }
     });
 
     if (noCourseData.length > 0) {
       console.warn(`⚠️ ${category} without course data: ${noCourseData.join(', ')}`);
     }
 
-    console.log(`✅ ${category} Grouping Complete:`, {
-      total: fellows.length,
-      uniqueGroups: Object.keys(grouped).length,
-      groups: Object.keys(grouped).map(key => {
-        const g = grouped[key];
-        return `Course ${g.courseNumber}/${g.year} (${g.fellows.length} fellows)`;
-      })
-    });
-
-    return Object.entries(grouped)
-      .map(([groupId, data]) => ({
+    return Object.values(courseMap)
+      .map((data) => ({
         year: data.year,
         courseNumber: data.courseNumber,
-        designation: `Course ${data.courseNumber}/${data.year}`,
+        academicYear: data.academicYear,
+        designation: `Course ${data.courseNumber}`,
         fellows: data.fellows.sort((a, b) => {
           if (a.seniorityOrder !== b.seniorityOrder) {
             return a.seniorityOrder - b.seniorityOrder;
@@ -180,13 +196,9 @@ export function FellowsByCourse({
           }
           return a.name.localeCompare(b.name);
         }),
-        groupId,
+        groupId: `${data.year}-${data.courseNumber}`,
       }))
-      .sort((a, b) => {
-        const yearDiff = b.year - a.year;
-        if (yearDiff !== 0) return yearDiff;
-        return a.courseNumber - b.courseNumber;
-      });
+      .sort((a, b) => b.courseNumber - a.courseNumber); // Sort Course 34 to 1 descending
   }, [personnel, category]);
 
   const activeGroup = useMemo(
@@ -196,6 +208,34 @@ export function FellowsByCourse({
 
   const activeFellows = activeGroup?.fellows ?? [];
 
+  // Notify parent of active course changes
+  useEffect(() => {
+    if (onCourseSelect) {
+      onCourseSelect(activeGroup ? activeGroup.courseNumber : null);
+    }
+  }, [activeGroup, onCourseSelect]);
+
+  const lastProcessedBackNonce = useRef(backTriggerNonce);
+
+  // Handle universal back button trigger
+  useEffect(() => {
+    if (backTriggerNonce === 0 || backTriggerNonce === lastProcessedBackNonce.current) {
+      lastProcessedBackNonce.current = backTriggerNonce;
+      return;
+    }
+    lastProcessedBackNonce.current = backTriggerNonce;
+
+    if (autoDisplayActive) {
+      setAutoDisplayActive(false);
+    } else if (selectedPerson) {
+      setSelectedPerson(null);
+    } else if (selectedGroupId) {
+      setSelectedGroupId(null);
+    } else if (onBack) {
+      onBack();
+    }
+  }, [backTriggerNonce]);
+
   // Create flat list of all fellows with course info for all-courses auto display
   const allCourseFellows = useMemo(() => {
     return courseGroups.flatMap(group =>
@@ -204,6 +244,7 @@ export function FellowsByCourse({
         courseDesignation: group.designation,
         courseNumber: group.courseNumber,
         courseYear: group.year,
+        courseAcademicYear: group.academicYear,
       }))
     );
   }, [courseGroups]);
@@ -239,26 +280,9 @@ export function FellowsByCourse({
 
   return (
     <div className="space-y-2">
-      {/* When no course selected - show course selection grid */}
+      {/* When no course selected - show list of all fellows or course selection grid */}
       {!selectedGroupId && (
         <>
-          {/* Back button */}
-          {onBack && (
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <button
-                onClick={onBack}
-                className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
-                  isLightMode
-                    ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
-                    : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
-                }`}
-              >
-                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                Back
-              </button>
-            </div>
-          )}
-
           {/* Header section - Single unified heading */}
           {title && (
             <div className={cn(
@@ -266,7 +290,7 @@ export function FellowsByCourse({
               isLightMode ? 'bg-white/80 border-slate-200 shadow-sm' : 'bg-slate-800/80 border-slate-700'
             )}>
               {TRI_COLOR_BAR}
-              <div className="pt-4">
+              <div className="pt-4 text-center">
                 <h1 className={cn(
                   'text-2xl md:text-4xl font-bold font-serif text-center uppercase tracking-wider heading-accent',
                   isLightMode ? 'text-[#002060]' : 'text-white'
@@ -285,129 +309,185 @@ export function FellowsByCourse({
             </div>
           )}
 
-          {/* Course Selection Box */}
-          <div className={cn(
-            'relative overflow-hidden rounded-xl border p-6',
-            isLightMode
-              ? 'border-[#FFD700]/30 bg-slate-50'
-              : 'border-[#00B0F0]/40 bg-[linear-gradient(135deg,rgba(0,40,80,0.95)_0%,rgba(0,80,120,0.9)_100%)]'
-          )}>
-            {/* Glow effect for dark mode */}
-            {!isLightMode && (
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,176,240,0.1),transparent_70%)]" />
-            )}
-
-            <div className="relative z-10">
-              <h2 className={cn(
-                'text-xl md:text-2xl font-bold font-serif mb-1 text-center uppercase tracking-wide',
-                isLightMode ? 'text-[#002060]' : 'text-[#00B0F0]'
-              )}>
-                Select Course
-              </h2>
-              <p className={cn(
-                'text-sm mb-5 text-center',
-                isLightMode ? 'text-slate-500' : 'text-white/65'
-              )}>
-                Choose a course to browse fellows, or use Auto Display to cycle through all
-              </p>
-
-              {courseGroups.length === 0 && (
-                <p className={cn(
-                  'text-sm mb-6 p-4 rounded-lg border text-center',
-                  isLightMode
-                    ? 'border-orange-300 bg-orange-50 text-orange-700'
-                    : 'border-orange-500/30 bg-orange-500/10 text-orange-300'
-                )}>
-                  📌 No course data found. Add CSE designation (e.g., "CSE 1/1986") to the decoration field.
-                </p>
-              )}
-
-              {/* Course Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-5">
-                {courseGroups.map((group, index) => (
-                  <button
-                    key={group.groupId}
-                    onClick={() => {
-                      setSelectedGroupId(group.groupId);
-                      setAutoDisplayIndex(0);
-                    }}
-                    className={cn(
-                      'group relative flex flex-col items-center justify-center gap-2 aspect-square rounded-xl border-2 p-3 transition-all duration-300',
-                      'backdrop-blur-sm overflow-hidden animate-fade-up hover:scale-[1.04]',
-                      isLightMode
-                        ? 'border-[#002060]/25 bg-gradient-to-b from-white via-slate-50 to-[#ADD8E6]/30 hover:border-[#00B0F0]/50 hover:shadow-[0_8px_28px_rgba(0,32,96,0.12)]'
-                        : cn(
-                            'border-[#00B0F0]/35 bg-gradient-to-br hover:border-[#00B0F0]/65',
-                            'hover:shadow-[0_0_28px_rgba(0,176,240,0.22)]',
-                            courseTileGradient
-                          )
-                    )}
-                    style={{ animationDelay: `${Math.min(index * 0.04, 0.35)}s` }}
-                  >
-                    <div className="absolute top-0 left-0 right-0 flex h-1 opacity-90">
-                      <div className="flex-1 bg-[#002060]" />
-                      <div className="flex-1 bg-[#FF0000]" />
-                      <div className="flex-1 bg-[#00B0F0]" />
-                    </div>
-
-                    <div className={cn(
-                      'absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none',
-                      isLightMode
-                        ? 'bg-[radial-gradient(circle_at_center,rgba(0,176,240,0.08),transparent_70%)]'
-                        : 'bg-[radial-gradient(circle_at_center,rgba(0,176,240,0.15),transparent_70%)]'
-                    )} />
-
-                    <img
-                      src={ndcCrest}
-                      alt={`${group.designation} crest`}
-                      className={cn(
-                        'h-14 w-14 md:h-16 md:w-16 object-contain relative z-10 transition-transform duration-300 group-hover:scale-110',
-                        isLightMode ? 'opacity-85' : 'opacity-90 drop-shadow-md'
-                      )}
-                    />
-
-                    <div className="flex flex-col items-center gap-0.5 relative z-10">
-                      <span className={cn(
-                        'font-bold text-sm md:text-base text-center leading-tight',
-                        isLightMode ? 'text-[#002060]' : 'text-white'
-                      )}>
-                        {group.designation}
-                      </span>
-                      <span className={cn(
-                        'text-[10px] font-semibold text-center px-2 py-0.5 rounded-full',
-                        isLightMode
-                          ? 'text-[#002060]/60 bg-[#002060]/5'
-                          : 'text-[#FFD700]/90 bg-white/10'
-                      )}>
-                        {group.fellows.length} {group.fellows.length === 1 ? 'Fellow' : 'Fellows'}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
+          {/* Pill Shaped Menu Switcher */}
+          <div className="flex justify-center my-4">
+            <div className={cn(
+              "inline-flex p-1 rounded-full border transition-all duration-300 backdrop-blur-sm",
+              isLightMode ? "bg-slate-100/90 border-slate-200 shadow-sm" : "bg-slate-900/60 border-slate-800/80"
+            )}>
+              <button
+                onClick={() => setViewMode('all')}
+                className={cn(
+                  "px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300",
+                  viewMode === 'all'
+                    ? (isLightMode 
+                        ? "bg-[#002060] text-white shadow-md" 
+                        : "bg-gradient-to-r from-[#00B0F0] to-[#002060] text-white shadow-[0_2px_10px_rgba(0,176,240,0.3)]")
+                    : (isLightMode 
+                        ? "text-slate-600 hover:text-slate-900" 
+                        : "text-white/60 hover:text-white")
+                )}
+              >
+                All Fellows
+              </button>
+              <button
+                onClick={() => setViewMode('courses')}
+                className={cn(
+                  "px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300",
+                  viewMode === 'courses'
+                    ? (isLightMode 
+                        ? "bg-[#002060] text-white shadow-md" 
+                        : "bg-gradient-to-r from-[#00B0F0] to-[#002060] text-white shadow-[0_2px_10px_rgba(0,176,240,0.3)]")
+                    : (isLightMode 
+                        ? "text-slate-600 hover:text-slate-900" 
+                        : "text-white/60 hover:text-white")
+                )}
+              >
+                Filter by Courses
+              </button>
             </div>
           </div>
+
+          {viewMode === 'all' ? (
+            /* All Fellows Grid View */
+            <div className="relative">
+              {/* Large Animated Background NDC Logo */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-[0.05]">
+                <img
+                  src={ndcCrest}
+                  alt=""
+                  className="ndc-logo-watermark absolute"
+                  style={{
+                    width: '450px',
+                    height: '450px',
+                  }}
+                />
+              </div>
+
+              <div className="relative z-10">
+                <PersonnelPortraitGrid
+                  personnel={allCourseFellows}
+                  isLightMode={isLightMode}
+                  onSelectPerson={setSelectedPerson}
+                />
+              </div>
+            </div>
+          ) : (
+            /* Course Selection Box with Course Grid */
+            <div className={cn(
+              'relative overflow-hidden rounded-xl border p-6',
+              isLightMode
+                ? 'border-[#FFD700]/30 bg-slate-50'
+                : 'border-[#00B0F0]/40 bg-[linear-gradient(135deg,rgba(0,40,80,0.95)_0%,rgba(0,80,120,0.9)_100%)]'
+            )}>
+              {/* Glow effect for dark mode */}
+              {!isLightMode && (
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,176,240,0.1),transparent_70%)]" />
+              )}
+
+              <div className="relative z-10">
+                <h2 className={cn(
+                  'text-xl md:text-2xl font-bold font-serif mb-1 text-center uppercase tracking-wide',
+                  isLightMode ? 'text-[#002060]' : 'text-[#00B0F0]'
+                )}>
+                  Select Course
+                </h2>
+                <p className={cn(
+                  'text-sm mb-5 text-center',
+                  isLightMode ? 'text-slate-500' : 'text-white/65'
+                )}>
+                  Choose a course to browse fellows, or use Auto Display to cycle through all
+                </p>
+
+                {courseGroups.length === 0 && (
+                  <p className={cn(
+                    'text-sm mb-6 p-4 rounded-lg border text-center',
+                    isLightMode
+                      ? 'border-orange-300 bg-orange-50 text-orange-700'
+                      : 'border-orange-500/30 bg-orange-500/10 text-orange-300'
+                  )}>
+                    📌 No course data found. Add CSE designation (e.g., "CSE 1/1986") to the decoration field.
+                  </p>
+                )}
+
+                {/* Course Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-5">
+                  {courseGroups.map((group, index) => (
+                    <button
+                      key={group.groupId}
+                      onClick={() => {
+                        setSelectedGroupId(group.groupId);
+                        setAutoDisplayIndex(0);
+                      }}
+                      className={cn(
+                        'group relative flex flex-col items-center justify-center gap-2 aspect-square rounded-xl border-2 p-3 transition-all duration-300',
+                        'backdrop-blur-sm overflow-hidden animate-fade-up hover:scale-[1.04]',
+                        isLightMode
+                          ? 'border-[#002060]/25 bg-gradient-to-b from-white via-slate-50 to-[#ADD8E6]/30 hover:border-[#00B0F0]/50 hover:shadow-[0_8px_28px_rgba(0,32,96,0.12)]'
+                          : cn(
+                              'border-[#00B0F0]/35 bg-gradient-to-br hover:border-[#00B0F0]/65',
+                              'hover:shadow-[0_0_28px_rgba(0,176,240,0.22)]',
+                              courseTileGradient
+                            )
+                      )}
+                      style={{ animationDelay: `${Math.min(index * 0.04, 0.35)}s` }}
+                    >
+                      <div className="absolute top-0 left-0 right-0 flex h-1 opacity-90">
+                        <div className="flex-1 bg-[#002060]" />
+                        <div className="flex-1 bg-[#FF0000]" />
+                        <div className="flex-1 bg-[#00B0F0]" />
+                      </div>
+
+                      <div className={cn(
+                        'absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none',
+                        isLightMode
+                          ? 'bg-[radial-gradient(circle_at_center,rgba(0,176,240,0.08),transparent_70%)]'
+                          : 'bg-[radial-gradient(circle_at_center,rgba(0,176,240,0.15),transparent_70%)]'
+                      )} />
+
+                      <img
+                        src={ndcCrest}
+                        alt={`${group.designation} crest`}
+                        className={cn(
+                          'h-14 w-14 md:h-16 md:w-16 object-contain relative z-10 transition-transform duration-300 group-hover:scale-110',
+                          isLightMode ? 'opacity-85' : 'opacity-90 drop-shadow-md'
+                        )}
+                      />
+
+                      <div className="flex flex-col items-center gap-0.5 relative z-10">
+                        <span className={cn(
+                          'font-bold text-sm md:text-base text-center leading-tight',
+                          isLightMode ? 'text-[#002060]' : 'text-white'
+                        )}>
+                          {group.designation}
+                        </span>
+                        <span className={cn(
+                          'text-[11px] text-center font-medium opacity-80',
+                          isLightMode ? 'text-[#002060]/75' : 'text-white/75'
+                        )}>
+                          {group.academicYear}
+                        </span>
+                        <span className={cn(
+                          'text-[10px] font-semibold text-center px-2 py-0.5 rounded-full mt-0.5',
+                          isLightMode
+                            ? 'text-[#002060]/60 bg-[#002060]/5'
+                            : 'text-[#FFD700]/90 bg-white/10'
+                        )}>
+                          {group.fellows.length} {group.fellows.length === 1 ? 'Fellow' : 'Fellows'}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
       {/* When course selected - show full page view */}
       {selectedGroupId && (
         <div className="space-y-2">
-          {/* Back button to course selection */}
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <button
-              onClick={() => setSelectedGroupId(null)}
-              className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
-                isLightMode
-                  ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
-                  : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
-              }`}
-            >
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              Back to Courses
-            </button>
-          </div>
-
           {/* Header with category title - Enhanced with tri-color and scattered NDC logos */}
           <div className={`relative overflow-hidden rounded-xl border-2 p-3 ${
             isLightMode
@@ -477,7 +557,7 @@ export function FellowsByCourse({
 
               <div className="space-y-1 pt-1">
                 <p className={`text-center font-bold text-lg ${isLightMode ? 'text-[#002060]' : 'text-[#FFD700]'}`}>
-                  {activeGroup?.designation}
+                  {activeGroup ? `${activeGroup.designation} (${activeGroup.academicYear})` : ''}
                 </p>
                 <p className={`text-center text-sm font-semibold ${isLightMode ? 'text-slate-600' : 'text-white/70'}`}>
                   {activeFellows.length} {activeFellows.length === 1 ? 'Fellow' : 'Fellows'}
@@ -522,6 +602,7 @@ export function FellowsByCourse({
               No fellows found for this course.
             </div>
           )}
+          {/* Removed bottom back button */}
         </div>
       )}
 
@@ -561,8 +642,8 @@ export function FellowsByCourse({
               <div className="min-w-0">
                 <p className="text-[#FFD700] font-serif text-xs md:text-sm uppercase tracking-widest font-bold truncate">
                   {autoDisplayMode === 'all-courses'
-                    ? currentAutoDisplayPerson.courseDesignation
-                    : activeGroup?.designation}
+                    ? `${currentAutoDisplayPerson.courseDesignation} (${currentAutoDisplayPerson.courseAcademicYear})`
+                    : activeGroup ? `${activeGroup.designation} (${activeGroup.academicYear})` : ''}
                 </p>
                 <p className="text-white/55 text-xs mt-0.5">
                   {autoDisplayIndex + 1} of {autoDisplayMode === 'all-courses' ? allCourseFellows.length : activeFellows.length}
@@ -638,9 +719,15 @@ export function FellowsByCourse({
       {selectedPerson && (
         <FellowProfileModal
           person={selectedPerson}
-          fellows={activeFellows}
+          fellows={viewMode === 'all' ? allCourseFellows : activeFellows}
           category={category}
-          courseDesignation={activeGroup?.designation}
+          courseDesignation={
+            activeGroup
+              ? `${activeGroup.designation} (${activeGroup.academicYear})`
+              : (selectedPerson as FellowWithCourse).courseDesignation
+                ? `${(selectedPerson as FellowWithCourse).courseDesignation} (${(selectedPerson as FellowWithCourse).courseAcademicYear})`
+                : undefined
+          }
           onClose={() => setSelectedPerson(null)}
           onSelectPerson={setSelectedPerson}
         />
