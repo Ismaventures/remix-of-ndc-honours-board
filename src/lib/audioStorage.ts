@@ -91,8 +91,8 @@ export async function listAudioTracksFromSupabase(): Promise<RemoteAudioTrack[]>
 export async function getSupabaseAudioUrl(bucketPath: string): Promise<string | null> {
   if (!isSupabaseAudioReady()) return null;
 
-  const { data } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(bucketPath);
-  return data?.publicUrl ?? null;
+  const result = await supabase.storage.from(AUDIO_BUCKET).getPublicUrl(bucketPath);
+  return result?.data?.publicUrl ?? null;
 }
 
 export async function deleteAudioFromSupabase(id: string, bucketPath?: string): Promise<boolean> {

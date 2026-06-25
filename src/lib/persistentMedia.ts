@@ -198,7 +198,12 @@ async function fetchAndPersistRemoteMedia(url: string): Promise<StoredRemoteMedi
 async function resolveRemoteMediaRefToObjectUrl(ref: string): Promise<string> {
   if (ref.startsWith('local-media://')) {
     if (typeof window !== 'undefined' && !(window as any).electronAPI) {
-      return ref.replace('local-media://', '/local_media/');
+      // Browser mode: resolve local-media:// to IndexedDB blob URL
+      const { getBlob } = await import('./localDb');
+      const path = ref.replace('local-media://', '');
+      const blob = await getBlob(path);
+      if (blob) return URL.createObjectURL(blob);
+      return '';
     }
     return ref;
   }
@@ -311,7 +316,11 @@ export async function resolveMediaRefToObjectUrl(ref: string): Promise<string | 
   if (!parsedPersistentRef) {
     if (ref.startsWith('local-media://')) {
       if (typeof window !== 'undefined' && !(window as any).electronAPI) {
-        return ref.replace('local-media://', '/local_media/');
+        const { getBlob } = await import('./localDb');
+        const path = ref.replace('local-media://', '');
+        const blob = await getBlob(path);
+        if (blob) return URL.createObjectURL(blob);
+        return '';
       }
       return ref;
     }

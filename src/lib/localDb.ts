@@ -612,8 +612,10 @@ class StorageBuilder {
 /* ─── Auth Layer ─── */
 
 const AUTH_KEY = 'ndc-auth-session';
-const ADMIN_EMAIL = 'admin@ndc.com';
-const ADMIN_PASSWORD = 'admin@ndc';
+const VALID_CREDENTIALS = [
+  { email: 'admin@ndc.gov.ng', password: 'NDC_admin_2026!' },
+  { email: 'admin@ndc.com', password: 'admin@ndc' },
+];
 
 interface AuthSession {
   user: {
@@ -670,7 +672,8 @@ class AuthBuilder {
     email: string;
     password: string;
   }) {
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+    const match = VALID_CREDENTIALS.find(c => c.email === email && c.password === password);
+    if (match) {
       const session = createSession(email);
       storeSession(session);
       for (const cb of authCallbacks) {
@@ -691,7 +694,7 @@ class AuthBuilder {
     email: string;
     password: string;
   }) {
-    if (email === ADMIN_EMAIL) {
+    if (VALID_CREDENTIALS.some(c => c.email === email)) {
       const session = createSession(email);
       storeSession(session);
       for (const cb of authCallbacks) {

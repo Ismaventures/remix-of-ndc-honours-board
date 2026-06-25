@@ -43,8 +43,8 @@ const CARDS: {
   },
   {
     key: "fwc",
-    label: "DISTINGUISHED FELLOWS OF WAR COLLEGE",
-    subtitle: "FWC",
+    label: "FWC+",
+    subtitle: "Distinguished Fellows of War College",
     icon: Shield,
     color: "text-blue-600",
     cardGradient: "from-[#0f2c4e] via-[#14365d] to-[#1a4373]",
