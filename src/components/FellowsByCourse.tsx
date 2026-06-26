@@ -116,9 +116,11 @@ export function FellowsByCourse({
 
   // Group fellows by course year and course number
   const courseGroups = useMemo(() => {
-    // 1. Pre-populate Course 1 to Course 34 mapping
+    // 1. Pre-populate course mapping based on category
     const courseMap: Record<number, { year: number; courseNumber: number; academicYear: string; fellows: Personnel[] }> = {};
-    for (let c = 1; c <= 34; c++) {
+    const startCourse = category === 'FWC' ? 1 : 16;
+    const endCourse = 34;
+    for (let c = startCourse; c <= endCourse; c++) {
       const startYear = 1991 + c;
       const endYear = 1992 + c;
       courseMap[c] = {
