@@ -119,18 +119,68 @@ const resolveDisplayContext = (
   return "commandants";
 };
 
+const getServiceColor = (serviceName?: string, rank?: string, title?: string, postNominals?: string): string => {
+  if (serviceName) {
+    const s = serviceName.toLowerCase();
+    if (s.includes("army")) return "#FF0000";
+    if (s.includes("navy")) return "#002060";
+    if (s.includes("air force") || s.includes("airforce")) return "#00B0F0";
+  }
+  if (rank || title || postNominals) {
+    const r = (rank || "").toLowerCase();
+    const t = (title || "").toLowerCase();
+    const p = (postNominals || "").toLowerCase();
+    if (
+      r.includes("admiral") ||
+      r.includes("commodore") ||
+      r.includes("cdre") ||
+      t.includes("navy") ||
+      p.includes("nn")
+    ) {
+      return "#002060";
+    }
+    if (
+      r.includes("avm") ||
+      r.includes("air vice marshal") ||
+      r.includes("marshal") ||
+      r.includes("air commodore") ||
+      r.includes("air cdre") ||
+      t.includes("air force") ||
+      p.includes("naf")
+    ) {
+      return "#00B0F0";
+    }
+    if (
+      r.includes("general") ||
+      r.includes("gen") ||
+      r.includes("colonel") ||
+      r.includes("col") ||
+      r.includes("brigadier") ||
+      r.includes("brig") ||
+      r.includes("major") ||
+      r.includes("lieutenant") ||
+      r.includes("lt")
+    ) {
+      return "#FF0000";
+    }
+  }
+  return "tri-color";
+};
+
 const ContinuousSlideCard = memo(function ContinuousSlideCard({
   item,
   type,
   onSelect,
   isLightMode,
   imageLoading,
+  onHover,
 }: {
   item: Personnel | DistinguishedVisit | Commandant;
   type: "personnel" | "visit" | "commandant";
   onSelect: (item: Personnel | DistinguishedVisit | Commandant) => void;
   isLightMode: boolean;
   imageLoading: "eager" | "lazy";
+  onHover?: (hovering: boolean) => void;
 }) {
   const rawUrl = item.imageUrl;
   const imageUrl = useResolvedMediaUrl(rawUrl);
@@ -143,7 +193,7 @@ const ContinuousSlideCard = memo(function ContinuousSlideCard({
       ? getCommandantDisplayTitle(item as Commandant, "")
       : isVisit
         ? (item as DistinguishedVisit).title
-        : (item as Personnel).decoration
+        : ""
     )?.trim() || "";
   const name = item.name?.trim();
   const subtitle = isCommandant
@@ -170,6 +220,18 @@ const ContinuousSlideCard = memo(function ContinuousSlideCard({
       : name;
   const safeName = displayName || "Name unavailable";
   const safeDecoration = decoration?.trim() || "";
+  const serviceColor = useMemo(() => {
+    if (type === "visit") return "tri-color";
+    if (type === "personnel") {
+      const p = item as Personnel;
+      return getServiceColor(p.service);
+    }
+    if (type === "commandant") {
+      const c = item as Commandant;
+      return getServiceColor(undefined, c.rank, c.title, c.postNominals);
+    }
+    return "tri-color";
+  }, [item, type]);
 
   const yearLabel = useMemo(() => {
     if (isVisit) {
@@ -199,28 +261,44 @@ const ContinuousSlideCard = memo(function ContinuousSlideCard({
     <button
       type="button"
       onClick={() => onSelect(item as any)}
+      onMouseEnter={() => onHover?.(true)}
+      onMouseLeave={() => onHover?.(false)}
       className={`auto-scroll-card group relative ${
         isCommandant
-          ? "commandant-auto-card w-[70vw] sm:w-[38vw] md:w-[32vw] lg:w-[26vw] xl:w-[21vw] max-w-[360px]"
-          : "w-[65vw] sm:w-[35vw] md:w-[28vw] lg:w-[22vw] xl:w-[18vw] max-w-[320px]"
-      } self-center h-full max-h-[88vh] shrink-0 overflow-hidden rounded-2xl p-1.5 sm:p-2 text-left transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
+          ? "commandant-auto-card w-[75vw] sm:w-[42vw] md:w-[36vw] lg:w-[30vw] xl:w-[26vw] max-w-[420px] h-[clamp(440px,72vh,660px)]"
+          : "w-[78vw] sm:w-[45vw] md:w-[38vw] lg:w-[31vw] xl:w-[28vw] max-w-[450px] h-[clamp(420px,68vh,620px)]"
+      } self-center shrink-0 overflow-hidden rounded-2xl p-1.5 sm:p-2 text-left transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
           ? "bg-white border border-[#002060]/20 shadow-[0_8px_22px_rgba(0,32,96,0.12)]"
           : "bg-slate-950 border border-slate-500/35 shadow-[0_10px_26px_rgba(2,6,23,0.42)]"
       }`}
       aria-label={`${isCommandant ? "Commandant" : isVisit ? "Visit" : "Staff"} card for ${safeName}`}
     >
-      <div className="pointer-events-none absolute top-0 inset-x-0 h-[7px] flex z-20">
-        <div className="flex-1 bg-[#002060]" />
-        <div className="flex-1 bg-[#FF0000]" />
-        <div className="flex-1 bg-[#00B0F0]" />
-      </div>
-
-      <div className="pointer-events-none absolute bottom-0 inset-x-0 h-[6px] flex z-20">
-        <div className="flex-1 bg-[#002060]" />
-        <div className="flex-1 bg-[#FF0000]" />
-        <div className="flex-1 bg-[#00B0F0]" />
-      </div>
+      {serviceColor === "tri-color" ? (
+        <>
+          <div className="pointer-events-none absolute top-0 inset-x-0 h-[7px] flex z-20">
+            <div className="flex-1 bg-[#002060]" />
+            <div className="flex-1 bg-[#FF0000]" />
+            <div className="flex-1 bg-[#00B0F0]" />
+          </div>
+          <div className="pointer-events-none absolute bottom-0 inset-x-0 h-[6px] flex z-20">
+            <div className="flex-1 bg-[#002060]" />
+            <div className="flex-1 bg-[#FF0000]" />
+            <div className="flex-1 bg-[#00B0F0]" />
+          </div>
+        </>
+      ) : (
+        <>
+          <div
+            className="pointer-events-none absolute top-0 inset-x-0 h-[7px] z-20"
+            style={{ backgroundColor: serviceColor }}
+          />
+          <div
+            className="pointer-events-none absolute bottom-0 inset-x-0 h-[6px] z-20"
+            style={{ backgroundColor: serviceColor }}
+          />
+        </>
+      )}
 
       <div className="pointer-events-none absolute inset-0 z-0 opacity-40">
         <div
@@ -371,6 +449,7 @@ export function AutoRotationDisplay({
   );
   const activationAudioPrimedRef = useRef(false);
   const fdcScrollRef = useRef<HTMLDivElement | null>(null);
+  const fdcTrackRef = useRef<HTMLDivElement | null>(null);
   const fdcAutoPauseUntilRef = useRef(0);
   const fdcNavRafRef = useRef<number | null>(null);
   const lastForcedStepNonceRef = useRef<number>(0);
@@ -381,7 +460,7 @@ export function AutoRotationDisplay({
   const transitionDirectionRef = useRef<1 | -1>(1);
   const lastTransitionCueAtRef = useRef(0);
   const lastCourseDetectionAtRef = useRef(0);
-  const { isPaused, registerInteraction } = useSliderControl({
+  const { isPaused, registerInteraction, setHovering } = useSliderControl({
     resumeAfterMs: 4200,
   });
 
@@ -474,11 +553,7 @@ export function AutoRotationDisplay({
   const isContinuousMode =
     isActive &&
     slides.length > 0 &&
-    ((activeCategory !== null &&
-      displayContext !== "commandants" &&
-      displayContext !== "FWC" &&
-      displayContext !== "FDC" &&
-      !useAppliedTransitionOnly) ||
+    ((displayContext !== "visits" && !useAppliedTransitionOnly) ||
       appliedTransition === "continuous-scroll" ||
       sequence[0] === "continuous-scroll");
 
@@ -545,6 +620,79 @@ export function AutoRotationDisplay({
     return [...continuousItems, ...continuousItems, ...continuousItems];
   }, [continuousItems]);
 
+  const segmentWidthRef = useRef<number>(0);
+  const scrollPosRef = useRef<number>(0);
+
+  const updateCachedSegmentWidth = useCallback(() => {
+    const container = fdcScrollRef.current;
+    if (!container) return;
+    segmentWidthRef.current = container.scrollWidth / 3;
+  }, []);
+
+  useEffect(() => {
+    if (!isContinuousMode) return;
+    updateCachedSegmentWidth();
+    const t1 = setTimeout(updateCachedSegmentWidth, 100);
+    const t2 = setTimeout(updateCachedSegmentWidth, 500);
+    window.addEventListener("resize", updateCachedSegmentWidth);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener("resize", updateCachedSegmentWidth);
+    };
+  }, [isContinuousMode, continuousItems.length, updateCachedSegmentWidth]);
+
+  const courseLabels = useMemo(() => {
+    if (activeCategory !== "FWC" && activeCategory !== "FDC") return [];
+    const labels: string[] = [];
+    let lastLabel = "";
+    for (const person of continuousItems) {
+      if ("decoration" in person) {
+        const label = getCourseDesignation(person as Personnel);
+        if (label !== lastLabel) {
+          labels.push(label);
+          lastLabel = label;
+        }
+      }
+    }
+    return labels;
+  }, [activeCategory, continuousItems]);
+
+  const detectCurrentCourse = useCallback((currentScrollPos: number) => {
+    const container = fdcScrollRef.current;
+    const track = fdcTrackRef.current;
+    if (!container || !track || courseLabels.length === 0) return;
+
+    const cards = track.querySelectorAll<HTMLElement>(".auto-scroll-card");
+    if (cards.length === 0) return;
+
+    const containerCenter = currentScrollPos + container.clientWidth / 2;
+    let closestCard: HTMLElement | null = null;
+    let closestDist = Infinity;
+
+    cards.forEach((card) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const dist = Math.abs(cardCenter - containerCenter);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestCard = card;
+      }
+    });
+
+    if (!closestCard) return;
+
+    const allItems = Array.from(track.querySelectorAll<HTMLElement>(".auto-scroll-card"));
+    const idx = allItems.indexOf(closestCard);
+    const itemCount = continuousItems.length;
+    const segmentIdx = itemCount > 0 ? idx % itemCount : 0;
+    const item = continuousItems[segmentIdx];
+
+    if (item && "decoration" in item) {
+      const label = getCourseDesignation(item as Personnel);
+      setActiveCourseLabel((prev) => (prev !== label ? label : prev));
+    }
+  }, [courseLabels.length, continuousItems]);
+
   const handleContinuousSelect = useCallback(
     (selected: Personnel | DistinguishedVisit | Commandant) => {
       if ("isCurrent" in selected) {
@@ -564,21 +712,27 @@ export function AutoRotationDisplay({
     const container = fdcScrollRef.current;
     if (!container || continuousItems.length <= 1) return;
 
-    const segmentWidth = container.scrollWidth / 3;
+    const segmentWidth = segmentWidthRef.current || (container.scrollWidth / 3);
+    if (segmentWidth <= 0) return;
 
-    while (container.scrollLeft >= segmentWidth * 2) {
-      container.scrollLeft -= segmentWidth;
+    while (scrollPosRef.current >= segmentWidth * 2) {
+      scrollPosRef.current -= segmentWidth;
     }
 
-    while (container.scrollLeft < segmentWidth) {
-      container.scrollLeft += segmentWidth;
+    while (scrollPosRef.current < segmentWidth) {
+      scrollPosRef.current += segmentWidth;
+    }
+
+    if (fdcTrackRef.current) {
+      fdcTrackRef.current.style.transform = `translate3d(-${scrollPosRef.current}px, 0, 0)`;
     }
   }, [continuousItems.length]);
 
   const nudgeFdcTrack = useCallback(
     (dir: "left" | "right") => {
       const container = fdcScrollRef.current;
-      if (!container) return;
+      const track = fdcTrackRef.current;
+      if (!container || !track) return;
 
       normalizeFdcLoopPosition();
       fdcAutoPauseUntilRef.current = performance.now() + 900;
@@ -589,7 +743,7 @@ export function AutoRotationDisplay({
       }
 
       const delta = dir === "left" ? -340 : 340;
-      const start = container.scrollLeft;
+      const start = scrollPosRef.current;
       const end = start + delta;
       const durationMs = 420;
       const startAt = performance.now();
@@ -599,7 +753,7 @@ export function AutoRotationDisplay({
         const progress = Math.min(1, (now - startAt) / durationMs);
         const eased = easeOutCubic(progress);
 
-        container.scrollLeft = start + (end - start) * eased;
+        scrollPosRef.current = start + (end - start) * eased;
         normalizeFdcLoopPosition();
 
         if (progress < 1) {
@@ -795,23 +949,30 @@ export function AutoRotationDisplay({
     const container = fdcScrollRef.current;
     if (!container || !isContinuousMode || continuousItems.length === 0) return;
 
-    // Use total scroll width to position in middle third
-    const segmentWidth = container.scrollWidth / 3;
-    // But this depends on items being rendered. We might need a small delay or use layoutEffect
-    if (container.scrollLeft < 10) {
-      container.scrollLeft = segmentWidth;
-    }
+    // Small delay to allow container.scrollWidth to settle after mount
+    const t = setTimeout(() => {
+      const segmentWidth = container.scrollWidth / 3;
+      if (segmentWidth > 0 && scrollPosRef.current < 10) {
+        scrollPosRef.current = segmentWidth;
+        if (fdcTrackRef.current) {
+          fdcTrackRef.current.style.transform = `translate3d(-${segmentWidth}px, 0, 0)`;
+        }
+      }
+    }, 100);
+    return () => clearTimeout(t);
   }, [continuousItems.length, isContinuousMode]);
 
   useEffect(() => {
     const container = fdcScrollRef.current;
-    if (!container || !isContinuousMode || continuousItems.length === 0) return;
+    const track = fdcTrackRef.current;
+    if (!container || !track || !isContinuousMode || continuousItems.length === 0) return;
 
     if (prefersReducedMotion) return;
 
     let rafId = 0;
     let last = performance.now();
-    const speedPxPerMs = 0.03;
+    const speedPxPerMs = 0.055;
+    let lastDetectionAt = 0;
 
     const tick = (now: number) => {
       const elapsed = now - last;
@@ -823,8 +984,25 @@ export function AutoRotationDisplay({
           return;
         }
 
-        container.scrollLeft += elapsed * speedPxPerMs;
-        normalizeFdcLoopPosition();
+        scrollPosRef.current += elapsed * speedPxPerMs;
+        
+        // Loop position normalization using cached width to avoid layout reflow overhead
+        const segmentWidth = segmentWidthRef.current || (container.scrollWidth / 3);
+        if (segmentWidth > 0) {
+          if (scrollPosRef.current >= segmentWidth * 2) {
+            scrollPosRef.current -= segmentWidth;
+          } else if (scrollPosRef.current < segmentWidth) {
+            scrollPosRef.current += segmentWidth;
+          }
+        }
+
+        track.style.transform = `translate3d(-${scrollPosRef.current}px, 0, 0)`;
+        
+        // Throttled detection of the current course label (every 200ms)
+        if (now - lastDetectionAt > 200) {
+          lastDetectionAt = now;
+          detectCurrentCourse(scrollPosRef.current);
+        }
       }
 
       rafId = window.requestAnimationFrame(tick);
@@ -842,81 +1020,9 @@ export function AutoRotationDisplay({
     continuousItems.length,
     isContinuousMode,
     isPaused,
-    normalizeFdcLoopPosition,
     prefersReducedMotion,
+    detectCurrentCourse,
   ]);
-
-  const courseLabels = useMemo(() => {
-    if (activeCategory !== "FWC" && activeCategory !== "FDC") return [];
-    const labels: string[] = [];
-    let lastLabel = "";
-    for (const person of continuousItems) {
-      if ("decoration" in person) {
-        const label = getCourseDesignation(person as Personnel);
-        if (label !== lastLabel) {
-          labels.push(label);
-          lastLabel = label;
-        }
-      }
-    }
-    return labels;
-  }, [activeCategory, continuousItems]);
-
-  const detectCurrentCourse = useCallback(() => {
-    const container = fdcScrollRef.current;
-    if (!container || courseLabels.length === 0) return;
-
-    const cards = container.querySelectorAll<HTMLElement>(".auto-scroll-card");
-    if (cards.length === 0) return;
-
-    const containerCenter = container.scrollLeft + container.clientWidth / 2;
-    let closestCard: HTMLElement | null = null;
-    let closestDist = Infinity;
-
-    cards.forEach((card) => {
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-      const dist = Math.abs(cardCenter - containerCenter);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closestCard = card;
-      }
-    });
-
-    if (!closestCard) return;
-
-    const allItems = Array.from(container.querySelectorAll<HTMLElement>(".auto-scroll-card"));
-    const idx = allItems.indexOf(closestCard);
-    const itemCount = continuousItems.length;
-    const segmentIdx = itemCount > 0 ? idx % itemCount : 0;
-    const item = continuousItems[segmentIdx];
-
-    if (item && "decoration" in item) {
-      const label = getCourseDesignation(item as Personnel);
-      setActiveCourseLabel((prev) => (prev !== label ? label : prev));
-    }
-  }, [courseLabels.length, continuousItems]);
-
-  useEffect(() => {
-    if (!isContinuousMode || (activeCategory !== "FWC" && activeCategory !== "FDC")) return;
-    const container = fdcScrollRef.current;
-    if (!container) return;
-
-    let rafId = 0;
-    const onScroll = () => {
-      const now = performance.now();
-      if (now - lastCourseDetectionAtRef.current < 300) return;
-      lastCourseDetectionAtRef.current = now;
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(detectCurrentCourse);
-    };
-
-    container.addEventListener("scroll", onScroll, { passive: true });
-    detectCurrentCourse();
-    return () => {
-      container.removeEventListener("scroll", onScroll);
-      cancelAnimationFrame(rafId);
-    };
-  }, [isContinuousMode, activeCategory, detectCurrentCourse]);
 
   useEffect(() => {
     if (!forcedControl) return;
@@ -1479,25 +1585,19 @@ export function AutoRotationDisplay({
             <div className="flex-1 bg-[#00B0F0]" />
           </div>
           <div className="px-2 pb-0 pt-2 text-center">
-            <AnimatedPresence mode="wait" initial={false}>
-              {headingPrimary && (
-                <h2
-                  key={`primary-${headingPrimary}`}
-                  className="heading-accent mx-auto max-w-[96vw] break-words font-serif text-[clamp(1.45rem,2.75vw,3.25rem)] font-bold uppercase leading-[0.98] tracking-[0.15em] text-[#002060] animate-fade-in"
-                >
-                  {headingPrimary.replace(" (FWC)", "").replace(" (FDC)", "")}
-                </h2>
-              )}
-            </AnimatedPresence>
+            {headingPrimary && (
+              <h2
+                className="heading-accent mx-auto max-w-[96vw] break-words font-serif text-[clamp(1.45rem,2.75vw,3.25rem)] font-bold uppercase leading-[0.98] tracking-[0.15em] text-[#002060]"
+              >
+                {headingPrimary.replace(" (FWC)", "").replace(" (FDC)", "")}
+              </h2>
+            )}
             {headingSecondary && (
-              <AnimatedPresence mode="wait" initial={false}>
-                <p
-                  key={`secondary-${headingSecondary}`}
-                  className="mx-auto mt-1.5 max-w-[82vw] break-words text-[clamp(0.95rem,1.35vw,1.45rem)] font-bold uppercase leading-none tracking-[0.08em] text-[#d4af37] animate-fade-in"
-                >
-                  {headingSecondary}
-                </p>
-              </AnimatedPresence>
+              <p
+                className="mx-auto mt-1.5 max-w-[82vw] break-words text-[clamp(0.95rem,1.35vw,1.45rem)] font-bold uppercase leading-none tracking-[0.08em] text-[#d4af37]"
+              >
+                {headingSecondary}
+              </p>
             )}
           </div>
         </div>
@@ -1505,37 +1605,33 @@ export function AutoRotationDisplay({
 
       <div
         ref={fdcScrollRef}
-        className="relative flex flex-1 min-h-0 items-stretch justify-start gap-4 sm:gap-6 overflow-x-auto pb-3 px-3 sm:px-6 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_3%,black_97%,transparent)]"
-        onMouseEnter={() =>
-          (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
-        }
-        onMouseLeave={() =>
-          (fdcAutoPauseUntilRef.current = performance.now() + 180)
-        }
-        onFocus={() =>
-          (fdcAutoPauseUntilRef.current = Number.POSITIVE_INFINITY)
-        }
-        onBlur={() => (fdcAutoPauseUntilRef.current = performance.now() + 180)}
+        className="relative flex flex-1 min-h-0 items-stretch justify-start overflow-hidden pb-3 px-3 sm:px-6 [mask-image:linear-gradient(to_right,transparent,black_3%,black_97%,transparent)]"
       >
-        {loopedContinuousItems.map((item, i) => {
-          const isPersonnel = "category" in item;
-          const isCommandant = "isCurrent" in item;
-          const itemType = isCommandant
-            ? "commandant"
-            : isPersonnel
-              ? "personnel"
-              : "visit";
-          return (
-            <ContinuousSlideCard
-              key={`${item.id}-${i}`}
-              item={item as any}
-              type={itemType}
-              isLightMode={isLightMode}
-              imageLoading={i < continuousItems.length ? "eager" : "lazy"}
-              onSelect={handleContinuousSelect}
-            />
-          );
-        })}
+        <div
+          ref={fdcTrackRef}
+          className="flex items-stretch justify-start gap-4 sm:gap-6 w-max h-full will-change-transform"
+        >
+          {loopedContinuousItems.map((item, i) => {
+            const isPersonnel = "category" in item;
+            const isCommandant = "isCurrent" in item;
+            const itemType = isCommandant
+              ? "commandant"
+              : isPersonnel
+                ? "personnel"
+                : "visit";
+            return (
+              <ContinuousSlideCard
+                key={`${item.id}-${i}`}
+                item={item as any}
+                type={itemType}
+                isLightMode={isLightMode}
+                imageLoading={i < continuousItems.length ? "eager" : "lazy"}
+                onSelect={handleContinuousSelect}
+                onHover={setHovering}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );

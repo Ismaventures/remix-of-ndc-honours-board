@@ -7,6 +7,8 @@ import {
   ArrowLeft,
   Settings,
   ChevronUp,
+  Home,
+  LayoutGrid,
 } from "lucide-react";
 import { useThemeMode } from "@/hooks/useThemeMode";
 import type { ViewKey } from "./CategoryCards";
@@ -15,9 +17,10 @@ interface BottomDockProps {
   currentView: ViewKey;
   onNavigate: (view: ViewKey) => void;
   hidden?: boolean;
+  onBack?: () => void;
 }
 
-export function BottomDock({ currentView, onNavigate, hidden }: BottomDockProps) {
+export function BottomDock({ currentView, onNavigate, hidden, onBack }: BottomDockProps) {
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith("outdoor");
   const [expanded, setExpanded] = useState(false);
@@ -90,31 +93,21 @@ export function BottomDock({ currentView, onNavigate, hidden }: BottomDockProps)
       onTouchStart={(e) => handleTouchStart(e.touches[0].clientY)}
       onTouchEnd={(e) => handleTouchEnd(e.changedTouches[0].clientY)}
     >
-      {/* Expanded nav row */}
+      {/* Expanded nav row popover */}
       <div
-        className={`pointer-events-auto transition-all duration-300 ease-out overflow-hidden ${
+        className={`pointer-events-auto transition-all duration-300 ease-out overflow-hidden mb-3 ${
           expanded
-            ? "opacity-100 translate-y-0 max-h-20"
-            : "opacity-0 translate-y-4 max-h-0"
+            ? "opacity-100 translate-y-0 scale-100 max-h-20"
+            : "opacity-0 translate-y-4 scale-95 max-h-0 pointer-events-none"
         }`}
       >
         <div
-          className={`flex items-center gap-2 sm:gap-2.5 px-4 py-2.5 rounded-t-2xl border border-b-0 backdrop-blur-xl ${
+          className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border backdrop-blur-2xl shadow-2xl transition-all duration-300 ${
             isLightMode
-              ? "bg-white/90 border-slate-200"
-              : "bg-navy-deep/90 border-white/10"
+              ? "bg-white/90 border-slate-200/80 shadow-slate-400/20"
+              : "bg-slate-900/90 border-white/10 shadow-black/50"
           }`}
         >
-          {!isHome && (
-            <button
-              onClick={() => { onNavigate("home"); setExpanded(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 border ${pillBase}`}
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Home</span>
-            </button>
-          )}
-
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.key;
@@ -148,17 +141,62 @@ export function BottomDock({ currentView, onNavigate, hidden }: BottomDockProps)
         </div>
       </div>
 
-      {/* Trigger pill */}
-      <button
-        onClick={() => setExpanded((prev) => !prev)}
-        className={`pointer-events-auto flex items-center gap-1.5 px-4 py-1.5 rounded-t-xl border border-b-0 backdrop-blur-xl transition-all duration-300 active:scale-95 ${
-          expanded ? "opacity-0 pointer-events-none" : "opacity-100"
-        } ${pillBase}`}
+      {/* Unified Navigation Pill (One UI Style) */}
+      <div
+        className={`pointer-events-auto flex items-center h-12 px-3 mb-5 rounded-full border backdrop-blur-xl shadow-2xl transition-all duration-300 ${
+          isLightMode
+            ? "bg-white/70 border-slate-200/50 shadow-slate-400/20"
+            : "bg-slate-900/75 border-white/10 shadow-black/40"
+        }`}
       >
-        <ChevronUp className="h-3.5 w-3.5 animate-bounce" />
-        <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">Menu</span>
-        <ChevronUp className="h-3.5 w-3.5 animate-bounce" />
-      </button>
+        {/* Back Button */}
+        <button
+          onClick={onBack}
+          disabled={isHome || !onBack}
+          className={`flex items-center gap-1.5 px-3 h-8 rounded-full transition-all duration-200 ${
+            isHome || !onBack
+              ? "text-slate-400/40 dark:text-slate-600/40 cursor-not-allowed"
+              : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90"
+          }`}
+          title="Back"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span className="text-[10px] font-extrabold uppercase tracking-wider">Back</span>
+        </button>
+
+        {/* Separator */}
+        <div className={`w-px h-5 mx-1.5 ${isLightMode ? "bg-slate-200" : "bg-white/10"}`} />
+
+        {/* Home Button */}
+        <button
+          onClick={() => {
+            onNavigate("home");
+            setExpanded(false);
+          }}
+          className={`flex items-center gap-1.5 px-3 h-8 rounded-full transition-all duration-200 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90`}
+          title="Home"
+        >
+          <Home className="h-3.5 w-3.5" />
+          <span className="text-[10px] font-extrabold uppercase tracking-wider">Home</span>
+        </button>
+
+        {/* Separator */}
+        <div className={`w-px h-5 mx-1.5 ${isLightMode ? "bg-slate-200" : "bg-white/10"}`} />
+
+        {/* Menu Toggle Button */}
+        <button
+          onClick={() => setExpanded((prev) => !prev)}
+          className={`flex items-center gap-1.5 px-3 h-8 rounded-full transition-all duration-200 ${
+            expanded
+              ? "bg-[#002060] dark:bg-primary/25 text-white dark:text-primary"
+              : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90"
+          }`}
+          title="Menu"
+        >
+          <LayoutGrid className="h-3.5 w-3.5" />
+          <span className="text-[10px] font-extrabold uppercase tracking-wider">Menu</span>
+        </button>
+      </div>
     </div>
   );
 }

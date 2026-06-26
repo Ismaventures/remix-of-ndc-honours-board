@@ -74,16 +74,17 @@ function composePersistentMediaRef(localRef: string, publicUrl: string | null): 
   return `${localRef}${MEDIA_FALLBACK_DELIMITER}${publicUrl}`;
 }
 
-async function uploadMediaToSupabase(id: string, file: File): Promise<string | null> {
+async function uploadMediaToSupabase(id: string, file: File, bucketName: string, subFolder?: string): Promise<string | null> {
   if (!isSupabaseMediaReady()) return null;
 
   const safeFilename = normalizeFilename(file.name || `${id}.bin`);
   const isAudioFile = file.type.startsWith('audio/');
-  const bucket = isAudioFile ? AUDIO_BUCKET : MEDIA_BUCKET;
-  const path = `${isAudioFile ? 'tracks' : 'images'}/${id}-${safeFilename}`;
+  const path = subFolder
+    ? `${subFolder}/${id}-${safeFilename}`
+    : `${isAudioFile ? 'tracks' : 'images'}/${id}-${safeFilename}`;
 
   const { error: uploadError } = await supabase.storage
-    .from(bucket)
+    .from(bucketName)
     .upload(path, file, {
       upsert: true,
       contentType: file.type || 'application/octet-stream',
@@ -91,11 +92,11 @@ async function uploadMediaToSupabase(id: string, file: File): Promise<string | n
     });
 
   if (uploadError) {
-    console.error(`Supabase media upload failed (bucket: ${bucket}):`, uploadError.message);
+    console.error(`Supabase media upload failed (bucket: ${bucketName}):`, uploadError.message);
     return null;
   }
 
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  const { data } = supabase.storage.from(bucketName).getPublicUrl(path);
   return data?.publicUrl ?? null;
 }
 
@@ -297,7 +298,7 @@ export function isPersistentMediaRef(value?: string | null): value is string {
   return typeof value === 'string' && value.startsWith(MEDIA_URL_PREFIX);
 }
 
-export async function saveMediaFile(file: File): Promise<string> {
+export async function saveMediaFile(file: File, bucketName: string = 'ndc-media', subFolder?: string): Promise<string> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const buffer = await file.arrayBuffer();
   const localRef = `${MEDIA_URL_PREFIX}${id}`;
@@ -307,7 +308,7 @@ export async function saveMediaFile(file: File): Promise<string> {
     type: file.type || 'application/octet-stream',
   } satisfies StoredMedia);
 
-  const publicUrl = await uploadMediaToSupabase(id, file);
+  const publicUrl = await uploadMediaToSupabase(id, file, bucketName, subFolder);
   return composePersistentMediaRef(localRef, publicUrl);
 }
 

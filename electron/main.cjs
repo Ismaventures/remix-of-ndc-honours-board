@@ -304,43 +304,115 @@ function copyDirRecursive(src, dest) {
   }
 }
 
+/**
+ * Copy files from src to dest recursively, but only if the file doesn't
+ * already exist at the destination. This is non-destructive and safe to
+ * call on every startup to pick up newly bundled assets.
+ */
+function copyMissingFiles(src, dest) {
+  if (!fs.existsSync(src)) return;
+  fs.mkdirSync(dest, { recursive: true });
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyMissingFiles(srcPath, destPath);
+    } else if (!fs.existsSync(destPath)) {
+      fs.copyFileSync(srcPath, destPath);
+      console.log(`Copied missing asset: ${entry.name}`);
+    }
+  }
+}
+
+/**
+ * Merge updated image_url references from the bundled (read-only) database
+ * into the user's writable database. This ensures that when a new app version
+ * ships with updated image paths, those updates are propagated even though
+ * the user's database already exists and won't be overwritten.
+ */
+function mergeDatabaseUpdates(bundledDbPath, userDbPath) {
+  if (!fs.existsSync(bundledDbPath) || !fs.existsSync(userDbPath)) return;
+  try {
+    const bundledDb = new Database(bundledDbPath, { readonly: true });
+    const userDb = new Database(userDbPath);
+
+    // Merge personnel image_url updates
+    const bundledPersonnel = bundledDb.prepare(
+      "SELECT id, image_url FROM personnel WHERE image_url IS NOT NULL AND image_url != ''"
+    ).all();
+    const updatePersonnel = userDb.prepare(
+      "UPDATE personnel SET image_url = ? WHERE id = ? AND (image_url IS NULL OR image_url = '')"
+    );
+    userDb.transaction(() => {
+      for (const row of bundledPersonnel) {
+        updatePersonnel.run(row.image_url, row.id);
+      }
+    })();
+    console.log(`Merged ${bundledPersonnel.length} personnel image references from bundled DB.`);
+
+    // Merge commandant image_url updates
+    const bundledCommandants = bundledDb.prepare(
+      "SELECT id, image_url FROM commandants WHERE image_url IS NOT NULL AND image_url != ''"
+    ).all();
+    const updateCommandants = userDb.prepare(
+      "UPDATE commandants SET image_url = ? WHERE id = ? AND (image_url IS NULL OR image_url = '')"
+    );
+    userDb.transaction(() => {
+      for (const row of bundledCommandants) {
+        updateCommandants.run(row.image_url, row.id);
+      }
+    })();
+    console.log(`Merged ${bundledCommandants.length} commandant image references from bundled DB.`);
+
+    bundledDb.close();
+    userDb.close();
+  } catch (err) {
+    console.error('Failed to merge database updates:', err.message);
+  }
+}
+
 app.whenReady().then(() => {
   // Set up local media directory
   if (!fs.existsSync(LOCAL_MEDIA_DIR)) {
     fs.mkdirSync(LOCAL_MEDIA_DIR, { recursive: true });
   }
 
-  // Copy bundled local_media folder to user data directory if it's the first run
+  // Copy any missing bundled local_media assets to user data directory.
+  // Uses copyMissingFiles so existing files are never overwritten but newly
+  // bundled assets (e.g. new personnel images) are always picked up.
   if (!isDev) {
     const bundledMediaDir = path.join(APP_PATH, 'local_media');
     if (fs.existsSync(bundledMediaDir)) {
-      const destExists = fs.existsSync(LOCAL_MEDIA_DIR);
-      const isDestEmpty = !destExists || fs.readdirSync(LOCAL_MEDIA_DIR).length === 0;
-      if (isDestEmpty) {
-        try {
-          copyDirRecursive(bundledMediaDir, LOCAL_MEDIA_DIR);
-          console.log('Successfully copied bundled local_media to user data.');
-        } catch (err) {
-          console.error('Failed to copy bundled local_media:', err);
-        }
+      try {
+        copyMissingFiles(bundledMediaDir, LOCAL_MEDIA_DIR);
+        console.log('Finished syncing bundled local_media to user data.');
+      } catch (err) {
+        console.error('Failed to sync bundled local_media:', err);
       }
     }
   }
 
-  // If DB doesn't exist in userData (production), copy the bundled pre-populated database
-  if (!isDev && !fs.existsSync(DB_PATH)) {
-    const dbDir = path.dirname(DB_PATH);
-    if (!fs.existsSync(dbDir)) {
-      fs.mkdirSync(dbDir, { recursive: true });
-    }
+  // If DB doesn't exist in userData (production), copy the bundled pre-populated database.
+  // If it does exist, merge any updated image_url references from the bundled DB.
+  if (!isDev) {
     const bundledDbPath = path.join(APP_PATH, 'database.sqlite');
-    if (fs.existsSync(bundledDbPath)) {
-      try {
-        fs.copyFileSync(bundledDbPath, DB_PATH);
-        console.log('Successfully copied bundled database.sqlite to user data.');
-      } catch (err) {
-        console.error('Failed to copy bundled database.sqlite:', err);
+    if (!fs.existsSync(DB_PATH)) {
+      const dbDir = path.dirname(DB_PATH);
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
       }
+      if (fs.existsSync(bundledDbPath)) {
+        try {
+          fs.copyFileSync(bundledDbPath, DB_PATH);
+          console.log('Successfully copied bundled database.sqlite to user data.');
+        } catch (err) {
+          console.error('Failed to copy bundled database.sqlite:', err);
+        }
+      }
+    } else if (fs.existsSync(bundledDbPath)) {
+      // User DB already exists — merge any new image references from the bundled DB
+      mergeDatabaseUpdates(bundledDbPath, DB_PATH);
     }
   }
 
@@ -354,13 +426,32 @@ app.whenReady().then(() => {
   }, 1000);
 
   // Register modern protocol handle for local-media://
+  // First check the writable userData directory, then fall back to the
+  // read-only bundled assets inside APP_PATH. This ensures images render
+  // even before copyMissingFiles finishes or if the copy was skipped.
   protocol.handle('local-media', (request) => {
     let filePath = request.url.slice('local-media://'.length);
     if (filePath.startsWith('/')) {
       filePath = filePath.slice(1);
     }
-    const absolutePath = path.join(LOCAL_MEDIA_DIR, decodeURIComponent(filePath));
-    return net.fetch('file://' + absolutePath);
+    const decodedPath = decodeURIComponent(filePath);
+    const userPath = path.join(LOCAL_MEDIA_DIR, decodedPath);
+
+    // Try writable userData directory first
+    if (fs.existsSync(userPath)) {
+      return net.fetch('file://' + userPath);
+    }
+
+    // Fallback to read-only bundled assets inside the app package
+    if (!isDev) {
+      const bundledPath = path.join(APP_PATH, 'local_media', decodedPath);
+      if (fs.existsSync(bundledPath)) {
+        return net.fetch('file://' + bundledPath);
+      }
+    }
+
+    // Default: still attempt userData path (will 404 naturally)
+    return net.fetch('file://' + userPath);
   });
 
   // In production, intercept file:// requests for absolute paths like /images/...
@@ -649,6 +740,19 @@ async function downloadRemoteAssets() {
 
   function parseUrl(urlStr) {
     if (!urlStr) return null;
+
+    // Handle local-media:// refs — check if the file exists locally;
+    // if it does, no download needed; if not, skip (nothing to download from).
+    if (urlStr.startsWith('local-media://')) {
+      const relPath = urlStr.slice('local-media://'.length);
+      const localPath = path.join(LOCAL_MEDIA_DIR, relPath);
+      if (fs.existsSync(localPath)) return null; // already have it
+      // Also check the bundled path
+      const bundledPath = path.join(APP_PATH, 'local_media', relPath);
+      if (fs.existsSync(bundledPath)) return null; // available from bundle
+      // File is truly missing — nothing we can do without a remote URL
+      return null;
+    }
 
     let cleanUrl = urlStr;
     if (urlStr.includes('::')) {

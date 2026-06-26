@@ -83,6 +83,13 @@ export function PersonnelPortraitCard({
 
   const showPreload = urlPending || (Boolean(resolvedImageUrl) && !imageReady);
   const showPermanentPlaceholder = !urlPending && !resolvedImageUrl;
+  const serviceColor = (() => {
+    const s = (person.service || "").toLowerCase();
+    if (s.includes("army")) return "#FF0000";
+    if (s.includes("navy")) return "#002060";
+    if (s.includes("air force") || s.includes("airforce")) return "#00B0F0";
+    return "tri-color";
+  })();
 
   return (
     <div
@@ -104,7 +111,14 @@ export function PersonnelPortraitCard({
         }
       }}
     >
-      {PORTRAIT_CARD_ACCENT}
+      {serviceColor === "tri-color" ? (
+        PORTRAIT_CARD_ACCENT
+      ) : (
+        <div
+          className="h-1.5 w-full shrink-0"
+          style={{ backgroundColor: serviceColor }}
+        />
+      )}
 
       <div
         className={cn(
@@ -214,26 +228,6 @@ export function PersonnelPortraitGrid({
 
   return (
     <div className="relative space-y-3">
-      {!allLoaded && totalCount > 0 && (
-        <div className="relative z-20 rounded-full overflow-hidden h-1.5 bg-slate-200/80 dark:bg-slate-700/80">
-          <div className="h-full flex transition-all duration-500 ease-out" style={{ width: `${loadProgress}%` }}>
-            <div className="flex-1 bg-[#002060]" />
-            <div className="flex-1 bg-[#FF0000]" />
-            <div className="flex-1 bg-[#00B0F0]" />
-          </div>
-        </div>
-      )}
-
-      {allLoaded && totalCount > 0 && (
-        <p
-          className={cn(
-            'text-center text-[10px] font-semibold uppercase tracking-[0.18em]',
-            isLightMode ? 'text-[#5B9BD5]/80' : 'text-[#00B0F0]/70'
-          )}
-        >
-          All portraits loaded
-        </p>
-      )}
 
       <div className="relative z-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
         {personnel.map((person, index) => (

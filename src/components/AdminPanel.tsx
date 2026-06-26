@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Plus, Pencil, Trash2, X, ArrowLeft, Upload } from 'lucide-react';
 import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/types/domain';
 import { AdvancedAudioAdmin } from './AdvancedAudioAdmin';
@@ -93,6 +93,7 @@ interface AdminPanelProps {
   onUpdateAudioSettings?: (url: string | null) => void;
   onBack: () => void;
   onSignOut?: () => void;
+  backTriggerNonce?: number;
 }
 
 const CATEGORIES: Category[] = ['FWC', 'FDC', 'Directing Staff', 'Allied'];
@@ -386,6 +387,7 @@ export function AdminPanel({
   audioSettings, onUpdateAudioSettings,
   onBack,
   onSignOut,
+  backTriggerNonce = 0,
 }: AdminPanelProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices' | 'guide' | 'content' | 'museum'>('personnel');
@@ -448,6 +450,43 @@ export function AdminPanel({
   useEffect(() => {
     setIdleStageDraft(idleStageSettings);
   }, [idleStageSettings]);
+
+  const lastProcessedBackNonce = useRef(backTriggerNonce);
+
+  // Handle universal back button trigger
+  useEffect(() => {
+    if (backTriggerNonce === 0 || backTriggerNonce === lastProcessedBackNonce.current) {
+      lastProcessedBackNonce.current = backTriggerNonce;
+      return;
+    }
+    lastProcessedBackNonce.current = backTriggerNonce;
+
+    if (previewModalOpen) {
+      setPreviewModalOpen(false);
+    } else if (editingP) {
+      setEditingP(null);
+    } else if (editingV) {
+      setEditingV(null);
+    } else if (editingC) {
+      setEditingC(null);
+    } else if (showFormP) {
+      setShowFormP(false);
+    } else if (showFormV) {
+      setShowFormV(false);
+    } else if (showFormC) {
+      setShowFormC(false);
+    } else if (showBatchUploadP) {
+      setShowBatchUploadP(false);
+    } else if (showBatchImageUploadP) {
+      setShowBatchImageUploadP(false);
+    } else if (showUnifiedPersonnelP) {
+      setShowUnifiedPersonnelP(false);
+    } else if (showUnifiedEditorP) {
+      setShowUnifiedEditorP(false);
+    } else if (onBack) {
+      onBack();
+    }
+  }, [backTriggerNonce]);
 
   const personnelCategories = useMemo(() => {
     const discovered = Array.from(new Set(personnel.map(p => p.category)));
@@ -1048,11 +1087,12 @@ export function AdminPanel({
       <aside className={`flex-shrink-0 flex flex-col border-r border-slate-200 bg-gradient-to-b from-white to-slate-50 overflow-y-auto transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "w-[80px] p-2" : "w-[260px] p-4 lg:p-5"}`}>
         <div className={`mb-8 flex items-center ${isSidebarCollapsed ? "flex-col gap-4 mt-2" : "gap-3"}`}>
 <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-2 rounded-full border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all" title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M9 3v18"/></svg> </button>
-          <button onClick={onBack} className="p-2 rounded-full border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all"><ArrowLeft className="h-4 w-4" /></button>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#002060]">NDC Honours Board</p>
-            <p className="mt-0.5 text-[9px] text-slate-500 uppercase tracking-widest">Admin Panel</p>
-          </div>
+          {!isSidebarCollapsed && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#002060]">NDC Honours Board</p>
+              <p className="mt-0.5 text-[9px] text-slate-500 uppercase tracking-widest">Admin Panel</p>
+            </div>
+          )}
         </div>
         
         <div className="space-y-1 flex-1">
@@ -1096,8 +1136,8 @@ export function AdminPanel({
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto relative bg-white">
-        <div className="w-full flex-1 p-4 md:p-8 max-w-[1400px] mx-auto">
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto relative bg-white pb-16">
+        <div className="w-full flex-1 p-4 md:p-8 max-w-[1400px] mx-auto pb-16">
         <div className="relative">
         {guideFlowActive && tab !== 'guide' && (
           <div className="mb-4 rounded-lg border border-[#002060]/20 bg-[#002060]/5 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -1183,6 +1223,7 @@ export function AdminPanel({
             ) : showFormP ? (
               <PersonnelForm
                 initial={editingP}
+                personnel={personnel}
                 onSave={(data) => {
                   if (editingP) onUpdatePersonnel(editingP.id, data);
                   else onAddPersonnel(data as Omit<Personnel, 'id'>);
@@ -2664,6 +2705,7 @@ export function AdminPanel({
           @keyframes preview-ndc-scatter { from { opacity: 0; transform: scale(0.6) rotate(-8deg); filter: blur(5px);} to { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0);} }
           @keyframes preview-pro-slider { from { opacity: 0; transform: translateX(26px) scale(0.96); filter: blur(8px);} to { opacity: 1; transform: translateX(0) scale(1); filter: blur(0);} }
         `}</style>
+        {/* Bottom Back Button Removed */}
       </div>
       </div>
 
@@ -2685,10 +2727,11 @@ function parseMultilineEntries(value: string): string[] {
     .filter((item) => item.length > 0);
 }
 
-function PersonnelForm({ initial, onSave, onCancel }: {
+function PersonnelForm({ initial, onSave, onCancel, personnel = [] }: {
   initial: Personnel | null;
   onSave: (data: Partial<Personnel>) => void;
   onCancel: () => void;
+  personnel?: Personnel[];
 }) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -2711,6 +2754,90 @@ function PersonnelForm({ initial, onSave, onCancel }: {
   });
 
   const [useCourseFormat, setUseCourseFormat] = useState(!!initial?.decoration?.includes('/'));
+
+  const existingCourseNumbers = useMemo(() => {
+    const numbers = new Set<number>();
+    // Pre-populate Course 1 to Course 34
+    for (let i = 1; i <= 34; i++) {
+      numbers.add(i);
+    }
+    // Extract from existing personnel
+    personnel.forEach(p => {
+      if (p.category === 'FWC' || p.category === 'FDC' || p.category === 'Allied') {
+        let courseNum = null;
+        if (p.decoration) {
+          let match = p.decoration.match(/CSE\s*(\d+)/i);
+          if (match) {
+            courseNum = parseInt(match[1], 10);
+          } else {
+            match = p.decoration.match(/NWC\s+Course\s+(\d+)/i);
+            if (match) {
+              courseNum = parseInt(match[1], 10);
+            }
+          }
+        }
+        if (!courseNum && p.periodStart) {
+          courseNum = p.periodStart - 1991;
+        }
+        if (courseNum && !isNaN(courseNum) && courseNum > 0) {
+          numbers.add(courseNum);
+        }
+      }
+    });
+    return Array.from(numbers).sort((a, b) => a - b);
+  }, [personnel]);
+
+  const [selectedCourseOption, setSelectedCourseOption] = useState<string>(() => {
+    if (initial?.decoration) {
+      let match = initial.decoration.match(/CSE\s*(\d+)/i);
+      if (!match) match = initial.decoration.match(/NWC\s+Course\s+(\d+)/i);
+      if (match) {
+        return match[1];
+      }
+    }
+    if (initial?.periodStart) {
+      const calc = initial.periodStart - 1991;
+      if (calc > 0) return String(calc);
+    }
+    return '';
+  });
+
+  const [customCourseNumber, setCustomCourseNumber] = useState<string>(() => {
+    if (initial?.decoration) {
+      let match = initial.decoration.match(/CSE\s*(\d+)/i);
+      if (!match) match = initial.decoration.match(/NWC\s+Course\s+(\d+)/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > 34) {
+          return match[1];
+        }
+      }
+    }
+    return '';
+  });
+
+  const handleCourseChange = (val: string) => {
+    setSelectedCourseOption(val);
+    if (val !== 'custom' && val !== '') {
+      const courseNum = parseInt(val, 10);
+      updateCourse('courseNumber', val);
+      const calculatedYear = 1991 + courseNum;
+      updateCourse('courseYear', calculatedYear);
+      update('periodStart', calculatedYear);
+      update('periodEnd', calculatedYear + 1);
+    } else if (val === '') {
+      updateCourse('courseNumber', '');
+    } else if (val === 'custom') {
+      updateCourse('courseNumber', customCourseNumber);
+      const cNum = parseInt(customCourseNumber, 10);
+      if (cNum && !isNaN(cNum)) {
+        const calculatedYear = 1991 + cNum;
+        updateCourse('courseYear', calculatedYear);
+        update('periodStart', calculatedYear);
+        update('periodEnd', calculatedYear + 1);
+      }
+    }
+  };
 
   const update = (key: string, value: string | number) => setForm(prev => ({ ...prev, [key]: value }));
   const updateCourse = (key: string, value: string | number) => setCourseInfo(prev => ({ ...prev, [key]: value }));
@@ -2750,7 +2877,37 @@ function PersonnelForm({ initial, onSave, onCancel }: {
     }
 
     try {
-      const mediaRef = await saveMediaFile(file);
+      let bucketName = 'ndc-media';
+      let subFolder: string | undefined = undefined;
+
+      const currentCategory = form.category;
+      if (currentCategory === 'FWC' || currentCategory === 'FDC' || currentCategory === 'Allied') {
+        let courseNum = null;
+        if (useCourseFormat && courseInfo.courseNumber) {
+          courseNum = parseInt(courseInfo.courseNumber, 10);
+        } else if (form.decoration) {
+          let match = form.decoration.match(/CSE\s*(\d+)/i);
+          if (match) {
+            courseNum = parseInt(match[1], 10);
+          } else {
+            match = form.decoration.match(/NWC\s+Course\s+(\d+)/i);
+            if (match) {
+              courseNum = parseInt(match[1], 10);
+            }
+          }
+        }
+
+        if ((!courseNum || isNaN(courseNum)) && form.periodStart) {
+          courseNum = form.periodStart - 1991;
+        }
+
+        if (courseNum && !isNaN(courseNum) && courseNum > 0) {
+          bucketName = 'courses';
+          subFolder = `Course-${courseNum}`;
+        }
+      }
+
+      const mediaRef = await saveMediaFile(file, bucketName, subFolder);
       update('imageUrl', mediaRef);
     } catch {
       setUploadError('Could not process the selected file.');
@@ -2853,25 +3010,57 @@ function PersonnelForm({ initial, onSave, onCancel }: {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Course Number *</label>
-                  <input
-                    type="number"
-                    placeholder="E.g., 1, 42"
-                    value={courseInfo.courseNumber}
-                    onChange={e => updateCourse('courseNumber', e.target.value)}
-                    className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="1"
-                    max="999"
-                  />
+                  <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Select Course</label>
+                  <select
+                    value={selectedCourseOption}
+                    onChange={e => handleCourseChange(e.target.value)}
+                    className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">-- Select a Course --</option>
+                    {existingCourseNumbers.map(num => (
+                      <option key={`opt-course-${num}`} value={String(num)}>Course {num}</option>
+                    ))}
+                    <option value="custom">New Course / Other...</option>
+                  </select>
                 </div>
-                <div className="space-y-1.5">
+                {selectedCourseOption === 'custom' ? (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Custom Course Number *</label>
+                    <input
+                      type="number"
+                      placeholder="E.g., 35"
+                      value={customCourseNumber}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setCustomCourseNumber(val);
+                        updateCourse('courseNumber', val);
+                        const cNum = parseInt(val, 10);
+                        if (cNum && !isNaN(cNum)) {
+                          const calculatedYear = 1991 + cNum;
+                          updateCourse('courseYear', calculatedYear);
+                          update('periodStart', calculatedYear);
+                          update('periodEnd', calculatedYear + 1);
+                        }
+                      }}
+                      className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      min="1"
+                      max="999"
+                    />
+                  </div>
+                ) : null}
+                <div className={`space-y-1.5 ${selectedCourseOption === 'custom' ? 'col-span-3 sm:col-span-1' : 'col-span-1'}`}>
                   <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Graduation Year *</label>
                   <input
                     type="number"
                     placeholder="E.g., 1993, 2020"
                     value={courseInfo.courseYear}
-                    onChange={e => updateCourse('courseYear', parseInt(e.target.value))}
-                    className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={e => {
+                      const val = parseInt(e.target.value, 10);
+                      updateCourse('courseYear', val);
+                      update('periodStart', val);
+                      update('periodEnd', val + 1);
+                    }}
+                    className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                     min="1900"
                     max="2100"
                   />
@@ -2888,14 +3077,16 @@ function PersonnelForm({ initial, onSave, onCancel }: {
               </p>
             </div>
           ) : (
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Decoration / Honours (Manual)</label>
-              <input
-                placeholder="e.g., CSE 42/2020, NWC Course 5"
-                value={form.decoration}
-                onChange={e => update('decoration', e.target.value)}
-                className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Decoration / Honours (Manual)</label>
+                <input
+                  placeholder="e.g., CSE 42/2020, NWC Course 5"
+                  value={form.decoration}
+                  onChange={e => update('decoration', e.target.value)}
+                  className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                />
+              </div>
               <p className="text-xs text-blue-600">
                 Enable "Use CSE Format" above to auto-generate from course info
               </p>

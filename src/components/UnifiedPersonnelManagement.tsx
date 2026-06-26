@@ -3,6 +3,7 @@ import { Plus, Upload, Image as ImageIcon, ChevronDown, X, Trash2, Edit2 } from 
 import { Personnel, Category, Service } from '@/types/domain';
 import { BatchUploadAdmin } from './BatchUploadAdmin';
 import { BatchImageUpload } from './BatchImageUpload';
+import { saveMediaFile } from '@/lib/persistentMedia';
 
 interface UnifiedPersonnelManagementProps {
   personnel: Personnel[];
@@ -172,6 +173,7 @@ export function UnifiedPersonnelManagement({
           </div>
           <PersonnelEditForm
             initial={editingPersonnel}
+            personnel={personnel}
             onSave={(data) => {
               onUpdatePersonnel(editingPersonnel.id, data);
               setEditingPersonnel(null);
@@ -328,7 +330,7 @@ export function UnifiedPersonnelManagement({
             </button>
             <h3 className="text-lg font-semibold text-slate-900">Add Single Personnel</h3>
           </div>
-          <PersonnelForm onSave={onAddPersonnel} onCancel={() => setUploadMode('none')} />
+          <PersonnelForm personnel={personnel} onSave={onAddPersonnel} onCancel={() => setUploadMode('none')} />
         </div>
       ) : uploadMode === 'batch-csv' ? (
         <div>
@@ -373,10 +375,13 @@ export function UnifiedPersonnelManagement({
 function PersonnelForm({
   onSave,
   onCancel,
+  personnel = [],
 }: {
   onSave: (data: Omit<Personnel, 'id'>) => void;
   onCancel: () => void;
+  personnel?: Personnel[];
 }) {
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     rank: '',
@@ -396,6 +401,62 @@ function PersonnelForm({
     courseYear: new Date().getFullYear(),
   });
 
+  const existingCourseNumbers = useMemo(() => {
+    const numbers = new Set<number>();
+    for (let i = 1; i <= 34; i++) {
+      numbers.add(i);
+    }
+    personnel.forEach(p => {
+      if (p.category === 'FWC' || p.category === 'FDC' || p.category === 'Allied') {
+        let courseNum = null;
+        if (p.decoration) {
+          let match = p.decoration.match(/CSE\s*(\d+)/i);
+          if (match) {
+            courseNum = parseInt(match[1], 10);
+          } else {
+            match = p.decoration.match(/NWC\s+Course\s+(\d+)/i);
+            if (match) {
+              courseNum = parseInt(match[1], 10);
+            }
+          }
+        }
+        if (!courseNum && p.periodStart) {
+          courseNum = p.periodStart - 1991;
+        }
+        if (courseNum && !isNaN(courseNum) && courseNum > 0) {
+          numbers.add(courseNum);
+        }
+      }
+    });
+    return Array.from(numbers).sort((a, b) => a - b);
+  }, [personnel]);
+
+  const [selectedCourseOption, setSelectedCourseOption] = useState<string>('');
+  const [customCourseNumber, setCustomCourseNumber] = useState<string>('');
+
+  const handleCourseChange = (val: string) => {
+    setSelectedCourseOption(val);
+    if (val !== 'custom' && val !== '') {
+      const courseNum = parseInt(val, 10);
+      updateCourse('courseNumber', val);
+      const calculatedYear = 1991 + courseNum;
+      updateCourse('courseYear', calculatedYear);
+      update('periodStart', calculatedYear);
+      update('periodEnd', calculatedYear + 1);
+    } else if (val === '') {
+      updateCourse('courseNumber', '');
+    } else if (val === 'custom') {
+      updateCourse('courseNumber', customCourseNumber);
+      const cNum = parseInt(customCourseNumber, 10);
+      if (cNum && !isNaN(cNum)) {
+        const calculatedYear = 1991 + cNum;
+        updateCourse('courseYear', calculatedYear);
+        update('periodStart', calculatedYear);
+        update('periodEnd', calculatedYear + 1);
+      }
+    }
+  };
+
   const update = (key: string, value: string | number) =>
     setForm(prev => ({ ...prev, [key]: value }));
 
@@ -409,6 +470,58 @@ function PersonnelForm({
     return form.decoration;
   };
 
+  const onUploadImage = async (file: File | null) => {
+    if (!file) return;
+    setUploadError(null);
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please upload an image or animated image file.');
+      return;
+    }
+
+    if (file.size > MAX_MEDIA_SIZE_MB * 1024 * 1024) {
+      setUploadError(`File is too large. Maximum size is ${MAX_MEDIA_SIZE_MB}MB.`);
+      return;
+    }
+
+    try {
+      let bucketName = 'ndc-media';
+      let subFolder: string | undefined = undefined;
+
+      const currentCategory = form.category;
+      if (currentCategory === 'FWC' || currentCategory === 'FDC' || currentCategory === 'Allied') {
+        let courseNum = null;
+        if (courseInfo.courseNumber) {
+          courseNum = parseInt(courseInfo.courseNumber, 10);
+        } else if (form.decoration) {
+          let match = form.decoration.match(/CSE\s*(\d+)/i);
+          if (match) {
+            courseNum = parseInt(match[1], 10);
+          } else {
+            match = form.decoration.match(/NWC\s+Course\s+(\d+)/i);
+            if (match) {
+              courseNum = parseInt(match[1], 10);
+            }
+          }
+        }
+
+        if ((!courseNum || isNaN(courseNum)) && form.periodStart) {
+          courseNum = form.periodStart - 1991;
+        }
+
+        if (courseNum && !isNaN(courseNum) && courseNum > 0) {
+          bucketName = 'courses';
+          subFolder = `Course-${courseNum}`;
+        }
+      }
+
+      const mediaRef = await saveMediaFile(file, bucketName, subFolder);
+      update('imageUrl', mediaRef);
+    } catch {
+      setUploadError('Could not process the selected file.');
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -420,7 +533,7 @@ function PersonnelForm({
             placeholder="Name"
             value={form.name}
             onChange={e => update('name', e.target.value)}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
         <div>
@@ -431,7 +544,7 @@ function PersonnelForm({
             placeholder="Rank"
             value={form.rank}
             onChange={e => update('rank', e.target.value)}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
         <div>
@@ -441,7 +554,7 @@ function PersonnelForm({
           <select
             value={form.category}
             onChange={e => update('category', e.target.value)}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
             {CATEGORIES.map(c => (
               <option key={c} value={c}>
@@ -457,7 +570,7 @@ function PersonnelForm({
           <select
             value={form.service}
             onChange={e => update('service', e.target.value)}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
             {SERVICES.map(s => (
               <option key={s} value={s}>
@@ -474,7 +587,7 @@ function PersonnelForm({
             type="number"
             value={form.periodStart}
             onChange={e => update('periodStart', parseInt(e.target.value))}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
         <div>
@@ -485,7 +598,7 @@ function PersonnelForm({
             type="number"
             value={form.periodEnd}
             onChange={e => update('periodEnd', parseInt(e.target.value))}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
         <div>
@@ -497,18 +610,18 @@ function PersonnelForm({
             placeholder="Order (1=highest)"
             value={form.seniorityOrder}
             onChange={e => update('seniorityOrder', parseInt(e.target.value))}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
         <div>
           <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-            Decoration / Honours
+            Decoration / Honours (Manual)
           </label>
           <input
             placeholder="e.g., CSE 42/2020"
             value={form.decoration}
             onChange={e => update('decoration', e.target.value)}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
       </div>
@@ -521,9 +634,21 @@ function PersonnelForm({
           placeholder="Image URL (optional)"
           value={form.imageUrl}
           onChange={e => update('imageUrl', e.target.value)}
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-2"
         />
-        <p className="text-xs text-slate-600 mt-1">Use batch image upload for multiple images</p>
+        <div className="flex items-center gap-2">
+          <label className="px-3 py-1.5 text-xs rounded border border-slate-300 bg-white hover:bg-slate-50 cursor-pointer transition-colors text-slate-700 font-medium">
+            Upload Image / GIF
+            <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
+          </label>
+          {form.imageUrl && (
+            <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+              Clear
+            </button>
+          )}
+        </div>
+        {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
+        <p className="text-xs text-slate-600 mt-1">Select an image file to upload or enter a URL directly.</p>
       </div>
 
       {/* Course Selection Section */}
@@ -537,7 +662,7 @@ function PersonnelForm({
             <select
               value={courseInfo.courseClassification}
               onChange={e => updateCourse('courseClassification', e.target.value)}
-              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               <option value="FDC">FDC</option>
               <option value="FWC">FWC</option>
@@ -547,27 +672,61 @@ function PersonnelForm({
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-              Course Number
+              Select Course
             </label>
-            <input
-              type="number"
-              placeholder="e.g., 42"
-              value={courseInfo.courseNumber}
-              onChange={e => updateCourse('courseNumber', e.target.value)}
-              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              min="1"
-              max="999"
-            />
+            <select
+              value={selectedCourseOption}
+              onChange={e => handleCourseChange(e.target.value)}
+              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="">-- Select a Course --</option>
+              {existingCourseNumbers.map(num => (
+                <option key={`opt-ucourse-${num}`} value={String(num)}>Course {num}</option>
+              ))}
+              <option value="custom">New Course / Other...</option>
+            </select>
           </div>
-          <div>
+          {selectedCourseOption === 'custom' ? (
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Custom Course Number
+              </label>
+              <input
+                type="number"
+                placeholder="e.g., 35"
+                value={customCourseNumber}
+                onChange={e => {
+                  const val = e.target.value;
+                  setCustomCourseNumber(val);
+                  updateCourse('courseNumber', val);
+                  const cNum = parseInt(val, 10);
+                  if (cNum && !isNaN(cNum)) {
+                    const calculatedYear = 1991 + cNum;
+                    updateCourse('courseYear', calculatedYear);
+                    update('periodStart', calculatedYear);
+                    update('periodEnd', calculatedYear + 1);
+                  }
+                }}
+                className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                min="1"
+                max="999"
+              />
+            </div>
+          ) : null}
+          <div className={selectedCourseOption === 'custom' ? 'col-span-3 md:col-span-1' : ''}>
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
               Course Year
             </label>
             <input
               type="number"
               value={courseInfo.courseYear}
-              onChange={e => updateCourse('courseYear', parseInt(e.target.value))}
-              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={e => {
+                const val = parseInt(e.target.value, 10);
+                updateCourse('courseYear', val);
+                update('periodStart', val);
+                update('periodEnd', val + 1);
+              }}
+              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               min="1900"
               max="2100"
             />
@@ -579,7 +738,7 @@ function PersonnelForm({
           </p>
         )}
         <p className="text-xs text-blue-600 mt-1">
-          Leave blank to use the Decoration / Honours field manually
+          Select a course above or use "New Course / Other..." to customize.
         </p>
       </div>
 
@@ -592,7 +751,7 @@ function PersonnelForm({
           value={form.citation}
           onChange={e => update('citation', e.target.value)}
           rows={3}
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
         />
       </div>
 
@@ -624,11 +783,14 @@ function PersonnelEditForm({
   initial,
   onSave,
   onCancel,
+  personnel = [],
 }: {
   initial: Personnel;
   onSave: (data: Partial<Personnel>) => void;
   onCancel: () => void;
+  personnel?: Personnel[];
 }) {
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: initial.name,
     rank: initial.rank,
@@ -650,6 +812,88 @@ function PersonnelEditForm({
 
   const [useCourseFormat, setUseCourseFormat] = useState(!!initial.decoration?.includes('/'));
 
+  const existingCourseNumbers = useMemo(() => {
+    const numbers = new Set<number>();
+    for (let i = 1; i <= 34; i++) {
+      numbers.add(i);
+    }
+    personnel.forEach(p => {
+      if (p.category === 'FWC' || p.category === 'FDC' || p.category === 'Allied') {
+        let courseNum = null;
+        if (p.decoration) {
+          let match = p.decoration.match(/CSE\s*(\d+)/i);
+          if (match) {
+            courseNum = parseInt(match[1], 10);
+          } else {
+            match = p.decoration.match(/NWC\s+Course\s+(\d+)/i);
+            if (match) {
+              courseNum = parseInt(match[1], 10);
+            }
+          }
+        }
+        if (!courseNum && p.periodStart) {
+          courseNum = p.periodStart - 1991;
+        }
+        if (courseNum && !isNaN(courseNum) && courseNum > 0) {
+          numbers.add(courseNum);
+        }
+      }
+    });
+    return Array.from(numbers).sort((a, b) => a - b);
+  }, [personnel]);
+
+  const [selectedCourseOption, setSelectedCourseOption] = useState<string>(() => {
+    if (initial.decoration) {
+      let match = initial.decoration.match(/CSE\s*(\d+)/i);
+      if (!match) match = initial.decoration.match(/NWC\s+Course\s+(\d+)/i);
+      if (match) {
+        return match[1];
+      }
+    }
+    if (initial.periodStart) {
+      const calc = initial.periodStart - 1991;
+      if (calc > 0) return String(calc);
+    }
+    return '';
+  });
+
+  const [customCourseNumber, setCustomCourseNumber] = useState<string>(() => {
+    if (initial.decoration) {
+      let match = initial.decoration.match(/CSE\s*(\d+)/i);
+      if (!match) match = initial.decoration.match(/NWC\s+Course\s+(\d+)/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > 34) {
+          return match[1];
+        }
+      }
+    }
+    return '';
+  });
+
+  const handleCourseChange = (val: string) => {
+    setSelectedCourseOption(val);
+    if (val !== 'custom' && val !== '') {
+      const courseNum = parseInt(val, 10);
+      updateCourse('courseNumber', val);
+      const calculatedYear = 1991 + courseNum;
+      updateCourse('courseYear', calculatedYear);
+      update('periodStart', calculatedYear);
+      update('periodEnd', calculatedYear + 1);
+    } else if (val === '') {
+      updateCourse('courseNumber', '');
+    } else if (val === 'custom') {
+      updateCourse('courseNumber', customCourseNumber);
+      const cNum = parseInt(customCourseNumber, 10);
+      if (cNum && !isNaN(cNum)) {
+        const calculatedYear = 1991 + cNum;
+        updateCourse('courseYear', calculatedYear);
+        update('periodStart', calculatedYear);
+        update('periodEnd', calculatedYear + 1);
+      }
+    }
+  };
+
   const update = (key: string, value: string | number) =>
     setForm(prev => ({ ...prev, [key]: value }));
 
@@ -670,6 +914,58 @@ function PersonnelEditForm({
     onSave({ ...form, decoration: finalDecoration });
   };
 
+  const onUploadImage = async (file: File | null) => {
+    if (!file) return;
+    setUploadError(null);
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please upload an image or animated image file.');
+      return;
+    }
+
+    if (file.size > MAX_MEDIA_SIZE_MB * 1024 * 1024) {
+      setUploadError(`File is too large. Maximum size is ${MAX_MEDIA_SIZE_MB}MB.`);
+      return;
+    }
+
+    try {
+      let bucketName = 'ndc-media';
+      let subFolder: string | undefined = undefined;
+
+      const currentCategory = form.category;
+      if (currentCategory === 'FWC' || currentCategory === 'FDC' || currentCategory === 'Allied') {
+        let courseNum = null;
+        if (courseInfo.courseNumber) {
+          courseNum = parseInt(courseInfo.courseNumber, 10);
+        } else if (form.decoration) {
+          let match = form.decoration.match(/CSE\s*(\d+)/i);
+          if (match) {
+            courseNum = parseInt(match[1], 10);
+          } else {
+            match = form.decoration.match(/NWC\s+Course\s+(\d+)/i);
+            if (match) {
+              courseNum = parseInt(match[1], 10);
+            }
+          }
+        }
+
+        if ((!courseNum || isNaN(courseNum)) && form.periodStart) {
+          courseNum = form.periodStart - 1991;
+        }
+
+        if (courseNum && !isNaN(courseNum) && courseNum > 0) {
+          bucketName = 'courses';
+          subFolder = `Course-${courseNum}`;
+        }
+      }
+
+      const mediaRef = await saveMediaFile(file, bucketName, subFolder);
+      update('imageUrl', mediaRef);
+    } catch {
+      setUploadError('Could not process the selected file.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Basic Information */}
@@ -687,7 +983,7 @@ function PersonnelEditForm({
               placeholder="Name"
               value={form.name}
               onChange={e => update('name', e.target.value)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
           </div>
           <div>
@@ -698,7 +994,7 @@ function PersonnelEditForm({
               placeholder="Rank"
               value={form.rank}
               onChange={e => update('rank', e.target.value)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
           </div>
           <div>
@@ -708,7 +1004,7 @@ function PersonnelEditForm({
             <select
               value={form.category}
               onChange={e => update('category', e.target.value)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               {CATEGORIES.map(c => (
                 <option key={c} value={c}>
@@ -724,7 +1020,7 @@ function PersonnelEditForm({
             <select
               value={form.service}
               onChange={e => update('service', e.target.value)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               {SERVICES.map(s => (
                 <option key={s} value={s}>
@@ -751,7 +1047,7 @@ function PersonnelEditForm({
               type="number"
               value={form.periodStart}
               onChange={e => update('periodStart', parseInt(e.target.value))}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
           </div>
           <div>
@@ -762,7 +1058,7 @@ function PersonnelEditForm({
               type="number"
               value={form.periodEnd}
               onChange={e => update('periodEnd', parseInt(e.target.value))}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
           </div>
           <div>
@@ -774,7 +1070,7 @@ function PersonnelEditForm({
               placeholder="Order (1=highest)"
               value={form.seniorityOrder}
               onChange={e => update('seniorityOrder', parseInt(e.target.value))}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
           </div>
         </div>
@@ -808,7 +1104,7 @@ function PersonnelEditForm({
                   onChange={e => updateCourse('courseClassification', e.target.value)}
                   className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 >
-                    <option value="FDC">FDC - Fellows of Defence College</option>
+                  <option value="FDC">FDC - Fellows of Defence College</option>
                   <option value="FWC">FWC - Fellows of War College</option>
                   <option value="Directing Staff">Directing Staff</option>
                   <option value="Allied">Allied</option>
@@ -816,19 +1112,48 @@ function PersonnelEditForm({
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Course Number *
+                  Select Course
                 </label>
-                <input
-                  type="number"
-                  placeholder="E.g., 1, 42, etc."
-                  value={courseInfo.courseNumber}
-                  onChange={e => updateCourse('courseNumber', e.target.value)}
-                  className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="1"
-                  max="999"
-                />
+                <select
+                  value={selectedCourseOption}
+                  onChange={e => handleCourseChange(e.target.value)}
+                  className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">-- Select a Course --</option>
+                  {existingCourseNumbers.map(num => (
+                    <option key={`opt-ueditcourse-${num}`} value={String(num)}>Course {num}</option>
+                  ))}
+                  <option value="custom">New Course / Other...</option>
+                </select>
               </div>
-              <div>
+              {selectedCourseOption === 'custom' ? (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Custom Course Number
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="e.g., 35"
+                    value={customCourseNumber}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setCustomCourseNumber(val);
+                      updateCourse('courseNumber', val);
+                      const cNum = parseInt(val, 10);
+                      if (cNum && !isNaN(cNum)) {
+                        const calculatedYear = 1991 + cNum;
+                        updateCourse('courseYear', calculatedYear);
+                        update('periodStart', calculatedYear);
+                        update('periodEnd', calculatedYear + 1);
+                      }
+                    }}
+                    className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    min="1"
+                    max="999"
+                  />
+                </div>
+              ) : null}
+              <div className={selectedCourseOption === 'custom' ? 'col-span-3 md:col-span-1' : ''}>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Graduation Year *
                 </label>
@@ -836,8 +1161,13 @@ function PersonnelEditForm({
                   type="number"
                   placeholder="E.g., 1993, 2020"
                   value={courseInfo.courseYear}
-                  onChange={e => updateCourse('courseYear', parseInt(e.target.value))}
-                  className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e => {
+                    const val = parseInt(e.target.value, 10);
+                    updateCourse('courseYear', val);
+                    update('periodStart', val);
+                    update('periodEnd', val + 1);
+                  }}
+                  className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                   min="1900"
                   max="2100"
                 />
@@ -862,7 +1192,7 @@ function PersonnelEditForm({
               placeholder="e.g., CSE 42/2020, FDC Course 5"
               value={form.decoration}
               onChange={e => update('decoration', e.target.value)}
-              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
             <p className="text-xs text-blue-600 mt-1">
               Enable "Use CSE Format" above to auto-generate from course info
@@ -887,7 +1217,7 @@ function PersonnelEditForm({
               value={form.citation}
               onChange={e => update('citation', e.target.value)}
               rows={3}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
           </div>
           <div>
@@ -898,9 +1228,21 @@ function PersonnelEditForm({
               placeholder="Image URL (optional)"
               value={form.imageUrl}
               onChange={e => update('imageUrl', e.target.value)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-2"
             />
-            <p className="text-xs text-slate-600 mt-1">Use batch image upload to change images</p>
+            <div className="flex items-center gap-2">
+              <label className="px-3 py-1.5 text-xs rounded border border-slate-300 bg-white hover:bg-slate-50 cursor-pointer transition-colors text-slate-700 font-medium">
+                Upload Image / GIF
+                <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
+              </label>
+              {form.imageUrl && (
+                <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+                  Clear
+                </button>
+              )}
+            </div>
+            {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
+            <p className="text-xs text-slate-500 mt-1">Select an image file to upload or enter a URL directly.</p>
           </div>
         </div>
       </div>

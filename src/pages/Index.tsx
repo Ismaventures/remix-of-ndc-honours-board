@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { SlidersHorizontal, ChevronLeft, ChevronRight, Play, Pause, X, Shield, ArrowLeft } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
+import { AppFooter } from "@/components/AppFooter";
 import { CommandantHero } from "@/components/CommandantHero";
 import { CommandantProfileOverlay } from "@/components/CommandantProfileOverlay";
 import { PastCommandants } from "@/components/PastCommandants";
@@ -167,12 +168,32 @@ function GridCommandantCard({ commandant, onClick, isLightMode }: GridCommandant
   );
 }
 
+type CrestParticle = {
+  id: number;
+  left: number;
+  top: number;
+  size: number;
+  rotate: number;
+};
+
+const randomInRange = (min: number, max: number) =>
+  min + Math.random() * (max - min);
+
+const createParticle = (id: number): CrestParticle => ({
+  id,
+  left: randomInRange(4, 96),
+  top: randomInRange(6, 94),
+  size: randomInRange(48, 128),
+  rotate: randomInRange(-25, 25),
+});
+
 interface IndexProps {
   defaultView?: ViewKey;
 }
 
 const Index = ({ defaultView = "home" }: IndexProps) => {
   const [isBooting, setIsBooting] = useState(true);
+  const [view, setView] = useState<ViewKey>(defaultView);
   const [idleStageActive, setIdleStageActive] = useState(false);
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
@@ -203,15 +224,50 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
   const [commandantsAutoDisplayActive, setCommandantsAutoDisplayActive] = useState(false);
   const [commandantsAutoDisplayIndex, setCommandantsAutoDisplayIndex] = useState(0);
   const [isCommandantsAutoPlaying, setIsCommandantsAutoPlaying] = useState(true);
+
+  // Universal Back Button trigger
+  const [backTriggerNonce, setBackTriggerNonce] = useState(0);
+
+  const handleGlobalBack = () => {
+    setBackTriggerNonce((prev) => prev + 1);
+  };
+
+  const lastProcessedBackNonce = useRef(backTriggerNonce);
+
+  // Handle local backing logic for views managed directly in Index.tsx
+  useEffect(() => {
+    if (backTriggerNonce === 0 || backTriggerNonce === lastProcessedBackNonce.current) {
+      lastProcessedBackNonce.current = backTriggerNonce;
+      return;
+    }
+    lastProcessedBackNonce.current = backTriggerNonce;
+
+    if (view === "commandants") {
+      if (commandantsAutoDisplayActive) {
+        setCommandantsAutoDisplayActive(false);
+      } else if (selectedPastCommandant) {
+        setSelectedPastCommandant(null);
+      } else {
+        setView("home");
+      }
+    } else if (view === "ndc-events") {
+      setView("home");
+    } else if (view === "admin" && !adminAuthenticated) {
+      setView("home");
+    }
+  }, [backTriggerNonce, view, commandantsAutoDisplayActive, selectedPastCommandant, adminAuthenticated]);
   const globalCommandRef = useRef<number | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousViewBeforeCommandantProfileRef = useRef<ViewKey | null>(null);
 
-  const [view, setView] = useState<ViewKey>(defaultView);
   const [showStageConfig, setShowStageConfig] = useState(false);
+  const [activeCourseNumber, setActiveCourseNumber] = useState<number | null>(null);
 
   const { themeMode, setThemeMode, resetThemeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith("outdoor");
+  const [scatteredCrests] = useState<CrestParticle[]>(() =>
+    Array.from({ length: 16 }, (_, i) => createParticle(i)),
+  );
   const {
     settings: bootSequenceSettings,
     setSettings: setBootSequenceSettings,
@@ -386,6 +442,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
 
   useEffect(() => {
     setShowStageConfig(false);
+    setActiveCourseNumber(null);
   }, [view]);
 
   const isSuperAdmin = useMemo(() => {
@@ -936,18 +993,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
 
       return (
         <section className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <button
-              onClick={() => setView("home")}
-              className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
-                isLightMode
-                  ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
-                  : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
-              }`}
-            >
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              Back
-            </button>
+          <div className="flex justify-end gap-4 mb-6">
             <button
               onClick={() => {
                 setCommandantsAutoDisplayActive(true);
@@ -986,31 +1032,21 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
               />
             ))}
           </div>
+
+          {/* Bottom Back Button Removed */}
         </section>
       );
     }
 
     if (view === "visits") {
-      return <VisitsSection visits={visits} onBack={() => setView("home")} />;
+      return <VisitsSection visits={visits} onBack={() => setView("home")} backTriggerNonce={backTriggerNonce} />;
     }
 
     if (view === "ndc-events") {
       return (
         <section className="min-h-screen bg-white p-6 md:p-12">
           <div className="max-w-6xl mx-auto">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <button
-                onClick={() => setView("home")}
-                className={`group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm ${
-                  isLightMode
-                    ? 'border-[#002060]/20 text-[#002060] bg-white hover:bg-[#002060]/5 hover:border-[#002060]/35'
-                    : 'border-white/10 text-white/80 bg-slate-950/20 hover:bg-white/[0.08] hover:border-white/20'
-                }`}
-              >
-                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                Back
-              </button>
-            </div>
+            {/* Header Back Button Removed */}
 
             <div className="mb-6 flex flex-col items-start">
               <h1 className="text-4xl md:text-5xl font-bold font-serif text-slate-900 mb-2">NDC Facilitated Events</h1>
@@ -1038,6 +1074,8 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
                 </div>
               </div>
             </div>
+
+            {/* Bottom Back Button Removed */}
           </div>
         </section>
       );
@@ -1186,6 +1224,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
             setAdminEmail(null);
           }}
           onBack={() => setView("home")}
+          backTriggerNonce={backTriggerNonce}
         />
       );
     }
@@ -1198,6 +1237,8 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           onBack={() => setView("home")}
           title="Participants"
           description="Distinguished participants who have guided courses and shaped the NDC academic framework, categorized by CSE course year."
+          onCourseSelect={setActiveCourseNumber}
+          backTriggerNonce={backTriggerNonce}
         />
       );
     }
@@ -1210,6 +1251,8 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           onBack={() => setView("home")}
           title="Directing Staff"
           description="Directing staff who have guided courses and shaped the NDC academic framework, categorized by CSE course year."
+          onCourseSelect={setActiveCourseNumber}
+          backTriggerNonce={backTriggerNonce}
         />
       );
     }
@@ -1227,6 +1270,8 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
             ? "Distinguished Fellows of the War College, categorized by CSE course year."
             : "Distinguished Fellows of the National Defence College, categorized by CSE course year."
           }
+          onCourseSelect={setActiveCourseNumber}
+          backTriggerNonce={backTriggerNonce}
         />
       );
     }
@@ -1239,6 +1284,8 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           onBack={() => setView("home")}
           title="Participants"
           description="Participants who have shaped the NDC academic framework, categorized by CSE course year."
+          onCourseSelect={setActiveCourseNumber}
+          backTriggerNonce={backTriggerNonce}
         />
       );
     }
@@ -1258,6 +1305,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           }
           forcedSelectionNonce={forcedProfileSelection.nonce}
           onBack={() => setView("home")}
+          backTriggerNonce={backTriggerNonce}
         />
       );
     }
@@ -1312,9 +1360,42 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           />
         )}
 
-        <main className={`flex-1 overflow-y-auto overflow-x-hidden ${autoDisplayActive ? "p-0" : ""}`}>
+        <main className={`flex-1 overflow-y-auto overflow-x-hidden ${autoDisplayActive ? "p-0" : "pb-20"}`}>
           <div className={`${autoDisplayActive || view === "admin" || view === "artifact-gallery" ? "w-screen h-screen max-w-none p-0" : "max-w-[1840px] px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8"} mx-auto relative z-10`}>
-            <div className={`${autoDisplayActive || view === "admin" || view === "artifact-gallery" ? "bg-transparent border-none p-0 rounded-none shadow-none" : "app-shell-frame rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8"}`}>
+            <div className={`${autoDisplayActive || view === "admin" || view === "artifact-gallery" ? "bg-transparent border-none p-0 rounded-none shadow-none" : `app-shell-frame rounded-2xl md:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8 relative overflow-hidden${view === "home" ? " min-h-[calc(100vh-180px)] flex flex-col justify-center" : ""}`}`}>
+              {view === "home" && (
+                <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit]">
+                  <div className="pointer-events-none absolute inset-0 opacity-[0.04] bg-[linear-gradient(90deg,rgba(0,32,96,0.08)_1px,transparent_1px),linear-gradient(rgba(0,32,96,0.08)_1px,transparent_1px)] bg-[size:40px_40px]" />
+                  <img
+                    src={ndcCrest}
+                    alt=""
+                    className="pointer-events-none absolute -left-20 top-8 h-56 w-56 object-contain opacity-[0.06]"
+                  />
+                  <img
+                    src={ndcCrest}
+                    alt=""
+                    className="pointer-events-none absolute -right-20 bottom-6 h-56 w-56 object-contain opacity-[0.06]"
+                  />
+
+                  <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden">
+                    {scatteredCrests.map((crest) => (
+                      <img
+                        key={crest.id}
+                        src={ndcCrest}
+                        alt=""
+                        className={`absolute object-contain ${isLightMode ? "opacity-[0.05]" : "opacity-[0.08] invert"}`}
+                        style={{
+                          width: `${crest.size}px`,
+                          height: `${crest.size}px`,
+                          left: `${crest.left}%`,
+                          top: `${crest.top}%`,
+                          transform: `translate(-50%, -50%) rotate(${crest.rotate}deg)`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className={`${autoDisplayActive ? "fixed top-4 right-4 z-[100]" : "flex justify-end mb-3 sm:mb-4"} ${view === "home" ? "hidden" : ""}`}>
                 <div className="relative flex items-center gap-2">
 
@@ -1453,10 +1534,15 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           </div>
         </main>
 
+        {!autoDisplayActive && view !== "admin" && (
+          <AppFooter activeCourseNumber={activeCourseNumber} />
+        )}
+
         <BottomDock
           currentView={view}
           onNavigate={setView}
           hidden={autoDisplayActive}
+          onBack={handleGlobalBack}
         />
       </div>
 

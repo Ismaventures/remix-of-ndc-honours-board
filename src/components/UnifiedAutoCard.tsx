@@ -26,6 +26,14 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
     : `${visit.country} • ${visit.date}`;
   
   const citation = isPersonnel ? person.citation : visit.description;
+  const serviceColor = (() => {
+    if (!isPersonnel) return "tri-color";
+    const s = (person.service || "").toLowerCase();
+    if (s.includes("army")) return "#FF0000";
+    if (s.includes("navy")) return "#002060";
+    if (s.includes("air force") || s.includes("airforce")) return "#00B0F0";
+    return "tri-color";
+  })();
 
   return (
     <section
@@ -36,11 +44,18 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
       }`}
     >
       {/* Top Defence Colors Strip */}
-      <div className="absolute top-0 inset-x-0 h-[3%] min-h-[10px] flex z-30">
-        <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
-        <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
-        <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
-      </div>
+      {serviceColor === "tri-color" ? (
+        <div className="absolute top-0 inset-x-0 h-[3%] min-h-[10px] flex z-30">
+          <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
+          <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
+          <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
+        </div>
+      ) : (
+        <div
+          className="absolute top-0 inset-x-0 h-[3%] min-h-[10px] z-30"
+          style={{ backgroundColor: serviceColor }}
+        />
+      )}
 
       {/* Background: subtle paper grain (light) */}
       <div className={`absolute inset-0 z-0 ${isLightMode ? "opacity-100" : "opacity-40"}`}>
@@ -147,11 +162,18 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
         )}
 
         {/* Bottom Defence Colors Strip */}
-        <div className="absolute bottom-0 inset-x-0 h-[2.5%] min-h-[8px] flex z-30">
-          <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
-          <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
-          <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
-        </div>
+        {serviceColor === "tri-color" ? (
+          <div className="absolute bottom-0 inset-x-0 h-[2.5%] min-h-[8px] flex z-30">
+            <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
+            <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
+            <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
+          </div>
+        ) : (
+          <div
+            className="absolute bottom-0 inset-x-0 h-[2.5%] min-h-[8px] z-30"
+            style={{ backgroundColor: serviceColor }}
+          />
+        )}
       </div>
     </section>
   );

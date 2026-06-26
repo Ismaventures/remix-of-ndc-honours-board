@@ -33,15 +33,6 @@ const CARDS: {
   accentGlow: string;
 }[] = [
   {
-    key: "commandants",
-    label: "COMMANDANTS OF NDC",
-    subtitle: "Leadership Chronicle",
-    icon: Shield,
-    color: "text-amber-600",
-    cardGradient: "from-[#2f2508] via-[#3f3210] to-[#524117]",
-    accentGlow: "shadow-[0_0_0_1px_rgba(255,215,0,0.34),0_20px_46px_rgba(0,0,0,0.2)]",
-  },
-  {
     key: "fwc",
     label: "FWC+",
     subtitle: "Distinguished Fellows of War College",
@@ -70,111 +61,29 @@ const CARDS: {
   },
 ];
 
-type CrestParticle = {
-  id: number;
-  left: number;
-  top: number;
-  size: number;
-  rotate: number;
-  transitionSec: number;
-};
-
-const randomInRange = (min: number, max: number) =>
-  min + Math.random() * (max - min);
-
-const createParticle = (id: number): CrestParticle => ({
-  id,
-  left: randomInRange(4, 96),
-  top: randomInRange(6, 94),
-  size: randomInRange(48, 128),
-  rotate: randomInRange(-25, 25),
-  transitionSec: randomInRange(5.5, 10.5),
-});
-
 export function CategoryCards({ onSelect }: CategoryCardsProps) {
   const [mounted, setMounted] = useState(false);
   const { themeMode } = useThemeMode();
   const isLightMode = themeMode.startsWith("outdoor");
-  const [scatteredCrests, setScatteredCrests] = useState<CrestParticle[]>(() =>
-    Array.from({ length: 16 }, (_, i) => createParticle(i)),
-  );
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 100);
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setScatteredCrests((current) =>
-        current.map((crest) => ({
-          ...crest,
-          left: randomInRange(2, 98),
-          top: randomInRange(4, 96),
-          size: randomInRange(50, 132),
-          rotate: randomInRange(-32, 32),
-          transitionSec: randomInRange(6, 11),
-        })),
-      );
-    }, 5200);
 
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <section className="mb-8 sm:mb-10">
-      <div className="mb-8 flex flex-col items-center">
-        <h2 className="heading-accent text-2xl sm:text-3xl lg:text-4xl font-bold font-serif text-foreground tracking-wider uppercase text-center mt-6 sm:mt-8 relative">
-          <span className="relative z-10">Chronicles of Directing Staff</span>
-          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-[#002060]/10 to-transparent -z-10" />
-        </h2>
-        <div className="ornament-divider mt-4 mb-2">
-          <div className="ornament-divider-diamond" />
-        </div>
-        <p className="text-xs sm:text-sm text-muted-foreground tracking-widest uppercase text-center mt-1">
-          Select a category to view hierarchy
-        </p>
-      </div>
 
       <div
         className={`transition-all duration-1000 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
       >
-        <div className="relative w-full max-w-6xl mx-auto rounded-[28px] border border-[#002060]/10 bg-[linear-gradient(165deg,#ffffff_0%,#f8faff_52%,#f0f5ff_100%)] px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-7 overflow-hidden shadow-[0_12px_40px_rgba(0,32,96,0.08),0_2px_8px_rgba(0,32,96,0.04)]">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.04] bg-[linear-gradient(90deg,rgba(0,32,96,0.08)_1px,transparent_1px),linear-gradient(rgba(0,32,96,0.08)_1px,transparent_1px)] bg-[size:40px_40px]" />
-          <img
-            src={ndcCrest}
-            alt=""
-            className="pointer-events-none absolute -left-20 top-8 h-56 w-56 object-contain opacity-[0.06]"
-          />
-          <img
-            src={ndcCrest}
-            alt=""
-            className="pointer-events-none absolute -right-20 bottom-6 h-56 w-56 object-contain opacity-[0.06]"
-          />
-
-          <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden">
-            {scatteredCrests.map((crest) => (
-              <img
-                key={crest.id}
-                src={ndcCrest}
-                alt=""
-                className={`absolute object-contain ${isLightMode ? "opacity-[0.05]" : "opacity-[0.08] invert"}`}
-                style={{
-                  width: `${crest.size}px`,
-                  height: `${crest.size}px`,
-                  left: `${crest.left}%`,
-                  top: `${crest.top}%`,
-                  transform: `translate(-50%, -50%) rotate(${crest.rotate}deg)`,
-                  transition: `left ${crest.transitionSec}s ease-in-out, top ${crest.transitionSec}s ease-in-out, transform ${crest.transitionSec}s ease-in-out, width ${crest.transitionSec}s ease-in-out, height ${crest.transitionSec}s ease-in-out`,
-                }}
-              />
-            ))}
-          </div>
-
-          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 stagger-reveal">
+        <div className="relative w-full max-w-6xl mx-auto px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-7">
+          <div className="relative z-10 flex flex-col md:flex-row justify-center items-center md:items-stretch gap-4 md:gap-6 stagger-reveal w-full">
             {CARDS.map((card) => {
               return (
-                <div key={card.key} className="p-2 h-full">
+                <div key={card.key} className="p-2 w-full md:flex-1 max-w-[360px] h-full">
                   <button
                     onClick={() => onSelect(card.key)}
                     className={`relative w-full h-[clamp(230px,36vh,310px)] sm:h-[clamp(250px,34vh,320px)] lg:h-[clamp(270px,33vh,330px)] overflow-hidden rounded-2xl border text-center group transition-all duration-500 hover:-translate-y-2.5 hover:scale-[1.012] flex flex-col items-center justify-center p-6 sm:p-8 ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${card.accentGlow} ${
