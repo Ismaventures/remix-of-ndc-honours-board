@@ -1,5 +1,11 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
+import { autoSeedIfNeeded } from "./lib/localDb.ts";
 import "./index.css";
 
-createRoot(document.getElementById("root")!).render(<App />);
+async function init() {
+  await autoSeedIfNeeded();
+  createRoot(document.getElementById("root")!).render(<App />);
+}
+
+init();

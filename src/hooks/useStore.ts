@@ -87,7 +87,7 @@ const mapPersonnelToRow = (p: Personnel): PersonnelRow => ({
   decoration: p.decoration ?? null,
   biography_full: p.biographyFull ?? null,
   seniority_order: p.seniorityOrder,
-});
+} as any);
 
 const mapRowToPersonnel = (row: PersonnelRow): Personnel => ({
   id: row.id,
@@ -95,15 +95,15 @@ const mapRowToPersonnel = (row: PersonnelRow): Personnel => ({
   rank: row.rank,
   category: normalizeCategory(row.category),
   service: normalizeService(row.service),
-  course: row.course ?? undefined,
-  academicYear: row.academic_year ?? undefined,
-  periodStart: row.period_start,
-  periodEnd: row.period_end,
-  imageUrl: row.image_url ?? undefined,
+  course: (row as any).course ?? row.course ?? undefined,
+  academicYear: (row as any).academicYear ?? (row as any).academic_year ?? row.academic_year ?? undefined,
+  periodStart: (row as any).periodStart ?? row.period_start,
+  periodEnd: (row as any).periodEnd ?? row.period_end,
+  imageUrl: (row as any).imageUrl ?? row.image_url ?? undefined,
   citation: row.citation,
-  decoration: row.decoration ?? undefined,
-  biographyFull: row.biography_full ?? undefined,
-  seniorityOrder: row.seniority_order,
+  decoration: (row as any).decoration ?? row.decoration ?? undefined,
+  biographyFull: (row as any).biographyFull ?? (row as any).biography_full ?? row.biography_full ?? undefined,
+  seniorityOrder: (row as any).seniorityOrder ?? row.seniority_order,
 });
 
 const normalizeStringArray = (value: unknown): string[] => {

@@ -372,8 +372,9 @@ class QueryBuilder {
     if (this.orders.length > 0) {
       rows.sort((a, b) => {
         for (const { column, ascending } of this.orders) {
-          const aVal = a[column];
-          const bVal = b[column];
+          // Support both snake_case and camelCase column names
+          const aVal = a[column] ?? a[column.replace(/_([a-z])/g, (_, c) => c.toUpperCase())];
+          const bVal = b[column] ?? b[column.replace(/_([a-z])/g, (_, c) => c.toUpperCase())];
           if (aVal == null && bVal == null) continue;
           if (aVal == null) return ascending ? -1 : 1;
           if (bVal == null) return ascending ? 1 : -1;
@@ -867,20 +868,39 @@ export function autoSeedIfNeeded(): Promise<boolean> {
   if (autoSeedPromise) return autoSeedPromise;
   autoSeedPromise = (async () => {
     try {
-      const existing = await getAll('personnel');
-      if (existing.length > 0) return false;
-
       const resp = await fetch('/seed-data.json');
       if (!resp.ok) return false;
       const data = await resp.json();
 
-      if (data.personnel?.length > 0) await putAll('personnel', data.personnel);
-      if (data.commandants?.length > 0) await putAll('commandants', data.commandants);
-      if (data.visits?.length > 0) await putAll('visits', data.visits);
-      if (data.audio_tracks?.length > 0) await putAll('audio_tracks', data.audio_tracks);
-      if (data.audio_assignments?.length > 0) await putAll('audio_assignments', data.audio_assignments);
+      const existingPersonnel = await getAll('personnel');
+      if (data.personnel?.length > 0 && existingPersonnel.length !== data.personnel.length) {
+        await clearStore('personnel');
+        await putAll('personnel', data.personnel);
+        // Also clear localStorage cache so store re-reads fresh data
+        try { localStorage.removeItem('ndc_cache_personnel_v1'); } catch {}
+        console.log(`[localDb] Re-seeded personnel: cleared ${existingPersonnel.length}, inserted ${data.personnel.length}`);
+      }
 
-      console.log(`[localDb] Auto-seeded: ${data.personnel?.length ?? 0} personnel, ${data.commandants?.length ?? 0} commandants, ${data.visits?.length ?? 0} visits, ${data.audio_tracks?.length ?? 0} audio tracks`);
+      const existingCommandants = await getAll('commandants');
+      if (existingCommandants.length === 0 && data.commandants?.length > 0) {
+        await putAll('commandants', data.commandants);
+      }
+
+      const existingVisits = await getAll('visits');
+      if (existingVisits.length === 0 && data.visits?.length > 0) {
+        await putAll('visits', data.visits);
+      }
+
+      const existingAudio = await getAll('audio_tracks');
+      if (existingAudio.length === 0 && data.audio_tracks?.length > 0) {
+        await putAll('audio_tracks', data.audio_tracks);
+      }
+
+      const existingAssignments = await getAll('audio_assignments');
+      if (existingAssignments.length === 0 && data.audio_assignments?.length > 0) {
+        await putAll('audio_assignments', data.audio_assignments);
+      }
+
       return true;
     } catch (err) {
       console.warn('[localDb] Auto-seed failed:', err);
