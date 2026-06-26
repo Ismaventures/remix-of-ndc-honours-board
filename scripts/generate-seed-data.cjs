@@ -396,16 +396,24 @@ const COURSE_MAP = [
   { course: 34, startYear: 2025, endYear: 2026 },
 ];
 
-function getCourseInfo(periodStart) {
+function getCourseInfo(periodStart, category) {
   const match = COURSE_MAP.find(c => c.startYear === parseInt(periodStart));
-  if (match) return { course: match.course, academicYear: `${match.startYear}–${match.endYear}` };
-  const fallback = parseInt(periodStart) - 1991;
-  return { course: fallback, academicYear: `${periodStart}–${parseInt(periodStart) + 1}` };
+  let course = match ? match.course : parseInt(periodStart) - 1991;
+  let academicYear = match ? `${match.startYear}–${match.endYear}` : `${periodStart}–${parseInt(periodStart) + 1}`;
+
+  // FDC starts after FWC ends — FWC stops at Course 15, FDC starts at Course 16
+  if (category === 'FDC' && course <= 15) {
+    course = 16;
+    const fdcStart = COURSE_MAP.find(c => c.course === 16);
+    academicYear = `${fdcStart.startYear}–${fdcStart.endYear}`;
+  }
+
+  return { course, academicYear };
 }
 
 function toPersonnel(list, category, seniorityStart) {
   return list.map((item, i) => {
-    const { course, academicYear } = getCourseInfo(item.periodStart);
+    const { course, academicYear } = getCourseInfo(item.periodStart, category);
     return {
       id: `${category.toLowerCase()}-${item.serial}`,
       name: item.name,
