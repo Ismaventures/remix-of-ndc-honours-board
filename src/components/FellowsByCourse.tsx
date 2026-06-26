@@ -119,7 +119,7 @@ export function FellowsByCourse({
     // 1. Pre-populate course mapping based on category
     const courseMap: Record<number, { year: number; courseNumber: number; academicYear: string; fellows: Personnel[] }> = {};
     const startCourse = category === 'FWC' ? 1 : 16;
-    const endCourse = 34;
+    const endCourse = category === 'FWC' ? 15 : 34;
     for (let c = startCourse; c <= endCourse; c++) {
       const startYear = 1991 + c;
       const endYear = 1992 + c;
@@ -189,6 +189,7 @@ export function FellowsByCourse({
     }
 
     return Object.values(courseMap)
+      .filter(data => data.fellows.length > 0)
       .map((data) => ({
         year: data.year,
         courseNumber: data.courseNumber,
