@@ -2,7 +2,6 @@ const { app, BrowserWindow, ipcMain, protocol, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
-const { pathToFileURL } = require('url');
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 const APP_PATH = app.getAppPath();
@@ -438,21 +437,31 @@ app.whenReady().then(() => {
     const decodedPath = decodeURIComponent(filePath);
     const userPath = path.join(LOCAL_MEDIA_DIR, decodedPath);
 
+    const getFileUrl = (p) => {
+      try {
+        return require('url').pathToFileURL(p).toString();
+      } catch (e) {
+        return process.platform === 'win32'
+          ? 'file:///' + p.replace(/\\/g, '/')
+          : 'file://' + p;
+      }
+    };
+
     // Try writable userData directory first
     if (fs.existsSync(userPath)) {
-      return net.fetch(pathToFileURL(userPath).href);
+      return net.fetch(getFileUrl(userPath));
     }
 
     // Fallback to read-only bundled assets inside the app package
     if (!isDev) {
       const bundledPath = path.join(APP_PATH, 'local_media', decodedPath);
       if (fs.existsSync(bundledPath)) {
-        return net.fetch(pathToFileURL(bundledPath).href);
+        return net.fetch(getFileUrl(bundledPath));
       }
     }
 
     // Default: still attempt userData path (will 404 naturally)
-    return net.fetch(pathToFileURL(userPath).href);
+    return net.fetch(getFileUrl(userPath));
   });
 
   // In production, intercept file:// requests for absolute paths like /images/...
@@ -493,37 +502,64 @@ app.on('window-all-closed', () => {
 // IPC handler for SQLite queries
 ipcMain.handle('query-sqlite', async (event, queryDesc) => {
   const { table, method, fields, payload, filters, order, range } = queryDesc;
+  
+  // Helper to build SQL WHERE clauses for all filter types
+  function buildWhereClause(filtersList, paramsArray) {
+    const clauses = [];
+    for (const filter of (filtersList || [])) {
+      if (filter.type === 'eq') {
+        if (filter.value === null) {
+          clauses.push(`${filter.column} IS NULL`);
+        } else {
+          clauses.push(`${filter.column} = ?`);
+          paramsArray.push(filter.value);
+        }
+      } else if (filter.type === 'neq') {
+        if (filter.value === null) {
+          clauses.push(`${filter.column} IS NOT NULL`);
+        } else {
+          clauses.push(`${filter.column} != ?`);
+          paramsArray.push(filter.value);
+        }
+      } else if (filter.type === 'gt') {
+        clauses.push(`${filter.column} > ?`);
+        paramsArray.push(filter.value);
+      } else if (filter.type === 'gte') {
+        clauses.push(`${filter.column} >= ?`);
+        paramsArray.push(filter.value);
+      } else if (filter.type === 'lt') {
+        clauses.push(`${filter.column} < ?`);
+        paramsArray.push(filter.value);
+      } else if (filter.type === 'lte') {
+        clauses.push(`${filter.column} <= ?`);
+        paramsArray.push(filter.value);
+      } else if (filter.type === 'like') {
+        clauses.push(`${filter.column} LIKE ?`);
+        paramsArray.push(filter.value);
+      } else if (filter.type === 'in') {
+        if (Array.isArray(filter.value) && filter.value.length > 0) {
+          const placeholders = filter.value.map(() => '?').join(',');
+          clauses.push(`${filter.column} IN (${placeholders})`);
+          paramsArray.push(...filter.value);
+        } else {
+          clauses.push('1 = 0');
+        }
+      } else if (filter.type === 'not_in') {
+        if (Array.isArray(filter.value) && filter.value.length > 0) {
+          const placeholders = filter.value.map(() => '?').join(',');
+          clauses.push(`${filter.column} NOT IN (${placeholders})`);
+          paramsArray.push(...filter.value);
+        }
+      }
+    }
+    return clauses;
+  }
+
   try {
     if (method === 'select') {
       let sql = `SELECT ${fields || '*'} FROM ${table}`;
       const params = [];
-      const whereClauses = [];
-
-      for (const filter of (filters || [])) {
-        if (filter.type === 'eq') {
-          if (filter.value === null) {
-            whereClauses.push(`${filter.column} IS NULL`);
-          } else {
-            whereClauses.push(`${filter.column} = ?`);
-            params.push(filter.value);
-          }
-        } else if (filter.type === 'neq') {
-          if (filter.value === null) {
-            whereClauses.push(`${filter.column} IS NOT NULL`);
-          } else {
-            whereClauses.push(`${filter.column} != ?`);
-            params.push(filter.value);
-          }
-        } else if (filter.type === 'in') {
-          if (Array.isArray(filter.value) && filter.value.length > 0) {
-            const placeholders = filter.value.map(() => '?').join(',');
-            whereClauses.push(`${filter.column} IN (${placeholders})`);
-            params.push(...filter.value);
-          } else {
-            whereClauses.push('1 = 0');
-          }
-        }
-      }
+      const whereClauses = buildWhereClause(filters, params);
 
       if (whereClauses.length > 0) {
         sql += ` WHERE ${whereClauses.join(' AND ')}`;
@@ -573,17 +609,7 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
       const params = Object.values(serializedPayload).map(normalizeSqliteValue);
 
       let sql = `UPDATE ${table} SET ${setClauses}`;
-      const whereClauses = [];
-
-      for (const filter of (filters || [])) {
-        if (filter.type === 'eq') {
-          whereClauses.push(`${filter.column} = ?`);
-          params.push(filter.value);
-        } else if (filter.type === 'neq') {
-          whereClauses.push(`${filter.column} != ?`);
-          params.push(filter.value);
-        }
-      }
+      const whereClauses = buildWhereClause(filters, params);
 
       if (whereClauses.length > 0) {
         sql += ` WHERE ${whereClauses.join(' AND ')}`;
@@ -598,17 +624,7 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
     if (method === 'delete') {
       let sql = `DELETE FROM ${table}`;
       const params = [];
-      const whereClauses = [];
-
-      for (const filter of (filters || [])) {
-        if (filter.type === 'eq') {
-          whereClauses.push(`${filter.column} = ?`);
-          params.push(filter.value);
-        } else if (filter.type === 'neq') {
-          whereClauses.push(`${filter.column} != ?`);
-          params.push(filter.value);
-        }
-      }
+      const whereClauses = buildWhereClause(filters, params);
 
       if (whereClauses.length > 0) {
         sql += ` WHERE ${whereClauses.join(' AND ')}`;

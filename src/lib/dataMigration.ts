@@ -49,7 +49,6 @@ export async function migrateFromSupabase(): Promise<{
 
   console.log(`[Migration] Fetched: ${personnel.length} personnel, ${commandants.length} commandants, ${visits.length} visits`);
 
-  const { seedInitialData } = await import('./localDb');
 
   // Store personnel
   if (personnel.length > 0) {

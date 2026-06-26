@@ -5,6 +5,10 @@
 const DB_NAME = 'ndc-honours-board';
 const DB_VERSION = 2;
 
+const getElectronAPI = () => {
+  return typeof window !== 'undefined' ? (window as any).electronAPI : null;
+};
+
 export { openDb as openLocalDb };
 
 const TABLES = [
@@ -82,6 +86,13 @@ function openDb(): Promise<IDBDatabase> {
 }
 
 async function getAll(storeName: TableName): Promise<any[]> {
+  const electronAPI = getElectronAPI();
+  if (electronAPI) {
+    const res = await electronAPI.querySqlite({ table: storeName, method: 'select' });
+    if (res.error) throw new Error(typeof res.error === 'string' ? res.error : res.error.message);
+    return res.data ?? [];
+  }
+
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readonly');
@@ -93,6 +104,17 @@ async function getAll(storeName: TableName): Promise<any[]> {
 }
 
 async function getById(storeName: TableName, id: string): Promise<any | undefined> {
+  const electronAPI = getElectronAPI();
+  if (electronAPI) {
+    const res = await electronAPI.querySqlite({
+      table: storeName,
+      method: 'select',
+      filters: [{ column: 'id', value: id, type: 'eq' }]
+    });
+    if (res.error) throw new Error(typeof res.error === 'string' ? res.error : res.error.message);
+    return res.data?.[0];
+  }
+
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readonly');
@@ -104,6 +126,17 @@ async function getById(storeName: TableName, id: string): Promise<any | undefine
 }
 
 async function put(storeName: TableName, data: any): Promise<void> {
+  const electronAPI = getElectronAPI();
+  if (electronAPI) {
+    const res = await electronAPI.querySqlite({
+      table: storeName,
+      method: 'upsert',
+      payload: data
+    });
+    if (res.error) throw new Error(typeof res.error === 'string' ? res.error : res.error.message);
+    return;
+  }
+
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readwrite');
@@ -115,6 +148,17 @@ async function put(storeName: TableName, data: any): Promise<void> {
 }
 
 async function putAll(storeName: TableName, items: any[]): Promise<void> {
+  const electronAPI = getElectronAPI();
+  if (electronAPI) {
+    const res = await electronAPI.querySqlite({
+      table: storeName,
+      method: 'upsert',
+      payload: items
+    });
+    if (res.error) throw new Error(typeof res.error === 'string' ? res.error : res.error.message);
+    return;
+  }
+
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readwrite');
@@ -128,6 +172,17 @@ async function putAll(storeName: TableName, items: any[]): Promise<void> {
 }
 
 async function deleteById(storeName: TableName, id: string): Promise<void> {
+  const electronAPI = getElectronAPI();
+  if (electronAPI) {
+    const res = await electronAPI.querySqlite({
+      table: storeName,
+      method: 'delete',
+      filters: [{ column: 'id', value: id, type: 'eq' }]
+    });
+    if (res.error) throw new Error(typeof res.error === 'string' ? res.error : res.error.message);
+    return;
+  }
+
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readwrite');
@@ -139,6 +194,17 @@ async function deleteById(storeName: TableName, id: string): Promise<void> {
 }
 
 async function clearStore(storeName: TableName): Promise<void> {
+  const electronAPI = getElectronAPI();
+  if (electronAPI) {
+    const res = await electronAPI.querySqlite({
+      table: storeName,
+      method: 'delete',
+      filters: []
+    });
+    if (res.error) throw new Error(typeof res.error === 'string' ? res.error : res.error.message);
+    return;
+  }
+
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readwrite');
@@ -242,6 +308,7 @@ class QueryBuilder {
   private tableName: TableName;
   private selectColumns: string | null = null;
   private filters: FilterFn[] = [];
+  private sqlFilters: Array<{ column: string; value: any; type: string }> = [];
   private orders: OrderSpec[] = [];
   private rangeStart: number | null = null;
   private rangeEnd: number | null = null;
@@ -260,31 +327,37 @@ class QueryBuilder {
 
   eq(column: string, value: any) {
     this.filters.push((row) => row[column] === value);
+    this.sqlFilters.push({ column, value, type: 'eq' });
     return this;
   }
 
   neq(column: string, value: any) {
     this.filters.push((row) => row[column] !== value);
+    this.sqlFilters.push({ column, value, type: 'neq' });
     return this;
   }
 
   gt(column: string, value: any) {
     this.filters.push((row) => row[column] > value);
+    this.sqlFilters.push({ column, value, type: 'gt' });
     return this;
   }
 
   gte(column: string, value: any) {
     this.filters.push((row) => row[column] >= value);
+    this.sqlFilters.push({ column, value, type: 'gte' });
     return this;
   }
 
   lt(column: string, value: any) {
     this.filters.push((row) => row[column] < value);
+    this.sqlFilters.push({ column, value, type: 'lt' });
     return this;
   }
 
   lte(column: string, value: any) {
     this.filters.push((row) => row[column] <= value);
+    this.sqlFilters.push({ column, value, type: 'lte' });
     return this;
   }
 
@@ -294,6 +367,7 @@ class QueryBuilder {
       'i',
     );
     this.filters.push((row) => regex.test(String(row[column] ?? '')));
+    this.sqlFilters.push({ column, value: pattern, type: 'like' });
     return this;
   }
 
@@ -302,26 +376,29 @@ class QueryBuilder {
   }
 
   not(column: string, op: string, value: any) {
-    if (op === 'is') {
+    if (op === 'is' || op === 'eq') {
       this.filters.push((row) => row[column] !== value);
-    } else if (op === 'eq') {
-      this.filters.push((row) => row[column] !== value);
+      this.sqlFilters.push({ column, value, type: 'neq' });
     } else if (op === 'in') {
       this.filters.push((row) => !(value as any[]).includes(row[column]));
+      this.sqlFilters.push({ column, value, type: 'not_in' });
     }
     return this;
   }
 
   in(column: string, values: any[]) {
     this.filters.push((row) => values.includes(row[column]));
+    this.sqlFilters.push({ column, value: values, type: 'in' });
     return this;
   }
 
   is(column: string, value: any) {
     if (value === null) {
       this.filters.push((row) => row[column] == null);
+      this.sqlFilters.push({ column, value: null, type: 'eq' });
     } else {
       this.filters.push((row) => row[column] === value);
+      this.sqlFilters.push({ column, value, type: 'eq' });
     }
     return this;
   }
@@ -362,7 +439,40 @@ class QueryBuilder {
     return result;
   }
 
-  private async executeQuery(): Promise<{ data: any; error: null }> {
+  private async executeQuery(): Promise<{ data: any; error: any }> {
+    const electronAPI = getElectronAPI();
+    if (electronAPI) {
+      let range = undefined;
+      if (this.rangeStart !== null && this.rangeEnd !== null) {
+        range = { from: this.rangeStart, to: this.rangeEnd };
+      } else if (this.limitCount !== null) {
+        range = { from: 0, to: this.limitCount - 1 };
+      }
+
+      const queryDesc = {
+        table: this.tableName,
+        method: 'select',
+        fields: this.selectColumns || '*',
+        filters: this.sqlFilters,
+        order: this.orders.length > 0 ? this.orders[0] : undefined,
+        range,
+      };
+
+      const res = await electronAPI.querySqlite(queryDesc);
+      if (res.error) {
+        return { data: null, error: typeof res.error === 'string' ? { message: res.error } : res.error };
+      }
+
+      let rows = res.data ?? [];
+      if (this.isSingle) {
+        return { data: rows[0] ?? null, error: null };
+      }
+      if (this.isMaybeSingle) {
+        return { data: rows[0] ?? null, error: null };
+      }
+      return { data: rows, error: null };
+    }
+
     let rows = await getAll(this.tableName);
 
     for (const filter of this.filters) {
@@ -457,7 +567,82 @@ class MutationBuilder {
     return this;
   }
 
-  async execute(): Promise<{ data: any; error: null }> {
+  async execute(): Promise<{ data: any; error: any }> {
+    const electronAPI = getElectronAPI();
+    if (electronAPI) {
+      let ipcMethod = this.operation;
+      let ipcPayload = this.payload;
+      
+      const ipcFilters = this.filters.map(f => ({
+        column: f.column,
+        value: f.value,
+        type: f.op === 'eq' ? 'eq' : 'neq'
+      }));
+
+      if (ipcMethod === 'update') {
+        if (ipcFilters.length === 0 && ipcPayload?.id) {
+          ipcFilters.push({ column: 'id', value: ipcPayload.id, type: 'eq' });
+        }
+      }
+
+      if (ipcMethod === 'insert') {
+        if (Array.isArray(ipcPayload)) {
+          ipcPayload = ipcPayload.map(item => ({
+            id: item.id ?? crypto.randomUUID(),
+            ...item
+          }));
+        } else if (ipcPayload) {
+          ipcPayload = {
+            id: ipcPayload.id ?? crypto.randomUUID(),
+            ...ipcPayload
+          };
+        }
+      }
+
+      const queryDesc = {
+        table: this.tableName,
+        method: ipcMethod,
+        payload: ipcPayload,
+        filters: ipcFilters,
+      };
+
+      const res = await electronAPI.querySqlite(queryDesc);
+      if (res.error) {
+        return { data: null, error: typeof res.error === 'string' ? { message: res.error } : res.error };
+      }
+
+      notifyChange(this.tableName);
+
+      let data = res.data;
+      if (this.isSingle && Array.isArray(data)) {
+        data = data[0];
+      }
+      if (data && this.selectCols) {
+        const cols = this.selectCols.split(',').map(c => c.trim());
+        if (cols.length === 1 && cols[0] === '*') {
+          // Keep all
+        } else {
+          if (Array.isArray(data)) {
+            data = data.map(item => {
+              const filtered: any = {};
+              for (const col of cols) {
+                if (col in item) filtered[col] = item[col];
+              }
+              return filtered;
+            });
+          } else {
+            const filtered: any = {};
+            for (const col of cols) {
+              if (col in data) filtered[col] = data[col];
+            }
+            data = filtered;
+          }
+        }
+      }
+
+      return { data, error: null };
+    }
+
     switch (this.operation) {
       case 'insert': {
         const items = Array.isArray(this.payload) ? this.payload : [this.payload];
@@ -839,76 +1024,7 @@ export function isInvalidRefreshTokenError(): boolean {
   return false;
 }
 
-/* ─── Seed Data ─── */
 
-export async function seedInitialData(
-  personnel: any[],
-  commandants: any[],
-  visits: any[],
-) {
-  const existingPersonnel = await getAll('personnel');
-  if (existingPersonnel.length === 0 && personnel.length > 0) {
-    await putAll('personnel', personnel);
-  }
-
-  const existingCommandants = await getAll('commandants');
-  if (existingCommandants.length === 0 && commandants.length > 0) {
-    await putAll('commandants', commandants);
-  }
-
-  const existingVisits = await getAll('visits');
-  if (existingVisits.length === 0 && visits.length > 0) {
-    await putAll('visits', visits);
-  }
-}
-
-let autoSeedPromise: Promise<boolean> | null = null;
-
-export function autoSeedIfNeeded(): Promise<boolean> {
-  if (autoSeedPromise) return autoSeedPromise;
-  autoSeedPromise = (async () => {
-    try {
-      const resp = await fetch('/seed-data.json');
-      if (!resp.ok) return false;
-      const data = await resp.json();
-
-      const existingPersonnel = await getAll('personnel');
-      if (data.personnel?.length > 0 && existingPersonnel.length !== data.personnel.length) {
-        await clearStore('personnel');
-        await putAll('personnel', data.personnel);
-        // Also clear localStorage cache so store re-reads fresh data
-        try { localStorage.removeItem('ndc_cache_personnel_v1'); } catch {}
-        console.log(`[localDb] Re-seeded personnel: cleared ${existingPersonnel.length}, inserted ${data.personnel.length}`);
-      }
-
-      const existingCommandants = await getAll('commandants');
-      if (existingCommandants.length === 0 && data.commandants?.length > 0) {
-        await putAll('commandants', data.commandants);
-      }
-
-      const existingVisits = await getAll('visits');
-      if (existingVisits.length === 0 && data.visits?.length > 0) {
-        await putAll('visits', data.visits);
-      }
-
-      const existingAudio = await getAll('audio_tracks');
-      if (existingAudio.length === 0 && data.audio_tracks?.length > 0) {
-        await putAll('audio_tracks', data.audio_tracks);
-      }
-
-      const existingAssignments = await getAll('audio_assignments');
-      if (existingAssignments.length === 0 && data.audio_assignments?.length > 0) {
-        await putAll('audio_assignments', data.audio_assignments);
-      }
-
-      return true;
-    } catch (err) {
-      console.warn('[localDb] Auto-seed failed:', err);
-      return false;
-    }
-  })();
-  return autoSeedPromise;
-}
 
 export async function getDataForTable(tableName: string): Promise<any[]> {
   return getAll(tableName as TableName);

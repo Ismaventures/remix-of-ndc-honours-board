@@ -1,0 +1,340 @@
+[2026-06-26T12:00:53.291Z] Request URL: local-media://courses/Course-17/AIR%20CDRE%20AK%20FAMUYIWA.png
+[2026-06-26T12:00:53.291Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/AIR CDRE AK FAMUYIWA.png
+[2026-06-26T12:00:53.291Z] File exists: true
+[2026-06-26T12:00:53.291Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/AIR CDRE AK FAMUYIWA.png
+
+[2026-06-26T12:00:53.300Z] Request URL: local-media://courses/Course-17/BRIG%20GEN%20RT%20UTSAHA.png
+[2026-06-26T12:00:53.300Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN RT UTSAHA.png
+[2026-06-26T12:00:53.300Z] File exists: true
+[2026-06-26T12:00:53.300Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN RT UTSAHA.png
+
+[2026-06-26T12:00:53.301Z] Request URL: local-media://courses/Course-17/CDRE%20SA%20YAHAYA.png
+[2026-06-26T12:00:53.301Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/CDRE SA YAHAYA.png
+[2026-06-26T12:00:53.301Z] File exists: true
+[2026-06-26T12:00:53.301Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/CDRE SA YAHAYA.png
+
+[2026-06-26T12:00:53.302Z] Request URL: local-media://courses/Course-17/BRIG%20GEN%20COCHIMANA.png
+[2026-06-26T12:00:53.302Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN COCHIMANA.png
+[2026-06-26T12:00:53.302Z] File exists: true
+[2026-06-26T12:00:53.302Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN COCHIMANA.png
+
+[2026-06-26T12:00:53.302Z] Request URL: local-media://courses/Course-17/BRIG%20GEN%20MS%20USMAN.png
+[2026-06-26T12:00:53.302Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN MS USMAN.png
+[2026-06-26T12:00:53.302Z] File exists: true
+[2026-06-26T12:00:53.302Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN MS USMAN.png
+
+[2026-06-26T12:00:53.302Z] Request URL: local-media://courses/Course-16/Cdre%20AI%20OYAGHA.png
+[2026-06-26T12:00:53.302Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Cdre AI OYAGHA.png
+[2026-06-26T12:00:53.302Z] File exists: true
+[2026-06-26T12:00:53.302Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Cdre AI OYAGHA.png
+
+[2026-06-26T12:00:53.303Z] Request URL: local-media://courses/Course-16/Air%20Cdre%20SB%20ABUBAKAR.png
+[2026-06-26T12:00:53.303Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Air Cdre SB ABUBAKAR.png
+[2026-06-26T12:00:53.303Z] File exists: true
+[2026-06-26T12:00:53.303Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Air Cdre SB ABUBAKAR.png
+
+[2026-06-26T12:00:53.303Z] Request URL: local-media://courses/Course-16/Brig%20Gen%20TT%20WAYA.png
+[2026-06-26T12:00:53.303Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Brig Gen TT WAYA.png
+[2026-06-26T12:00:53.303Z] File exists: true
+[2026-06-26T12:00:53.303Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Brig Gen TT WAYA.png
+
+[2026-06-26T12:00:53.303Z] Request URL: local-media://courses/Course-16/Cdre%20JO%20OLUTOYIN.png
+[2026-06-26T12:00:53.303Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Cdre JO OLUTOYIN.png
+[2026-06-26T12:00:53.303Z] File exists: true
+[2026-06-26T12:00:53.303Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Cdre JO OLUTOYIN.png
+
+[2026-06-26T12:00:53.304Z] Request URL: local-media://courses/Course-16/Air%20Cdre%20IA%20BALOGUN.png
+[2026-06-26T12:00:53.304Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Air Cdre IA BALOGUN.png
+[2026-06-26T12:00:53.304Z] File exists: true
+[2026-06-26T12:00:53.304Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Air Cdre IA BALOGUN.png
+
+[2026-06-26T12:00:53.304Z] Request URL: local-media://ndc-media/images/1781154484927-4atp9y-IMG-20260410-WA0017.jpg
+[2026-06-26T12:00:53.304Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781154484927-4atp9y-IMG-20260410-WA0017.jpg
+[2026-06-26T12:00:53.304Z] File exists: true
+[2026-06-26T12:00:53.304Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781154484927-4atp9y-IMG-20260410-WA0017.jpg
+
+[2026-06-26T12:00:53.305Z] Request URL: local-media://courses/Course-15/T%20LOKOSON.png
+[2026-06-26T12:00:53.305Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/T LOKOSON.png
+[2026-06-26T12:00:53.305Z] File exists: true
+[2026-06-26T12:00:53.305Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/T LOKOSON.png
+
+[2026-06-26T12:00:53.305Z] Request URL: local-media://ndc-media/images/1781386889700-96vquy-BRIG_GEN_P_TNADAH.png
+[2026-06-26T12:00:53.305Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781386889700-96vquy-BRIG_GEN_P_TNADAH.png
+[2026-06-26T12:00:53.305Z] File exists: true
+[2026-06-26T12:00:53.305Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781386889700-96vquy-BRIG_GEN_P_TNADAH.png
+
+[2026-06-26T12:01:03.917Z] Request URL: local-media://courses/Course-15/AIR%20CDRE%20CE%20ARORIODE.png
+[2026-06-26T12:01:03.917Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/AIR CDRE CE ARORIODE.png
+[2026-06-26T12:01:03.917Z] File exists: true
+[2026-06-26T12:01:03.917Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/AIR CDRE CE ARORIODE.png
+
+[2026-06-26T12:01:03.918Z] Request URL: local-media://courses/Course-15/BRIG%20GEN%20G%20AUDU.png
+[2026-06-26T12:01:03.918Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/BRIG GEN G AUDU.png
+[2026-06-26T12:01:03.918Z] File exists: true
+[2026-06-26T12:01:03.918Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/BRIG GEN G AUDU.png
+
+[2026-06-26T12:01:03.919Z] Request URL: local-media://courses/Course-15/CDRE%20MF%20DANIEL.png
+[2026-06-26T12:01:03.919Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/CDRE MF DANIEL.png
+[2026-06-26T12:01:03.919Z] File exists: true
+[2026-06-26T12:01:03.919Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/CDRE MF DANIEL.png
+
+[2026-06-26T12:01:03.920Z] Request URL: local-media://courses/Course-16/Cdre%20O0%20OLAWUMI.png
+[2026-06-26T12:01:03.920Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Cdre O0 OLAWUMI.png
+[2026-06-26T12:01:03.920Z] File exists: true
+[2026-06-26T12:01:03.920Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Cdre O0 OLAWUMI.png
+
+[2026-06-26T12:01:03.921Z] Request URL: local-media://courses/Course-15/AIR%20CDRE%20I%20SALIHU.png
+[2026-06-26T12:01:03.921Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/AIR CDRE I SALIHU.png
+[2026-06-26T12:01:03.921Z] File exists: true
+[2026-06-26T12:01:03.921Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/AIR CDRE I SALIHU.png
+
+[2026-06-26T12:01:03.921Z] Request URL: local-media://courses/Course-15/CDRE%20DJ%20EZEOBA.png
+[2026-06-26T12:01:03.921Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/CDRE DJ EZEOBA.png
+[2026-06-26T12:01:03.921Z] File exists: true
+[2026-06-26T12:01:03.921Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/CDRE DJ EZEOBA.png
+
+[2026-06-26T12:01:03.922Z] Request URL: local-media://courses/Course-16/Air%20Commodore%20Michael%20NSE%20Ekwere.png
+[2026-06-26T12:01:03.922Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Air Commodore Michael NSE Ekwere.png
+[2026-06-26T12:01:03.922Z] File exists: true
+[2026-06-26T12:01:03.922Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Air Commodore Michael NSE Ekwere.png
+
+[2026-06-26T12:01:03.922Z] Request URL: local-media://courses/Course-15/AIR%20CDRE%20DA%20ASHEBU.png
+[2026-06-26T12:01:03.922Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/AIR CDRE DA ASHEBU.png
+[2026-06-26T12:01:03.922Z] File exists: true
+[2026-06-26T12:01:03.922Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/AIR CDRE DA ASHEBU.png
+
+[2026-06-26T12:01:03.922Z] Request URL: local-media://courses/Course-3/Air%20Commodore%20GO%20Agboneni.png
+[2026-06-26T12:01:03.922Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-3/Air Commodore GO Agboneni.png
+[2026-06-26T12:01:03.922Z] File exists: true
+[2026-06-26T12:01:03.922Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-3/Air Commodore GO Agboneni.png
+
+[2026-06-26T12:01:03.922Z] Request URL: local-media://courses/Course-6/Air%20Commodore%20Joseph%20Okoiye.png
+[2026-06-26T12:01:03.922Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Air Commodore Joseph Okoiye.png
+[2026-06-26T12:01:03.922Z] File exists: true
+[2026-06-26T12:01:03.922Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Air Commodore Joseph Okoiye.png
+
+[2026-06-26T12:01:03.923Z] Request URL: local-media://courses/Course-6/Major%20General%20John%20Idankpo%20Igoche.png
+[2026-06-26T12:01:03.923Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Major General John Idankpo Igoche.png
+[2026-06-26T12:01:03.923Z] File exists: true
+[2026-06-26T12:01:03.923Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Major General John Idankpo Igoche.png
+
+[2026-06-26T12:01:03.923Z] Request URL: local-media://courses/Course-6/Commodore%20Babatunde%20Ogundele.png
+[2026-06-26T12:01:03.923Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Commodore Babatunde Ogundele.png
+[2026-06-26T12:01:03.923Z] File exists: true
+[2026-06-26T12:01:03.923Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Commodore Babatunde Ogundele.png
+
+[2026-06-26T12:01:03.923Z] Request URL: local-media://courses/Course-6/Commodore%20Amos%20Gbedejo%20Adedeji.png
+[2026-06-26T12:01:03.923Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Commodore Amos Gbedejo Adedeji.png
+[2026-06-26T12:01:03.923Z] File exists: true
+[2026-06-26T12:01:03.923Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Commodore Amos Gbedejo Adedeji.png
+
+[2026-06-26T12:01:03.924Z] Request URL: local-media://courses/Course-6/Brig-General%20David%20Olanrewaju%20Enahoro.png
+[2026-06-26T12:01:03.924Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Brig-General David Olanrewaju Enahoro.png
+[2026-06-26T12:01:03.924Z] File exists: true
+[2026-06-26T12:01:03.924Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Brig-General David Olanrewaju Enahoro.png
+
+[2026-06-26T12:01:03.924Z] Request URL: local-media://courses/Course-5/Air%20Commodore%20AO%20Ogundana.png
+[2026-06-26T12:01:03.924Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-5/Air Commodore AO Ogundana.png
+[2026-06-26T12:01:03.924Z] File exists: true
+[2026-06-26T12:01:03.924Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-5/Air Commodore AO Ogundana.png
+
+[2026-06-26T12:01:03.924Z] Request URL: local-media://courses/Course-3/BRIG%20GEN%20G%20ABDULKADIR.png
+[2026-06-26T12:01:03.924Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-3/BRIG GEN G ABDULKADIR.png
+[2026-06-26T12:01:03.924Z] File exists: true
+[2026-06-26T12:01:03.924Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-3/BRIG GEN G ABDULKADIR.png
+
+[2026-06-26T12:01:03.924Z] Request URL: local-media://courses/Course-2/COL%20IBA%20YELLOW%20DUKE.png
+[2026-06-26T12:01:03.924Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-2/COL IBA YELLOW DUKE.png
+[2026-06-26T12:01:03.924Z] File exists: true
+[2026-06-26T12:01:03.924Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-2/COL IBA YELLOW DUKE.png
+
+[2026-06-26T12:01:03.925Z] Request URL: local-media://courses/Course-6/Commodore%20Victor%20Oladiran%20Laseinde.png
+[2026-06-26T12:01:03.925Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Commodore Victor Oladiran Laseinde.png
+[2026-06-26T12:01:03.925Z] File exists: true
+[2026-06-26T12:01:03.925Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Commodore Victor Oladiran Laseinde.png
+
+[2026-06-26T12:01:03.925Z] Request URL: local-media://courses/Course-1/BRIG%20GEN%20S%20MOMAH.png
+[2026-06-26T12:01:03.925Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-1/BRIG GEN S MOMAH.png
+[2026-06-26T12:01:03.925Z] File exists: true
+[2026-06-26T12:01:03.925Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-1/BRIG GEN S MOMAH.png
+
+[2026-06-26T12:01:03.925Z] Request URL: local-media://ndc-media/images/1781153538898-qjejfg-BRIG_GEN_S_MOMAH.png
+[2026-06-26T12:01:03.925Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781153538898-qjejfg-BRIG_GEN_S_MOMAH.png
+[2026-06-26T12:01:03.925Z] File exists: true
+[2026-06-26T12:01:03.925Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781153538898-qjejfg-BRIG_GEN_S_MOMAH.png
+
+[2026-06-26T12:01:03.925Z] Request URL: local-media://ndc-media/images/1781387050820-twxy7m-CDRE_O_GEORGE.png
+[2026-06-26T12:01:03.925Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781387050820-twxy7m-CDRE_O_GEORGE.png
+[2026-06-26T12:01:03.925Z] File exists: true
+[2026-06-26T12:01:03.925Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781387050820-twxy7m-CDRE_O_GEORGE.png
+
+[2026-06-26T12:01:03.925Z] Request URL: local-media://ndc-media/images/1781153750485-ii4bo9-AIR_CDRE_EI_OMBU.png
+[2026-06-26T12:01:03.925Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781153750485-ii4bo9-AIR_CDRE_EI_OMBU.png
+[2026-06-26T12:01:03.925Z] File exists: true
+[2026-06-26T12:01:03.925Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781153750485-ii4bo9-AIR_CDRE_EI_OMBU.png
+
+[2026-06-26T12:01:03.926Z] Request URL: local-media://ndc-media/images/1781153678286-nhmk48-COL_EF_OLUTUMOGUN.png
+[2026-06-26T12:01:03.926Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781153678286-nhmk48-COL_EF_OLUTUMOGUN.png
+[2026-06-26T12:01:03.926Z] File exists: true
+[2026-06-26T12:01:03.926Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781153678286-nhmk48-COL_EF_OLUTUMOGUN.png
+
+[2026-06-26T12:01:03.926Z] Request URL: local-media://ndc-media/images/1781386991611-b7n1pv-COL_RD_VELLACOTT_OBE.png
+[2026-06-26T12:01:03.926Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781386991611-b7n1pv-COL_RD_VELLACOTT_OBE.png
+[2026-06-26T12:01:03.926Z] File exists: true
+[2026-06-26T12:01:03.926Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781386991611-b7n1pv-COL_RD_VELLACOTT_OBE.png
+
+[2026-06-26T12:01:03.926Z] Request URL: local-media://ndc-media/images/1781386944578-18xwkt-CAPT_CHRIS_ELLISON__ROYAL_NAVY_.png
+[2026-06-26T12:01:03.926Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781386944578-18xwkt-CAPT_CHRIS_ELLISON__ROYAL_NAVY_.png
+[2026-06-26T12:01:03.926Z] File exists: true
+[2026-06-26T12:01:03.926Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781386944578-18xwkt-CAPT_CHRIS_ELLISON__ROYAL_NAVY_.png
+
+[2026-06-26T12:01:03.926Z] Request URL: local-media://ndc-media/images/1781387110740-kosres-GP_CAPT_DELVE.png
+[2026-06-26T12:01:03.926Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781387110740-kosres-GP_CAPT_DELVE.png
+[2026-06-26T12:01:03.926Z] File exists: true
+[2026-06-26T12:01:03.926Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781387110740-kosres-GP_CAPT_DELVE.png
+
+[2026-06-26T12:01:03.926Z] Request URL: local-media://courses/Course-1/BRIG%20GEN%20P%20TNADAH.png
+[2026-06-26T12:01:03.926Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-1/BRIG GEN P TNADAH.png
+[2026-06-26T12:01:03.926Z] File exists: true
+[2026-06-26T12:01:03.926Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-1/BRIG GEN P TNADAH.png
+
+[2026-06-26T12:01:03.927Z] Request URL: local-media://courses/Course-1/AIR%20CDRE%20EI%20OMBU.png
+[2026-06-26T12:01:03.927Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-1/AIR CDRE EI OMBU.png
+[2026-06-26T12:01:03.927Z] File exists: true
+[2026-06-26T12:01:03.927Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-1/AIR CDRE EI OMBU.png
+
+[2026-06-26T12:01:03.927Z] Request URL: local-media://courses/Course-6/Ambassador%20Edward%20Martins.png
+[2026-06-26T12:01:03.927Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Ambassador Edward Martins.png
+[2026-06-26T12:01:03.927Z] File exists: true
+[2026-06-26T12:01:03.927Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-6/Ambassador Edward Martins.png
+
+[2026-06-26T12:11:21.351Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:11:21.351Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:11:21.351Z] File exists: true
+[2026-06-26T12:11:21.351Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:11:41.916Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:11:41.916Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:11:41.916Z] File exists: true
+[2026-06-26T12:11:41.916Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:12:50.792Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:12:50.792Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:12:50.792Z] File exists: true
+[2026-06-26T12:12:50.792Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:12:56.225Z] Request URL: local-media://courses/Course-17/AIR%20CDRE%20AK%20FAMUYIWA.png
+[2026-06-26T12:12:56.225Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/AIR CDRE AK FAMUYIWA.png
+[2026-06-26T12:12:56.225Z] File exists: true
+[2026-06-26T12:12:56.225Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/AIR CDRE AK FAMUYIWA.png
+
+[2026-06-26T12:12:56.226Z] Request URL: local-media://courses/Course-17/BRIG%20GEN%20RT%20UTSAHA.png
+[2026-06-26T12:12:56.226Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN RT UTSAHA.png
+[2026-06-26T12:12:56.226Z] File exists: true
+[2026-06-26T12:12:56.226Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN RT UTSAHA.png
+
+[2026-06-26T12:12:56.226Z] Request URL: local-media://courses/Course-17/CDRE%20SA%20YAHAYA.png
+[2026-06-26T12:12:56.226Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/CDRE SA YAHAYA.png
+[2026-06-26T12:12:56.226Z] File exists: true
+[2026-06-26T12:12:56.226Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/CDRE SA YAHAYA.png
+
+[2026-06-26T12:12:56.227Z] Request URL: local-media://courses/Course-17/BRIG%20GEN%20COCHIMANA.png
+[2026-06-26T12:12:56.227Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN COCHIMANA.png
+[2026-06-26T12:12:56.227Z] File exists: true
+[2026-06-26T12:12:56.227Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN COCHIMANA.png
+
+[2026-06-26T12:12:56.228Z] Request URL: local-media://courses/Course-17/BRIG%20GEN%20MS%20USMAN.png
+[2026-06-26T12:12:56.228Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN MS USMAN.png
+[2026-06-26T12:12:56.228Z] File exists: true
+[2026-06-26T12:12:56.228Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-17/BRIG GEN MS USMAN.png
+
+[2026-06-26T12:12:56.229Z] Request URL: local-media://courses/Course-16/Cdre%20AI%20OYAGHA.png
+[2026-06-26T12:12:56.229Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Cdre AI OYAGHA.png
+[2026-06-26T12:12:56.229Z] File exists: true
+[2026-06-26T12:12:56.229Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Cdre AI OYAGHA.png
+
+[2026-06-26T12:12:56.230Z] Request URL: local-media://courses/Course-16/Air%20Cdre%20SB%20ABUBAKAR.png
+[2026-06-26T12:12:56.230Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Air Cdre SB ABUBAKAR.png
+[2026-06-26T12:12:56.230Z] File exists: true
+[2026-06-26T12:12:56.230Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Air Cdre SB ABUBAKAR.png
+
+[2026-06-26T12:12:56.231Z] Request URL: local-media://courses/Course-16/Brig%20Gen%20TT%20WAYA.png
+[2026-06-26T12:12:56.231Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Brig Gen TT WAYA.png
+[2026-06-26T12:12:56.231Z] File exists: true
+[2026-06-26T12:12:56.231Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Brig Gen TT WAYA.png
+
+[2026-06-26T12:12:56.232Z] Request URL: local-media://courses/Course-16/Cdre%20JO%20OLUTOYIN.png
+[2026-06-26T12:12:56.232Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Cdre JO OLUTOYIN.png
+[2026-06-26T12:12:56.232Z] File exists: true
+[2026-06-26T12:12:56.232Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Cdre JO OLUTOYIN.png
+
+[2026-06-26T12:12:56.233Z] Request URL: local-media://courses/Course-16/Air%20Cdre%20IA%20BALOGUN.png
+[2026-06-26T12:12:56.233Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Air Cdre IA BALOGUN.png
+[2026-06-26T12:12:56.233Z] File exists: true
+[2026-06-26T12:12:56.233Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-16/Air Cdre IA BALOGUN.png
+
+[2026-06-26T12:12:56.234Z] Request URL: local-media://ndc-media/images/1781154484927-4atp9y-IMG-20260410-WA0017.jpg
+[2026-06-26T12:12:56.234Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781154484927-4atp9y-IMG-20260410-WA0017.jpg
+[2026-06-26T12:12:56.234Z] File exists: true
+[2026-06-26T12:12:56.234Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781154484927-4atp9y-IMG-20260410-WA0017.jpg
+
+[2026-06-26T12:12:56.235Z] Request URL: local-media://courses/Course-15/T%20LOKOSON.png
+[2026-06-26T12:12:56.235Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/T LOKOSON.png
+[2026-06-26T12:12:56.235Z] File exists: true
+[2026-06-26T12:12:56.235Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/courses/Course-15/T LOKOSON.png
+
+[2026-06-26T12:12:56.238Z] Request URL: local-media://ndc-media/images/1781386889700-96vquy-BRIG_GEN_P_TNADAH.png
+[2026-06-26T12:12:56.238Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781386889700-96vquy-BRIG_GEN_P_TNADAH.png
+[2026-06-26T12:12:56.238Z] File exists: true
+[2026-06-26T12:12:56.238Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781386889700-96vquy-BRIG_GEN_P_TNADAH.png
+
+[2026-06-26T12:15:06.302Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:15:06.302Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:15:06.302Z] File exists: true
+[2026-06-26T12:15:06.302Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:15:23.252Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:15:23.252Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:15:23.252Z] File exists: true
+[2026-06-26T12:15:23.252Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:15:34.984Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:15:34.984Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:15:34.984Z] File exists: true
+[2026-06-26T12:15:34.984Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:15:55.980Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:15:55.980Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:15:55.980Z] File exists: true
+[2026-06-26T12:15:55.980Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:16:15.983Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:16:15.983Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:16:15.983Z] File exists: true
+[2026-06-26T12:16:15.983Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:16:35.988Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:16:35.988Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:16:35.988Z] File exists: true
+[2026-06-26T12:16:35.988Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:16:55.982Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:16:55.982Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:16:55.982Z] File exists: true
+[2026-06-26T12:16:55.982Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:17:05.979Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:17:05.979Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:17:05.979Z] File exists: true
+[2026-06-26T12:17:05.979Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:17:15.981Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:17:15.981Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:17:15.981Z] File exists: true
+[2026-06-26T12:17:15.981Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
+[2026-06-26T12:18:08.983Z] Request URL: local-media://ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:18:08.983Z] Resolved userPath: /Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+[2026-06-26T12:18:08.983Z] File exists: true
+[2026-06-26T12:18:08.983Z] Fetching URL: file:///Users/Kingsolo/projects/remix-of-ndc-honours-board/local_media/ndc-media/images/1781421045634-3se9jt-AHMAD.png
+
