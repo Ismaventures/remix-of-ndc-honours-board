@@ -52,8 +52,8 @@ const CARDS: {
   },
   {
     key: "fdc",
-    label: "DISTINGUISHED FELLOWS OF DEFENCE COLLEGE",
-    subtitle: "FDC",
+    label: "FDC+",
+    subtitle: "Distinguished Fellows of Defence College",
     icon: Award,
     color: "text-sky-600",
     cardGradient: "from-[#0e2d4a] via-[#133e66] to-[#195080]",
