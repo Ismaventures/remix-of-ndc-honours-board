@@ -1,11 +1,11 @@
 {
   "uploaded_files": {
-    "Course-1/AIR CDRE EI OMBU.png": "p-fwc-007",
-    "Course-1/BRIG GEN P TNADAH.png": "p-fwc-006",
-    "Course-1/BRIG GEN S MOMAH.png": "p-fwc-010",
-    "Course-1/CAPT CHRIS ELLISON (ROYAL NAVY).png": "p-allied-003",
-    "Course-1/COL RD VELLACOTT OBE.png": "p-allied-002",
-    "Course-1/GP CAPT DELVE.png": "p-allied-004",
+    "Course-1/AIR CDRE EI OMBU.png": "p-fwc-local-1-007",
+    "Course-1/BRIG GEN P TNADAH.png": "p-fwc-local-1-006",
+    "Course-1/BRIG GEN S MOMAH.png": "p-fwc-local-1-010",
+    "Course-1/CAPT CHRIS ELLISON (ROYAL NAVY).png": "p-allied-local-1-003",
+    "Course-1/COL RD VELLACOTT OBE.png": "p-allied-local-1-002",
+    "Course-1/GP CAPT DELVE.png": "p-allied-local-1-004",
     "Course-2/BRIG  GEN G ABDULKADIR.png": "p-fwc-local-2-014",
     "Course-2/CAPT VO LASEINDE.png": "p-fwc-local-2-019",
     "Course-2/COL IBA YELLOW DUKE.png": "p-fwc-local-2-017",
@@ -31,6 +31,8 @@
     "Course-15/CDRE MF DANIEL.png": "p-fwc-local-15-104",
     "Course-15/CDRE OO OLAWUMI.png": "p-fwc-local-15-105",
     "Course-15/T LOKOSON.png": "p-fdc-local-15-015",
+    "Course-16/AIR COMMODORE ALEX SABUNDU BADEH.png": "p-fdc-local-16-017",
+    "Course-16/AIR COMMODORE IBIDAPO SHOMADE.png": "p-fwc-local-16-111",
     "Course-16/Air Cdre IA BALOGUN.png": "p-fdc-local-16-027",
     "Course-16/Air Cdre SB ABUBAKAR.png": "p-fdc-local-16-020",
     "Course-16/Air Commodore Michael NSE Ekwere.png": "p-fwc-local-16-109",
@@ -59,8 +61,6 @@
     "Course-29/CDRE O0 SOYEMI.png": "p-fdc-local-29-199",
     "Course-29/CDRE OA ADELEKE.png": "p-fdc-local-29-217",
     "Course-29/CDRE PS ANABRABA.png": "p-fdc-local-29-201",
-    "Course-29/CDRE VB GBARANWI.png": "p-fdc-local-29-211",
-    "Course-16/AIR COMMODORE ALEX SABUNDU BADEH.png": "p-fdc-local-16-017",
-    "Course-16/AIR COMMODORE IBIDAPO SHOMADE.png": "p-fwc-local-16-111"
+    "Course-29/CDRE VB GBARANWI.png": "p-fdc-local-29-211"
   }
 }
