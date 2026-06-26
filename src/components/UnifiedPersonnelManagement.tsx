@@ -409,7 +409,10 @@ function PersonnelForm({
     personnel.forEach(p => {
       if (p.category === 'FWC' || p.category === 'FDC' || p.category === 'Allied') {
         let courseNum = null;
-        if (p.decoration) {
+        if (p.course) {
+          courseNum = p.course;
+        }
+        if (!courseNum && p.decoration) {
           let match = p.decoration.match(/CSE\s*(\d+)/i);
           if (match) {
             courseNum = parseInt(match[1], 10);
@@ -820,7 +823,10 @@ function PersonnelEditForm({
     personnel.forEach(p => {
       if (p.category === 'FWC' || p.category === 'FDC' || p.category === 'Allied') {
         let courseNum = null;
-        if (p.decoration) {
+        if (p.course) {
+          courseNum = p.course;
+        }
+        if (!courseNum && p.decoration) {
           let match = p.decoration.match(/CSE\s*(\d+)/i);
           if (match) {
             courseNum = parseInt(match[1], 10);

@@ -8,11 +8,14 @@ type PersonnelRow = {
   rank: string;
   category: string;
   service: string;
+  course?: number | null;
+  academic_year?: string | null;
   period_start: number;
   period_end: number;
   image_url: string | null;
   citation: string;
   decoration?: string | null;
+  biography_full?: string | null;
   seniority_order: number;
 };
 
@@ -75,11 +78,14 @@ const mapPersonnelToRow = (p: Personnel): PersonnelRow => ({
   rank: p.rank,
   category: p.category,
   service: p.service,
+  course: p.course ?? null,
+  academic_year: p.academicYear ?? null,
   period_start: p.periodStart,
   period_end: p.periodEnd,
   image_url: p.imageUrl ?? null,
   citation: p.citation,
   decoration: p.decoration ?? null,
+  biography_full: p.biographyFull ?? null,
   seniority_order: p.seniorityOrder,
 });
 
@@ -89,11 +95,14 @@ const mapRowToPersonnel = (row: PersonnelRow): Personnel => ({
   rank: row.rank,
   category: normalizeCategory(row.category),
   service: normalizeService(row.service),
+  course: row.course ?? undefined,
+  academicYear: row.academic_year ?? undefined,
   periodStart: row.period_start,
   periodEnd: row.period_end,
   imageUrl: row.image_url ?? undefined,
   citation: row.citation,
   decoration: row.decoration ?? undefined,
+  biographyFull: row.biography_full ?? undefined,
   seniorityOrder: row.seniority_order,
 });
 

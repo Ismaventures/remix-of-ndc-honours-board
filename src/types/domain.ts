@@ -31,11 +31,14 @@ export interface Personnel {
   rank: string;
   category: Category;
   service: Service;
+  course?: number;
+  academicYear?: string;
   periodStart: number;
   periodEnd: number;
   imageUrl?: string;
   citation: string;
   decoration?: string;
+  biographyFull?: string;
   seniorityOrder: number;
 }
 

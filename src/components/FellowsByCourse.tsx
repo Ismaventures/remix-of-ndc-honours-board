@@ -135,15 +135,20 @@ export function FellowsByCourse({
     fellows.forEach(person => {
       let courseNum = null;
 
-      // Try to parse CSE course number: "CSE X" or "CSE X/YYYY"
-      if (person.decoration) {
+      // Priority 1: Use course field directly from seed data
+      if (person.course) {
+        courseNum = person.course;
+      }
+
+      // Priority 2: Try to parse CSE course number: "CSE X" or "CSE X/YYYY"
+      if (!courseNum && person.decoration) {
         let match = person.decoration.match(/CSE\s*(\d+)/i);
         if (match) {
           courseNum = parseInt(match[1], 10);
         }
       }
 
-      // Try to parse NWC course number: "NWC Course X"
+      // Priority 3: Try to parse NWC course number: "NWC Course X"
       if (!courseNum && person.decoration) {
         let match = person.decoration.match(/NWC\s+Course\s+(\d+)/i);
         if (match) {
@@ -151,7 +156,7 @@ export function FellowsByCourse({
         }
       }
 
-      // Fallback: calculate course number based on periodStart (starts with Course 1 in 1992)
+      // Priority 4: Fallback: calculate course number based on periodStart (starts with Course 1 in 1992)
       if (!courseNum && person.periodStart) {
         courseNum = person.periodStart - 1991;
       }

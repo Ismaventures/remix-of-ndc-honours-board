@@ -359,21 +359,70 @@ const fdc = [
   { serial: 235, rank: "Cdre", name: "SA Yahaya", periodStart: "2022", periodEnd: "2022" },
 ];
 
+const COURSE_MAP = [
+  { course: 1, startYear: 1992, endYear: 1993 },
+  { course: 2, startYear: 1993, endYear: 1994 },
+  { course: 3, startYear: 1994, endYear: 1995 },
+  { course: 4, startYear: 1995, endYear: 1996 },
+  { course: 5, startYear: 1996, endYear: 1997 },
+  { course: 6, startYear: 1997, endYear: 1998 },
+  { course: 7, startYear: 1998, endYear: 1999 },
+  { course: 8, startYear: 1999, endYear: 2000 },
+  { course: 9, startYear: 2000, endYear: 2001 },
+  { course: 10, startYear: 2001, endYear: 2002 },
+  { course: 11, startYear: 2002, endYear: 2003 },
+  { course: 12, startYear: 2003, endYear: 2004 },
+  { course: 13, startYear: 2004, endYear: 2005 },
+  { course: 14, startYear: 2005, endYear: 2006 },
+  { course: 15, startYear: 2006, endYear: 2007 },
+  { course: 16, startYear: 2007, endYear: 2008 },
+  { course: 17, startYear: 2008, endYear: 2009 },
+  { course: 18, startYear: 2009, endYear: 2010 },
+  { course: 19, startYear: 2010, endYear: 2011 },
+  { course: 20, startYear: 2011, endYear: 2012 },
+  { course: 21, startYear: 2012, endYear: 2013 },
+  { course: 22, startYear: 2013, endYear: 2014 },
+  { course: 23, startYear: 2014, endYear: 2015 },
+  { course: 24, startYear: 2015, endYear: 2016 },
+  { course: 25, startYear: 2016, endYear: 2017 },
+  { course: 26, startYear: 2017, endYear: 2018 },
+  { course: 27, startYear: 2018, endYear: 2019 },
+  { course: 28, startYear: 2019, endYear: 2020 },
+  { course: 29, startYear: 2020, endYear: 2021 },
+  { course: 30, startYear: 2021, endYear: 2022 },
+  { course: 31, startYear: 2022, endYear: 2023 },
+  { course: 32, startYear: 2023, endYear: 2024 },
+  { course: 33, startYear: 2024, endYear: 2025 },
+  { course: 34, startYear: 2025, endYear: 2026 },
+];
+
+function getCourseInfo(periodStart) {
+  const match = COURSE_MAP.find(c => c.startYear === parseInt(periodStart));
+  if (match) return { course: match.course, academicYear: `${match.startYear}–${match.endYear}` };
+  const fallback = parseInt(periodStart) - 1991;
+  return { course: fallback, academicYear: `${periodStart}–${parseInt(periodStart) + 1}` };
+}
+
 function toPersonnel(list, category, seniorityStart) {
-  return list.map((item, i) => ({
-    id: `${category.toLowerCase()}-${item.serial}`,
-    name: item.name,
-    rank: item.rank,
-    service: item.rank.includes("Air Cdre") ? "Nigerian Air Force" : item.rank.includes("Cdre") ? "Nigerian Navy" : item.rank.includes("Amb") || item.rank.includes("Dr") || item.rank.includes("Prof") ? "Civilian" : "Nigerian Army",
-    category: category,
-    periodStart: item.periodStart,
-    periodEnd: item.periodEnd,
-    seniorityOrder: seniorityStart + i,
-    decoration: "",
-    citation: "",
-    biographyFull: "",
-    imageUrl: "",
-  }));
+  return list.map((item, i) => {
+    const { course, academicYear } = getCourseInfo(item.periodStart);
+    return {
+      id: `${category.toLowerCase()}-${item.serial}`,
+      name: item.name,
+      rank: item.rank,
+      service: item.rank.includes("Air Cdre") ? "Nigerian Air Force" : item.rank.includes("Cdre") ? "Nigerian Navy" : item.rank.includes("Amb") || item.rank.includes("Dr") || item.rank.includes("Prof") ? "Civilian" : "Nigerian Army",
+      category: category,
+      course: course,
+      academicYear: academicYear,
+      periodStart: item.periodStart,
+      periodEnd: item.periodEnd,
+      seniorityOrder: seniorityStart + i,
+      decoration: "",
+      citation: "",
+      biographyFull: "",
+      imageUrl: "",
+    };
+  });
 }
 
 const existing = JSON.parse(fs.readFileSync('public/seed-data.json', 'utf8'));

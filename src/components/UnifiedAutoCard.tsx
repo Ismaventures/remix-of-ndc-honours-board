@@ -22,7 +22,9 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
   const mainName = isPersonnel ? `${person.rank} ${person.name}` : visit.name;
   const subTitle = isPersonnel ? person.category : "Distinguished Visit";
   const tertiaryTitle = isPersonnel 
-    ? `${person.service} • ${person.periodStart} - ${person.periodEnd}`
+    ? (person.academicYear 
+        ? `${person.service} • Course ${person.course}/${person.academicYear.split('–')[0]}`
+        : `${person.service} • ${person.periodStart} - ${person.periodEnd}`)
     : `${visit.country} • ${visit.date}`;
   
   const citation = isPersonnel ? person.citation : visit.description;

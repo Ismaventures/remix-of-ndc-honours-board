@@ -91,6 +91,17 @@ type ContinuousItem =
 
 const getCourseDesignation = (person: Personnel): string => {
   const decoration = person.decoration?.trim() ?? "";
+
+  // Priority 1: Use academicYear from seed data
+  if (person.academicYear && person.course) {
+    return `Course ${person.course}/${person.academicYear.split('–')[0]}`;
+  }
+
+  // Priority 2: Use course field from seed data
+  if (person.course) {
+    return `Course ${person.course}`;
+  }
+
   const cseMatch = decoration.match(/CSE\s*(\d+)\s*\/\s*(\d{4})/i);
   if (cseMatch) return `CSE ${cseMatch[1]}/${cseMatch[2]}`;
 
