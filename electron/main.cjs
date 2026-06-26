@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, protocol, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
+const { pathToFileURL } = require('url');
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 const APP_PATH = app.getAppPath();
@@ -439,19 +440,19 @@ app.whenReady().then(() => {
 
     // Try writable userData directory first
     if (fs.existsSync(userPath)) {
-      return net.fetch('file://' + userPath);
+      return net.fetch(pathToFileURL(userPath).href);
     }
 
     // Fallback to read-only bundled assets inside the app package
     if (!isDev) {
       const bundledPath = path.join(APP_PATH, 'local_media', decodedPath);
       if (fs.existsSync(bundledPath)) {
-        return net.fetch('file://' + bundledPath);
+        return net.fetch(pathToFileURL(bundledPath).href);
       }
     }
 
     // Default: still attempt userData path (will 404 naturally)
-    return net.fetch('file://' + userPath);
+    return net.fetch(pathToFileURL(userPath).href);
   });
 
   // In production, intercept file:// requests for absolute paths like /images/...
