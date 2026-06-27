@@ -6,13 +6,6 @@ import { useAudioStore } from '@/hooks/useAudioStore';
 import { playPortraitPreloadSound } from '@/lib/playPortraitPreloadSound';
 import { cn } from '@/lib/utils';
 
-export const PORTRAIT_CARD_ACCENT = (
-  <div className="h-1.5 flex shrink-0">
-    <div className="flex-1 bg-[#FF0000]" />
-    <div className="flex-1 bg-[#00B0F0]" />
-  </div>
-);
-
 function PortraitCardPreload({ isLightMode }: { isLightMode: boolean }) {
   return (
     <div
@@ -83,22 +76,14 @@ export function PersonnelPortraitCard({
 
   const showPreload = urlPending || (Boolean(resolvedImageUrl) && !imageReady);
   const showPermanentPlaceholder = !urlPending && !resolvedImageUrl;
-  const serviceColor = (() => {
-    const s = (person.service || "").toLowerCase();
-    if (s.includes("army")) return "#FF0000";
-    if (s.includes("navy")) return "#002060";
-    if (s.includes("air force") || s.includes("airforce")) return "#00B0F0";
-    return "tri-color";
-  })();
 
   return (
     <div
       className={cn(
-        'group flex flex-col overflow-hidden cursor-pointer transition-all duration-300 animate-fade-up',
-        'rounded-2xl hover:shadow-[0_14px_36px_rgba(0,32,96,0.16)] hover:-translate-y-1',
+        'group relative overflow-hidden rounded-2xl border-2 text-left flex flex-col transition-all duration-300 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 w-full shadow-lg animate-fade-up',
         isLightMode
-          ? 'bg-white border border-slate-200/80 shadow-[0_6px_20px_rgba(0,32,96,0.08)]'
-          : 'bg-slate-800/95 border border-slate-600/70 shadow-[0_8px_24px_rgba(0,0,0,0.28)]'
+          ? 'bg-white border-slate-200 hover:shadow-xl hover:border-slate-300'
+          : 'bg-slate-950 border-slate-800 hover:shadow-2xl hover:border-slate-700'
       )}
       style={{ animationDelay: `${Math.min(index * 0.05, 0.4)}s` }}
       onClick={onSelect}
@@ -111,76 +96,91 @@ export function PersonnelPortraitCard({
         }
       }}
     >
-      {serviceColor === "tri-color" ? (
-        PORTRAIT_CARD_ACCENT
-      ) : (
-        <div
-          className="h-1.5 w-full shrink-0"
-          style={{ backgroundColor: serviceColor }}
-        />
-      )}
+      {/* Top tri-service strip */}
+      <div className="absolute inset-x-0 top-0 h-[4px] flex z-20 rounded-t-2xl">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#C0392B]" />
+        <div className="flex-1 bg-[#00B0F0]" />
+      </div>
 
-      <div
-        className={cn(
-          'relative aspect-[4/5] w-full overflow-hidden flex items-center justify-center p-2.5 md:p-3',
-          isLightMode ? 'bg-[#f3f4f6]' : 'bg-slate-700'
-        )}
-      >
-        {showPreload && <PortraitCardPreload isLightMode={isLightMode} />}
+      {/* Main card body */}
+      <div className="p-3 pb-0 flex-1 flex flex-col w-full">
 
-        {showPermanentPlaceholder && !showPreload && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Shield
-              strokeWidth={1.15}
+        {/* Photo frame with red/white border */}
+        <div className="w-full aspect-[3/4] rounded-lg border-[3px] border-white relative overflow-hidden shadow-md bg-white">
+          {/* Inner decorative border */}
+          <div className="absolute inset-[3px] border border-slate-200 rounded pointer-events-none z-10" />
+
+          {showPreload && <PortraitCardPreload isLightMode={isLightMode} />}
+
+          {showPermanentPlaceholder && !showPreload && (
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+              <Shield
+                strokeWidth={1.15}
+                className="h-16 w-16 text-slate-300 animate-pulse"
+              />
+            </div>
+          )}
+
+          {resolvedImageUrl && (
+            <img
+              src={resolvedImageUrl}
+              alt={person.name}
               className={cn(
-                'h-[4.5rem] w-[4.5rem] md:h-20 md:w-20',
-                isLightMode
-                  ? 'text-[#5B9BD5]/40 fill-[#ADD8E6]/15'
-                  : 'text-[#00B0F0]/35 fill-[#002060]/20'
+                'relative z-[1] w-full h-full object-cover object-top transition-opacity duration-500 ease-out',
+                imageReady ? 'opacity-100' : 'opacity-0'
               )}
+              onLoad={() => setImageReady(true)}
+              onError={() => setImageReady(true)}
             />
-          </div>
-        )}
+          )}
+        </div>
 
-        {resolvedImageUrl && (
-          <img
-            src={resolvedImageUrl}
-            alt={person.name}
-            className={cn(
-              'relative z-[1] max-w-full max-h-full w-auto h-auto object-contain transition-opacity duration-500 ease-out',
-              imageReady ? 'opacity-100' : 'opacity-0'
-            )}
-            onLoad={() => setImageReady(true)}
-            onError={() => setImageReady(true)}
-          />
+        {/* Name and title below photo */}
+        <div className="text-center mt-2.5 px-1">
+          <h3 className="text-[11px] sm:text-xs font-bold text-slate-800 leading-tight">
+            {person.rank && `${person.rank} `}{person.name}
+          </h3>
+          {person.title && (
+            <p className="text-[9px] text-slate-500 mt-0.5 italic leading-tight line-clamp-2">
+              {person.title}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Navy blue info box */}
+      <div className="mx-3 mt-2 mb-1 bg-[#002060] rounded-lg p-3 text-center shadow-[inset_0_0_20px_rgba(0,0,0,0.3)]">
+        {person.rank && (
+          <p className="text-[#FFD700] text-xs md:text-sm font-serif font-extrabold leading-tight">
+            {person.rank}
+          </p>
+        )}
+        <p className="text-[#FFD700] text-xs md:text-sm font-serif font-extrabold leading-tight">
+          {person.name}
+        </p>
+
+        <p className="text-white/70 text-[8px] md:text-[9px] font-bold tracking-widest uppercase mt-1.5">
+          {person.service || (person.category === 'FWC' ? 'Nigerian Armed Forces' : 'Nigerian Armed Forces')}
+        </p>
+
+        {person.periodStart && (
+          <p className="text-white/70 text-[8px] md:text-[9px] font-bold tracking-widest uppercase mt-0.5">
+            YEAR: {person.periodStart} – {person.periodEnd || 'PRESENT'}
+          </p>
         )}
       </div>
 
-      <div
-        className={cn(
-          'px-2 py-2.5 border-t',
-          isLightMode ? 'bg-white border-slate-100' : 'bg-slate-900/80 border-slate-700/80'
-        )}
-      >
-        <p
-          className={cn(
-            'text-[10px] md:text-xs font-bold text-center uppercase leading-snug tracking-wide line-clamp-2',
-            isLightMode ? 'text-[#002060]' : 'text-white'
-          )}
-        >
-          {person.rank && `${person.rank} `}
-          {person.name}
-        </p>
-        {person.periodStart && (
-          <p
-            className={cn(
-              'text-[8px] md:text-[9px] text-center leading-snug tracking-wide mt-0.5',
-              isLightMode ? 'text-slate-600' : 'text-white/60'
-            )}
-          >
-            {person.periodStart}–{person.periodEnd || ''}
-          </p>
-        )}
+      {/* Tap to open */}
+      <div className="py-2.5 text-center text-[9px] sm:text-[10px] font-extrabold tracking-wider text-sky-600 uppercase">
+        TAP TO OPEN FULL DETAILS
+      </div>
+
+      {/* Bottom tri-service strip */}
+      <div className="absolute inset-x-0 bottom-0 h-[4px] flex z-20 rounded-b-2xl">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#C0392B]" />
+        <div className="flex-1 bg-[#00B0F0]" />
       </div>
     </div>
   );
@@ -218,7 +218,6 @@ export function PersonnelPortraitGrid({
   const loadedCount = readyIds.size;
   const totalCount = personnel.length;
   const allLoaded = totalCount > 0 && loadedCount >= totalCount;
-  const loadProgress = totalCount > 0 ? (loadedCount / totalCount) * 100 : 0;
 
   useEffect(() => {
     if (!enablePreloadSound || !allLoaded || soundPlayedRef.current) return;
@@ -228,8 +227,7 @@ export function PersonnelPortraitGrid({
 
   return (
     <div className="relative space-y-3">
-
-      <div className="relative z-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+      <div className="relative z-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-6">
         {personnel.map((person, index) => (
           <PersonnelPortraitCard
             key={person.id}
