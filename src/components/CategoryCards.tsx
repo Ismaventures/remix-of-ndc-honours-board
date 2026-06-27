@@ -34,8 +34,8 @@ const CARDS: {
 }[] = [
   {
     key: "fwc",
-    label: "FWC+",
-    subtitle: "Distinguished Fellows of War College",
+    label: "DISTINGUISHED FELLOWS",
+    subtitle: "Distinguished Fellows of War College (FWC+)",
     icon: Shield,
     color: "text-blue-600",
     cardGradient: "from-[#0f2c4e] via-[#14365d] to-[#1a4373]",
@@ -43,8 +43,8 @@ const CARDS: {
   },
   {
     key: "fdc",
-    label: "FDC+",
-    subtitle: "Distinguished Fellows of Defence College",
+    label: "DISTINGUISHED FELLOWS",
+    subtitle: "Distinguished Fellows of Defence College (FDC+)",
     icon: Award,
     color: "text-sky-600",
     cardGradient: "from-[#0e2d4a] via-[#133e66] to-[#195080]",
@@ -95,13 +95,13 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                     {/* Top tri-service accent — refined thin line */}
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-[5px] flex z-20">
                       <div className="flex-1 bg-[#002060]" />
-                      <div className="flex-1 bg-[#FF0000]" />
+                      <div className="flex-1 bg-[#C0392B]" />
                       <div className="flex-1 bg-[#00B0F0]" />
                     </div>
                     {/* Bottom tri-service accent */}
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[4px] flex z-20 opacity-80">
                       <div className="flex-1 bg-[#002060]" />
-                      <div className="flex-1 bg-[#FF0000]" />
+                      <div className="flex-1 bg-[#C0392B]" />
                       <div className="flex-1 bg-[#00B0F0]" />
                     </div>
 
@@ -150,18 +150,20 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                       {/* Upper Case Text Group */}
                       <div className="flex flex-col items-center">
                         <h3
-                          className={`text-base sm:text-lg lg:text-xl font-bold font-serif leading-tight mb-2 tracking-wide uppercase transition-colors text-center ${
+                          className={`text-lg sm:text-xl lg:text-2xl leading-tight mb-2 tracking-wide uppercase transition-colors text-center ${
                             isLightMode
                               ? "text-[#0f2a5f]"
                               : "text-white drop-shadow-md"
                           }`}
+                          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 700 }}
                         >
                           {card.label}
                         </h3>
                         <p
-                          className={`text-[10px] sm:text-xs tracking-[0.2em] uppercase font-semibold text-center ${
+                          className={`text-[10px] sm:text-xs tracking-[0.15em] uppercase text-center ${
                             isLightMode ? "text-slate-400" : "text-white/60"
                           }`}
+                          style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600 }}
                         >
                           {card.subtitle}
                         </p>

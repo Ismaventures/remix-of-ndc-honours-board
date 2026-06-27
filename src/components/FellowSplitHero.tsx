@@ -10,10 +10,6 @@ interface FellowSplitHeroProps {
 }
 
 function getCategoryLabel(category: Category) {
-  if (category === 'FWC') return 'FELLOW OF WAR COLLEGE';
-  if (category === 'FDC') return 'FELLOW OF NATIONAL DEFENCE COLLEGE';
-  if (category === 'Allied') return 'INTERNATIONAL ALLIED OFFICER';
-  if (category === 'Directing Staff') return 'DIRECTING STAFF';
   return 'DISTINGUISHED FELLOW';
 }
 
@@ -45,14 +41,14 @@ export function FellowSplitHero({ person, category, courseDesignation }: FellowS
           {/* Category label with decorative lines */}
           <div className="flex items-center gap-4 mb-4 w-full justify-center">
             <div className="h-[1px] w-20 bg-slate-300" />
-            <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-[#002060] font-bold">
+            <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-[#002060] font-bold" style={{ fontFamily: "'Manrope', sans-serif" }}>
               {categoryLabel}
             </span>
             <div className="h-[1px] w-20 bg-slate-300" />
           </div>
 
           {/* Rank + Name on same line — matches commandant style */}
-          <h2 className="text-2xl md:text-4xl font-serif font-extrabold mb-3 text-[#002060] uppercase tracking-wide text-center">
+          <h2 className="text-2xl md:text-4xl font-extrabold mb-3 text-[#002060] uppercase tracking-wide text-center" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
             {fullName}
           </h2>
 

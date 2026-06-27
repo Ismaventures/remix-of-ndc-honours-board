@@ -495,10 +495,10 @@ export function FellowsByCourse({
               </div>
 
               <h1 className={cn(
-                'text-xl md:text-2xl font-serif font-bold uppercase tracking-[0.08em] leading-tight',
+                'text-xl md:text-2xl font-bold uppercase tracking-[0.08em] leading-tight',
                 isLightMode ? 'text-[#002060]' : 'text-white'
-              )}>
-                {category === 'FWC' ? 'FELLOW OF WAR COLLEGE' : 'FELLOW OF NATIONAL DEFENCE COLLEGE'}
+              )} style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+                {category === 'FWC' ? 'DISTINGUISHED FELLOW OF WAR COLLEGE' : 'DISTINGUISHED FELLOW OF NATIONAL DEFENCE COLLEGE'}
               </h1>
 
               <div className="flex items-center justify-center gap-2 mt-2 mb-2">
