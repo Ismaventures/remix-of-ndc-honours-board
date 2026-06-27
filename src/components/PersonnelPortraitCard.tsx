@@ -139,13 +139,8 @@ export function PersonnelPortraitCard({
 
       {/* Navy blue info box */}
       <div className="mx-3 mt-2 mb-1 bg-[#002060] rounded-lg p-3 text-center shadow-[inset_0_0_20px_rgba(0,0,0,0.3)]">
-        {person.rank && (
-          <p className="text-[#FFD700] text-xs md:text-sm font-serif font-extrabold leading-tight">
-            {person.rank}
-          </p>
-        )}
-        <p className="text-[#FFD700] text-xs md:text-sm font-serif font-extrabold leading-tight">
-          {person.name}
+        <p className="text-[#FFD700] text-[11px] md:text-xs font-serif font-extrabold leading-tight whitespace-nowrap overflow-hidden text-ellipsis px-1">
+          {person.rank && `${person.rank} `}{person.name}
         </p>
 
         <p className="text-white/70 text-[8px] md:text-[9px] font-bold tracking-widest uppercase mt-1.5">
