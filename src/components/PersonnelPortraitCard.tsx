@@ -139,16 +139,16 @@ export function PersonnelPortraitCard({
 
       {/* Navy blue info box */}
       <div className="mx-3 mt-2 mb-1 bg-[#002060] rounded-lg p-3 text-center shadow-[inset_0_0_20px_rgba(0,0,0,0.3)]">
-        <p className="text-[#FFD700] text-[11px] md:text-xs font-serif font-extrabold leading-tight whitespace-nowrap overflow-hidden text-ellipsis px-1">
+        <p className="text-[#FFD700] text-[11px] md:text-xs font-bold leading-tight whitespace-nowrap overflow-hidden text-ellipsis px-1" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
           {person.rank && `${person.rank} `}{person.name}
         </p>
 
-        <p className="text-white/70 text-[8px] md:text-[9px] font-bold tracking-widest uppercase mt-1.5">
+        <p className="text-white/70 text-[8px] md:text-[9px] tracking-widest uppercase mt-1.5" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600 }}>
           {person.service || 'NIGERIAN ARMED FORCES'}
         </p>
 
         {person.periodStart && (
-          <p className="text-white/70 text-[8px] md:text-[9px] font-bold tracking-widest uppercase mt-0.5">
+          <p className="text-white/70 text-[8px] md:text-[9px] tracking-widest uppercase mt-0.5" style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600 }}>
             YEAR: {person.periodStart} – {person.periodEnd || 'PRESENT'}
           </p>
         )}
