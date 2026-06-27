@@ -3,16 +3,33 @@ import ndcCrest from '/images/ndc-crest.png';
 import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl';
 import { ProfilePortraitFrame } from './ProfilePortraitFrame';
 
-const SOFT_RED = '#C0392B';
-
 interface FellowSplitHeroProps {
   person: Personnel;
   category: Category;
   courseDesignation?: string;
 }
 
+function getCategoryLabel(category: Category) {
+  if (category === 'FWC') return 'FELLOW OF WAR COLLEGE';
+  if (category === 'FDC') return 'FELLOW OF NATIONAL DEFENCE COLLEGE';
+  if (category === 'Allied') return 'INTERNATIONAL ALLIED OFFICER';
+  if (category === 'Directing Staff') return 'DIRECTING STAFF';
+  return 'DISTINGUISHED FELLOW';
+}
+
 export function FellowSplitHero({ person, category, courseDesignation }: FellowSplitHeroProps) {
   const portraitUrl = useResolvedMediaUrl(person.imageUrl);
+  const categoryLabel = getCategoryLabel(category);
+
+  const normalizedRank = person.rank?.trim() || "";
+  const normalizedName = person.name?.trim() || "";
+  const hasRankPrefix =
+    normalizedRank.length > 0 &&
+    normalizedName.toLowerCase().startsWith(normalizedRank.toLowerCase());
+  const fullName =
+    normalizedRank.length > 0 && normalizedName.length > 0 && !hasRankPrefix
+      ? `${normalizedRank} ${normalizedName}`
+      : normalizedName || "Name unavailable";
 
   return (
     <section className="relative w-full h-full flex flex-col overflow-hidden bg-white text-slate-900">
@@ -25,58 +42,38 @@ export function FellowSplitHero({ person, category, courseDesignation }: FellowS
       <div className="relative flex flex-1 min-h-0 z-10">
         {/* Left: biography */}
         <div className="flex-1 overflow-y-auto pr-6 pl-8 py-8 flex flex-col items-center scrollbar-hide border-r-[3px] border-[#002060]/30">
-          <div className="flex flex-col items-center justify-center gap-1 mb-4">
-            {person.rank && (
-              <p className="text-base md:text-lg text-[#002060] font-extrabold uppercase tracking-widest" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                {person.rank}
-              </p>
-            )}
-
-            <h2 className="text-2xl md:text-4xl font-serif font-extrabold text-[#002060] uppercase tracking-wide leading-tight" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-              {person.name}
-            </h2>
+          {/* Category label with decorative lines */}
+          <div className="flex items-center gap-4 mb-4 w-full justify-center">
+            <div className="h-[1px] w-20 bg-slate-300" />
+            <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-[#002060] font-bold">
+              {categoryLabel}
+            </span>
+            <div className="h-[1px] w-20 bg-slate-300" />
           </div>
 
+          {/* Rank + Name on same line — matches commandant style */}
+          <h2 className="text-2xl md:text-4xl font-serif font-extrabold mb-3 text-[#002060] uppercase tracking-wide text-center">
+            {fullName}
+          </h2>
+
+          {/* Red Credentials Line — decoration */}
           {person.decoration && (
-            <div className="flex items-center gap-2.5 mb-3 justify-center max-w-2xl">
-              <p className="text-[#C0392B] text-xs sm:text-sm md:text-base font-extrabold italic tracking-wider uppercase text-center">
+            <div className="flex items-center gap-2.5 mb-6 justify-center">
+              <span className="text-[#C0392B] text-xl font-extrabold font-serif">|</span>
+              <p className="text-[#C0392B] text-xs sm:text-sm md:text-base font-extrabold italic tracking-wider uppercase">
                 {person.decoration}
               </p>
             </div>
           )}
 
-          <img
-            src={ndcCrest}
-            alt="NDC Logo"
-            className="h-14 md:h-16 w-auto object-contain filter drop-shadow-sm mb-4"
-          />
+          {/* NDC Crest */}
+          <img src={ndcCrest} alt="NDC Logo" className="h-16 md:h-20 w-auto object-contain filter drop-shadow-sm mb-6" />
 
-          {/* Service / Period info pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-5 text-[10px] font-bold uppercase tracking-widest" style={{ fontFamily: "'Manrope', sans-serif" }}>
-            {person.service && (
-              <span className="px-3 py-1 rounded-full bg-[#002060]/5 border border-[#002060]/15 text-[#002060]">
-                {person.service}
-              </span>
-            )}
-            {person.periodStart > 0 && (
-              <span className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600">
-                {person.periodStart} – {person.periodEnd}
-              </span>
-            )}
-            {person.title && (
-              <span className="px-3 py-1 rounded-full bg-[#002060]/5 border border-[#002060]/15 text-[#002060]">
-                {person.title}
-              </span>
-            )}
-          </div>
-
-          <div className="bg-[#f8fafc] border border-slate-100 p-6 sm:p-8 rounded-xl w-full max-w-3xl shadow-sm mb-8">
-            <div className="flex items-center gap-3 mb-4 pb-2 border-b border-slate-200/60">
-              <div className="h-1.5 w-10 bg-[#C0392B]" />
-              <h4 className="text-xs font-serif font-extrabold text-[#002060] uppercase tracking-[0.2em]">
-                FULL BIOGRAPHY
-              </h4>
-            </div>
+          {/* Full Biography Section */}
+          <div className="bg-[#f8fafc] border border-slate-100 p-6 sm:p-8 rounded-xl w-full max-w-3xl shadow-sm mb-4">
+            <h4 className="text-xs font-serif font-extrabold text-[#002060] uppercase tracking-[0.2em] mb-4 pb-2 border-b border-slate-200/60">
+              FULL BIOGRAPHY
+            </h4>
             <p className="text-xs md:text-sm text-slate-700 leading-relaxed whitespace-pre-wrap font-medium">
               {person.citation?.trim() || 'No biography available for this fellow.'}
             </p>
