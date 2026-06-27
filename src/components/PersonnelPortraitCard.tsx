@@ -135,15 +135,6 @@ export function PersonnelPortraitCard({
             />
           )}
         </div>
-
-        {/* Name and title below photo */}
-        <div className="text-center mt-2.5 px-1">
-          {person.title && (
-            <p className="text-[9px] text-slate-500 italic leading-tight line-clamp-2">
-              {person.title}
-            </p>
-          )}
-        </div>
       </div>
 
       {/* Navy blue info box */}
