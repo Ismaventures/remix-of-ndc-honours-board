@@ -474,11 +474,17 @@ app.whenReady().then(() => {
       // Convert file:// URL to a local path
       let filePath = decodeURIComponent(new URL(url).pathname);
 
+      // On Windows, pathname may start with /C:/... — strip leading slash
+      if (process.platform === 'win32' && /^\/[a-zA-Z]:/.test(filePath)) {
+        filePath = filePath.slice(1);
+      }
+
       // Check if this is an absolute /images/... or /placeholder.svg etc. request
       // that should be served from our dist/ directory
-      const publicAssetMatch = filePath.match(/^\/(images\/.*|placeholder\.svg|favicon\.ico|robots\.txt)$/);
+      const publicAssetMatch = filePath.match(/(?:^|[/\\])(images[/\\].*|placeholder\.svg|favicon\.ico|robots\.txt)$/i);
       if (publicAssetMatch) {
-        const assetPath = path.join(APP_PATH, 'dist', publicAssetMatch[0]);
+        const assetRelative = publicAssetMatch[1].replace(/\\/g, '/');
+        const assetPath = path.join(APP_PATH, 'dist', assetRelative);
         callback({ path: assetPath });
         return;
       }

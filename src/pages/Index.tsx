@@ -55,8 +55,8 @@ import ndcCrest from "/images/ndc-crest.png";
 import { getCommandantDisplayTitle } from "@/lib/utils";
 
 const SECTION_TITLES: Record<string, string> = {
-  fwc: "Distinguished Fellows of the War College (FWC)",
-  fdc: "Distinguished Fellows of the Defence College (FDC)",
+  fwc: "Distinguished Fellows of War College (FWC)",
+  fdc: "Distinguished Fellows of Defence College (FDC)",
   participants: "Participants",
   allied: "International Allied Officers (Allied)",
 };
@@ -1267,8 +1267,8 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           onBack={() => setView("home")}
           title={SECTION_TITLES[view]}
           description={view === "fwc" 
-            ? "Distinguished Fellows of the War College, categorized by CSE course year."
-            : "Distinguished Fellows of the National Defence College, categorized by CSE course year."
+            ? "Distinguished Fellows of War College, categorized by CSE course year."
+            : "Distinguished Fellows of Defence College, categorized by CSE course year."
           }
           onCourseSelect={setActiveCourseNumber}
           backTriggerNonce={backTriggerNonce}

@@ -279,11 +279,11 @@ export function FellowsByCourse({
     : (autoDisplayActive && activeFellows[autoDisplayIndex] ? activeFellows[autoDisplayIndex] : null);
 
   const pageTitle = category === 'FWC'
-    ? 'DISTINGUISHED FELLOWS OF THE WAR COLLEGE'
-    : 'DISTINGUISHED FELLOWS OF THE DEFENCE COLLEGE';
+    ? 'DISTINGUISHED FELLOWS OF WAR COLLEGE (FWC)'
+    : 'DISTINGUISHED FELLOWS OF DEFENCE COLLEGE (FDC)';
   const pageDescription = category === 'FWC'
-    ? `Distinguished Fellows of the War College, categorized by CSE course year.`
-    : `Distinguished Fellows of the Defence College, categorized by CSE course year.`;
+    ? `Distinguished Fellows of War College, categorized by CSE course year.`
+    : `Distinguished Fellows of Defence College, categorized by CSE course year.`;
 
   return (
     <div className="space-y-0">
@@ -312,10 +312,10 @@ export function FellowsByCourse({
               {DECORATIVE_STARS}
 
               <h1 className={cn(
-                'text-2xl md:text-4xl lg:text-[2.5rem] font-serif font-bold uppercase tracking-[0.08em] leading-tight mb-3',
+                'text-2xl md:text-4xl lg:text-[2.5rem] font-serif font-bold tracking-[0.08em] leading-tight mb-3',
                 isLightMode ? 'text-[#002060]' : 'text-white'
-              )}>
-                {title.replace(' (FWC)', '').replace(' (FDC)', '') || pageTitle}
+              )} style={{ textTransform: 'uppercase' as const }}>
+                {title || pageTitle}
               </h1>
 
               {description ? (
@@ -498,7 +498,7 @@ export function FellowsByCourse({
                 'text-xl md:text-2xl font-bold uppercase tracking-[0.08em] leading-tight',
                 isLightMode ? 'text-[#002060]' : 'text-white'
               )} style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                {category === 'FWC' ? 'DISTINGUISHED FELLOW OF THE WAR COLLEGE' : 'DISTINGUISHED FELLOW OF THE DEFENCE COLLEGE'}
+                {category === 'FWC' ? 'DISTINGUISHED FELLOW OF WAR COLLEGE (FWC)' : 'DISTINGUISHED FELLOW OF DEFENCE COLLEGE (FDC)'}
               </h1>
 
               <div className="flex items-center justify-center gap-2 mt-2 mb-2">
