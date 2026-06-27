@@ -10,6 +10,10 @@ interface FellowSplitHeroProps {
 }
 
 function getCategoryLabel(category: Category) {
+  if (category === 'FWC') return 'DISTINGUISHED FELLOWS OF THE WAR COLLEGE';
+  if (category === 'FDC') return 'DISTINGUISHED FELLOWS OF THE DEFENCE COLLEGE';
+  if (category === 'Allied') return 'INTERNATIONAL ALLIED OFFICER';
+  if (category === 'Directing Staff') return 'DIRECTING STAFF';
   return 'DISTINGUISHED FELLOW';
 }
 
@@ -51,16 +55,6 @@ export function FellowSplitHero({ person, category, courseDesignation }: FellowS
           <h2 className="text-2xl md:text-4xl font-extrabold mb-3 text-[#002060] uppercase tracking-wide text-center" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
             {fullName}
           </h2>
-
-          {/* Red Credentials Line — decoration */}
-          {person.decoration && (
-            <div className="flex items-center gap-2.5 mb-6 justify-center">
-              <span className="text-[#C0392B] text-xl font-extrabold font-serif">|</span>
-              <p className="text-[#C0392B] text-xs sm:text-sm md:text-base font-extrabold italic tracking-wider uppercase">
-                {person.decoration}
-              </p>
-            </div>
-          )}
 
           {/* NDC Crest */}
           <img src={ndcCrest} alt="NDC Logo" className="h-16 md:h-20 w-auto object-contain filter drop-shadow-sm mb-6" />
