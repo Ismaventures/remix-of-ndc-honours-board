@@ -1660,6 +1660,13 @@ export function AutoRotationDisplay({
       }}
       tabIndex={0}
     >
+      {/* Top Tri-service stripes */}
+      <div className="w-full flex flex-col h-[30px] shrink-0 z-40 select-none">
+        <div className="h-[10px] bg-[#FF0000]" />
+        <div className="h-[10px] bg-[#002060]" />
+        <div className="h-[10px] bg-[#00B0F0]" />
+      </div>
+
       {/* Cinematic Transition Overlay: NDC scatter and new military/action transitions */}
       {fadeState === "out" &&
         ({
@@ -1805,11 +1812,18 @@ export function AutoRotationDisplay({
         </div>
       )}
 
+      {/* Bottom Tri-service stripes */}
+      <div className="w-full flex flex-col h-[30px] shrink-0 z-40 select-none">
+        <div className="h-[10px] bg-[#FF0000]" />
+        <div className="h-[10px] bg-[#002060]" />
+        <div className="h-[10px] bg-[#00B0F0]" />
+      </div>
+
       {isActive && (
         <button
           type="button"
           onClick={() => setDisplayActive(false)}
-          className="fixed bottom-4 right-4 z-[120] flex h-11 w-11 items-center justify-center rounded-full border border-[#002060]/25 bg-white/90 text-[#002060] shadow-[0_8px_24px_rgba(0,0,0,0.16)] transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#002060]/45"
+          className="fixed bottom-12 right-4 z-[120] flex h-11 w-11 items-center justify-center rounded-full border border-[#002060]/25 bg-white/90 text-[#002060] shadow-[0_8px_24px_rgba(0,0,0,0.16)] transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#002060]/45"
           aria-label="Exit display"
           title="Exit display"
         >

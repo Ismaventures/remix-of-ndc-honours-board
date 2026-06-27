@@ -136,17 +136,14 @@ export function PersonnelPortraitCard({
           )}
         </div>
 
-        {/* Name and title below photo */}
-        <div className="text-center mt-2.5 px-1">
-          <h3 className="text-[11px] sm:text-xs font-bold text-slate-800 leading-tight">
-            {person.rank && `${person.rank} `}{person.name}
-          </h3>
-          {person.title && (
-            <p className="text-[9px] text-slate-500 mt-0.5 italic leading-tight line-clamp-2">
+        {/* Title below photo (if present) */}
+        {person.title && (
+          <div className="text-center mt-2 px-1">
+            <p className="text-[9px] text-slate-500 italic leading-tight line-clamp-2">
               {person.title}
             </p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Navy blue info box */}
@@ -227,7 +224,7 @@ export function PersonnelPortraitGrid({
 
   return (
     <div className="relative space-y-3">
-      <div className="relative z-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-6">
+      <div className="relative z-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5 md:gap-6">
         {personnel.map((person, index) => (
           <PersonnelPortraitCard
             key={person.id}
