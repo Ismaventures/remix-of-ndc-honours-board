@@ -34,8 +34,8 @@ const CARDS: {
 }[] = [
   {
     key: "fwc",
-    label: "DISTINGUISHED FELLOWS",
-    subtitle: "Distinguished Fellows of War College (FWC+)",
+    label: "DISTINGUISHED FELLOWS OF THE WAR COLLEGE",
+    subtitle: "Fellows of War College (FWC+)",
     icon: Shield,
     color: "text-blue-600",
     cardGradient: "from-[#0f2c4e] via-[#14365d] to-[#1a4373]",
@@ -43,8 +43,8 @@ const CARDS: {
   },
   {
     key: "fdc",
-    label: "DISTINGUISHED FELLOWS",
-    subtitle: "Distinguished Fellows of Defence College (FDC+)",
+    label: "DISTINGUISHED FELLOWS OF THE DEFENCE COLLEGE",
+    subtitle: "Fellows of Defence College (FDC+)",
     icon: Award,
     color: "text-sky-600",
     cardGradient: "from-[#0e2d4a] via-[#133e66] to-[#195080]",
@@ -150,7 +150,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                       {/* Upper Case Text Group */}
                       <div className="flex flex-col items-center">
                         <h3
-                          className={`text-lg sm:text-xl lg:text-2xl leading-tight mb-2 tracking-wide uppercase transition-colors text-center ${
+                          className={`text-base sm:text-lg lg:text-xl leading-tight mb-2 tracking-wide uppercase transition-colors text-center ${
                             isLightMode
                               ? "text-[#0f2a5f]"
                               : "text-white drop-shadow-md"
