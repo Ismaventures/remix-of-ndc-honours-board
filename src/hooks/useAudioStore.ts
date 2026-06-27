@@ -297,6 +297,7 @@ export async function getAudioUrl(id: string): Promise<string | null> {
     const track = useAudioStore.getState().tracks.find(t => t.id === id);
     const normalizedTrack = track ? normalizeStoredTrack(track) : null;
 
+    // 1. Check IndexedDB audio cache
     const sourceKey = normalizedTrack?.bucketPath ?? `local:${id}`;
     const cachedValue = await get<unknown>(`${AUDIO_CACHE_KEY_PREFIX}${id}`);
     if (isAudioCacheEntry(cachedValue) && cachedValue.sourceKey === sourceKey) {
@@ -310,15 +311,33 @@ export async function getAudioUrl(id: string): Promise<string | null> {
       await del(`${AUDIO_CACHE_KEY_PREFIX}${id}`);
     }
 
+    // 2. Try local-media:// protocol (Electron packaged app with files on disk)
+    if (normalizedTrack?.bucketPath) {
+      try {
+        const localMediaUrl = `local-media://ndc-audio/${normalizedTrack.bucketPath}`;
+        const resp = await fetch(localMediaUrl);
+        if (resp.ok) {
+          const arrayBuffer = await resp.arrayBuffer();
+          if (arrayBuffer.byteLength > 0) {
+            // Cache it for future use
+            const payload: AudioCacheEntry = { buffer: arrayBuffer, cachedAt: Date.now(), sourceKey };
+            await set(`${AUDIO_CACHE_KEY_PREFIX}${id}`, payload);
+            return URL.createObjectURL(new Blob([arrayBuffer]));
+          }
+        }
+      } catch { /* local-media not available, continue */ }
+    }
+
+    // 3. Try Supabase public URL (online)
     if (normalizedTrack?.source === 'supabase' && normalizedTrack.bucketPath) {
       const remoteUrl = await getSupabaseAudioUrl(normalizedTrack.bucketPath);
       if (remoteUrl) {
-        // Return stream URL immediately for fastest start, cache in background.
         void prefetchAudioTrack(id);
         return remoteUrl;
       }
     }
 
+    // 4. Fall back to idb-keyval local audio buffer
     const buffer = await get(`${AUDIO_LOCAL_KEY_PREFIX}${id}`);
     if (!buffer) return null;
 
@@ -347,18 +366,35 @@ export async function prefetchAudioTrack(id: string): Promise<void> {
       await del(cacheKey);
     }
 
-    if (normalizedTrack.source !== 'supabase' || !normalizedTrack.bucketPath) return;
+    if (!normalizedTrack.bucketPath) return;
 
-    const remoteUrl = await getSupabaseAudioUrl(normalizedTrack.bucketPath);
-    if (!remoteUrl) return;
+    let fetchedBuffer: ArrayBuffer | null = null;
 
-    const response = await fetch(remoteUrl, { cache: 'force-cache' });
-    if (!response.ok) return;
+    // Try local-media:// protocol first (Electron packaged app)
+    try {
+      const localMediaUrl = `local-media://ndc-audio/${normalizedTrack.bucketPath}`;
+      const resp = await fetch(localMediaUrl);
+      if (resp.ok) {
+        const buf = await resp.arrayBuffer();
+        if (buf.byteLength > 0) fetchedBuffer = buf;
+      }
+    } catch { /* not available */ }
 
-    const arrayBuffer = await response.arrayBuffer();
-    if (arrayBuffer.byteLength > 0) {
+    // Fallback: try Supabase public URL (online)
+    if (!fetchedBuffer && normalizedTrack.source === 'supabase') {
+      const remoteUrl = await getSupabaseAudioUrl(normalizedTrack.bucketPath);
+      if (remoteUrl) {
+        const response = await fetch(remoteUrl, { cache: 'force-cache' });
+        if (response.ok) {
+          const buf = await response.arrayBuffer();
+          if (buf.byteLength > 0) fetchedBuffer = buf;
+        }
+      }
+    }
+
+    if (fetchedBuffer) {
       const payload: AudioCacheEntry = {
-        buffer: arrayBuffer,
+        buffer: fetchedBuffer,
         cachedAt: Date.now(),
         sourceKey,
       };

@@ -357,68 +357,19 @@
   .command-center-bg {
     position: relative;
     isolation: isolate;
-    background:
-      radial-gradient(
-        140% 100% at 50% -5%,
-        hsl(var(--primary) / 0.14),
-        transparent 56%
-      ),
-      linear-gradient(
-        180deg,
-        hsl(var(--navy-deep)),
-        hsl(var(--background)) 36%,
-        hsl(var(--background))
-      );
+    background: transparent;
   }
 
   :root[data-theme-mode="outdoor-tactical-light"] .command-center-bg {
-    background:
-      radial-gradient(
-        150% 120% at 50% -10%,
-        hsl(var(--accent) / 0.2),
-        transparent 56%
-      ),
-      linear-gradient(
-        180deg,
-        hsl(var(--background)),
-        hsl(var(--muted)) 35%,
-        hsl(var(--background))
-      );
+    background: transparent;
   }
 
   :root[data-theme-mode="outdoor-high-contrast-command"] .command-center-bg {
-    background:
-      radial-gradient(
-        140% 110% at 52% -12%,
-        hsl(var(--primary) / 0.18),
-        transparent 54%
-      ),
-      linear-gradient(
-        180deg,
-        hsl(var(--background)),
-        hsl(var(--muted)) 40%,
-        hsl(var(--background))
-      );
+    background: transparent;
   }
 
   :root[data-theme-mode="outdoor-tri-service"] .command-center-bg {
-    background:
-      radial-gradient(
-        120% 115% at 10% 0%,
-        hsl(var(--secondary) / 0.12),
-        transparent 52%
-      ),
-      radial-gradient(
-        125% 120% at 90% 8%,
-        hsl(var(--accent) / 0.14),
-        transparent 56%
-      ),
-      linear-gradient(
-        180deg,
-        hsl(var(--background)),
-        hsl(var(--muted)) 42%,
-        hsl(var(--background))
-      );
+    background: transparent;
   }
 
   .command-center-bg::before {
@@ -470,15 +421,14 @@
     position: relative;
     border: none;
     background:
-      linear-gradient(180deg, hsl(var(--card) / 0.82), hsl(var(--card) / 0.72)),
-      linear-gradient(160deg, hsl(var(--primary) / 0.08), transparent 28%);
+      linear-gradient(180deg, hsl(var(--card) / 0.35), hsl(var(--card) / 0.25)),
+      linear-gradient(160deg, hsl(var(--primary) / 0.06), transparent 28%);
     box-shadow:
       inset 0 1px 0 hsl(var(--gold-bright) / 0.18),
       0 0 0 2px #00B0F0,
       0 0 0 4px #002060,
-      0 0 0 6px #FF0000,
+      0 0 0 6px #C0392B,
       0 18px 55px rgba(0, 0, 0, 0.34);
-    backdrop-filter: blur(7px);
   }
 
   :root[data-theme-mode^="outdoor-"] .app-shell-frame {
@@ -487,7 +437,7 @@
       inset 0 1px 0 hsl(var(--gold-bright) / 0.24),
       0 0 0 2px #00B0F0,
       0 0 0 4px #002060,
-      0 0 0 6px #FF0000,
+      0 0 0 6px #C0392B,
       0 14px 40px hsl(var(--navy-deep) / 0.18);
   }
 
@@ -512,15 +462,14 @@
   .scroll-reveal {
     opacity: 0;
     transform: translateY(16px);
-    filter: blur(4px);
     animation: reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, transform;
   }
 
   @keyframes reveal {
     to {
       opacity: 1;
       transform: translateY(0);
-      filter: blur(0);
     }
   }
 
@@ -963,8 +912,8 @@
   .stagger-reveal > * {
     opacity: 0;
     transform: translateY(18px);
-    filter: blur(8px);
     animation: reveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, transform;
   }
 
   .stagger-reveal > *:nth-child(1) { animation-delay: 0ms; }
@@ -1110,8 +1059,8 @@
       180deg,
       #002060 0%,
       #002060 33.33%,
-      #FF0000 33.33%,
-      #FF0000 66.66%,
+      #C0392B 33.33%,
+      #C0392B 66.66%,
       #00B0F0 66.66%,
       #00B0F0 100%
     );
@@ -1124,8 +1073,8 @@
       180deg,
       #003080 0%,
       #003080 33.33%,
-      #FF3333 33.33%,
-      #FF3333 66.66%,
+      #D4544A 33.33%,
+      #D4544A 66.66%,
       #00D4FF 66.66%,
       #00D4FF 100%
     );
@@ -1138,7 +1087,7 @@
   }
 
   *:hover {
-    scrollbar-color: #FF0000 transparent;
+    scrollbar-color: #C0392B transparent;
   }
 
   /* Force hide scrollbars for .scrollbar-hide selector in both Webkit and Firefox */
@@ -1227,7 +1176,7 @@
   }
 
   .ndc-logo-watermark {
-    animation: pulseGlow 4s ease-in-out infinite;
+    opacity: 0.04;
   }
 
   .ndc-logo-scattered {
@@ -1264,5 +1213,24 @@
 
   .ndc-logo-scattered:nth-child(8) {
     animation-delay: 8.75s;
+  }
+
+  /* Background image crossfade animation */
+  @keyframes bgFadeCycle {
+    0%, 42% { opacity: 1; }
+    50%, 92% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes bgFadeCycle2 {
+    0%, 42% { opacity: 0; }
+    50%, 92% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .ndc-bg-fade-1 {
+    animation: bgFadeCycle 16s ease-in-out infinite;
+  }
+  .ndc-bg-fade-2 {
+    animation: bgFadeCycle2 16s ease-in-out infinite;
   }
 }

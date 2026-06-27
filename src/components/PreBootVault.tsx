@@ -3,23 +3,21 @@ import ndcCrest from "/images/ndc-crest.png";
 
 interface PreBootVaultProps {
   onComplete: () => void;
+  durationMs?: number;
 }
 
-export const PreBootVault: React.FC<PreBootVaultProps> = ({ onComplete }) => {
+export const PreBootVault: React.FC<PreBootVaultProps> = ({ onComplete, durationMs = 10000 }) => {
   const [progress, setProgress] = useState(0);
 
-  // Smoothly animate progress bar to 100% over 2.4 seconds
   useEffect(() => {
-    const duration = 2400; // 2.4 seconds total duration
-    const intervalTime = 30; // update every 30ms
-    const step = 100 / (duration / intervalTime);
+    const intervalTime = 30;
+    const step = 100 / (durationMs / intervalTime);
 
     const timer = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(timer);
-          // Wait 300ms at 100% for smooth transition before calling onComplete
-          setTimeout(onComplete, 300);
+          setTimeout(onComplete, 400);
           return 100;
         }
         return Math.min(100, prev + step);
@@ -27,15 +25,26 @@ export const PreBootVault: React.FC<PreBootVaultProps> = ({ onComplete }) => {
     }, intervalTime);
 
     return () => clearInterval(timer);
-  }, [onComplete]);
+  }, [onComplete, durationMs]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-b from-[#000a1a] via-[#001026] to-[#000a1a] select-none">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center select-none">
       
-      {/* Premium ambient glow circles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.035)_0%,transparent_70%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:40px_40px]" />
+      {/* Background Image with crossfade */}
+      <div className="absolute inset-0 overflow-hidden">
+        <img
+          src="/images/ndc-bg-1.png"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover ndc-bg-fade-1"
+          style={{ filter: "brightness(0.4) contrast(1.05)" }}
+        />
+        <img
+          src="/images/ndc-bg-2.png"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover ndc-bg-fade-2"
+          style={{ filter: "brightness(0.4) contrast(1.05)" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#000a1a]/70 via-[#001026]/50 to-[#000a1a]/70" />
       </div>
 
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-md w-full">
@@ -43,7 +52,7 @@ export const PreBootVault: React.FC<PreBootVaultProps> = ({ onComplete }) => {
         {/* Crest Wrapper with smooth breathing pulse */}
         <div className="relative mb-8 flex items-center justify-center animate-pulse" style={{ animationDuration: "3s" }}>
           {/* Subtle backglow */}
-          <div className="absolute inset-0 w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-r from-[#002060]/20 via-[#FF0000]/10 to-[#00B0F0]/20 blur-xl pointer-events-none" />
+          <div className="absolute inset-0 w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-r from-[#002060]/20 via-[#C0392B]/10 to-[#00B0F0]/20 blur-xl pointer-events-none" />
           
           <div className="relative w-24 h-24 md:w-28 md:h-28 flex items-center justify-center">
             <img 
@@ -74,7 +83,7 @@ export const PreBootVault: React.FC<PreBootVaultProps> = ({ onComplete }) => {
         {/* Thin, elegant tri-service progress bar */}
         <div className="w-64 sm:w-72 h-[3px] bg-white/10 rounded-full mt-10 overflow-hidden relative shadow-inner">
           <div 
-            className="h-full rounded-full bg-gradient-to-r from-[#002060] via-[#FF0000] to-[#00B0F0] transition-all duration-100 ease-out"
+            className="h-full rounded-full bg-gradient-to-r from-[#002060] via-[#C0392B] to-[#00B0F0] transition-all duration-100 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>

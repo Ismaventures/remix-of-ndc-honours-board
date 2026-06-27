@@ -108,7 +108,7 @@ function GridCommandantCard({ commandant, onClick, isLightMode }: GridCommandant
       {/* Top tri-service strip */}
       <div className="absolute inset-x-0 top-0 h-[4px] flex z-20">
         <div className="flex-1 bg-[#002060]" />
-        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#C0392B]" />
         <div className="flex-1 bg-[#00B0F0]" />
       </div>
 
@@ -137,7 +137,7 @@ function GridCommandantCard({ commandant, onClick, isLightMode }: GridCommandant
           {(() => {
             const displayTitle = getCommandantDisplayTitle(commandant, "");
             return displayTitle ? (
-              <p className="text-[#FF0000] text-[8.5px] font-bold font-sans mt-1 leading-tight line-clamp-2 px-0.5">
+              <p className="text-[#FFD700] text-[8.5px] font-bold font-sans mt-1 leading-tight line-clamp-2 px-0.5">
                 {displayTitle}
               </p>
             ) : null;
@@ -161,7 +161,7 @@ function GridCommandantCard({ commandant, onClick, isLightMode }: GridCommandant
       {/* Bottom tri-service strip */}
       <div className="absolute inset-x-0 bottom-0 h-[4px] flex z-20">
         <div className="flex-1 bg-[#002060]" />
-        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#C0392B]" />
         <div className="flex-1 bg-[#00B0F0]" />
       </div>
     </button>
@@ -1016,7 +1016,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
               </span>
             </h2>
             <div className="w-20 h-[2px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent mx-auto mt-2 mb-2" />
-            <p className="text-sm sm:text-base lg:text-lg font-semibold font-serif uppercase tracking-[0.2em] text-[#FF0000]">
+            <p className="text-sm sm:text-base lg:text-lg font-semibold font-serif uppercase tracking-[0.2em] text-[#C0392B]">
               National Defence College
             </p>
           </div>
@@ -1051,7 +1051,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
             <div className="mb-6 flex flex-col items-start">
               <h1 className="text-4xl md:text-5xl font-bold font-serif text-slate-900 mb-2">NDC Facilitated Events</h1>
               <p className="text-slate-600 text-lg">Seminars, Conferences & Professional Development</p>
-              <div className="mt-4 h-1 w-24 bg-gradient-to-r from-[#002060] via-[#FF0000] to-[#00B0F0]"></div>
+              <div className="mt-4 h-1 w-24 bg-gradient-to-r from-[#002060] via-[#C0392B] to-[#00B0F0]"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1059,7 +1059,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
                 {/* Top tri-service accent */}
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-[5px] flex z-20">
                   <div className="flex-1 bg-[#002060]" />
-                  <div className="flex-1 bg-[#FF0000]" />
+                  <div className="flex-1 bg-[#C0392B]" />
                   <div className="flex-1 bg-[#00B0F0]" />
                 </div>
 
@@ -1316,6 +1316,24 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
   return (
     <>
       <AudioManager />
+
+      {/* NDC Campus — full-viewport background with crossfade */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <img
+          src="/images/ndc-bg-1.png"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover ndc-bg-fade-1"
+          style={{ filter: "brightness(0.75) contrast(1.05) saturate(0.9)" }}
+        />
+        <img
+          src="/images/ndc-bg-2.png"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover ndc-bg-fade-2"
+          style={{ filter: "brightness(0.75) contrast(1.05) saturate(0.9)" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a1628]/25 via-transparent to-[#0a1628]/50" />
+      </div>
+
       {isBooting && (
         <BootSequence
           settings={bootSequenceSettings}
