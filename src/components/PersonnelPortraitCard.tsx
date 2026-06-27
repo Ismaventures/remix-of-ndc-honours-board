@@ -227,7 +227,7 @@ export function PersonnelPortraitGrid({
 
   return (
     <div className="relative space-y-3">
-      <div className="relative z-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-6">
+      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-7 max-w-[1400px] mx-auto">
         {personnel.map((person, index) => (
           <PersonnelPortraitCard
             key={person.id}
