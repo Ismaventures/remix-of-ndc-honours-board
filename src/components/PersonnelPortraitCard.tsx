@@ -138,11 +138,8 @@ export function PersonnelPortraitCard({
 
         {/* Name and title below photo */}
         <div className="text-center mt-2.5 px-1">
-          <h3 className="text-[11px] sm:text-xs font-bold text-slate-800 leading-tight">
-            {person.rank && `${person.rank} `}{person.name}
-          </h3>
           {person.title && (
-            <p className="text-[9px] text-slate-500 mt-0.5 italic leading-tight line-clamp-2">
+            <p className="text-[9px] text-slate-500 italic leading-tight line-clamp-2">
               {person.title}
             </p>
           )}
@@ -151,7 +148,16 @@ export function PersonnelPortraitCard({
 
       {/* Navy blue info box */}
       <div className="mx-3 mt-2 mb-1 bg-[#002060] rounded-lg p-3 text-center shadow-[inset_0_0_20px_rgba(0,0,0,0.3)]">
-        <p className="text-white/70 text-[8px] md:text-[9px] font-bold tracking-widest uppercase mt-0.5">
+        {person.rank && (
+          <p className="text-[#FFD700] text-xs md:text-sm font-serif font-extrabold leading-tight">
+            {person.rank}
+          </p>
+        )}
+        <p className="text-[#FFD700] text-xs md:text-sm font-serif font-extrabold leading-tight">
+          {person.name}
+        </p>
+
+        <p className="text-white/70 text-[8px] md:text-[9px] font-bold tracking-widest uppercase mt-1.5">
           {person.service || 'NIGERIAN ARMED FORCES'}
         </p>
 
