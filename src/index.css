@@ -1228,9 +1228,9 @@
   }
 
   .ndc-bg-fade-1 {
-    animation: bgFadeCycle 16s ease-in-out infinite;
+    animation: bgFadeCycle 4s ease-in-out infinite;
   }
   .ndc-bg-fade-2 {
-    animation: bgFadeCycle2 16s ease-in-out infinite;
+    animation: bgFadeCycle2 4s ease-in-out infinite;
   }
 }

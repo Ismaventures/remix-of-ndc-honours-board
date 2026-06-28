@@ -20,7 +20,7 @@
     "electron:start": "electron .",
     "electron:dev": "concurrently -k \"npm run dev\" \"electron .\"",
     "electron:rebuild": "electron-builder install-app-deps",
-    "electron:build": "npm run build && electron-builder install-app-deps && electron-builder --win",
+    "electron:build": "npm run build && electron-builder install-app-deps && electron-builder",
     "electron:pack": "npm run electron:build"
   },
   "build": {
@@ -31,8 +31,6 @@
       "dist/**/*",
       "electron/**/*",
       "package.json",
-      "database.sqlite",
-      "local_media/**/*",
       "supabase_schema.sql",
       "supabase_cms_migration.sql",
       "nwc_personnel_sql_seed_trackable.sql"
@@ -40,9 +38,13 @@
     "asar": true,
     "asarUnpack": [
       "**/node_modules/better-sqlite3/**/*",
-      "electron/preload.cjs",
-      "local_media/**/*",
-      "database.sqlite"
+      "electron/preload.cjs"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/drive-credentials.json",
+        "to": "drive-credentials.json"
+      }
     ],
     "directories": {
       "output": "dist-electron"
@@ -97,6 +99,7 @@
     "date-fns": "^3.6.0",
     "dnd-kit": "^0.0.2",
     "embla-carousel-react": "^8.6.0",
+    "googleapis": "^173.0.0",
     "idb-keyval": "^6.2.2",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",

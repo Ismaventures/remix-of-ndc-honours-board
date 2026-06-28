@@ -2,12 +2,13 @@ import { useEffect, useState, useRef } from "react";
 import { useAudioStore, getAudioUrl } from "@/hooks/useAudioStore";
 import { playAudioTrack } from "@/components/AudioManager";
 import { PreBootVault } from "./PreBootVault";
-
-const DEFAULT_DURATION_MS = 10_000;
+import { BootSequenceSettings } from "@/hooks/useBootSequenceSettings";
 
 export function BootSequence({
+  settings,
   onComplete,
 }: {
+  settings?: BootSequenceSettings;
   onComplete?: () => void;
 }) {
   const assignments = useAudioStore((s) => s.assignments);
@@ -15,7 +16,10 @@ export function BootSequence({
   const loadTracks = useAudioStore((s) => s.loadTracks);
   const setMuted = useAudioStore((s) => s.setMuted);
   const [leaving, setLeaving] = useState(false);
-  const [audioDuration, setAudioDuration] = useState<number>(DEFAULT_DURATION_MS);
+  const [isSkipped, setIsSkipped] = useState(false);
+  
+  const defaultDuration = settings?.totalDurationMs ?? 2000;
+  const [audioDuration, setAudioDuration] = useState<number>(defaultDuration);
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -37,34 +41,6 @@ export function BootSequence({
     const preloaderId = assignments.preloader;
     if (!preloaderId) return;
 
-    const hasTrack = tracks.some((t) => t.id === preloaderId);
-    if (!hasTrack) return;
-
-    // Detect audio duration via a temporary Audio element
-    (async () => {
-      try {
-        const url = await getAudioUrl(preloaderId);
-        if (url) {
-          const tempAudio = new Audio();
-          tempAudio.src = url;
-          await new Promise<void>((resolve) => {
-            tempAudio.addEventListener("loadedmetadata", () => {
-              if (tempAudio.duration && Number.isFinite(tempAudio.duration) && tempAudio.duration > 0) {
-                setAudioDuration(tempAudio.duration * 1000);
-              }
-              resolve();
-            });
-            tempAudio.addEventListener("error", () => resolve());
-            // Fallback if metadata never fires
-            setTimeout(resolve, 3000);
-          });
-          tempAudio.src = "";
-        }
-      } catch {
-        // Fall back to default duration
-      }
-    })();
-
     // Start the actual preloader audio through AudioManager
     playAudioTrack(preloaderId, true, false, { fadeMs: 420 });
   }, [assignments.preloader, tracks]);
@@ -72,16 +48,32 @@ export function BootSequence({
   const handleProgressComplete = () => {
     if (leaving) return;
     setLeaving(true);
-    setTimeout(() => { if (onComplete) onComplete(); }, 1200);
+    const fadeDuration = isSkipped ? 250 : 1200;
+    setTimeout(() => { if (onComplete) onComplete(); }, fadeDuration);
+  };
+
+  const handleSkip = () => {
+    if (leaving) return;
+    setIsSkipped(true);
+    setLeaving(true);
+    setTimeout(() => { if (onComplete) onComplete(); }, 250);
   };
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#000a1a] overflow-hidden transition-all duration-[1200ms] ease-out ${
+      onClick={handleSkip}
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#000a1a] cursor-pointer overflow-hidden transition-all ease-out ${
+        isSkipped ? "duration-[300ms]" : "duration-[1200ms]"
+      } ${
         leaving ? "opacity-0 scale-[1.05] blur-[4px] pointer-events-none" : "opacity-100 scale-100 blur-none"
       }`}
     >
       <PreBootVault onComplete={handleProgressComplete} durationMs={audioDuration} />
+      
+      {/* Subtle indicator for user */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[9px] font-mono tracking-[0.25em] text-white/30 hover:text-white/60 transition-colors uppercase animate-pulse select-none">
+        Click / Tap anywhere to skip intro
+      </div>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { BatchUploadAdmin } from './BatchUploadAdmin';
 import { BatchImageUploadEnhanced } from './BatchImageUploadEnhanced';
 import { UnifiedPersonnelManagement } from './UnifiedPersonnelManagement';
 import { UnifiedPersonnelEditor } from './UnifiedPersonnelEditor';
+import { DriveBackupAdmin } from './DriveBackupAdmin';
 import { saveMediaFile } from '@/lib/persistentMedia';
 import { ThemeMode } from '@/hooks/useThemeMode';
 import { BootSequenceSettings } from '@/hooks/useBootSequenceSettings';
@@ -390,7 +391,7 @@ export function AdminPanel({
   backTriggerNonce = 0,
 }: AdminPanelProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices' | 'guide' | 'content' | 'museum'>('personnel');
+  const [tab, setTab] = useState<'personnel' | 'visits' | 'commandants' | 'theme' | 'transitions' | 'audio' | 'devices' | 'guide' | 'content' | 'museum' | 'backup'>('personnel');
   const [editingP, setEditingP] = useState<Personnel | null>(null);
   const [editingV, setEditingV] = useState<DistinguishedVisit | null>(null);
   const [editingC, setEditingC] = useState<Commandant | null>(null);
@@ -1124,6 +1125,9 @@ export function AdminPanel({
           <button onClick={() => setTab('audio')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'audio' ? "bg-white text-[#FF0000] font-medium border-2 border-[#FF0000]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Audio">
             {!isSidebarCollapsed && <span>Audio Settings</span>}
           </button>
+          <button onClick={() => setTab('backup')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'backup' ? "bg-white text-[#002060] font-medium border-2 border-[#002060]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Cloud Backup">
+            {!isSidebarCollapsed && <span>Cloud Backup</span>}
+          </button>
 
           {!isSidebarCollapsed && <p className="px-3 mb-2 mt-6 text-[9px] font-semibold uppercase tracking-wider text-slate-500">Control</p>}
           <button onClick={() => setTab('devices')} className={"w-full flex items-center rounded-[12px] py-2.5 text-left text-[11px] transition-all " + (isSidebarCollapsed ? "justify-center px-0 " : "gap-3 px-3 ") + (tab === 'devices' ? "bg-white text-[#00B0F0] font-medium border-2 border-[#00B0F0]" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900")} title="Devices">
@@ -1832,6 +1836,12 @@ export function AdminPanel({
               onSendGlobalClose={onSendGlobalSiteClose}
               onSendGlobalOpen={onSendGlobalSiteOpen}
             />
+          </div>
+        )}
+
+        {tab === 'backup' && (
+          <div className="view-enter">
+            <DriveBackupAdmin />
           </div>
         )}
 

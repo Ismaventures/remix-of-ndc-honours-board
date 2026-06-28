@@ -2,18 +2,20 @@ const { app, BrowserWindow, ipcMain, protocol, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
+const driveSync = require('./driveSync.cjs');
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 const APP_PATH = app.getAppPath();
 const UNPACKED_PATH = isDev ? APP_PATH : APP_PATH.replace('app.asar', 'app.asar.unpacked');
 
-const LOCAL_MEDIA_DIR = isDev 
-  ? path.join(process.cwd(), 'local_media') 
-  : path.join(app.getPath('userData'), 'local_media');
+// In Option C: database.sqlite and local_media live in the User's Home folder in production.
+// This ensures they are 100% writable on Mac/Windows and easy to backup in Finder/Explorer.
+const LOCAL_DATA_ROOT = isDev
+  ? process.cwd()
+  : path.join(app.getPath('home'), 'NDCHonoursBoard');
 
-const DB_PATH = isDev 
-  ? path.join(process.cwd(), 'database.sqlite') 
-  : path.join(app.getPath('userData'), 'database.sqlite');
+const LOCAL_MEDIA_DIR = path.join(LOCAL_DATA_ROOT, 'local_media');
+const DB_PATH = path.join(LOCAL_DATA_ROOT, 'database.sqlite');
 
 // Crash log file for diagnosing installed-app failures
 const LOG_FILE = isDev ? null : path.join(app.getPath('userData'), 'crash.log');
@@ -372,6 +374,18 @@ function createWindow() {
   });
   win.setMenuBarVisibility(false);
 
+  // Allow opening DevTools with F12 / Cmd+Alt+I in production for debugging
+  win.webContents.on('before-input-event', (event, input) => {
+    if (
+      input.key === 'F12' ||
+      (input.meta && input.alt && input.key.toLowerCase() === 'i') ||
+      (input.control && input.shift && input.key.toLowerCase() === 'i')
+    ) {
+      win.webContents.toggleDevTools();
+      event.preventDefault();
+    }
+  });
+
   // Forward renderer console messages to main terminal output
   win.webContents.on('console-message', (event, level, message, line, sourceId) => {
     console.log(`[Renderer] ${message} (from ${path.basename(sourceId)}:${line})`);
@@ -401,7 +415,9 @@ function parseLocalMediaPath(rawUrl) {
 }
 
 function resolveBundledAssetPath(...segments) {
+  // In production, extraResources places files directly in process.resourcesPath
   const candidates = [
+    path.join(process.resourcesPath, ...segments),
     path.join(UNPACKED_PATH, ...segments),
     path.join(APP_PATH, ...segments),
   ];
@@ -409,38 +425,6 @@ function resolveBundledAssetPath(...segments) {
     if (fs.existsSync(candidate)) return candidate;
   }
   return null;
-}
-
-function syncBundledAssetsToUserData() {
-  if (isDev) return;
-
-  const bundledDbPath = resolveBundledAssetPath('database.sqlite');
-  if (bundledDbPath) {
-    if (!fs.existsSync(DB_PATH)) {
-      const dbDir = path.dirname(DB_PATH);
-      fs.mkdirSync(dbDir, { recursive: true });
-      try {
-        fs.copyFileSync(bundledDbPath, DB_PATH);
-        logToFile('Copied bundled database.sqlite from ' + bundledDbPath);
-      } catch (err) {
-        logToFile('Failed to copy bundled database.sqlite: ' + err.message);
-      }
-    }
-  } else {
-    logToFile('WARNING: bundled database.sqlite not found in app package');
-  }
-
-  const bundledMediaDir = resolveBundledAssetPath('local_media');
-  if (bundledMediaDir) {
-    try {
-      copyMissingFiles(bundledMediaDir, LOCAL_MEDIA_DIR);
-      logToFile('Synced bundled local_media from ' + bundledMediaDir);
-    } catch (err) {
-      logToFile('Failed to sync bundled local_media: ' + err.message);
-    }
-  } else {
-    logToFile('WARNING: bundled local_media not found in app package');
-  }
 }
 
 /**
@@ -568,29 +552,84 @@ app.whenReady().then(() => {
   logToFile('UNPACKED_PATH: ' + UNPACKED_PATH);
   logToFile('LOCAL_MEDIA_DIR: ' + LOCAL_MEDIA_DIR);
   logToFile('DB_PATH: ' + DB_PATH);
+  if (!isDev) {
+    logToFile('resourcesPath: ' + process.resourcesPath);
+  }
 
   if (!isDev) {
-    const bundledMediaExists = fs.existsSync(path.join(UNPACKED_PATH, 'local_media'));
-    const bundledDbExists = fs.existsSync(path.join(UNPACKED_PATH, 'database.sqlite'));
-    logToFile('Bundled local_media exists at UNPACKED_PATH: ' + bundledMediaExists);
-    logToFile('Bundled database.sqlite exists at UNPACKED_PATH: ' + bundledDbExists);
-    if (bundledMediaExists) {
+    const mediaExists = fs.existsSync(LOCAL_MEDIA_DIR);
+    const dbExists = fs.existsSync(DB_PATH);
+    logToFile('local_media exists at resourcesPath: ' + mediaExists);
+    logToFile('database.sqlite exists at resourcesPath: ' + dbExists);
+    if (mediaExists) {
       try {
-        const topLevelEntries = fs.readdirSync(path.join(UNPACKED_PATH, 'local_media'));
-        logToFile('Bundled local_media top-level entries: ' + JSON.stringify(topLevelEntries));
+        const topLevelEntries = fs.readdirSync(LOCAL_MEDIA_DIR);
+        logToFile('local_media top-level entries: ' + JSON.stringify(topLevelEntries));
       } catch (e) {
-        logToFile('Could not list bundled local_media: ' + e.message);
+        logToFile('Could not list local_media: ' + e.message);
       }
     }
   }
 
-  // Set up local media directory
+  // Migration to Option C path: If the new Home folder doesn't have the database,
+  // but the old Resources or userData folder does, copy it over!
+  if (!isDev) {
+    const homeDbPath = DB_PATH;
+    const homeMediaDir = LOCAL_MEDIA_DIR;
+    
+    if (!fs.existsSync(homeDbPath)) {
+      const oldResourcesDb = path.join(process.resourcesPath, 'database.sqlite');
+      const oldUserDataDb = path.join(app.getPath('userData'), 'database.sqlite');
+      
+      let migrated = false;
+      fs.mkdirSync(path.dirname(homeDbPath), { recursive: true });
+
+      if (fs.existsSync(oldResourcesDb)) {
+        try {
+          fs.copyFileSync(oldResourcesDb, homeDbPath);
+          logToFile('Migrated existing database from Resources to Home folder.');
+          migrated = true;
+        } catch (e) {
+          logToFile('Failed to migrate database from Resources: ' + e.message);
+        }
+      } else if (fs.existsSync(oldUserDataDb)) {
+        try {
+          fs.copyFileSync(oldUserDataDb, homeDbPath);
+          logToFile('Migrated existing database from userData to Home folder.');
+          migrated = true;
+        } catch (e) {
+          logToFile('Failed to migrate database from userData: ' + e.message);
+        }
+      }
+
+      // Also migrate local_media folder if it exists in old paths
+      if (migrated) {
+        const oldResourcesMedia = path.join(process.resourcesPath, 'local_media');
+        const oldUserDataMedia = path.join(app.getPath('userData'), 'local_media');
+        
+        if (fs.existsSync(oldResourcesMedia)) {
+          try {
+            copyDirRecursive(oldResourcesMedia, homeMediaDir);
+            logToFile('Migrated existing media from Resources to Home folder.');
+          } catch (e) {
+            logToFile('Failed to migrate media from Resources: ' + e.message);
+          }
+        } else if (fs.existsSync(oldUserDataMedia)) {
+          try {
+            copyDirRecursive(oldUserDataMedia, homeMediaDir);
+            logToFile('Migrated existing media from userData to Home folder.');
+          } catch (e) {
+            logToFile('Failed to migrate media from userData: ' + e.message);
+          }
+        }
+      }
+    }
+  }
+
+  // Ensure local media directory exists (in case extraResources didn't include it)
   if (!fs.existsSync(LOCAL_MEDIA_DIR)) {
     fs.mkdirSync(LOCAL_MEDIA_DIR, { recursive: true });
   }
-
-  // Copy bundled DB + media into userData before opening SQLite
-  syncBundledAssetsToUserData();
 
   logToFile('Calling initializeDatabase()...');
   try {
@@ -600,11 +639,6 @@ app.whenReady().then(() => {
     logToFile('FATAL: initializeDatabase() failed: ' + err.stack);
     app.quit();
     return;
-  }
-
-  const bundledDbPath = resolveBundledAssetPath('database.sqlite');
-  if (bundledDbPath && fs.existsSync(DB_PATH)) {
-    mergeDatabaseUpdates(bundledDbPath, DB_PATH);
   }
 
   logToFile('Registering protocol handler...');
@@ -668,11 +702,11 @@ app.whenReady().then(() => {
       return 'application/octet-stream';
     };
 
-    // Try writable userData directory first
+    // Try the primary local_media directory (resourcesPath in production, cwd in dev)
     if (fs.existsSync(userPath)) {
       try {
         const fileContent = await fs.promises.readFile(userPath);
-        console.log(`[local-media] SUCCESS from userData: ${userPath} (${fileContent.length} bytes)`);
+        console.log(`[local-media] SUCCESS: ${userPath} (${fileContent.length} bytes)`);
         return new Response(fileContent, {
           headers: { 'content-type': getMimeType(userPath) }
         });
@@ -723,11 +757,26 @@ app.whenReady().then(() => {
         filePath = filePath.slice(1);
       }
 
-      // Check if this is an absolute /images/... or /placeholder.svg etc. request
-      // that should be served from our dist/ directory
-      const publicAssetMatch = filePath.match(/(?:^|[/\\])(images[/\\].*|placeholder\.svg|favicon\.ico|robots\.txt)$/i);
-      if (publicAssetMatch) {
-        const assetRelative = publicAssetMatch[1].replace(/\\/g, '/');
+      // Only intercept requests that are absolute to the root of the file system (starting with /images/ or are public assets at root)
+      // This prevents matching parent directory names containing the word "images".
+      const isAbsolutePublicAsset = 
+        filePath.startsWith('/images/') || 
+        filePath === '/placeholder.svg' || 
+        filePath === '/favicon.ico' || 
+        filePath === '/robots.txt' ||
+        (process.platform === 'win32' && (
+          /^[a-zA-Z]:[/\\]images[/\\]/i.test(filePath) ||
+          /^[a-zA-Z]:[/\\]placeholder\.svg$/i.test(filePath) ||
+          /^[a-zA-Z]:[/\\]favicon\.ico$/i.test(filePath) ||
+          /^[a-zA-Z]:[/\\]robots\.txt$/i.test(filePath)
+        ));
+
+      if (isAbsolutePublicAsset) {
+        let assetRelative = filePath;
+        if (process.platform === 'win32' && /^[a-zA-Z]:/.test(assetRelative)) {
+          assetRelative = assetRelative.slice(2);
+        }
+        assetRelative = assetRelative.replace(/^\/+/, '').replace(/\\/g, '/');
         const assetPath = path.join(APP_PATH, 'dist', assetRelative);
         callback({ path: assetPath });
         return;
@@ -748,6 +797,43 @@ app.whenReady().then(() => {
       console.error('Background assets download check failed:', err);
     });
   }, 1000);
+
+  // Background Google Drive sync — pull any newer files from Drive on startup
+  setTimeout(async () => {
+    try {
+      const status = await driveSync.getAuthStatus();
+      if (status.authenticated) {
+        logToFile('Drive authenticated — starting background pull...');
+        
+        // Close SQLite database before download to avoid locking
+        if (db) {
+          logToFile('Closing database for background Drive pull...');
+          db.close();
+          db = null;
+        }
+
+        try {
+          const result = await driveSync.pullFromCloud(LOCAL_MEDIA_DIR, DB_PATH, null);
+          logToFile('Drive pull complete: downloaded=' + (result.downloaded || 0) + ' skipped=' + (result.skipped || 0));
+          
+          if (result && result.downloaded > 0) {
+            logToFile('Reloading renderer window after background startup sync pull...');
+            const windows = BrowserWindow.getAllWindows();
+            if (windows.length > 0 && !windows[0].isDestroyed()) {
+              windows[0].webContents.send('drive-sync-reload');
+            }
+          }
+        } finally {
+          logToFile('Re-initializing database after background Drive pull...');
+          initializeDatabase();
+        }
+      } else {
+        logToFile('Drive not authenticated — skipping background sync.');
+      }
+    } catch (err) {
+      logToFile('Background Drive pull failed: ' + err.message);
+    }
+  }, 3000);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -969,11 +1055,106 @@ ipcMain.handle('save-media', async (event, { bucketName, filePath, fileArray, fi
     fs.writeFileSync(destPath, buffer);
     
     const publicUrl = `local-media://${bucketName}/${filePath}`;
+
+    // Auto-push the new file and updated database to Google Drive in the background
+    setTimeout(async () => {
+      try {
+        const relativePath = `local_media/${bucketName}/${filePath}`;
+        await driveSync.pushSingleFile(destPath, relativePath);
+        // Also push updated database after the media save settles
+        if (fs.existsSync(DB_PATH)) {
+          await driveSync.pushSingleFile(DB_PATH, 'database.sqlite');
+        }
+      } catch (err) {
+        console.error('[DriveSync] Auto-push after save-media failed:', err.message);
+      }
+    }, 500);
+
     return { success: true, url: publicUrl };
   } catch (err) {
     console.error('Failed to save media locally:', err);
     return { success: false, error: err.message || String(err) };
   }
+});
+
+// ── Google Drive Sync IPC Handlers ──────────────────────────────────
+
+ipcMain.handle('drive-auth', async () => {
+  try {
+    const result = await driveSync.authorize();
+    return result;
+  } catch (err) {
+    console.error('[DriveSync] Auth failed:', err.message);
+    return { authenticated: false, error: err.message };
+  }
+});
+
+ipcMain.handle('drive-sign-out', async () => {
+  return driveSync.signOut();
+});
+
+ipcMain.handle('drive-auth-status', async () => {
+  return driveSync.getAuthStatus();
+});
+
+ipcMain.handle('drive-push', async (event) => {
+  try {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const progressCallback = (data) => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('drive-sync-progress', data);
+      }
+    };
+    const result = await driveSync.pushToCloud(LOCAL_MEDIA_DIR, DB_PATH, progressCallback);
+    return result;
+  } catch (err) {
+    console.error('[DriveSync] Push failed:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('drive-pull', async (event) => {
+  try {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const progressCallback = (data) => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('drive-sync-progress', data);
+      }
+    };
+
+    // Close SQLite database before downloading to avoid file locking errors
+    if (db) {
+      logToFile('Closing database for Drive pull...');
+      db.close();
+      db = null;
+    }
+
+    let result;
+    try {
+      result = await driveSync.pullFromCloud(LOCAL_MEDIA_DIR, DB_PATH, progressCallback);
+    } finally {
+      // Always re-initialize the database connection
+      logToFile('Re-initializing database after Drive pull...');
+      initializeDatabase();
+    }
+
+    if (result && result.downloaded > 0) {
+      logToFile('Reloading renderer window after manual sync pull...');
+      const win = BrowserWindow.fromWebContents(event.sender);
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('drive-sync-reload');
+      }
+    }
+
+    return result;
+  } catch (err) {
+    console.error('[DriveSync] Pull failed:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('drive-sync-status', async () => {
+  return driveSync.getSyncStatus();
 });
 
 // IPC handlers for simulated authentication

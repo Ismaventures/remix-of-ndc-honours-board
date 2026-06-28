@@ -839,6 +839,20 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
     };
   }, []);
 
+  // Listen for Google Drive sync reload requests from the main process
+  useEffect(() => {
+    if (!window.electronAPI || !window.electronAPI.onDriveSyncReload) return;
+
+    const cleanup = window.electronAPI.onDriveSyncReload(() => {
+      console.log('[Index] Received Drive sync reload request. Reloading window...');
+      window.location.reload();
+    });
+
+    return () => {
+      cleanup();
+    };
+  }, []);
+
   useEffect(() => {
     let mounted = true;
 

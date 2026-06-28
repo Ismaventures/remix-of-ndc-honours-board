@@ -6,39 +6,39 @@ interface AppHeaderProps {
 
 export function AppHeader({ onHomeClick }: AppHeaderProps) {
   return (
-    <header className="relative w-full z-40 shrink-0 select-none bg-transparent">
-      {/* Tri-service stripes */}
-      <div className="w-full flex flex-col h-[30px]">
-        <div className="h-[10px] bg-[#FF0000]" />
-        <div className="h-[10px] bg-[#002060]" />
-        <div className="h-[10px] bg-[#00B0F0]" />
+    <header className="relative w-full z-40 shrink-0 select-none bg-white border-b border-slate-200/60">
+      {/* NDC Header Banner */}
+      <div className="flex items-center gap-4 px-6 py-2.5">
+        {/* Left Crest */}
+        <button
+          onClick={onHomeClick}
+          className="shrink-0 active:scale-95 transition-transform"
+          aria-label="Home"
+        >
+          <img
+            src={ndcCrest}
+            alt="NDC Crest"
+            className="h-11 w-11 object-contain"
+          />
+        </button>
+
+        {/* Title & Motto */}
+        <div className="flex flex-col justify-center min-w-0">
+          <h1 className="font-serif text-[clamp(0.85rem,1.6vw,1.25rem)] font-bold uppercase tracking-[0.18em] text-[#002060] leading-tight whitespace-nowrap">
+            National Defence College Nigeria
+          </h1>
+          <p className="text-[clamp(0.55rem,0.9vw,0.7rem)] uppercase tracking-[0.32em] text-[#8B7A2B] leading-tight mt-0.5 whitespace-nowrap">
+            Excellence &middot; Courage &middot; Patriotism &middot; Integrity
+          </p>
+        </div>
       </div>
 
-      {/* Left Crest */}
-      <button 
-        onClick={onHomeClick}
-        className="absolute left-6 top-1/2 -translate-y-1/2 active:scale-95 transition-transform"
-        aria-label="Home Left logo"
-      >
-        <img
-          src={ndcCrest}
-          alt="NDC Crest Left"
-          className="h-12 w-12 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]"
-        />
-      </button>
-
-      {/* Right Crest */}
-      <button 
-        onClick={onHomeClick}
-        className="absolute right-6 top-1/2 -translate-y-1/2 active:scale-95 transition-transform"
-        aria-label="Home Right logo"
-      >
-        <img
-          src={ndcCrest}
-          alt="NDC Crest Right"
-          className="h-12 w-12 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]"
-        />
-      </button>
+      {/* Tri-service stripe (thin, below header) */}
+      <div className="w-full flex h-[6px]">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#00B0F0]" />
+      </div>
     </header>
   );
 }

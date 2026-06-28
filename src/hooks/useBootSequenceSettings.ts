@@ -11,7 +11,7 @@ const STORAGE_KEY = 'ndc-boot-sequence-settings';
 const SUPABASE_SETTING_KEY = 'boot_sequence_settings';
 
 export const DEFAULT_BOOT_SEQUENCE_SETTINGS: BootSequenceSettings = {
-  totalDurationMs: 11000,
+  totalDurationMs: 2000,
   archiveTransitionMs: 600,
 };
 
@@ -22,7 +22,7 @@ function sanitizeSettings(input: Partial<BootSequenceSettings> | null | undefine
   const archive = Number(input?.archiveTransitionMs);
 
   return {
-    totalDurationMs: Number.isFinite(total) ? clamp(Math.round(total), 7000, 24000) : DEFAULT_BOOT_SEQUENCE_SETTINGS.totalDurationMs,
+    totalDurationMs: Number.isFinite(total) ? clamp(Math.round(total), 1000, 15000) : DEFAULT_BOOT_SEQUENCE_SETTINGS.totalDurationMs,
     archiveTransitionMs: Number.isFinite(archive) ? clamp(Math.round(archive), 250, 2000) : DEFAULT_BOOT_SEQUENCE_SETTINGS.archiveTransitionMs,
   };
 }
