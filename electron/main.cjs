@@ -5,11 +5,8 @@ const Database = require('better-sqlite3');
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 const APP_PATH = app.getAppPath();
-// In production, asarUnpack'd files live next to app.asar in app.asar.unpacked/
 const UNPACKED_PATH = isDev ? APP_PATH : APP_PATH.replace('app.asar', 'app.asar.unpacked');
 
-// In development, keep writeable files in the workspace root.
-// In production, write them to standard user application support directory.
 const LOCAL_MEDIA_DIR = isDev 
   ? path.join(process.cwd(), 'local_media') 
   : path.join(app.getPath('userData'), 'local_media');
@@ -18,10 +15,27 @@ const DB_PATH = isDev
   ? path.join(process.cwd(), 'database.sqlite') 
   : path.join(app.getPath('userData'), 'database.sqlite');
 
+// Crash log file for diagnosing installed-app failures
+const LOG_FILE = isDev ? null : path.join(app.getPath('userData'), 'crash.log');
+function logToFile(msg) {
+  const line = `[${new Date().toISOString()}] ${msg}\n`;
+  if (LOG_FILE) {
+    try { fs.appendFileSync(LOG_FILE, line); } catch (_) {}
+  }
+}
+
 // Register local-media protocol privileges
 protocol.registerSchemesAsPrivileged([
   { scheme: 'local-media', privileges: { bypassCSP: true, secure: true, supportFetchAPI: true, corsEnabled: true, standard: true } }
 ]);
+
+// Global crash handlers — write to crash.log so we can diagnose installed-app failures
+process.on('uncaughtException', (err) => {
+  try { logToFile('UNCAUGHT EXCEPTION: ' + err.stack); } catch (_) {}
+});
+process.on('unhandledRejection', (reason) => {
+  try { logToFile('UNHANDLED REJECTION: ' + String(reason)); } catch (_) {}
+});
 
 let db;
 
@@ -337,9 +351,12 @@ function normalizeSqliteValue(value) {
 function createWindow() {
   // In production the preload script is unpacked from ASAR to the real filesystem
   // so the sandbox bundler can read it without byte-offset corruption.
+  // Fallback to reading from ASAR if unpacked version doesn't exist.
+  const unpackedPreload = path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'preload.cjs');
+  const asarPreload = path.join(APP_PATH, 'electron', 'preload.cjs');
   const preloadPath = isDev
     ? path.join(__dirname, 'preload.cjs')
-    : path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'preload.cjs');
+    : (fs.existsSync(unpackedPreload) ? unpackedPreload : asarPreload);
 
   const win = new BrowserWindow({
     width: 1280,
@@ -367,17 +384,62 @@ function createWindow() {
   }
 }
 
-function copyDirRecursive(src, dest) {
-  fs.mkdirSync(dest, { recursive: true });
-  const entries = fs.readdirSync(src, { withFileTypes: true });
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      copyDirRecursive(srcPath, destPath);
-    } else {
-      fs.copyFileSync(srcPath, destPath);
+function parseLocalMediaPath(rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    const host = url.hostname;
+    const pathname = decodeURIComponent(url.pathname).replace(/^\/+/, '');
+    if (host && host !== 'local-media') {
+      return pathname ? `${host}/${pathname}` : host;
     }
+    return pathname;
+  } catch (_) {
+    let filePath = rawUrl.slice('local-media://'.length);
+    if (filePath.startsWith('/')) filePath = filePath.slice(1);
+    return decodeURIComponent(filePath);
+  }
+}
+
+function resolveBundledAssetPath(...segments) {
+  const candidates = [
+    path.join(UNPACKED_PATH, ...segments),
+    path.join(APP_PATH, ...segments),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+function syncBundledAssetsToUserData() {
+  if (isDev) return;
+
+  const bundledDbPath = resolveBundledAssetPath('database.sqlite');
+  if (bundledDbPath) {
+    if (!fs.existsSync(DB_PATH)) {
+      const dbDir = path.dirname(DB_PATH);
+      fs.mkdirSync(dbDir, { recursive: true });
+      try {
+        fs.copyFileSync(bundledDbPath, DB_PATH);
+        logToFile('Copied bundled database.sqlite from ' + bundledDbPath);
+      } catch (err) {
+        logToFile('Failed to copy bundled database.sqlite: ' + err.message);
+      }
+    }
+  } else {
+    logToFile('WARNING: bundled database.sqlite not found in app package');
+  }
+
+  const bundledMediaDir = resolveBundledAssetPath('local_media');
+  if (bundledMediaDir) {
+    try {
+      copyMissingFiles(bundledMediaDir, LOCAL_MEDIA_DIR);
+      logToFile('Synced bundled local_media from ' + bundledMediaDir);
+    } catch (err) {
+      logToFile('Failed to sync bundled local_media: ' + err.message);
+    }
+  } else {
+    logToFile('WARNING: bundled local_media not found in app package');
   }
 }
 
@@ -407,73 +469,117 @@ function copyMissingFiles(src, dest) {
   }
 }
 
+function mergeTableUpdates(bundledDb, targetDb, tableName) {
+  try {
+    // Only attempt merge if table exists in both databases
+    const bundledTableExists = bundledDb.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(tableName);
+    const targetTableExists = targetDb.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(tableName);
+    if (!bundledTableExists || !targetTableExists) return;
+
+    // Check if table has an 'id' column
+    const hasId = bundledDb.prepare(`PRAGMA table_info(${tableName})`).all().some(col => col.name === 'id');
+    if (!hasId) return;
+
+    const records = bundledDb.prepare(`SELECT * FROM ${tableName}`).all();
+    if (records.length === 0) return;
+    
+    // Get columns to build INSERT query dynamically
+    const columns = Object.keys(records[0]);
+    const placeholders = columns.map(() => '?').join(', ');
+    
+    const checkStmt = targetDb.prepare(`SELECT 1 FROM ${tableName} WHERE id = ?`);
+    const insertStmt = targetDb.prepare(`INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`);
+    
+    // We only update image_url for existing records (and only if missing)
+    let updateStmt = null;
+    if (columns.includes('image_url')) {
+      updateStmt = targetDb.prepare(
+        `UPDATE ${tableName} SET image_url = ? WHERE id = ? AND (image_url IS NULL OR image_url = '' OR image_url NOT LIKE 'local-media://%')`
+      );
+    }
+
+    let insertedCount = 0;
+    let updatedCount = 0;
+
+    targetDb.transaction(() => {
+      for (const row of records) {
+        const exists = checkStmt.get(row.id);
+        if (exists) {
+          if (updateStmt && row.image_url && row.image_url !== '') {
+            const info = updateStmt.run(row.image_url, row.id);
+            if (info.changes > 0) updatedCount++;
+          }
+        } else {
+          // Exclude any columns from the insert that don't exist in target DB
+          // (To be perfectly safe, we'll just insert what we got from bundled DB)
+          const values = columns.map(col => row[col]);
+          try {
+            insertStmt.run(...values);
+            insertedCount++;
+          } catch (insertErr) {
+            // If schema mismatch, log it
+            logToFile(`Failed to insert record into ${tableName}: ` + insertErr.message);
+          }
+        }
+      }
+    })();
+    
+    if (insertedCount > 0 || updatedCount > 0) {
+      logToFile(`Merged ${tableName}: inserted ${insertedCount}, updated ${updatedCount} image references.`);
+    }
+  } catch (err) {
+    logToFile(`Failed to merge table ${tableName}: ` + err.message);
+  }
+}
+
 /**
- * Merge updated image_url references from the bundled (read-only) database
+ * Merge updated image_url references and entirely new records from the bundled (read-only) database
  * into the user's writable database. This ensures that when a new app version
- * ships with updated image paths, those updates are propagated even though
+ * ships with updated content, those updates are propagated even though
  * the user's database already exists and won't be overwritten.
  */
 function mergeDatabaseUpdates(bundledDbPath, userDbPath) {
-  if (!fs.existsSync(bundledDbPath) || !fs.existsSync(userDbPath)) return;
+  if (!fs.existsSync(bundledDbPath) || !fs.existsSync(userDbPath) || !db) return;
   try {
     const bundledDb = new Database(bundledDbPath, { readonly: true });
-    const userDb = new Database(userDbPath);
 
-    // Merge personnel image_url updates
-    const bundledPersonnel = bundledDb.prepare(
-      "SELECT id, image_url FROM personnel WHERE image_url IS NOT NULL AND image_url != ''"
-    ).all();
-    const updatePersonnel = userDb.prepare(
-      "UPDATE personnel SET image_url = ? WHERE id = ? AND (image_url IS NULL OR image_url = '')"
-    );
-    userDb.transaction(() => {
-      for (const row of bundledPersonnel) {
-        updatePersonnel.run(row.image_url, row.id);
-      }
-    })();
-    console.log(`Merged ${bundledPersonnel.length} personnel image references from bundled DB.`);
-
-    // Merge commandant image_url updates
-    const bundledCommandants = bundledDb.prepare(
-      "SELECT id, image_url FROM commandants WHERE image_url IS NOT NULL AND image_url != ''"
-    ).all();
-    const updateCommandants = userDb.prepare(
-      "UPDATE commandants SET image_url = ? WHERE id = ? AND (image_url IS NULL OR image_url = '')"
-    );
-    userDb.transaction(() => {
-      for (const row of bundledCommandants) {
-        updateCommandants.run(row.image_url, row.id);
-      }
-    })();
-    console.log(`Merged ${bundledCommandants.length} commandant image references from bundled DB.`);
+    // Core tables that should have their missing records synced from bundle to user DB
+    const tablesToSync = [
+      'personnel', 'commandants', 'visits', 
+      'museum_artifacts', 'museum_tours', 'museum_tour_steps', 
+      'museum_sections', 'museum_about_items', 'museum_collection_wings', 
+      'museum_tour_routes', 'audio_tracks'
+    ];
+    
+    for (const table of tablesToSync) {
+      mergeTableUpdates(bundledDb, db, table);
+    }
 
     bundledDb.close();
-    userDb.close();
   } catch (err) {
-    console.error('Failed to merge database updates:', err.message);
+    logToFile('Failed to merge database updates: ' + err.message);
   }
 }
 
 app.whenReady().then(() => {
-  // Diagnostic logging for production debugging
-  console.log('=== NDC Honours Board Startup ===');
-  console.log('isDev:', isDev);
-  console.log('APP_PATH:', APP_PATH);
-  console.log('UNPACKED_PATH:', UNPACKED_PATH);
-  console.log('LOCAL_MEDIA_DIR:', LOCAL_MEDIA_DIR);
-  console.log('DB_PATH:', DB_PATH);
+  logToFile('=== NDC Honours Board Startup ===');
+  logToFile('isDev: ' + isDev);
+  logToFile('APP_PATH: ' + APP_PATH);
+  logToFile('UNPACKED_PATH: ' + UNPACKED_PATH);
+  logToFile('LOCAL_MEDIA_DIR: ' + LOCAL_MEDIA_DIR);
+  logToFile('DB_PATH: ' + DB_PATH);
 
   if (!isDev) {
     const bundledMediaExists = fs.existsSync(path.join(UNPACKED_PATH, 'local_media'));
     const bundledDbExists = fs.existsSync(path.join(UNPACKED_PATH, 'database.sqlite'));
-    console.log('Bundled local_media exists at UNPACKED_PATH:', bundledMediaExists);
-    console.log('Bundled database.sqlite exists at UNPACKED_PATH:', bundledDbExists);
+    logToFile('Bundled local_media exists at UNPACKED_PATH: ' + bundledMediaExists);
+    logToFile('Bundled database.sqlite exists at UNPACKED_PATH: ' + bundledDbExists);
     if (bundledMediaExists) {
       try {
         const topLevelEntries = fs.readdirSync(path.join(UNPACKED_PATH, 'local_media'));
-        console.log('Bundled local_media top-level entries:', topLevelEntries);
+        logToFile('Bundled local_media top-level entries: ' + JSON.stringify(topLevelEntries));
       } catch (e) {
-        console.error('Could not list bundled local_media:', e.message);
+        logToFile('Could not list bundled local_media: ' + e.message);
       }
     }
   }
@@ -483,67 +589,33 @@ app.whenReady().then(() => {
     fs.mkdirSync(LOCAL_MEDIA_DIR, { recursive: true });
   }
 
-  // Copy any missing bundled local_media assets to user data directory.
-  // Uses copyMissingFiles so existing files are never overwritten but newly
-  // bundled assets (e.g. new personnel images) are always picked up.
-  if (!isDev) {
-    const bundledMediaDir = path.join(UNPACKED_PATH, 'local_media');
-    if (fs.existsSync(bundledMediaDir)) {
-      try {
-        copyMissingFiles(bundledMediaDir, LOCAL_MEDIA_DIR);
-        console.log('Finished syncing bundled local_media to user data.');
-      } catch (err) {
-        console.error('Failed to sync bundled local_media:', err);
-      }
-    }
+  // Copy bundled DB + media into userData before opening SQLite
+  syncBundledAssetsToUserData();
+
+  logToFile('Calling initializeDatabase()...');
+  try {
+    initializeDatabase();
+    logToFile('initializeDatabase() completed.');
+  } catch (err) {
+    logToFile('FATAL: initializeDatabase() failed: ' + err.stack);
+    app.quit();
+    return;
   }
 
-  // If DB doesn't exist in userData (production), copy the bundled pre-populated database.
-  // If it does exist, merge any updated image_url references from the bundled DB.
-  if (!isDev) {
-    const bundledDbPath = path.join(UNPACKED_PATH, 'database.sqlite');
-    if (!fs.existsSync(DB_PATH)) {
-      const dbDir = path.dirname(DB_PATH);
-      if (!fs.existsSync(dbDir)) {
-        fs.mkdirSync(dbDir, { recursive: true });
-      }
-      if (fs.existsSync(bundledDbPath)) {
-        try {
-          fs.copyFileSync(bundledDbPath, DB_PATH);
-          console.log('Successfully copied bundled database.sqlite to user data.');
-        } catch (err) {
-          console.error('Failed to copy bundled database.sqlite:', err);
-        }
-      }
-    } else if (fs.existsSync(bundledDbPath)) {
-      // User DB already exists — merge any new image references from the bundled DB
-      mergeDatabaseUpdates(bundledDbPath, DB_PATH);
-    }
+  const bundledDbPath = resolveBundledAssetPath('database.sqlite');
+  if (bundledDbPath && fs.existsSync(DB_PATH)) {
+    mergeDatabaseUpdates(bundledDbPath, DB_PATH);
   }
 
-  initializeDatabase();
-
-  // Trigger background remote assets download and local migration
-  setTimeout(() => {
-    downloadRemoteAssets().catch(err => {
-      console.error('Background assets download check failed:', err);
-    });
-  }, 1000);
-
-  // Register modern protocol handle for local-media://
+  logToFile('Registering protocol handler...');
+  // Register modern protocol handle for local-media:// BEFORE creating window.
   // First check the writable userData directory, then fall back to the
-  // read-only bundled assets inside APP_PATH. This ensures images render
-  // even before copyMissingFiles finishes or if the copy was skipped.
+  // read-only bundled assets inside APP_PATH.
   protocol.handle('local-media', async (request) => {
     const rawUrl = request.url;
-    let filePath = rawUrl.slice('local-media://'.length);
-    if (filePath.startsWith('/')) {
-      filePath = filePath.slice(1);
-    }
-    const decodedPath = decodeURIComponent(filePath);
+    const decodedPath = parseLocalMediaPath(rawUrl);
 
     console.log(`[local-media] RAW URL: ${rawUrl}`);
-    console.log(`[local-media] Sliced filePath: ${filePath}`);
     console.log(`[local-media] Decoded path: ${decodedPath}`);
 
     // Recursively resolve all parts of a relative path case-insensitively
@@ -609,22 +681,24 @@ app.whenReady().then(() => {
       }
     }
 
-    // Fallback to read-only bundled assets inside the app package
+    // Fallback to read-only bundled assets: first try asarUnpacked, then inside the ASAR itself.
     if (!isDev) {
-      const bundledMediaDir = path.join(UNPACKED_PATH, 'local_media');
-      console.log(`[local-media] Checking bundled dir: ${bundledMediaDir}, exists: ${fs.existsSync(bundledMediaDir)}`);
-      const bundledNormalizedPath = caseNormalizePath(bundledMediaDir, decodedPath);
-      const bundledPath = path.join(bundledMediaDir, bundledNormalizedPath);
-      console.log(`[local-media] Bundled path: ${bundledPath}, exists: ${fs.existsSync(bundledPath)}`);
-      if (fs.existsSync(bundledPath)) {
-        try {
-          const fileContent = await fs.promises.readFile(bundledPath);
-          console.log(`[local-media] SUCCESS from bundle: ${bundledPath} (${fileContent.length} bytes)`);
-          return new Response(fileContent, {
-            headers: { 'content-type': getMimeType(bundledPath) }
-          });
-        } catch (err) {
-          console.error(`[local-media] Error reading from bundle ${bundledPath}:`, err);
+      const searchPaths = [
+        path.join(UNPACKED_PATH, 'local_media'),
+        path.join(APP_PATH, 'local_media'),
+      ];
+      for (const bundledMediaDir of searchPaths) {
+        const bundledNormalizedPath = caseNormalizePath(bundledMediaDir, decodedPath);
+        const bundledPath = path.join(bundledMediaDir, bundledNormalizedPath);
+        if (fs.existsSync(bundledPath)) {
+          try {
+            const fileContent = await fs.promises.readFile(bundledPath);
+            return new Response(fileContent, {
+              headers: { 'content-type': getMimeType(bundledPath) }
+            });
+          } catch (err) {
+            console.error(`[local-media] Error reading from bundle ${bundledPath}:`, err);
+          }
         }
       }
     }
@@ -664,7 +738,16 @@ app.whenReady().then(() => {
     });
   }
 
+  logToFile('Protocol handlers registered. Creating window...');
   createWindow();
+  logToFile('createWindow() called.');
+
+  // Trigger background remote assets download and local migration
+  setTimeout(() => {
+    downloadRemoteAssets().catch(err => {
+      console.error('Background assets download check failed:', err);
+    });
+  }, 1000);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -677,6 +760,9 @@ app.on('window-all-closed', () => {
 
 // IPC handler for SQLite queries
 ipcMain.handle('query-sqlite', async (event, queryDesc) => {
+  if (!db) {
+    return { data: null, error: 'Database not yet initialized' };
+  }
   const { table, method, fields, payload, filters, order, range } = queryDesc;
   
   // Helper to build SQL WHERE clauses for all filter types

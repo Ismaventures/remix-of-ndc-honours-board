@@ -2,6 +2,8 @@
   "name": "vite_react_shadcn_ts",
   "private": true,
   "version": "0.0.0",
+  "description": "NDC Honours Board Museum Display",
+  "author": "National Defence College",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -12,15 +14,19 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "postinstall": "electron-builder install-app-deps",
     "admin:create-user": "node scripts/create-admin-user.mjs",
     "db:sync": "npx electron scripts/download_supabase_assets.cjs",
     "electron:start": "electron .",
     "electron:dev": "concurrently -k \"npm run dev\" \"electron .\"",
-    "electron:build": "npm run build && electron-builder"
+    "electron:rebuild": "electron-builder install-app-deps",
+    "electron:build": "npm run build && electron-builder install-app-deps && electron-builder --win",
+    "electron:pack": "npm run electron:build"
   },
   "build": {
     "appId": "com.ndc.honoursboard",
     "productName": "NDCHonoursBoard",
+    "npmRebuild": true,
     "files": [
       "dist/**/*",
       "electron/**/*",
