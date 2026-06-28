@@ -9,13 +9,14 @@ interface ProfilePortraitFrameProps {
 }
 
 /** Full-bleed official portrait panel with red/blue border frame (commandant / fellow full view). */
-export function ProfilePortraitFrame({ imageUrl, alt, placeholder }: ProfilePortraitFrameProps) {
+export function ProfilePortraitFrame({ imageUrl, alt, placeholder, serviceColor = 'tri-color' }: ProfilePortraitFrameProps) {
   return (
     <div className="w-[35%] shrink-0 flex h-full relative overflow-hidden">
       <div className="w-[12px] h-full flex flex-col shrink-0 flex-none">
-        <div className="flex-1 bg-[#002060]" title="Navy" />
-        <div className="flex-1 bg-[#FF0000]" title="Army" />
-        <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
+        {/* Navy block is fixed height to align exactly with the horizontal category text line from the left panel */}
+        <div className="h-[44px] shrink-0" style={{ backgroundColor: serviceColor === 'tri-color' ? '#002060' : serviceColor }} title="Navy" />
+        <div className="flex-1" style={{ backgroundColor: serviceColor === 'tri-color' ? '#FF0000' : serviceColor }} title="Army" />
+        <div className="flex-1" style={{ backgroundColor: serviceColor === 'tri-color' ? '#00B0F0' : serviceColor }} title="Air Force" />
       </div>
 
       <div className="flex-1 h-full min-h-0 relative bg-white flex items-center justify-center p-0 m-0 -ml-1">

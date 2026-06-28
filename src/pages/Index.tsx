@@ -55,10 +55,10 @@ import ndcCrest from "/images/ndc-crest.png";
 import { getCommandantDisplayTitle } from "@/lib/utils";
 
 const SECTION_TITLES: Record<string, string> = {
-  fwc: "Distinguished Fellows of War College (FWC)",
-  fdc: "Distinguished Fellows of Defence College (FDC)",
-  participants: "Participants",
-  allied: "International Allied Officers (Allied)",
+  fwc: "DISTINGUISHED FELLOWS OF WAR COLLEGE (fwc+)",
+  fdc: "DISTINGUISHED FELLOWS OF DEFENCE COLLEGE (fdc+)",
+  participants: "CHRONICLES OF DIRECTING STAFF",
+  allied: "ALLIED OFFICERS",
 };
 
 const SECTION_CATEGORIES: Record<string, Category | Category[]> = {
@@ -1249,7 +1249,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
         <DirectingStaffByCourseYear
           personnel={personnel}
           onBack={() => setView("home")}
-          title="Participants"
+          title="CHRONICLES OF DIRECTING STAFF"
           description="Distinguished participants who have guided courses and shaped the NDC academic framework, categorized by CSE course year."
           onCourseSelect={setActiveCourseNumber}
           backTriggerNonce={backTriggerNonce}
@@ -1263,7 +1263,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
         <DirectingStaffByCourseYear
           personnel={personnel}
           onBack={() => setView("home")}
-          title="Directing Staff"
+          title="CHRONICLES OF DIRECTING STAFF"
           description="Directing staff who have guided courses and shaped the NDC academic framework, categorized by CSE course year."
           onCourseSelect={setActiveCourseNumber}
           backTriggerNonce={backTriggerNonce}
@@ -1296,7 +1296,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
         <DirectingStaffByCourseYear
           personnel={personnel}
           onBack={() => setView("home")}
-          title="Participants"
+          title="CHRONICLES OF DIRECTING STAFF"
           description="Participants who have shaped the NDC academic framework, categorized by CSE course year."
           onCourseSelect={setActiveCourseNumber}
           backTriggerNonce={backTriggerNonce}

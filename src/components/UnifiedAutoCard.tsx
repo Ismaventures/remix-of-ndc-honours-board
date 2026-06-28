@@ -45,19 +45,7 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
           : "bg-background text-foreground border-border"
       }`}
     >
-      {/* Top Defence Colors Strip */}
-      {serviceColor === "tri-color" ? (
-        <div className="absolute top-0 inset-x-0 h-[3%] min-h-[10px] flex z-30">
-          <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
-          <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
-          <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
-        </div>
-      ) : (
-        <div
-          className="absolute top-0 inset-x-0 h-[3%] min-h-[10px] z-30"
-          style={{ backgroundColor: serviceColor }}
-        />
-      )}
+      {/* Top Defence Colors Strip - Removed as per user request */}
 
       {/* Background: subtle paper grain (light) */}
       <div className={`absolute inset-0 z-0 ${isLightMode ? "opacity-100" : "opacity-40"}`}>
@@ -81,64 +69,30 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
 
       {/* Main Content Container */}
       <div className="relative z-10 flex flex-col items-center w-full h-full max-w-[min(96vw,980px)] sm:max-w-[min(95vw,1050px)] md:max-w-[min(92vw,1120px)] mx-auto justify-center py-[max(10px,1.4vh)] gap-[max(8px,1.1vh)] md:gap-[2vh]">
-        {/* Portrait with Yellow/Gold frame */}
-        <div className="relative w-full flex justify-center items-center flex-shrink min-h-0 overflow-hidden">
-          {/* Tri-colour outer frame */}
-          <div className="relative rounded-sm overflow-hidden shadow-2xl transition-transform duration-500">
-            {/* Tri-colour border layers */}
-            <div className="absolute inset-0 z-0 pointer-events-none">
-              <div className="absolute top-0 left-0 bottom-0 w-[8px] bg-[#C0392B]" />
-              <div className="absolute top-0 right-0 bottom-0 w-[8px] bg-[#00B0F0]" />
-              <div className="absolute top-0 inset-x-0 h-[8px] flex">
-                <div className="flex-1 bg-[#C0392B]" />
-                <div className="flex-1 bg-[#002060]" />
-                <div className="flex-1 bg-[#00B0F0]" />
-              </div>
-              <div className="absolute bottom-0 inset-x-0 h-[8px] flex">
-                <div className="flex-1 bg-[#C0392B]" />
-                <div className="flex-1 bg-[#002060]" />
-                <div className="flex-1 bg-[#00B0F0]" />
-              </div>
-            </div>
-            {/* Black inner border */}
-            <div className="absolute inset-[8px] z-[1] border-[4px] border-black/90 pointer-events-none" />
-            {/* White mat + image */}
-            <div className="relative z-[2] m-[8px] p-[4px] bg-black/90">
-              <div className="bg-white p-[max(2px,0.22vh)]">
-                <div
-                  className={`relative aspect-[4/5] ${
-                    isPersonnel
-                      ? "h-[clamp(300px,66dvh,760px)] sm:h-[clamp(330px,68dvh,820px)] md:h-[clamp(360px,72dvh,900px)] max-h-[78dvh]"
-                      : "h-[clamp(220px,54dvh,560px)] sm:h-[clamp(260px,56dvh,600px)] md:h-[clamp(280px,58dvh,640px)] max-h-[62dvh]"
-                  } w-auto overflow-hidden shadow-inner ${
-                    isLightMode ? "bg-slate-100" : "bg-muted/30"
-                  }`}
-                >
-                  {imageUrl ? (
-                    <div
-                      className={`w-full h-full ${isPersonnel ? "p-[max(2px,0.3vh)]" : "p-[max(4px,0.55vh)]"} ${
-                        isLightMode ? "bg-slate-100" : "bg-muted/20"
-                      }`}
-                    >
-                      <img
-                        src={imageUrl}
-                        alt={mainName}
-                        className={`w-full h-full ${isPersonnel ? "object-contain object-top" : "object-contain object-center"}`}
-                        loading="eager"
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className={`w-full h-full flex flex-col items-center justify-center ${
-                        isLightMode
-                          ? "text-slate-300 bg-slate-50"
-                          : "text-slate-500 bg-muted/20"
-                      }`}
-                    >
-                      <Shield className="h-[15%] w-auto opacity-20" />
-                    </div>
-                  )}
-                </div>
+        {/* Portrait - no frame, just image with two-tone background */}
+        <div className="relative w-full flex justify-center items-center flex-shrink min-h-0">
+          <div className="relative flex flex-col shadow-2xl transition-transform duration-500">
+            {/* Full-size image container with two-tone background */}
+            <div className="relative w-full flex-1 flex" style={{ background: 'linear-gradient(to bottom, #C0392B 0%, #C0392B 45%, #002060 45%, #002060 100%)' }}>
+              <div
+                className={`relative aspect-[4/5] ${
+                  isPersonnel
+                    ? "h-[clamp(300px,66dvh,760px)] sm:h-[clamp(330px,68dvh,820px)] md:h-[clamp(360px,72dvh,900px)] max-h-[78dvh]"
+                    : "h-[clamp(220px,54dvh,560px)] sm:h-[clamp(260px,56dvh,600px)] md:h-[clamp(280px,58dvh,640px)] max-h-[62dvh]"
+                } w-auto overflow-hidden`}
+              >
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={mainName}
+                    className="absolute inset-0 h-full w-full object-cover object-top scale-[1.08]"
+                    loading="eager"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white/60">
+                    <Shield className="h-[15%] w-auto opacity-30" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -146,8 +100,6 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
 
         {/* Identity Plate */}
         <div className="w-full relative flex-shrink-0 mt-[0.5vh] md:mt-[1vh]">
-          {/* Top Red Bar */}
-          <div className="h-[0.6vh] min-h-[2px] w-full bg-[#FF0000]" />
           {/* Main Info Bar */}
           <div className="bg-[#002060] w-full py-[1.5vh] md:py-[2.5vh] px-[4vw] flex flex-col items-center justify-center text-center shadow-2xl">
             <div className="flex flex-col items-center gap-[0.3vh] md:gap-[0.4vh] mb-[0.5vh]">
@@ -169,8 +121,6 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
               </p>
             </div>
           </div>
-          {/* Bottom Red Bar */}
-          <div className="h-[0.6vh] min-h-[2px] w-full bg-[#FF0000]" />
         </div>
           
         {/* Sequence Number Indicator */}
@@ -182,19 +132,7 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
           </div>
         )}
 
-        {/* Bottom Defence Colors Strip */}
-        {serviceColor === "tri-color" ? (
-          <div className="absolute bottom-0 inset-x-0 h-[2.5%] min-h-[8px] flex z-30">
-            <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
-            <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
-            <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
-          </div>
-        ) : (
-          <div
-            className="absolute bottom-0 inset-x-0 h-[2.5%] min-h-[8px] z-30"
-            style={{ backgroundColor: serviceColor }}
-          />
-        )}
+        {/* Bottom Defence Colors Strip - Removed as per user request */}
       </div>
     </section>
   );

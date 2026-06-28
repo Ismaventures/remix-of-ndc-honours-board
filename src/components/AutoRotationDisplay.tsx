@@ -1537,11 +1537,7 @@ export function AutoRotationDisplay({
       {slide.type === "page" && (
         <div className="auto-scroll-heading mt-4 mb-2 px-6 sm:px-12 w-full max-w-[1900px] mx-auto shrink-0 z-10">
           <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white/95 px-3 py-1.5 shadow-sm md:px-4 md:py-2">
-            <div className="h-1 flex shrink-0">
-              <div className="flex-1 bg-[#002060]" />
-              <div className="flex-1 bg-[#FF0000]" />
-              <div className="flex-1 bg-[#00B0F0]" />
-            </div>
+
             <div className="px-2 pb-0 pt-2 text-center">
               {headingPrimary && (
                 <h2

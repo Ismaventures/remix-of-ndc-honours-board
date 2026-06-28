@@ -66,19 +66,7 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
         className={`rounded-xl max-w-5xl w-full overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.4)] modal-enter relative max-h-[94dvh] flex flex-col transition-all duration-500 border ${isLightMode ? "bg-white border-slate-200" : "bg-card border-primary/20"}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Defence Colors Strip */}
-        {serviceColor === "tri-color" ? (
-          <div className="h-[10px] w-full flex shrink-0">
-            <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
-            <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
-            <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
-          </div>
-        ) : (
-          <div
-            className="h-[10px] w-full shrink-0"
-            style={{ backgroundColor: serviceColor }}
-          />
-        )}
+        {/* Top Defence Colors Strip removed as requested */}
 
         <div className={`flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 sm:py-5 border-b ${isLightMode ? "border-slate-100 bg-slate-50/50" : "border-primary/20 bg-muted/20"}`}>
           <div className="flex items-center gap-4">
@@ -208,19 +196,7 @@ export function ProfileModal({ person, onClose }: ProfileModalProps) {
           </div>
         </div>
 
-        {/* Bottom Defence Colors Strip */}
-        {serviceColor === "tri-color" ? (
-          <div className="h-[8px] w-full flex shrink-0">
-            <div className="flex-1 bg-[#002060]" title="Nigerian Navy" />
-            <div className="flex-1 bg-[#FF0000]" title="Nigerian Army" />
-            <div className="flex-1 bg-[#00B0F0]" title="Nigerian Air Force" />
-          </div>
-        ) : (
-          <div
-            className="h-[8px] w-full shrink-0"
-            style={{ backgroundColor: serviceColor }}
-          />
-        )}
+        {/* Bottom Defence Colors Strip removed as requested */}
       </div>
     </div>,
     document.body,
