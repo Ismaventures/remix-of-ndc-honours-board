@@ -135,6 +135,15 @@ export function PersonnelPortraitCard({
             />
           )}
         </div>
+
+        {/* Title below photo (if present) */}
+        {person.title && (
+          <div className="text-center mt-2 px-1">
+            <p className="text-[9px] text-slate-500 italic leading-tight line-clamp-2">
+              {person.title}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Navy blue info box */}
@@ -210,7 +219,7 @@ export function PersonnelPortraitGrid({
 
   return (
     <div className="relative space-y-3">
-      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-7 max-w-[1400px] mx-auto">
+      <div className="relative z-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5 md:gap-6">
         {personnel.map((person, index) => (
           <PersonnelPortraitCard
             key={person.id}

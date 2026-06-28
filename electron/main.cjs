@@ -5,6 +5,8 @@ const Database = require('better-sqlite3');
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 const APP_PATH = app.getAppPath();
+// In production, asarUnpack'd files live next to app.asar in app.asar.unpacked/
+const UNPACKED_PATH = isDev ? APP_PATH : APP_PATH.replace('app.asar', 'app.asar.unpacked');
 
 // In development, keep writeable files in the workspace root.
 // In production, write them to standard user application support directory.
@@ -205,6 +207,81 @@ function initializeDatabase() {
       })();
     }
   }
+
+  // Heal database duplicates and correct categories on startup
+  healDatabase(db);
+}
+
+function healDatabase(db) {
+  console.log('Running database healing and deduplication...');
+  try {
+    db.transaction(() => {
+      // 1. Delete duplicate records where name is similar and one has no image
+      const personnel = db.prepare("SELECT id, name, category, image_url, decoration, period_start FROM personnel").all();
+      
+      const groups = {};
+      const cleanName = (n) => n.replace(/[^a-zA-Z]/g, '').toLowerCase();
+      
+      for (const p of personnel) {
+        const key = cleanName(p.name);
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(p);
+      }
+      
+      for (const key in groups) {
+        const list = groups[key];
+        if (list.length > 1) {
+          console.log(`[Heal] Found duplicates for normalized name "${key}":`, list.map(x => `${x.name} (ID: ${x.id}, Cat: ${x.category}, Img: ${x.image_url ? 'Yes' : 'No'})`));
+          
+          // Find if one has a valid image_url
+          const withImage = list.find(x => x.image_url && x.image_url.startsWith('local-media://'));
+          
+          if (withImage) {
+            // Keep the one with the image, delete the others
+            for (const item of list) {
+              if (item.id !== withImage.id) {
+                db.prepare("DELETE FROM personnel WHERE id = ?").run(item.id);
+                console.log(`[Heal] Deleted duplicate/broken personnel record: ${item.name} (${item.id}) category: ${item.category}`);
+              }
+            }
+          } else {
+            // If none have images, keep the first one and delete the rest
+            const keep = list[0];
+            for (let i = 1; i < list.length; i++) {
+              db.prepare("DELETE FROM personnel WHERE id = ?").run(list[i].id);
+              console.log(`[Heal] Deleted duplicate/empty personnel record: ${list[i].name} (${list[i].id}) category: ${list[i].category}`);
+            }
+          }
+        }
+      }
+      
+      // 2. Correct categories based on course numbers
+      // Course-1 to Course-15 MUST be FWC
+      // Course-16 to Course-34 MUST be FDC
+      const allPersonnel = db.prepare("SELECT id, name, category, decoration, period_start FROM personnel").all();
+      for (const p of allPersonnel) {
+        let courseNum = null;
+        if (p.decoration) {
+          let match = p.decoration.match(/CSE\s*(\d+)/i) || p.decoration.match(/NWC\s+Course\s+(\d+)/i) || p.decoration.match(/Course\s+(\d+)/i);
+          if (match) courseNum = parseInt(match[1], 10);
+        }
+        if (!courseNum && p.period_start) {
+          courseNum = p.period_start - 1991;
+        }
+        
+        if (courseNum && !isNaN(courseNum)) {
+          const correctCategory = courseNum <= 15 ? 'FWC' : 'FDC';
+          if (p.category !== correctCategory && p.category !== 'Allied' && p.category !== 'Directing Staff') {
+            db.prepare("UPDATE personnel SET category = ? WHERE id = ?").run(correctCategory, p.id);
+            console.log(`[Heal] Corrected category for ${p.name} (${p.id}) from ${p.category} to ${correctCategory}`);
+          }
+        }
+      }
+    })();
+    console.log('Database healing and deduplication complete.');
+  } catch (err) {
+    console.error('Failed to heal database:', err);
+  }
 }
 
 // Columns that contain serialized JSON or Array values
@@ -319,8 +396,13 @@ function copyMissingFiles(src, dest) {
     if (entry.isDirectory()) {
       copyMissingFiles(srcPath, destPath);
     } else if (!fs.existsSync(destPath)) {
-      fs.copyFileSync(srcPath, destPath);
-      console.log(`Copied missing asset: ${entry.name}`);
+      try {
+        const fileContent = fs.readFileSync(srcPath);
+        fs.writeFileSync(destPath, fileContent);
+        console.log(`Copied missing asset: ${entry.name}`);
+      } catch (err) {
+        console.error(`Failed to copy asset ${entry.name}:`, err);
+      }
     }
   }
 }
@@ -373,6 +455,29 @@ function mergeDatabaseUpdates(bundledDbPath, userDbPath) {
 }
 
 app.whenReady().then(() => {
+  // Diagnostic logging for production debugging
+  console.log('=== NDC Honours Board Startup ===');
+  console.log('isDev:', isDev);
+  console.log('APP_PATH:', APP_PATH);
+  console.log('UNPACKED_PATH:', UNPACKED_PATH);
+  console.log('LOCAL_MEDIA_DIR:', LOCAL_MEDIA_DIR);
+  console.log('DB_PATH:', DB_PATH);
+
+  if (!isDev) {
+    const bundledMediaExists = fs.existsSync(path.join(UNPACKED_PATH, 'local_media'));
+    const bundledDbExists = fs.existsSync(path.join(UNPACKED_PATH, 'database.sqlite'));
+    console.log('Bundled local_media exists at UNPACKED_PATH:', bundledMediaExists);
+    console.log('Bundled database.sqlite exists at UNPACKED_PATH:', bundledDbExists);
+    if (bundledMediaExists) {
+      try {
+        const topLevelEntries = fs.readdirSync(path.join(UNPACKED_PATH, 'local_media'));
+        console.log('Bundled local_media top-level entries:', topLevelEntries);
+      } catch (e) {
+        console.error('Could not list bundled local_media:', e.message);
+      }
+    }
+  }
+
   // Set up local media directory
   if (!fs.existsSync(LOCAL_MEDIA_DIR)) {
     fs.mkdirSync(LOCAL_MEDIA_DIR, { recursive: true });
@@ -382,7 +487,7 @@ app.whenReady().then(() => {
   // Uses copyMissingFiles so existing files are never overwritten but newly
   // bundled assets (e.g. new personnel images) are always picked up.
   if (!isDev) {
-    const bundledMediaDir = path.join(APP_PATH, 'local_media');
+    const bundledMediaDir = path.join(UNPACKED_PATH, 'local_media');
     if (fs.existsSync(bundledMediaDir)) {
       try {
         copyMissingFiles(bundledMediaDir, LOCAL_MEDIA_DIR);
@@ -396,7 +501,7 @@ app.whenReady().then(() => {
   // If DB doesn't exist in userData (production), copy the bundled pre-populated database.
   // If it does exist, merge any updated image_url references from the bundled DB.
   if (!isDev) {
-    const bundledDbPath = path.join(APP_PATH, 'database.sqlite');
+    const bundledDbPath = path.join(UNPACKED_PATH, 'database.sqlite');
     if (!fs.existsSync(DB_PATH)) {
       const dbDir = path.dirname(DB_PATH);
       if (!fs.existsSync(dbDir)) {
@@ -429,39 +534,104 @@ app.whenReady().then(() => {
   // First check the writable userData directory, then fall back to the
   // read-only bundled assets inside APP_PATH. This ensures images render
   // even before copyMissingFiles finishes or if the copy was skipped.
-  protocol.handle('local-media', (request) => {
-    let filePath = request.url.slice('local-media://'.length);
+  protocol.handle('local-media', async (request) => {
+    const rawUrl = request.url;
+    let filePath = rawUrl.slice('local-media://'.length);
     if (filePath.startsWith('/')) {
       filePath = filePath.slice(1);
     }
     const decodedPath = decodeURIComponent(filePath);
-    const userPath = path.join(LOCAL_MEDIA_DIR, decodedPath);
 
-    const getFileUrl = (p) => {
-      try {
-        return require('url').pathToFileURL(p).toString();
-      } catch (e) {
-        return process.platform === 'win32'
-          ? 'file:///' + p.replace(/\\/g, '/')
-          : 'file://' + p;
+    console.log(`[local-media] RAW URL: ${rawUrl}`);
+    console.log(`[local-media] Sliced filePath: ${filePath}`);
+    console.log(`[local-media] Decoded path: ${decodedPath}`);
+
+    // Recursively resolve all parts of a relative path case-insensitively
+    const caseNormalizePath = (baseDir, relativePath) => {
+      const parts = relativePath.split(/[/\\]/).filter(Boolean);
+      let currentDir = baseDir;
+      const normalizedParts = [];
+
+      for (const part of parts) {
+        if (!fs.existsSync(currentDir)) {
+          normalizedParts.push(part);
+          continue;
+        }
+        try {
+          const files = fs.readdirSync(currentDir);
+          const matched = files.find(f => f.toLowerCase() === part.toLowerCase());
+          if (matched) {
+            normalizedParts.push(matched);
+            currentDir = path.join(currentDir, matched);
+          } else {
+            console.log(`[local-media] No match for segment "${part}" in ${currentDir}. Available: ${files.join(', ')}`);
+            normalizedParts.push(part);
+            currentDir = path.join(currentDir, part);
+          }
+        } catch (e) {
+          normalizedParts.push(part);
+          currentDir = path.join(currentDir, part);
+        }
       }
+      return normalizedParts.length > 0 ? path.join(...normalizedParts) : relativePath;
+    };
+
+    const normalizedPath = caseNormalizePath(LOCAL_MEDIA_DIR, decodedPath);
+    const userPath = path.join(LOCAL_MEDIA_DIR, normalizedPath);
+
+    console.log(`[local-media] Normalized path: ${normalizedPath}`);
+    console.log(`[local-media] Full user path: ${userPath}`);
+    console.log(`[local-media] User path exists: ${fs.existsSync(userPath)}`);
+
+    const getMimeType = (p) => {
+      const ext = path.extname(p).toLowerCase();
+      if (ext === '.png') return 'image/png';
+      if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
+      if (ext === '.gif') return 'image/gif';
+      if (ext === '.svg') return 'image/svg+xml';
+      if (ext === '.webp') return 'image/webp';
+      if (ext === '.mp3') return 'audio/mpeg';
+      if (ext === '.wav') return 'audio/wav';
+      if (ext === '.ogg') return 'audio/ogg';
+      return 'application/octet-stream';
     };
 
     // Try writable userData directory first
     if (fs.existsSync(userPath)) {
-      return net.fetch(getFileUrl(userPath));
+      try {
+        const fileContent = await fs.promises.readFile(userPath);
+        console.log(`[local-media] SUCCESS from userData: ${userPath} (${fileContent.length} bytes)`);
+        return new Response(fileContent, {
+          headers: { 'content-type': getMimeType(userPath) }
+        });
+      } catch (err) {
+        console.error(`[local-media] Error reading from userData ${userPath}:`, err);
+      }
     }
 
     // Fallback to read-only bundled assets inside the app package
     if (!isDev) {
-      const bundledPath = path.join(APP_PATH, 'local_media', decodedPath);
+      const bundledMediaDir = path.join(UNPACKED_PATH, 'local_media');
+      console.log(`[local-media] Checking bundled dir: ${bundledMediaDir}, exists: ${fs.existsSync(bundledMediaDir)}`);
+      const bundledNormalizedPath = caseNormalizePath(bundledMediaDir, decodedPath);
+      const bundledPath = path.join(bundledMediaDir, bundledNormalizedPath);
+      console.log(`[local-media] Bundled path: ${bundledPath}, exists: ${fs.existsSync(bundledPath)}`);
       if (fs.existsSync(bundledPath)) {
-        return net.fetch(getFileUrl(bundledPath));
+        try {
+          const fileContent = await fs.promises.readFile(bundledPath);
+          console.log(`[local-media] SUCCESS from bundle: ${bundledPath} (${fileContent.length} bytes)`);
+          return new Response(fileContent, {
+            headers: { 'content-type': getMimeType(bundledPath) }
+          });
+        } catch (err) {
+          console.error(`[local-media] Error reading from bundle ${bundledPath}:`, err);
+        }
       }
     }
 
-    // Default: still attempt userData path (will 404 naturally)
-    return net.fetch(getFileUrl(userPath));
+    // Default: Return 404 Response if file does not exist
+    console.error(`[local-media] 404 NOT FOUND: ${decodedPath}`);
+    return new Response('Not Found', { status: 404 });
   });
 
   // In production, intercept file:// requests for absolute paths like /images/...
@@ -771,7 +941,7 @@ async function downloadRemoteAssets() {
       const localPath = path.join(LOCAL_MEDIA_DIR, relPath);
       if (fs.existsSync(localPath)) return null; // already have it
       // Also check the bundled path
-      const bundledPath = path.join(APP_PATH, 'local_media', relPath);
+      const bundledPath = path.join(UNPACKED_PATH, 'local_media', relPath);
       if (fs.existsSync(bundledPath)) return null; // available from bundle
       // File is truly missing — nothing we can do without a remote URL
       return null;

@@ -286,7 +286,7 @@ export function FellowsByCourse({
     : `Distinguished Fellows of Defence College, categorized by CSE course year.`;
 
   return (
-    <div className="space-y-0">
+    <div className="flex flex-col">
       {!selectedGroupId && (
         <>
           {/* Hero Section */}
@@ -346,7 +346,7 @@ export function FellowsByCourse({
           </div>
 
           {/* Filter Controls */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-4">
             <div className={cn(
               "inline-flex p-1 rounded-full border transition-all duration-300",
               isLightMode ? "bg-slate-100/80 border-slate-200/80 shadow-sm" : "bg-slate-900/60 border-slate-700/80"
@@ -379,7 +379,7 @@ export function FellowsByCourse({
           </div>
 
           {viewMode === 'all' ? (
-            <div className="relative">
+            <div className="relative mt-8">
               <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-[0.03]">
                 <img src={ndcCrest} alt="" className="ndc-logo-watermark absolute" style={{ width: '400px', height: '400px' }} />
               </div>

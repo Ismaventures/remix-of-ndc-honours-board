@@ -1022,7 +1022,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           </div>
 
           {/* Grid Layout for Commandants */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 sm:gap-6 mt-6 pb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5 sm:gap-6 mt-6 pb-8">
             {sortedCommandants.map((cmd) => (
               <GridCommandantCard
                 key={cmd.id}

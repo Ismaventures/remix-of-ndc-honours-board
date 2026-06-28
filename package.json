@@ -34,7 +34,9 @@
     "asar": true,
     "asarUnpack": [
       "**/node_modules/better-sqlite3/**/*",
-      "electron/preload.cjs"
+      "electron/preload.cjs",
+      "local_media/**/*",
+      "database.sqlite"
     ],
     "directories": {
       "output": "dist-electron"
