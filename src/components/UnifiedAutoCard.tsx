@@ -83,9 +83,28 @@ export function UnifiedAutoCard({ type, data, id }: UnifiedAutoCardProps) {
       <div className="relative z-10 flex flex-col items-center w-full h-full max-w-[min(96vw,980px)] sm:max-w-[min(95vw,1050px)] md:max-w-[min(92vw,1120px)] mx-auto justify-center py-[max(10px,1.4vh)] gap-[max(8px,1.1vh)] md:gap-[2vh]">
         {/* Portrait with Yellow/Gold frame */}
         <div className="relative w-full flex justify-center items-center flex-shrink min-h-0 overflow-hidden">
-          <div className="portrait-photo-mat rounded-sm p-[max(3px,0.28vh)] shadow-2xl transition-transform duration-500">
-            <div className="rounded-[3px] bg-white p-[max(2px,0.22vh)] shadow-inner">
-              <div className="portrait-photo-mat-inner rounded-[2px] bg-neutral-100/90 p-[max(1px,0.18vh)]">
+          {/* Tri-colour outer frame */}
+          <div className="relative rounded-sm overflow-hidden shadow-2xl transition-transform duration-500">
+            {/* Tri-colour border layers */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+              <div className="absolute top-0 left-0 bottom-0 w-[8px] bg-[#C0392B]" />
+              <div className="absolute top-0 right-0 bottom-0 w-[8px] bg-[#00B0F0]" />
+              <div className="absolute top-0 inset-x-0 h-[8px] flex">
+                <div className="flex-1 bg-[#C0392B]" />
+                <div className="flex-1 bg-[#002060]" />
+                <div className="flex-1 bg-[#00B0F0]" />
+              </div>
+              <div className="absolute bottom-0 inset-x-0 h-[8px] flex">
+                <div className="flex-1 bg-[#C0392B]" />
+                <div className="flex-1 bg-[#002060]" />
+                <div className="flex-1 bg-[#00B0F0]" />
+              </div>
+            </div>
+            {/* Black inner border */}
+            <div className="absolute inset-[8px] z-[1] border-[4px] border-black/90 pointer-events-none" />
+            {/* White mat + image */}
+            <div className="relative z-[2] m-[8px] p-[4px] bg-black/90">
+              <div className="bg-white p-[max(2px,0.22vh)]">
                 <div
                   className={`relative aspect-[4/5] ${
                     isPersonnel

@@ -106,34 +106,53 @@ export function PersonnelPortraitCard({
       {/* Main card body */}
       <div className="p-3 pb-0 flex-1 flex flex-col w-full">
 
-        {/* Photo frame with red/white border */}
-        <div className="w-full aspect-[3/4] rounded-lg border-[3px] border-white relative overflow-hidden shadow-md bg-white">
-          {/* Inner decorative border */}
-          <div className="absolute inset-[3px] border border-slate-200 rounded pointer-events-none z-10" />
-
-          {showPreload && <PortraitCardPreload isLightMode={isLightMode} />}
-
-          {showPermanentPlaceholder && !showPreload && (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
-              <Shield
-                strokeWidth={1.15}
-                className="h-16 w-16 text-slate-300 animate-pulse"
-              />
+        {/* Photo frame with tri-colour border */}
+        <div className="w-full aspect-[3/4] rounded-lg relative overflow-hidden shadow-md">
+          {/* Tri-colour border layers */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            <div className="absolute top-0 left-0 bottom-0 w-[5px] bg-[#C0392B]" />
+            <div className="absolute top-0 right-0 bottom-0 w-[5px] bg-[#00B0F0]" />
+            <div className="absolute top-0 inset-x-0 h-[5px] flex">
+              <div className="flex-1 bg-[#C0392B]" />
+              <div className="flex-1 bg-[#002060]" />
+              <div className="flex-1 bg-[#00B0F0]" />
             </div>
-          )}
+            <div className="absolute bottom-0 inset-x-0 h-[5px] flex">
+              <div className="flex-1 bg-[#C0392B]" />
+              <div className="flex-1 bg-[#002060]" />
+              <div className="flex-1 bg-[#00B0F0]" />
+            </div>
+          </div>
+          {/* Black inner border */}
+          <div className="absolute inset-[5px] z-[1] border-[2px] border-black/90 pointer-events-none" />
+          {/* White mat + content */}
+          <div className="absolute inset-[5px] z-[2] m-0 p-[2px] bg-black/90">
+            <div className="relative w-full h-full bg-white p-[3px]">
+              {showPreload && <PortraitCardPreload isLightMode={isLightMode} />}
 
-          {resolvedImageUrl && (
-            <img
-              src={resolvedImageUrl}
-              alt={person.name}
-              className={cn(
-                'relative z-[1] w-full h-full object-cover object-top transition-opacity duration-500 ease-out',
-                imageReady ? 'opacity-100' : 'opacity-0'
+              {showPermanentPlaceholder && !showPreload && (
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+                  <Shield
+                    strokeWidth={1.15}
+                    className="h-16 w-16 text-slate-300 animate-pulse"
+                  />
+                </div>
               )}
-              onLoad={() => setImageReady(true)}
-              onError={() => setImageReady(true)}
-            />
-          )}
+
+              {resolvedImageUrl && (
+                <img
+                  src={resolvedImageUrl}
+                  alt={person.name}
+                  className={cn(
+                    'relative z-[1] w-full h-full object-cover object-top transition-opacity duration-500 ease-out',
+                    imageReady ? 'opacity-100' : 'opacity-0'
+                  )}
+                  onLoad={() => setImageReady(true)}
+                  onError={() => setImageReady(true)}
+                />
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Title below photo (if present) */}

@@ -320,9 +320,32 @@ const ContinuousSlideCard = memo(function ContinuousSlideCard({
       </div>
 
       <div className="relative z-10 mb-1 sm:mb-1.5 flex flex-col flex-1 min-h-0 w-full">
-        <div className="portrait-photo-mat rounded-sm p-[2px] shadow-xl flex flex-col flex-1 min-h-0 w-full items-center justify-center">
-          <div className={`rounded-[2px] bg-white p-[2px] shadow-inner flex flex-col min-h-0 w-full`}>
-            <div className="portrait-photo-mat-inner rounded-[1px] bg-neutral-100/90 p-px flex flex-col flex-1 min-h-0 w-full">
+        {/* Tri-colour outer frame */}
+        <div className="relative flex flex-col flex-1 min-h-0 w-full rounded-sm overflow-hidden shadow-xl">
+          {/* Tri-colour border layers */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            {/* Left border - Red */}
+            <div className="absolute top-0 left-0 bottom-0 w-[6px] bg-[#C0392B]" />
+            {/* Right border - Light Blue */}
+            <div className="absolute top-0 right-0 bottom-0 w-[6px] bg-[#00B0F0]" />
+            {/* Top border - tri-colour */}
+            <div className="absolute top-0 inset-x-0 h-[6px] flex">
+              <div className="flex-1 bg-[#C0392B]" />
+              <div className="flex-1 bg-[#002060]" />
+              <div className="flex-1 bg-[#00B0F0]" />
+            </div>
+            {/* Bottom border - tri-colour */}
+            <div className="absolute bottom-0 inset-x-0 h-[6px] flex">
+              <div className="flex-1 bg-[#C0392B]" />
+              <div className="flex-1 bg-[#002060]" />
+              <div className="flex-1 bg-[#00B0F0]" />
+            </div>
+          </div>
+          {/* Black inner border */}
+          <div className="absolute inset-[6px] z-[1] border-[3px] border-black/90 pointer-events-none" />
+          {/* White mat inside */}
+          <div className="relative z-[2] flex flex-col flex-1 min-h-0 m-[6px] p-[3px] bg-black/90">
+            <div className="flex flex-col flex-1 min-h-0 bg-white p-[4px]">
               <div
                 className={`auto-scroll-image-frame relative flex-1 min-h-0 overflow-hidden w-full ${
                   isCommandant ? "commandant-portrait-frame commandant-portrait-reel" : isVisit ? "" : "staff-portrait-frame"
