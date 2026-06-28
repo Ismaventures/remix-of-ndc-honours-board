@@ -497,7 +497,7 @@ export function FellowsByCourse({
                 'text-xl md:text-2xl font-bold uppercase tracking-[0.08em] leading-tight',
                 isLightMode ? 'text-[#002060]' : 'text-white'
               )} style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                {category === 'FWC' ? 'DISTINGUISHED FELLOW OF WAR COLLEGE (FWC)' : 'DISTINGUISHED FELLOW OF DEFENCE COLLEGE (FDC)'}
+                {category === 'FWC' ? <>DISTINGUISHED FELLOWS OF WAR COLLEGE <span className="normal-case">(fwc+)</span></> : <>DISTINGUISHED FELLOWS OF DEFENCE COLLEGE <span className="normal-case">(fdc+)</span></>}
               </h1>
 
               <div className="flex items-center justify-center gap-2 mt-2 mb-2">

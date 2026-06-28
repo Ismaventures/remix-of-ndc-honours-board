@@ -10,8 +10,8 @@ interface FellowSplitHeroProps {
 }
 
 function getCategoryLabel(category: Category) {
-  if (category === 'FWC') return 'DISTINGUISHED FELLOW OF WAR COLLEGE (FWC)';
-  if (category === 'FDC') return 'DISTINGUISHED FELLOW OF DEFENCE COLLEGE (FDC)';
+  if (category === 'FWC') return <>DISTINGUISHED FELLOWS OF WAR COLLEGE <span style={{ textTransform: 'none' }}>(fwc+)</span></>;
+  if (category === 'FDC') return <>DISTINGUISHED FELLOWS OF DEFENCE COLLEGE <span style={{ textTransform: 'none' }}>(fdc+)</span></>;
   if (category === 'Allied') return 'ALLIED OFFICERS';
   if (category === 'Directing Staff') return 'DIRECTING STAFF';
   return 'DISTINGUISHED FELLOW';
