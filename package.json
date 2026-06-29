@@ -44,6 +44,14 @@
       {
         "from": "electron/drive-credentials.json",
         "to": "drive-credentials.json"
+      },
+      {
+        "from": "local_media",
+        "to": "local_media"
+      },
+      {
+        "from": "database.sqlite",
+        "to": "database.sqlite"
       }
     ],
     "directories": {

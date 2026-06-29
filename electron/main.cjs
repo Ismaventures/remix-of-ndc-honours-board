@@ -654,6 +654,23 @@ app.whenReady().then(() => {
     fs.mkdirSync(LOCAL_MEDIA_DIR, { recursive: true });
   }
 
+  // If local_media is empty but we packaged it in extraResources, copy it to the user's Home folder
+  if (!isDev) {
+    const bundledMediaDir = path.join(process.resourcesPath, 'local_media');
+    if (fs.existsSync(bundledMediaDir)) {
+      try {
+        const homeEntries = fs.existsSync(LOCAL_MEDIA_DIR) ? fs.readdirSync(LOCAL_MEDIA_DIR).filter(e => e !== '.DS_Store') : [];
+        if (homeEntries.length === 0) {
+          logToFile('Home local_media folder is empty. Copying bundled local_media folder to: ' + LOCAL_MEDIA_DIR);
+          copyDirRecursive(bundledMediaDir, LOCAL_MEDIA_DIR);
+          logToFile('Successfully copied bundled local_media to Home folder.');
+        }
+      } catch (e) {
+        logToFile('Failed to copy bundled local_media to Home: ' + e.message);
+      }
+    }
+  }
+
   logToFile('Calling initializeDatabase()...');
   try {
     initializeDatabase();
