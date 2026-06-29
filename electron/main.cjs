@@ -77,7 +77,7 @@ function initializeDatabase() {
     db.transaction(() => {
       for (let stmt of statements) {
         // Strip comments and format
-        stmt = stmt.split('\n').map(line => line.replace(/--.*$/, '').trim()).join(' ').trim();
+        stmt = stmt.split(/\r?\n/).map(line => line.replace(/--.*$/, '').trim()).join(' ').trim();
         if (!stmt) continue;
 
         // Skip PG-specific policies, RLS, and storage functions
@@ -130,7 +130,7 @@ function initializeDatabase() {
     db.transaction(() => {
       for (let stmt of statements) {
         // Strip comments and format
-        stmt = stmt.split('\n').map(line => line.replace(/--.*$/, '').trim()).join(' ').trim();
+        stmt = stmt.split(/\r?\n/).map(line => line.replace(/--.*$/, '').trim()).join(' ').trim();
         if (!stmt) continue;
 
         // Skip PG-specific policies, RLS, and storage functions
