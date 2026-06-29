@@ -96,12 +96,6 @@ export function PersonnelPortraitCard({
         }
       }}
     >
-      {/* Top tri-service strip */}
-      <div className="absolute inset-x-0 top-0 h-[4px] flex z-20 rounded-t-2xl">
-        <div className="flex-1 bg-[#002060]" />
-        <div className="flex-1 bg-[#C0392B]" />
-        <div className="flex-1 bg-[#00B0F0]" />
-      </div>
 
       {/* Main card body */}
       <div className="p-3 pb-0 flex-1 flex flex-col w-full">
