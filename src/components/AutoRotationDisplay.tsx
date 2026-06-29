@@ -319,7 +319,7 @@ const ContinuousSlideCard = memo(function ContinuousSlideCard({
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
-      <div className="relative z-10 mb-1 sm:mb-1.5 flex flex-col flex-1 min-h-0 w-full">
+      <div className="relative z-10 mt-1.5 sm:mt-2.5 mb-1 sm:mb-1.5 flex flex-col flex-1 min-h-0 w-full">
         {/* Tri-colour outer frame */}
         <div className="relative flex flex-col flex-1 min-h-0 w-full rounded-sm overflow-hidden shadow-xl">
           {/* Tri-colour border layers */}
