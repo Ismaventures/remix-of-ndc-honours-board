@@ -1,10 +1,35 @@
 const { app, BrowserWindow, ipcMain, protocol, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
+
+// Global crash handlers — setup early to catch require errors (like native modules)
+const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+const LOG_FILE = isDev ? null : path.join(app.getPath('userData'), 'crash.log');
+function logToFile(msg) {
+  const line = `[${new Date().toISOString()}] ${msg}\n`;
+  if (LOG_FILE) {
+    try {
+      fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
+      fs.appendFileSync(LOG_FILE, line);
+    } catch (_) {}
+  }
+}
+
+process.on('uncaughtException', (err) => {
+  try {
+    logToFile('UNCAUGHT EXCEPTION: ' + err.stack);
+  } catch (_) {}
+});
+process.on('unhandledRejection', (reason) => {
+  try {
+    logToFile('UNHANDLED REJECTION: ' + String(reason));
+  } catch (_) {}
+});
+
+// Now import native and sync modules
 const Database = require('better-sqlite3');
 const driveSync = require('./driveSync.cjs');
 
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 const APP_PATH = app.getAppPath();
 const UNPACKED_PATH = isDev ? APP_PATH : APP_PATH.replace('app.asar', 'app.asar.unpacked');
 
@@ -17,27 +42,10 @@ const LOCAL_DATA_ROOT = isDev
 const LOCAL_MEDIA_DIR = path.join(LOCAL_DATA_ROOT, 'local_media');
 const DB_PATH = path.join(LOCAL_DATA_ROOT, 'database.sqlite');
 
-// Crash log file for diagnosing installed-app failures
-const LOG_FILE = isDev ? null : path.join(app.getPath('userData'), 'crash.log');
-function logToFile(msg) {
-  const line = `[${new Date().toISOString()}] ${msg}\n`;
-  if (LOG_FILE) {
-    try { fs.appendFileSync(LOG_FILE, line); } catch (_) {}
-  }
-}
-
 // Register local-media protocol privileges
 protocol.registerSchemesAsPrivileged([
   { scheme: 'local-media', privileges: { bypassCSP: true, secure: true, supportFetchAPI: true, corsEnabled: true, standard: true } }
 ]);
-
-// Global crash handlers — write to crash.log so we can diagnose installed-app failures
-process.on('uncaughtException', (err) => {
-  try { logToFile('UNCAUGHT EXCEPTION: ' + err.stack); } catch (_) {}
-});
-process.on('unhandledRejection', (reason) => {
-  try { logToFile('UNHANDLED REJECTION: ' + String(reason)); } catch (_) {}
-});
 
 let db;
 
