@@ -131,35 +131,47 @@ function getMatchScore(fileTokens, jsonTokens) {
     return 1.0;
   }
 
+  // Check if there is a conflict in full names (e.g. "Albert" vs "Arthur")
+  let fullWordConflict = false;
+  const minLength = Math.min(fileRest.length, jsonRest.length);
+  for (let i = 0; i < minLength; i++) {
+    const f = fileRest[i];
+    const j = jsonRest[i];
+    if (f.length > 1 && j.length > 1 && f !== j) {
+      fullWordConflict = true;
+      break;
+    }
+  }
+  if (fullWordConflict) {
+    return 0; // Different full names
+  }
+
   // One of them lacks initials/first name
   if (fileRest.length === 0 || jsonRest.length === 0) {
     return 0.8;
   }
 
-  // Compare initials
-  const fileInitials = fileRest.map(t => t[0]).join('');
-  const jsonInitials = jsonRest.map(t => t[0]).join('');
+  // Extract initials properly (keeping short run-together initials like "ah" intact)
+  const getInitials = (tokens) => {
+    return tokens.map(t => {
+      if (t.length <= 2) return t;
+      return t[0];
+    }).join('');
+  };
 
-  if (fileInitials[0] === jsonInitials[0]) {
-    // Check if one sequence of initials is a subsequence of the other
-    const shorter = fileInitials.length < jsonInitials.length ? fileInitials : jsonInitials;
-    const longer = fileInitials.length < jsonInitials.length ? jsonInitials : fileInitials;
+  const fileInitials = getInitials(fileRest);
+  const jsonInitials = getInitials(jsonRest);
 
-    let sIdx = 0;
-    for (let lIdx = 0; lIdx < longer.length && sIdx < shorter.length; lIdx++) {
-      if (longer[lIdx] === shorter[sIdx]) {
-        sIdx++;
-      }
-    }
-
-    if (sIdx === shorter.length) {
-      return 0.95; // matching initials subsequence
-    }
-
-    return 0.9; // matching first initials
+  if (fileInitials === jsonInitials) {
+    return 0.95; // Matching initials
   }
 
-  return 0.5; // low match
+  // If one is a prefix of the other (e.g. "a" and "ah" or "a" and "ab")
+  if (fileInitials.startsWith(jsonInitials) || jsonInitials.startsWith(fileInitials)) {
+    return 0.8; // Partial match (less than 0.85 database flexible match threshold)
+  }
+
+  return 0; // No match/conflict
 }
 
 // Parse start/end years from period

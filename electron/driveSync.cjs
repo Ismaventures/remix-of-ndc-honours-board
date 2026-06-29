@@ -292,8 +292,12 @@ async function uploadFileToDrive(drive, localPath, parentFolderId, fileName) {
   const res = await drive.files.list({
     q: `name='${fileName.replace(/'/g, "\\'")}' and '${parentFolderId}' in parents and trashed=false`,
     spaces: 'drive',
-    fields: 'files(id, name, modifiedTime)',
+    fields: 'files(id, name, modifiedTime, size)',
   });
+
+  const localStat = fs.statSync(localPath);
+  const localSize = localStat.size;
+  const localModifiedTime = new Date(localStat.mtime).toISOString();
 
   const fileMetadata = { name: fileName };
   const media = {
@@ -301,13 +305,34 @@ async function uploadFileToDrive(drive, localPath, parentFolderId, fileName) {
   };
 
   if (res.data.files && res.data.files.length > 0) {
+    const driveFile = res.data.files[0];
+    const driveSize = parseInt(driveFile.size || '0', 10);
+    const driveModTime = new Date(driveFile.modifiedTime);
+    const localModTime = new Date(localStat.mtime);
+
+    // Compare file size and modified time (within 2 seconds threshold)
+    const timeDiffSeconds = Math.abs(driveModTime.getTime() - localModTime.getTime()) / 1000;
+    if (driveSize === localSize && timeDiffSeconds < 2) {
+      return { action: 'skipped', fileId: driveFile.id };
+    }
+
     // Update existing file
-    const fileId = res.data.files[0].id;
+    const fileId = driveFile.id;
     await drive.files.update({
       fileId,
       media,
-      fields: 'id, name, modifiedTime',
+      fields: 'id',
     });
+
+    // Set modification time immediately after update
+    await drive.files.update({
+      fileId,
+      requestBody: {
+        modifiedTime: localModifiedTime
+      },
+      fields: 'id, name, modifiedTime, size',
+    });
+
     return { action: 'updated', fileId };
   } else {
     // Create new file
@@ -315,9 +340,20 @@ async function uploadFileToDrive(drive, localPath, parentFolderId, fileName) {
     const created = await drive.files.create({
       requestBody: fileMetadata,
       media,
-      fields: 'id, name, modifiedTime',
+      fields: 'id',
     });
-    return { action: 'created', fileId: created.data.id };
+
+    const fileId = created.data.id;
+    // Set modification time immediately after creation
+    await drive.files.update({
+      fileId,
+      requestBody: {
+        modifiedTime: localModifiedTime
+      },
+      fields: 'id, name, modifiedTime, size',
+    });
+
+    return { action: 'created', fileId };
   }
 }
 
@@ -370,8 +406,12 @@ async function uploadDirectoryToDrive(drive, localDir, parentFolderId, progressC
         if (progressCallback) {
           progressCallback({ phase: 'uploading', file: relativePath });
         }
-        await uploadFileToDrive(drive, localPath, parentFolderId, entry.name);
-        stats.uploaded++;
+        const result = await uploadFileToDrive(drive, localPath, parentFolderId, entry.name);
+        if (result.action === 'skipped') {
+          stats.skipped++;
+        } else {
+          stats.uploaded++;
+        }
       } catch (err) {
         console.error(`[DriveSync] Failed to upload ${relativePath}:`, err.message);
         stats.errors++;
@@ -488,9 +528,16 @@ async function pushToCloud(localMediaDir, dbPath, progressCallback) {
   };
 
   // 1. Upload database.sqlite
+  let dbUploaded = 0;
+  let dbSkipped = 0;
   if (fs.existsSync(dbPath)) {
     wrappedProgress({ phase: 'uploading', file: 'database.sqlite' });
-    await uploadFileToDrive(drive, dbPath, rootFolderId, 'database.sqlite');
+    const dbResult = await uploadFileToDrive(drive, dbPath, rootFolderId, 'database.sqlite');
+    if (dbResult.action === 'skipped') {
+      dbSkipped = 1;
+    } else {
+      dbUploaded = 1;
+    }
   }
 
   // 2. Upload local_media/ directory
@@ -500,7 +547,7 @@ async function pushToCloud(localMediaDir, dbPath, progressCallback) {
   // Save last sync time
   const syncInfo = {
     lastPushTime: new Date().toISOString(),
-    filesUploaded: mediaStats.uploaded + 1,
+    filesUploaded: mediaStats.uploaded + dbUploaded,
     errors: mediaStats.errors,
   };
   const syncInfoPath = path.join(app.getPath('userData'), 'drive-sync-info.json');
@@ -508,8 +555,8 @@ async function pushToCloud(localMediaDir, dbPath, progressCallback) {
 
   return {
     success: true,
-    uploaded: mediaStats.uploaded + 1,
-    skipped: mediaStats.skipped,
+    uploaded: mediaStats.uploaded + dbUploaded,
+    skipped: mediaStats.skipped + dbSkipped,
     errors: mediaStats.errors,
   };
 }
