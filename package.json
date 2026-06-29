@@ -1,7 +1,7 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "ndc-honours-board",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.3",
   "description": "NDC Honours Board Museum Display",
   "author": "National Defence College",
   "type": "module",
