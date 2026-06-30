@@ -133,7 +133,7 @@ export function FellowsByCourse({
       courseMap[c] = {
         year: startYear,
         courseNumber: c,
-        academicYear: `${startYear}\u2013${endYear}`,
+        academicYear: `${startYear}–${endYear}`,
         fellows: []
       };
     }
@@ -143,9 +143,17 @@ export function FellowsByCourse({
 
     fellows.forEach(person => {
       let courseNum = null;
+      let endYear = null;
 
       if (person.course) {
         courseNum = person.course;
+      }
+
+      if (person.academicYear) {
+        const parts = person.academicYear.split(/[-–]/);
+        endYear = parseInt(parts.length > 1 ? parts[1].trim() : parts[0].trim(), 10);
+      } else if (person.periodEnd) {
+        endYear = parseInt(person.periodEnd, 10);
       }
 
       if (!courseNum && person.decoration) {
@@ -159,6 +167,20 @@ export function FellowsByCourse({
         let match = person.decoration.match(/NWC\s+Course\s+(\d+)/i);
         if (match) {
           courseNum = parseInt(match[1], 10);
+        }
+      }
+      
+      if (!courseNum && person.decoration) {
+        let match = person.decoration.match(/Course\s+(\d+)/i);
+        if (match) {
+          courseNum = parseInt(match[1], 10);
+        }
+      }
+      
+      if (!endYear && person.decoration) {
+        let match = person.decoration.match(/\/\s*(\d{4})/);
+        if (match) {
+          endYear = parseInt(match[1], 10);
         }
       }
 
@@ -175,18 +197,19 @@ export function FellowsByCourse({
         courseMap[courseNum].fellows.push(person);
       } else {
         const startYear = 1991 + courseNum;
-        const endYear = 1992 + courseNum;
+        const derivedEndYear = endYear || (1992 + courseNum);
         courseMap[courseNum] = {
           year: startYear,
+          endYear: derivedEndYear,
           courseNumber: courseNum,
-          academicYear: `${startYear}\u2013${endYear}`,
+          academicYear: `${startYear}–${derivedEndYear}`,
           fellows: [person]
         };
       }
     });
 
     if (noCourseData.length > 0) {
-      console.warn(`\u26A0\uFE0F ${category} without course data: ${noCourseData.join(', ')}`);
+      console.warn(`⚠️ ${category} without course data: ${noCourseData.join(', ')}`);
     }
 
     return Object.values(courseMap)
@@ -194,7 +217,7 @@ export function FellowsByCourse({
         year: data.year,
         courseNumber: data.courseNumber,
         academicYear: data.academicYear,
-        designation: `Course ${data.courseNumber}`,
+        designation: `Course ${data.courseNumber}/${data.endYear}`,
         fellows: data.fellows.sort((a, b) => {
           if (a.seniorityOrder !== b.seniorityOrder) {
             return a.seniorityOrder - b.seniorityOrder;
@@ -293,7 +316,6 @@ export function FellowsByCourse({
             'relative overflow-hidden rounded-xl mb-6',
             isLightMode ? 'bg-white/70' : 'bg-slate-800/30'
           )}>
-            {TRI_BAR_THIN}
 
             {/* Subtle faded military background imagery */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -313,7 +335,7 @@ export function FellowsByCourse({
               <h1 className={cn(
                 'text-2xl md:text-4xl lg:text-[2.5rem] font-serif font-bold tracking-[0.08em] leading-tight mb-3',
                 isLightMode ? 'text-[#002060]' : 'text-white'
-              )} style={{ textTransform: 'uppercase' as const }}>
+              )} >
                 {title || pageTitle}
               </h1>
 
@@ -341,7 +363,7 @@ export function FellowsByCourse({
               </div>
             </div>
 
-            {TRI_BAR_THIN}
+
           </div>
 
           {/* Filter Controls */}
@@ -486,7 +508,6 @@ export function FellowsByCourse({
             'relative overflow-hidden rounded-xl',
             isLightMode ? 'bg-white/70 border border-slate-200/60 shadow-sm' : 'bg-slate-800/25 border border-slate-700/40'
           )}>
-            {TRI_BAR_THIN}
 
             <div className="relative z-10 py-5 px-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
@@ -497,7 +518,7 @@ export function FellowsByCourse({
                 'text-xl md:text-2xl font-bold uppercase tracking-[0.08em] leading-tight',
                 isLightMode ? 'text-[#002060]' : 'text-white'
               )} style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
-                {category === 'FWC' ? 'DISTINGUISHED FELLOW OF WAR COLLEGE (FWC)' : 'DISTINGUISHED FELLOW OF DEFENCE COLLEGE (FDC)'}
+                {category === 'FWC' ? <>DISTINGUISHED FELLOWS OF WAR COLLEGE <span className="normal-case">(fwc+)</span></> : <>DISTINGUISHED FELLOWS OF DEFENCE COLLEGE <span className="normal-case">(fdc+)</span></>}
               </h1>
 
               <div className="flex items-center justify-center gap-2 mt-2 mb-2">
@@ -523,8 +544,6 @@ export function FellowsByCourse({
                 {activeFellows.length} {activeFellows.length === 1 ? 'Fellow' : 'Fellows'}
               </p>
             </div>
-
-            {TRI_BAR_THIN}
           </div>
 
           {activeFellows.length > 0 ? (

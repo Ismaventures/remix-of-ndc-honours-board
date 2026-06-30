@@ -10,9 +10,9 @@ interface FellowSplitHeroProps {
 }
 
 function getCategoryLabel(category: Category) {
-  if (category === 'FWC') return 'DISTINGUISHED FELLOW OF WAR COLLEGE (FWC)';
-  if (category === 'FDC') return 'DISTINGUISHED FELLOW OF DEFENCE COLLEGE (FDC)';
-  if (category === 'Allied') return 'INTERNATIONAL ALLIED OFFICER';
+  if (category === 'FWC') return <>DISTINGUISHED FELLOWS OF WAR COLLEGE <span style={{ textTransform: 'none' }}>(fwc+)</span></>;
+  if (category === 'FDC') return <>DISTINGUISHED FELLOWS OF DEFENCE COLLEGE <span style={{ textTransform: 'none' }}>(fdc+)</span></>;
+  if (category === 'Allied') return 'ALLIED OFFICERS';
   if (category === 'Directing Staff') return 'DIRECTING STAFF';
   return 'DISTINGUISHED FELLOW';
 }
@@ -33,8 +33,8 @@ export function FellowSplitHero({ person, category, courseDesignation }: FellowS
 
   return (
     <section className="relative w-full h-full flex flex-col overflow-hidden bg-white text-slate-900">
-      <div className="h-[8px] flex z-30 shrink-0">
-        <div className="flex-1 bg-[#002060]" title="Navy" />
+      <div className="h-[8px] flex z-30 shrink-0 w-full">
+        <div className="w-[65%] shrink-0 bg-[#002060]" title="Navy" />
         <div className="flex-1 bg-[#C0392B]" title="Army" />
         <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
       </div>
@@ -79,10 +79,10 @@ export function FellowSplitHero({ person, category, courseDesignation }: FellowS
         />
       </div>
 
-      <div className="h-[8px] flex z-30 shrink-0">
-        <div className="flex-1 bg-[#002060]" />
-        <div className="flex-1 bg-[#C0392B]" />
-        <div className="flex-1 bg-[#00B0F0]" />
+      <div className="h-[8px] flex z-30 shrink-0 w-full">
+        <div className="w-[65%] shrink-0 bg-[#002060]" title="Navy" />
+        <div className="flex-1 bg-[#C0392B]" title="Army" />
+        <div className="flex-1 bg-[#00B0F0]" title="Air Force" />
       </div>
     </section>
   );

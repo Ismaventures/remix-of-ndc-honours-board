@@ -91,29 +91,45 @@ type ContinuousItem =
   | CourseMarker;
 
 const getCourseDesignation = (person: Personnel): string => {
+  let courseNum = person.course?.toString() || "";
+  let endYear = "";
+
+  // Priority 1: Use academicYear or periodEnd
+  if (person.academicYear) {
+    const parts = person.academicYear.split(/[-–]/);
+    endYear = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+  } else if (person.periodEnd) {
+    endYear = person.periodEnd.toString().trim();
+  }
+
   const decoration = person.decoration?.trim() ?? "";
 
-  // Priority 1: Use academicYear from seed data
-  if (person.academicYear && person.course) {
-    return `Course ${person.course}/${person.academicYear.split('–')[0]}`;
+  // Priority 2: Extract from decoration if missing
+  if (!courseNum) {
+    const cseMatch = decoration.match(/CSE\s*(\d+)/i);
+    if (cseMatch) courseNum = cseMatch[1];
+    else {
+      const nwcMatch = decoration.match(/NWC\s+Course\s+(\d+)/i);
+      if (nwcMatch) courseNum = nwcMatch[1];
+      else {
+        const courseMatch = decoration.match(/Course\s+(\d+)/i);
+        if (courseMatch) courseNum = courseMatch[1];
+      }
+    }
   }
 
-  // Priority 2: Use course field from seed data
-  if (person.course) {
-    return `Course ${person.course}`;
+  if (!endYear) {
+    const yearMatch = decoration.match(/\/\s*(\d{4})/);
+    if (yearMatch) endYear = yearMatch[1];
   }
 
-  const cseMatch = decoration.match(/CSE\s*(\d+)\s*\/\s*(\d{4})/i);
-  if (cseMatch) return `CSE ${cseMatch[1]}/${cseMatch[2]}`;
-
-  const nwcMatch = decoration.match(/NWC\s+Course\s+(\d+)/i);
-  if (nwcMatch) {
-    return person.periodStart
-      ? `NWC Course ${nwcMatch[1]}/${person.periodStart}`
-      : `NWC Course ${nwcMatch[1]}`;
-  }
-
-  return decoration || (person.periodStart ? `Course ${person.periodStart}` : "Course");
+  if (courseNum && endYear) return `Course ${courseNum}/${endYear}`;
+  if (courseNum) return `Course ${courseNum}`;
+  if (endYear) return `Course ${endYear}`;
+  
+  // Clean decoration to remove NWC
+  let cleaned = decoration.replace(/NWC\s+/i, "");
+  return cleaned || "Course";
 };
 
 const isCourseMarker = (item: ContinuousItem): item is CourseMarker =>
@@ -954,6 +970,15 @@ export function AutoRotationDisplay({
 
   const handleManualAdvance = useCallback(() => {
     revealControls();
+
+    // Non-continuous (commandants, personnel single-card, visits): use standard advance
+    // which already handles end-of-slides + stageComplete firing
+    if (!isContinuousMode) {
+      advance();
+      return;
+    }
+
+    // Continuous mode (FWC/FDC/Allied page scrolling)
     const container = scrollContainerRef.current;
     if (!container) return;
     const segmentWidth = container.scrollWidth / 3;
@@ -961,12 +986,23 @@ export function AutoRotationDisplay({
     const pageWidth = segmentWidth / slides.length;
 
     const currentLeft = container.scrollLeft;
+    // In the looped track we have 3× copies of slides. Detect which real page we're on.
+    const realPage = Math.round((currentLeft - segmentWidth) / pageWidth) % slides.length;
+
+    // If we are on the very last real page, fire stageComplete to trigger category transition
+    if (realPage === slides.length - 1) {
+      if (!stageCompleteFiredRef.current) {
+        stageCompleteFiredRef.current = true;
+        onStageComplete?.(displayContext);
+      }
+      return;
+    }
+
     const nextPage = Math.floor((currentLeft - segmentWidth) / pageWidth) + 1;
     const target = nextPage * pageWidth + segmentWidth;
-
     animateTo(target, 650);
     setCurrentIndex(nextPage % slides.length);
-  }, [revealControls, slides.length, animateTo]);
+  }, [revealControls, isContinuousMode, slides.length, animateTo, advance, displayContext, onStageComplete]);
 
   const handleManualRetreat = useCallback(() => {
     revealControls();
@@ -1590,7 +1626,7 @@ export function AutoRotationDisplay({
                 ? "personnel"
                 : "visit";
             return (
-              <div key={item.id} className="flex justify-center items-center h-full max-w-[420px] flex-1">
+              <div key={item.id} className="flex justify-center items-center h-full w-full max-w-[420px]">
                 <ContinuousSlideCard
                   item={item as any}
                   type={itemType}
@@ -1691,11 +1727,7 @@ export function AutoRotationDisplay({
       {slide.type === "page" && (
         <div className="auto-scroll-heading mt-4 mb-2 px-6 sm:px-12 w-full max-w-[1900px] mx-auto shrink-0 z-10">
           <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white/95 px-3 py-1.5 shadow-sm md:px-4 md:py-2">
-            <div className="h-1 flex shrink-0">
-              <div className="flex-1 bg-[#002060]" />
-              <div className="flex-1 bg-[#FF0000]" />
-              <div className="flex-1 bg-[#00B0F0]" />
-            </div>
+
             <div className="px-2 pb-0 pt-2 text-center">
               {headingPrimary && (
                 <h2

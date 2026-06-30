@@ -502,6 +502,22 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
       return;
     }
 
+    // Custom loop for fellows/officers: FWC -> FDC -> Allied -> FWC...
+    if (context === "FWC" || context === "FDC" || context === "Allied") {
+      const loopSequence: AutoDisplayContextKey[] = ["FWC", "FDC", "Allied"];
+      const currentIndex = loopSequence.indexOf(context);
+      const nextIndex = (currentIndex + 1) % loopSequence.length;
+      const nextContext = loopSequence[nextIndex];
+      
+      const nextView = contextToView(nextContext);
+      setView(nextView);
+      setForcedAutoDisplay((prev) => ({
+        enabled: true,
+        nonce: prev.nonce + 1,
+      }));
+      return;
+    }
+
     const nextContext = autoDisplaySettings.nextContextByContext?.[context] ?? null;
     if (!nextContext || nextContext === context) {
       setAutoDisplayActive(false);
@@ -1357,7 +1373,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
         <DirectingStaffByCourseYear
           personnel={personnel}
           onBack={() => setView("home")}
-          title="Participants"
+          title="CHRONICLES OF DIRECTING STAFF"
           description="Distinguished participants who have guided courses and shaped the NDC academic framework, categorized by CSE course year."
           onCourseSelect={setActiveCourseNumber}
           backTriggerNonce={backTriggerNonce}
@@ -1371,7 +1387,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
         <DirectingStaffByCourseYear
           personnel={personnel}
           onBack={() => setView("home")}
-          title="Directing Staff"
+          title="CHRONICLES OF DIRECTING STAFF"
           description="Directing staff who have guided courses and shaped the NDC academic framework, categorized by CSE course year."
           onCourseSelect={setActiveCourseNumber}
           backTriggerNonce={backTriggerNonce}
@@ -1404,7 +1420,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
         <DirectingStaffByCourseYear
           personnel={personnel}
           onBack={() => setView("home")}
-          title="Participants"
+          title="CHRONICLES OF DIRECTING STAFF"
           description="Participants who have shaped the NDC academic framework, categorized by CSE course year."
           onCourseSelect={setActiveCourseNumber}
           backTriggerNonce={backTriggerNonce}

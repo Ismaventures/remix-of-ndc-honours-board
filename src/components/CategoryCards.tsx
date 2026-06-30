@@ -35,8 +35,8 @@ const CARDS: {
 }[] = [
   {
     key: "fwc",
-    label: "DISTINGUISHED FELLOWS OF WAR COLLEGE (FWC)",
-    subtitle: "FELLOWS OF WAR COLLEGE (FWC+)",
+    label: "DISTINGUISHED FELLOWS OF WAR COLLEGE (fwc+)",
+    subtitle: "",
     icon: Shield,
     color: "text-blue-600",
     cardGradient: "from-[#0f2c4e] via-[#14365d] to-[#1a4373]",
@@ -44,8 +44,8 @@ const CARDS: {
   },
   {
     key: "fdc",
-    label: "DISTINGUISHED FELLOWS OF DEFENCE COLLEGE (FDC)",
-    subtitle: "FELLOWS OF DEFENCE COLLEGE (FDC+)",
+    label: "DISTINGUISHED FELLOWS OF DEFENCE COLLEGE (fdc+)",
+    subtitle: "",
     icon: Award,
     color: "text-sky-600",
     cardGradient: "from-[#0e2d4a] via-[#133e66] to-[#195080]",
@@ -156,7 +156,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                               ? "text-[#0f2a5f]"
                               : "text-white drop-shadow-md"
                           }`}
-                          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 700, textTransform: 'uppercase' as const }}
+                          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 700 }}
                         >
                           {card.label}
                         </h3>
