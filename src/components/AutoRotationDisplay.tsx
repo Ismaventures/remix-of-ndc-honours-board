@@ -276,10 +276,10 @@ const ContinuousSlideCard = memo(function ContinuousSlideCard({
       onClick={() => onSelect(item as any)}
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
-      className={`auto-scroll-card group relative ${
+      className={`auto-scroll-card group relative w-full ${
         isCommandant
-          ? "commandant-auto-card w-[75vw] sm:w-[42vw] md:w-[36vw] lg:w-[30vw] xl:w-[26vw] max-w-[420px] h-[clamp(440px,72vh,660px)]"
-          : "w-[78vw] sm:w-[45vw] md:w-[38vw] lg:w-[31vw] xl:w-[28vw] max-w-[450px] h-[clamp(420px,68vh,620px)]"
+          ? "commandant-auto-card max-w-[420px] h-[clamp(440px,72vh,660px)]"
+          : "max-w-[450px] h-[clamp(420px,68vh,620px)]"
       } self-center shrink-0 overflow-hidden rounded-2xl p-1.5 sm:p-2 text-left transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 flex flex-col ${
         isLightMode
           ? "bg-white border border-[#002060]/20 shadow-[0_8px_22px_rgba(0,32,96,0.12)]"
@@ -836,15 +836,14 @@ export function AutoRotationDisplay({
 
   // Helper for snapping loop scroll bounds
   const normalizePosition = useCallback((container: HTMLDivElement) => {
-    const W = container.clientWidth;
-    if (W <= 0 || slides.length === 0) return;
-    const segmentWidth = slides.length * W;
+    const segmentWidth = container.scrollWidth / 3;
+    if (segmentWidth <= 0) return;
     if (container.scrollLeft >= segmentWidth * 2) {
       container.scrollLeft -= segmentWidth;
-    } else if (container.scrollLeft <= 0) {
+    } else if (container.scrollLeft < segmentWidth) {
       container.scrollLeft += segmentWidth;
     }
-  }, [slides.length]);
+  }, []);
 
   // Helper to trigger manual transition animations
   const animateTo = useCallback((targetScrollLeft: number, duration: number) => {
@@ -882,13 +881,14 @@ export function AutoRotationDisplay({
     const container = scrollContainerRef.current;
     if (!container || slide?.type !== "page" || slides.length === 0) return;
 
-    const W = container.clientWidth;
-    if (W <= 0) return;
-
-    const segmentWidth = slides.length * W;
-    if (container.scrollLeft < 10) {
-      container.scrollLeft = segmentWidth;
-    }
+    const timer = setTimeout(() => {
+      const segmentWidth = container.scrollWidth / 3;
+      if (segmentWidth <= 0) return;
+      if (container.scrollLeft < segmentWidth) {
+        container.scrollLeft = segmentWidth;
+      }
+    }, 50);
+    return () => clearTimeout(timer);
   }, [slides.length, slide?.type]);
 
   // Keep scroll position aligned on resize
@@ -898,9 +898,10 @@ export function AutoRotationDisplay({
     if (!container) return;
 
     const handleResize = () => {
-      const W = container.clientWidth;
-      if (W <= 0) return;
-      container.scrollLeft = currentIndex * W + (slides.length * W);
+      const segmentWidth = container.scrollWidth / 3;
+      if (segmentWidth <= 0) return;
+      const pageWidth = segmentWidth / slides.length;
+      container.scrollLeft = currentIndex * pageWidth + segmentWidth;
     };
 
     window.addEventListener("resize", handleResize);
@@ -920,8 +921,8 @@ export function AutoRotationDisplay({
       const elapsed = now - lastTime;
       lastTime = now;
 
-      const W = container.clientWidth;
-      if (W <= 0) {
+      const segmentWidth = container.scrollWidth / 3;
+      if (segmentWidth <= 0) {
         rafId = requestAnimationFrame(loop);
         return;
       }
@@ -932,13 +933,14 @@ export function AutoRotationDisplay({
         return;
       }
 
-      // continuous smooth scroll speed (e.g. 0.035px per millisecond)
-      const speed = 0.035; 
+      // continuous smooth scroll speed (e.g. 0.06px per millisecond)
+      const speed = 0.07; 
       container.scrollLeft += elapsed * speed;
 
       // Update progress indicators/currentIndex based on current scroll position
-      const pageIndex = Math.round(container.scrollLeft / W) % slides.length;
-      if (pageIndex !== currentIndex) {
+      const pageWidth = segmentWidth / slides.length;
+      const pageIndex = Math.round((container.scrollLeft - segmentWidth) / pageWidth) % slides.length;
+      if (pageIndex !== currentIndex && pageIndex >= 0 && pageIndex < slides.length) {
         setCurrentIndex(pageIndex);
       }
 
@@ -954,12 +956,13 @@ export function AutoRotationDisplay({
     revealControls();
     const container = scrollContainerRef.current;
     if (!container) return;
-    const W = container.clientWidth;
-    if (W <= 0 || slides.length === 0) return;
+    const segmentWidth = container.scrollWidth / 3;
+    if (segmentWidth <= 0 || slides.length === 0) return;
+    const pageWidth = segmentWidth / slides.length;
 
     const currentLeft = container.scrollLeft;
-    const nextPage = Math.floor(currentLeft / W) + 1;
-    const target = nextPage * W;
+    const nextPage = Math.floor((currentLeft - segmentWidth) / pageWidth) + 1;
+    const target = nextPage * pageWidth + segmentWidth;
 
     animateTo(target, 650);
     setCurrentIndex(nextPage % slides.length);
@@ -969,12 +972,13 @@ export function AutoRotationDisplay({
     revealControls();
     const container = scrollContainerRef.current;
     if (!container) return;
-    const W = container.clientWidth;
-    if (W <= 0 || slides.length === 0) return;
+    const segmentWidth = container.scrollWidth / 3;
+    if (segmentWidth <= 0 || slides.length === 0) return;
+    const pageWidth = segmentWidth / slides.length;
 
     const currentLeft = container.scrollLeft;
-    const prevPage = Math.ceil(currentLeft / W) - 1;
-    const target = prevPage * W;
+    const prevPage = Math.ceil((currentLeft - segmentWidth) / pageWidth) - 1;
+    const target = prevPage * pageWidth + segmentWidth;
 
     animateTo(target, 650);
     setCurrentIndex((prevPage + slides.length) % slides.length);
@@ -1746,40 +1750,33 @@ export function AutoRotationDisplay({
         >
 
           {isContinuousMode ? (
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden w-full h-full relative [mask-image:linear-gradient(to_right,transparent_0%,black_10%,black_90%,transparent_100%)]">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden w-full h-full relative [mask-image:linear-gradient(to_right,transparent_0%,black_5%,black_95%,transparent_100%)] py-4 sm:py-6">
               {/* Horizontal Scroll Track */}
               <div
                 ref={scrollContainerRef}
-                className="w-full h-full flex flex-row overflow-x-hidden select-none"
+                className="w-full h-full flex flex-row items-center overflow-x-hidden select-none gap-6 sm:gap-8 pb-3 px-6 sm:px-12"
               >
-                {loopedSlides.map((pSlide, pIdx) => (
-                  <div
-                    key={pIdx}
-                    className="w-full h-full flex shrink-0 justify-center items-center gap-4 sm:gap-6 pb-3 px-3 sm:px-6"
-                  >
-                    {pSlide.type === "page" && pSlide.items.map((item) => {
-                      const isPersonnel = "category" in item;
-                      const isCommandant = "isCurrent" in item;
-                      const itemType = isCommandant
-                        ? "commandant"
-                        : isPersonnel
-                          ? "personnel"
-                          : "visit";
-                      return (
-                        <div key={item.id} className="flex justify-center items-center h-full max-w-[420px] flex-1">
-                          <ContinuousSlideCard
-                            item={item as any}
-                            type={itemType}
-                            isLightMode={isLightMode}
-                            imageLoading="eager"
-                            onSelect={handleContinuousSelect}
-                            onHover={setHovering}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
+                {loopedSlides.flatMap((pSlide) => pSlide.type === "page" ? pSlide.items : []).map((item, idx) => {
+                  const isPersonnel = "category" in item;
+                  const isCommandant = "isCurrent" in item;
+                  const itemType = isCommandant
+                    ? "commandant"
+                    : isPersonnel
+                      ? "personnel"
+                      : "visit";
+                  return (
+                    <div key={`${item.id}-${idx}`} className="flex justify-center items-center h-full w-[280px] sm:w-[320px] md:w-[360px] xl:w-[390px] shrink-0">
+                      <ContinuousSlideCard
+                        item={item as any}
+                        type={itemType}
+                        isLightMode={isLightMode}
+                        imageLoading="eager"
+                        onSelect={handleContinuousSelect}
+                        onHover={setHovering}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ) : transitionType === "pro-slider" ? (

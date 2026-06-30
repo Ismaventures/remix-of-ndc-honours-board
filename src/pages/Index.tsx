@@ -942,6 +942,17 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
 
     const cleanup = window.electronAPI.onDropboxSyncReload(() => {
       console.log('[Index] Received Dropbox sync reload request. Reloading window...');
+      
+      // Clear localStorage cache to force fetching fresh data from SQLite
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('ndc_cache_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
       window.location.reload();
     });
 
