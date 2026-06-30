@@ -23,8 +23,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-# Cloud Sync Credentials and Tokens
-electron/drive-credentials.json
-electron/drive-token.json
-electron/dropbox-credentials.json
-electron/dropbox-token.json
