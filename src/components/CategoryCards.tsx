@@ -17,7 +17,8 @@ export type ViewKey =
   | "museum-collections"
   | "guided-tours"
   | "hall-of-fame"
-  | "artifact-gallery";
+  | "artifact-gallery"
+  | "combined";
 
 interface CategoryCardsProps {
   onSelect: (key: ViewKey) => void;
@@ -80,7 +81,7 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
         className={`transition-all duration-1000 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
       >
         <div className="relative w-full max-w-6xl mx-auto px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-7">
-          <div className="relative z-10 flex flex-col md:flex-row justify-center items-center md:items-stretch gap-4 md:gap-6 stagger-reveal w-full">
+          <div className="relative z-10 flex flex-col md:flex-row flex-wrap justify-center items-center md:items-stretch gap-4 md:gap-6 stagger-reveal w-full">
             {CARDS.map((card) => {
               return (
                 <div key={card.key} className="p-2 w-full md:flex-1 max-w-[360px] h-full">

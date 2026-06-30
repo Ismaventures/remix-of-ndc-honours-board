@@ -9,6 +9,7 @@ import {
   Star,
   Settings,
   Users,
+  Play,
 } from "lucide-react";
 import { useThemeMode } from "@/hooks/useThemeMode";
 import type { ViewKey } from "./CategoryCards";
@@ -104,6 +105,7 @@ export function BottomDock({ currentView, onNavigate, hidden, onBack }: BottomDo
     { key: "fdc", label: "FDC+", icon: Award },
     { key: "allied", label: "Allied", icon: Globe },
     { key: "visits", label: "Visits", icon: Star },
+    { key: "combined", label: "Global Auto Display", icon: Play },
   ];
 
   const isHome = currentView === "home";

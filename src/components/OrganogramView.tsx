@@ -27,7 +27,7 @@ import {
 interface OrganogramViewProps {
   data: Personnel[];
   title: string;
-  category: Category;
+  category: Category | Category[];
   onBack: () => void;
   forcedSelectedId?: string | null;
   forcedSelectionNonce?: number;
@@ -345,7 +345,7 @@ export function OrganogramView({
   }, [searchQuery, rankFilter, serviceFilter, yearFilter, sortMode]);
 
   const categoryRecords = useMemo(
-    () => data.filter((p) => p.category === category),
+    () => data.filter((p) => Array.isArray(category) ? category.includes(p.category) : p.category === category),
     [data, category],
   );
 
@@ -457,7 +457,7 @@ export function OrganogramView({
     return filtered.slice(start, start + itemsPerPage);
   }, [filtered, currentPage, itemsPerPage]);
 
-  const usePortraitGrid = category === "Allied";
+  const usePortraitGrid = category === "Allied" || (Array.isArray(category) && category.includes("Allied"));
 
   const loopedRecords = useMemo(() => {
     if (filtered.length <= 1) return filtered;
