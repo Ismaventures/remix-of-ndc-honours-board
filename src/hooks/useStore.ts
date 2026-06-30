@@ -78,14 +78,11 @@ const mapPersonnelToRow = (p: Personnel): PersonnelRow => ({
   rank: p.rank,
   category: p.category,
   service: p.service,
-  course: p.course ?? null,
-  academic_year: p.academicYear ?? null,
   period_start: p.periodStart,
   period_end: p.periodEnd,
   image_url: p.imageUrl ?? null,
   citation: p.citation,
   decoration: p.decoration ?? null,
-  biography_full: p.biographyFull ?? null,
   seniority_order: p.seniorityOrder,
 } as any);
 

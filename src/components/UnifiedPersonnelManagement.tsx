@@ -397,83 +397,8 @@ function PersonnelForm({
     seniorityOrder: 10,
   });
 
-  const [courseInfo, setCourseInfo] = useState({
-    courseClassification: 'FDC',
-    courseNumber: '',
-    courseYear: new Date().getFullYear(),
-  });
-
-  const existingCourseNumbers = useMemo(() => {
-    const numbers = new Set<number>();
-    for (let i = 1; i <= 34; i++) {
-      numbers.add(i);
-    }
-    personnel.forEach(p => {
-      if (p.category === 'FWC' || p.category === 'FDC' || p.category === 'Allied') {
-        let courseNum = null;
-        if (p.course) {
-          courseNum = p.course;
-        }
-        if (!courseNum && p.decoration) {
-          let match = p.decoration.match(/CSE\s*(\d+)/i);
-          if (match) {
-            courseNum = parseInt(match[1], 10);
-          } else {
-            match = p.decoration.match(/NWC\s+Course\s+(\d+)/i);
-            if (match) {
-              courseNum = parseInt(match[1], 10);
-            }
-          }
-        }
-        if (!courseNum && p.periodStart) {
-          courseNum = p.periodStart - 1991;
-        }
-        if (courseNum && !isNaN(courseNum) && courseNum > 0) {
-          numbers.add(courseNum);
-        }
-      }
-    });
-    return Array.from(numbers).sort((a, b) => a - b);
-  }, [personnel]);
-
-  const [selectedCourseOption, setSelectedCourseOption] = useState<string>('');
-  const [customCourseNumber, setCustomCourseNumber] = useState<string>('');
-
-  const handleCourseChange = (val: string) => {
-    setSelectedCourseOption(val);
-    if (val !== 'custom' && val !== '') {
-      const courseNum = parseInt(val, 10);
-      updateCourse('courseNumber', val);
-      const calculatedYear = 1991 + courseNum;
-      updateCourse('courseYear', calculatedYear);
-      update('periodStart', calculatedYear);
-      update('periodEnd', calculatedYear + 1);
-    } else if (val === '') {
-      updateCourse('courseNumber', '');
-    } else if (val === 'custom') {
-      updateCourse('courseNumber', customCourseNumber);
-      const cNum = parseInt(customCourseNumber, 10);
-      if (cNum && !isNaN(cNum)) {
-        const calculatedYear = 1991 + cNum;
-        updateCourse('courseYear', calculatedYear);
-        update('periodStart', calculatedYear);
-        update('periodEnd', calculatedYear + 1);
-      }
-    }
-  };
-
   const update = (key: string, value: string | number) =>
     setForm(prev => ({ ...prev, [key]: value }));
-
-  const updateCourse = (key: string, value: string | number) =>
-    setCourseInfo(prev => ({ ...prev, [key]: value }));
-
-  const generateDecorationFromCourse = () => {
-    if (courseInfo.courseNumber) {
-      return `CSE ${courseInfo.courseNumber}/${courseInfo.courseYear}`;
-    }
-    return form.decoration;
-  };
 
   const handleSave = async () => {
     if (isSaving) return;
@@ -490,9 +415,7 @@ function PersonnelForm({
         const currentCategory = form.category;
         if (currentCategory === 'FWC' || currentCategory === 'FDC' || currentCategory === 'Allied') {
           let courseNum = null;
-          if (courseInfo.courseNumber) {
-            courseNum = parseInt(courseInfo.courseNumber, 10);
-          } else if (form.decoration) {
+          if (form.decoration) {
             let match = form.decoration.match(/CSE\s*(\d+)/i);
             if (match) {
               courseNum = parseInt(match[1], 10);
@@ -521,11 +444,7 @@ function PersonnelForm({
         finalImageUrl = await saveMediaFile(pendingImageFile, bucketName, subFolder, customFilename);
       }
 
-      const finalDecoration = courseInfo.courseNumber
-        ? generateDecorationFromCourse()
-        : form.decoration;
-
-      onSave({ ...form, imageUrl: finalImageUrl, decoration: finalDecoration });
+      onSave({ ...form, imageUrl: finalImageUrl });
     } catch (err) {
       console.error('Failed to save personnel:', err);
       setUploadError('Could not save the personnel image and record.');
@@ -533,7 +452,6 @@ function PersonnelForm({
       setIsSaving(false);
     }
   };
-
   const onUploadImage = async (file: File | null) => {
     if (!file) return;
     setUploadError(null);
@@ -734,96 +652,7 @@ function PersonnelForm({
         </div>
       </div>
 
-      {/* Course Selection Section */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="text-sm font-semibold text-blue-900 mb-3">Course Information</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-              Course Classification
-            </label>
-            <select
-              value={courseInfo.courseClassification}
-              onChange={e => updateCourse('courseClassification', e.target.value)}
-              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              <option value="FDC">FDC</option>
-              <option value="FWC">FWC</option>
-              <option value="Directing Staff">Directing Staff</option>
-              <option value="Allied">Allied</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-              Select Course
-            </label>
-            <select
-              value={selectedCourseOption}
-              onChange={e => handleCourseChange(e.target.value)}
-              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              <option value="">-- Select a Course --</option>
-              {existingCourseNumbers.map(num => (
-                <option key={`opt-ucourse-${num}`} value={String(num)}>Course {num}</option>
-              ))}
-              <option value="custom">New Course / Other...</option>
-            </select>
-          </div>
-          {selectedCourseOption === 'custom' ? (
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Custom Course Number
-              </label>
-              <input
-                type="number"
-                placeholder="e.g., 35"
-                value={customCourseNumber}
-                onChange={e => {
-                  const val = e.target.value;
-                  setCustomCourseNumber(val);
-                  updateCourse('courseNumber', val);
-                  const cNum = parseInt(val, 10);
-                  if (cNum && !isNaN(cNum)) {
-                    const calculatedYear = 1991 + cNum;
-                    updateCourse('courseYear', calculatedYear);
-                    update('periodStart', calculatedYear);
-                    update('periodEnd', calculatedYear + 1);
-                  }
-                }}
-                className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                min="1"
-                max="999"
-              />
-            </div>
-          ) : null}
-          <div className={selectedCourseOption === 'custom' ? 'col-span-3 md:col-span-1' : ''}>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-              Course Year
-            </label>
-            <input
-              type="number"
-              value={courseInfo.courseYear}
-              onChange={e => {
-                const val = parseInt(e.target.value, 10);
-                updateCourse('courseYear', val);
-                update('periodStart', val);
-                update('periodEnd', val + 1);
-              }}
-              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              min="1900"
-              max="2100"
-            />
-          </div>
-        </div>
-        {courseInfo.courseNumber && (
-          <p className="text-xs text-blue-700 mt-2 font-medium">
-            📌 Auto-generated: CSE {courseInfo.courseNumber}/{courseInfo.courseYear}
-          </p>
-        )}
-        <p className="text-xs text-blue-600 mt-1">
-          Select a course above or use "New Course / Other..." to customize.
-        </p>
-      </div>
+
 
       <div>
         <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
@@ -885,111 +714,8 @@ function PersonnelEditForm({
     seniorityOrder: initial.seniorityOrder,
   });
 
-  const [courseInfo, setCourseInfo] = useState({
-    courseClassification: (initial.decoration?.split(' ')[0] === 'CSE' ? 'FDC' : initial.category) as Category,
-    courseNumber: initial.decoration?.match(/\d+/)?.[0] || '',
-    courseYear: initial.periodStart,
-  });
-
-  const [useCourseFormat, setUseCourseFormat] = useState(!!initial.decoration?.includes('/'));
-
-  const existingCourseNumbers = useMemo(() => {
-    const numbers = new Set<number>();
-    for (let i = 1; i <= 34; i++) {
-      numbers.add(i);
-    }
-    personnel.forEach(p => {
-      if (p.category === 'FWC' || p.category === 'FDC' || p.category === 'Allied') {
-        let courseNum = null;
-        if (p.course) {
-          courseNum = p.course;
-        }
-        if (!courseNum && p.decoration) {
-          let match = p.decoration.match(/CSE\s*(\d+)/i);
-          if (match) {
-            courseNum = parseInt(match[1], 10);
-          } else {
-            match = p.decoration.match(/NWC\s+Course\s+(\d+)/i);
-            if (match) {
-              courseNum = parseInt(match[1], 10);
-            }
-          }
-        }
-        if (!courseNum && p.periodStart) {
-          courseNum = p.periodStart - 1991;
-        }
-        if (courseNum && !isNaN(courseNum) && courseNum > 0) {
-          numbers.add(courseNum);
-        }
-      }
-    });
-    return Array.from(numbers).sort((a, b) => a - b);
-  }, [personnel]);
-
-  const [selectedCourseOption, setSelectedCourseOption] = useState<string>(() => {
-    if (initial.decoration) {
-      let match = initial.decoration.match(/CSE\s*(\d+)/i);
-      if (!match) match = initial.decoration.match(/NWC\s+Course\s+(\d+)/i);
-      if (match) {
-        return match[1];
-      }
-    }
-    if (initial.periodStart) {
-      const calc = initial.periodStart - 1991;
-      if (calc > 0) return String(calc);
-    }
-    return '';
-  });
-
-  const [customCourseNumber, setCustomCourseNumber] = useState<string>(() => {
-    if (initial.decoration) {
-      let match = initial.decoration.match(/CSE\s*(\d+)/i);
-      if (!match) match = initial.decoration.match(/NWC\s+Course\s+(\d+)/i);
-      if (match) {
-        const num = parseInt(match[1], 10);
-        if (num > 34) {
-          return match[1];
-        }
-      }
-    }
-    return '';
-  });
-
-  const handleCourseChange = (val: string) => {
-    setSelectedCourseOption(val);
-    if (val !== 'custom' && val !== '') {
-      const courseNum = parseInt(val, 10);
-      updateCourse('courseNumber', val);
-      const calculatedYear = 1991 + courseNum;
-      updateCourse('courseYear', calculatedYear);
-      update('periodStart', calculatedYear);
-      update('periodEnd', calculatedYear + 1);
-    } else if (val === '') {
-      updateCourse('courseNumber', '');
-    } else if (val === 'custom') {
-      updateCourse('courseNumber', customCourseNumber);
-      const cNum = parseInt(customCourseNumber, 10);
-      if (cNum && !isNaN(cNum)) {
-        const calculatedYear = 1991 + cNum;
-        updateCourse('courseYear', calculatedYear);
-        update('periodStart', calculatedYear);
-        update('periodEnd', calculatedYear + 1);
-      }
-    }
-  };
-
   const update = (key: string, value: string | number) =>
     setForm(prev => ({ ...prev, [key]: value }));
-
-  const updateCourse = (key: string, value: string | number) =>
-    setCourseInfo(prev => ({ ...prev, [key]: value }));
-
-  const generateDecorationFromCourse = () => {
-    if (courseInfo.courseNumber) {
-      return `CSE ${courseInfo.courseNumber}/${courseInfo.courseYear}`;
-    }
-    return form.decoration;
-  };
 
   const handleSave = async () => {
     if (isSaving) return;
@@ -1006,9 +732,7 @@ function PersonnelEditForm({
         const currentCategory = form.category;
         if (currentCategory === 'FWC' || currentCategory === 'FDC' || currentCategory === 'Allied') {
           let courseNum = null;
-          if (courseInfo.courseNumber) {
-            courseNum = parseInt(courseInfo.courseNumber, 10);
-          } else if (form.decoration) {
+          if (form.decoration) {
             let match = form.decoration.match(/CSE\s*(\d+)/i);
             if (match) {
               courseNum = parseInt(match[1], 10);
@@ -1037,11 +761,7 @@ function PersonnelEditForm({
         finalImageUrl = await saveMediaFile(pendingImageFile, bucketName, subFolder, customFilename);
       }
 
-      const finalDecoration = useCourseFormat && courseInfo.courseNumber
-        ? generateDecorationFromCourse()
-        : form.decoration;
-
-      onSave({ ...form, imageUrl: finalImageUrl, decoration: finalDecoration });
+      onSave({ ...form, imageUrl: finalImageUrl });
     } catch (err) {
       console.error('Failed to save personnel profile:', err);
       setUploadError('Failed to save the personnel image and profile changes.');
@@ -1196,129 +916,23 @@ function PersonnelEditForm({
         </div>
       </div>
 
-      {/* Course Information */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center gap-2 mb-4">
+      {/* Decoration & Honours */}
+      <div>
+        <h4 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
           <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">3</span>
-          <h4 className="text-sm font-semibold text-blue-900">Course Information</h4>
-          <label className="ml-auto flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={useCourseFormat}
-              onChange={e => setUseCourseFormat(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-2"
-            />
-            <span className="text-xs font-medium text-blue-700">Use CSE Format</span>
+          Decoration & Honours
+        </h4>
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+            Decoration / Honours
           </label>
+          <input
+            placeholder="e.g., CSE 35/2026, NWC Course 5"
+            value={form.decoration}
+            onChange={e => update('decoration', e.target.value)}
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          />
         </div>
-
-        {useCourseFormat ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Course Classification
-                </label>
-                <select
-                  value={courseInfo.courseClassification}
-                  onChange={e => updateCourse('courseClassification', e.target.value)}
-                  className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="FDC">FDC - Fellows of Defence College</option>
-                  <option value="FWC">FWC - Fellows of War College</option>
-                  <option value="Directing Staff">Directing Staff</option>
-                  <option value="Allied">Allied</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Select Course
-                </label>
-                <select
-                  value={selectedCourseOption}
-                  onChange={e => handleCourseChange(e.target.value)}
-                  className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="">-- Select a Course --</option>
-                  {existingCourseNumbers.map(num => (
-                    <option key={`opt-ueditcourse-${num}`} value={String(num)}>Course {num}</option>
-                  ))}
-                  <option value="custom">New Course / Other...</option>
-                </select>
-              </div>
-              {selectedCourseOption === 'custom' ? (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                    Custom Course Number
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="e.g., 35"
-                    value={customCourseNumber}
-                    onChange={e => {
-                      const val = e.target.value;
-                      setCustomCourseNumber(val);
-                      updateCourse('courseNumber', val);
-                      const cNum = parseInt(val, 10);
-                      if (cNum && !isNaN(cNum)) {
-                        const calculatedYear = 1991 + cNum;
-                        updateCourse('courseYear', calculatedYear);
-                        update('periodStart', calculatedYear);
-                        update('periodEnd', calculatedYear + 1);
-                      }
-                    }}
-                    className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                    min="1"
-                    max="999"
-                  />
-                </div>
-              ) : null}
-              <div className={selectedCourseOption === 'custom' ? 'col-span-3 md:col-span-1' : ''}>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Graduation Year *
-                </label>
-                <input
-                  type="number"
-                  placeholder="E.g., 1993, 2020"
-                  value={courseInfo.courseYear}
-                  onChange={e => {
-                    const val = parseInt(e.target.value, 10);
-                    updateCourse('courseYear', val);
-                    update('periodStart', val);
-                    update('periodEnd', val + 1);
-                  }}
-                  className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  min="1900"
-                  max="2100"
-                />
-              </div>
-            </div>
-            {courseInfo.courseNumber && (
-              <div className="bg-white rounded border border-blue-300 p-3 flex items-center gap-3">
-                <span className="text-sm font-semibold text-blue-900">📌 Auto-generated:</span>
-                <span className="text-lg font-bold text-blue-600">CSE {courseInfo.courseNumber}/{courseInfo.courseYear}</span>
-              </div>
-            )}
-            <p className="text-xs text-blue-600">
-              Format: CSE [course_number]/[graduation_year] - automatically populates Decoration field
-            </p>
-          </div>
-        ) : (
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-              Decoration / Honours (Manual)
-            </label>
-            <input
-              placeholder="e.g., CSE 42/2020, FDC Course 5"
-              value={form.decoration}
-              onChange={e => update('decoration', e.target.value)}
-              className="w-full border border-blue-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            />
-            <p className="text-xs text-blue-600 mt-1">
-              Enable "Use CSE Format" above to auto-generate from course info
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Additional Information */}

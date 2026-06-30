@@ -821,6 +821,35 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+const tableColumnsCache = {};
+function getTableColumns(tableName) {
+  if (!db) return null;
+  if (tableColumnsCache[tableName]) return tableColumnsCache[tableName];
+  try {
+    const columns = db.prepare(`PRAGMA table_info(${tableName})`).all().map(c => c.name);
+    if (columns.length > 0) {
+      tableColumnsCache[tableName] = columns;
+      return columns;
+    }
+  } catch (err) {
+    console.error(`Failed to get columns for table ${tableName}:`, err);
+  }
+  return null;
+}
+
+function filterRecordToTableColumns(tableName, record) {
+  if (!record || typeof record !== 'object') return record;
+  const cols = getTableColumns(tableName);
+  if (!cols) return record;
+  const filtered = {};
+  for (const key of Object.keys(record)) {
+    if (cols.includes(key)) {
+      filtered[key] = record[key];
+    }
+  }
+  return filtered;
+}
+
 // IPC handler for SQLite queries
 ipcMain.handle('query-sqlite', async (event, queryDesc) => {
   if (!db) {
@@ -913,7 +942,8 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
 
       db.transaction(() => {
         for (const record of records) {
-          const serializedRecord = serializeRowJsonColumns(table, record);
+          const filteredRecord = filterRecordToTableColumns(table, record);
+          const serializedRecord = serializeRowJsonColumns(table, filteredRecord);
           const keys = Object.keys(serializedRecord);
           const placeholders = keys.map(() => '?').join(',');
           const values = Object.values(serializedRecord).map(normalizeSqliteValue);
@@ -928,7 +958,8 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
     }
 
     if (method === 'update') {
-      const serializedPayload = serializeRowJsonColumns(table, payload);
+      const filteredPayload = filterRecordToTableColumns(table, payload);
+      const serializedPayload = serializeRowJsonColumns(table, filteredPayload);
       const setKeys = Object.keys(serializedPayload);
       const setClauses = setKeys.map(k => `${k} = ?`).join(',');
       const params = Object.values(serializedPayload).map(normalizeSqliteValue);
@@ -985,8 +1016,10 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
           }
 
           const existing = db.prepare(checkSql).get(...checkParams);
+          const filteredRecord = filterRecordToTableColumns(table, record);
+          
           if (existing) {
-            const serializedRecord = serializeRowJsonColumns(table, record);
+            const serializedRecord = serializeRowJsonColumns(table, filteredRecord);
             const setKeys = Object.keys(serializedRecord).filter(k => k !== conflictKey && k !== 'user_id');
             const setClauses = setKeys.map(k => `${k} = ?`).join(',');
             const values = setKeys.map(k => normalizeSqliteValue(serializedRecord[k]));
@@ -1002,7 +1035,7 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
 
             db.prepare(updateSql).run(...values);
           } else {
-            const serializedRecord = serializeRowJsonColumns(table, record);
+            const serializedRecord = serializeRowJsonColumns(table, filteredRecord);
             const keys = Object.keys(serializedRecord);
             const placeholders = keys.map(() => '?').join(',');
             const values = Object.values(serializedRecord).map(normalizeSqliteValue);
