@@ -298,7 +298,12 @@ export function isPersistentMediaRef(value?: string | null): value is string {
   return typeof value === 'string' && value.startsWith(MEDIA_URL_PREFIX);
 }
 
-export async function saveMediaFile(file: File, bucketName: string = 'ndc-media', subFolder?: string): Promise<string> {
+export async function saveMediaFile(
+  file: File,
+  bucketName: string = 'ndc-media',
+  subFolder?: string,
+  customFilename?: string
+): Promise<string> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const buffer = await file.arrayBuffer();
   const localRef = `${MEDIA_URL_PREFIX}${id}`;
@@ -307,6 +312,22 @@ export async function saveMediaFile(file: File, bucketName: string = 'ndc-media'
     buffer,
     type: file.type || 'application/octet-stream',
   } satisfies StoredMedia);
+
+  const electronAPI = typeof window !== 'undefined' ? (window as any).electronAPI : null;
+  if (electronAPI) {
+    try {
+      const filename = customFilename || file.name || `${id}.bin`;
+      const filePath = subFolder ? `${subFolder}/${filename}` : filename;
+      const fileArray = new Uint8Array(buffer);
+      
+      const res = await electronAPI.saveMedia(bucketName, filePath, fileArray, file.type);
+      if (res && res.success && res.url) {
+        return res.url;
+      }
+    } catch (err) {
+      console.error('[saveMediaFile] Electron saveMedia IPC failed:', err);
+    }
+  }
 
   const publicUrl = await uploadMediaToSupabase(id, file, bucketName, subFolder);
   return composePersistentMediaRef(localRef, publicUrl);

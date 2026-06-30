@@ -382,6 +382,8 @@ function PersonnelForm({
   personnel?: Personnel[];
 }) {
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState({
     name: '',
     rank: '',
@@ -473,6 +475,65 @@ function PersonnelForm({
     return form.decoration;
   };
 
+  const handleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    setUploadError(null);
+
+    try {
+      let finalImageUrl = form.imageUrl;
+
+      if (pendingImageFile) {
+        let bucketName = 'ndc-media';
+        let subFolder: string | undefined = undefined;
+
+        const currentCategory = form.category;
+        if (currentCategory === 'FWC' || currentCategory === 'FDC' || currentCategory === 'Allied') {
+          let courseNum = null;
+          if (courseInfo.courseNumber) {
+            courseNum = parseInt(courseInfo.courseNumber, 10);
+          } else if (form.decoration) {
+            let match = form.decoration.match(/CSE\s*(\d+)/i);
+            if (match) {
+              courseNum = parseInt(match[1], 10);
+            } else {
+              match = form.decoration.match(/NWC\s+Course\s+(\d+)/i);
+              if (match) {
+                courseNum = parseInt(match[1], 10);
+              }
+            }
+          }
+
+          if ((!courseNum || isNaN(courseNum)) && form.periodStart) {
+            courseNum = form.periodStart - 1991;
+          }
+
+          if (courseNum && !isNaN(courseNum) && courseNum > 0) {
+            bucketName = 'courses';
+            subFolder = `Course-${courseNum}`;
+          }
+        }
+
+        const extension = pendingImageFile.name.split('.').pop() || 'png';
+        const cleanName = form.name ? form.name.replace(/[\/\:\*\?\"\<\|\>\\\\]/g, '-').trim() : '';
+        const customFilename = cleanName ? `${cleanName}.${extension}` : undefined;
+
+        finalImageUrl = await saveMediaFile(pendingImageFile, bucketName, subFolder, customFilename);
+      }
+
+      const finalDecoration = courseInfo.courseNumber
+        ? generateDecorationFromCourse()
+        : form.decoration;
+
+      onSave({ ...form, imageUrl: finalImageUrl, decoration: finalDecoration });
+    } catch (err) {
+      console.error('Failed to save personnel:', err);
+      setUploadError('Could not save the personnel image and record.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const onUploadImage = async (file: File | null) => {
     if (!file) return;
     setUploadError(null);
@@ -487,42 +548,9 @@ function PersonnelForm({
       return;
     }
 
-    try {
-      let bucketName = 'ndc-media';
-      let subFolder: string | undefined = undefined;
-
-      const currentCategory = form.category;
-      if (currentCategory === 'FWC' || currentCategory === 'FDC' || currentCategory === 'Allied') {
-        let courseNum = null;
-        if (courseInfo.courseNumber) {
-          courseNum = parseInt(courseInfo.courseNumber, 10);
-        } else if (form.decoration) {
-          let match = form.decoration.match(/CSE\s*(\d+)/i);
-          if (match) {
-            courseNum = parseInt(match[1], 10);
-          } else {
-            match = form.decoration.match(/NWC\s+Course\s+(\d+)/i);
-            if (match) {
-              courseNum = parseInt(match[1], 10);
-            }
-          }
-        }
-
-        if ((!courseNum || isNaN(courseNum)) && form.periodStart) {
-          courseNum = form.periodStart - 1991;
-        }
-
-        if (courseNum && !isNaN(courseNum) && courseNum > 0) {
-          bucketName = 'courses';
-          subFolder = `Course-${courseNum}`;
-        }
-      }
-
-      const mediaRef = await saveMediaFile(file, bucketName, subFolder);
-      update('imageUrl', mediaRef);
-    } catch {
-      setUploadError('Could not process the selected file.');
-    }
+    setPendingImageFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    update('imageUrl', objectUrl);
   };
 
   return (
@@ -766,15 +794,11 @@ function PersonnelForm({
           Cancel
         </button>
         <button
-          onClick={() => {
-            const finalDecoration = courseInfo.courseNumber 
-              ? generateDecorationFromCourse() 
-              : form.decoration;
-            onSave({ ...form, decoration: finalDecoration });
-          }}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors"
+          onClick={handleSave}
+          disabled={isSaving}
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded font-medium transition-colors"
         >
-          Create Record
+          {isSaving ? 'Saving...' : 'Create Record'}
         </button>
       </div>
     </div>
@@ -794,6 +818,8 @@ function PersonnelEditForm({
   personnel?: Personnel[];
 }) {
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState({
     name: initial.name,
     rank: initial.rank,
@@ -913,11 +939,63 @@ function PersonnelEditForm({
     return form.decoration;
   };
 
-  const handleSave = () => {
-    const finalDecoration = useCourseFormat && courseInfo.courseNumber
-      ? generateDecorationFromCourse()
-      : form.decoration;
-    onSave({ ...form, decoration: finalDecoration });
+  const handleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    setUploadError(null);
+
+    try {
+      let finalImageUrl = form.imageUrl;
+
+      if (pendingImageFile) {
+        let bucketName = 'ndc-media';
+        let subFolder: string | undefined = undefined;
+
+        const currentCategory = form.category;
+        if (currentCategory === 'FWC' || currentCategory === 'FDC' || currentCategory === 'Allied') {
+          let courseNum = null;
+          if (courseInfo.courseNumber) {
+            courseNum = parseInt(courseInfo.courseNumber, 10);
+          } else if (form.decoration) {
+            let match = form.decoration.match(/CSE\s*(\d+)/i);
+            if (match) {
+              courseNum = parseInt(match[1], 10);
+            } else {
+              match = form.decoration.match(/NWC\s+Course\s+(\d+)/i);
+              if (match) {
+                courseNum = parseInt(match[1], 10);
+              }
+            }
+          }
+
+          if ((!courseNum || isNaN(courseNum)) && form.periodStart) {
+            courseNum = form.periodStart - 1991;
+          }
+
+          if (courseNum && !isNaN(courseNum) && courseNum > 0) {
+            bucketName = 'courses';
+            subFolder = `Course-${courseNum}`;
+          }
+        }
+
+        const extension = pendingImageFile.name.split('.').pop() || 'png';
+        const cleanName = form.name ? form.name.replace(/[\/\:\*\?\"\<\|\>\\\\]/g, '-').trim() : '';
+        const customFilename = cleanName ? `${cleanName}.${extension}` : undefined;
+
+        finalImageUrl = await saveMediaFile(pendingImageFile, bucketName, subFolder, customFilename);
+      }
+
+      const finalDecoration = useCourseFormat && courseInfo.courseNumber
+        ? generateDecorationFromCourse()
+        : form.decoration;
+
+      onSave({ ...form, imageUrl: finalImageUrl, decoration: finalDecoration });
+    } catch (err) {
+      console.error('Failed to save personnel profile:', err);
+      setUploadError('Failed to save the personnel image and profile changes.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const onUploadImage = async (file: File | null) => {
@@ -934,42 +1012,9 @@ function PersonnelEditForm({
       return;
     }
 
-    try {
-      let bucketName = 'ndc-media';
-      let subFolder: string | undefined = undefined;
-
-      const currentCategory = form.category;
-      if (currentCategory === 'FWC' || currentCategory === 'FDC' || currentCategory === 'Allied') {
-        let courseNum = null;
-        if (courseInfo.courseNumber) {
-          courseNum = parseInt(courseInfo.courseNumber, 10);
-        } else if (form.decoration) {
-          let match = form.decoration.match(/CSE\s*(\d+)/i);
-          if (match) {
-            courseNum = parseInt(match[1], 10);
-          } else {
-            match = form.decoration.match(/NWC\s+Course\s+(\d+)/i);
-            if (match) {
-              courseNum = parseInt(match[1], 10);
-            }
-          }
-        }
-
-        if ((!courseNum || isNaN(courseNum)) && form.periodStart) {
-          courseNum = form.periodStart - 1991;
-        }
-
-        if (courseNum && !isNaN(courseNum) && courseNum > 0) {
-          bucketName = 'courses';
-          subFolder = `Course-${courseNum}`;
-        }
-      }
-
-      const mediaRef = await saveMediaFile(file, bucketName, subFolder);
-      update('imageUrl', mediaRef);
-    } catch {
-      setUploadError('Could not process the selected file.');
-    }
+    setPendingImageFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    update('imageUrl', objectUrl);
   };
 
   return (
@@ -1263,9 +1308,10 @@ function PersonnelEditForm({
         </button>
         <button
           onClick={handleSave}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors"
+          disabled={isSaving}
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded font-medium transition-colors font-medium"
         >
-          Save Changes
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
     </div>
