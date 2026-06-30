@@ -286,30 +286,25 @@ const ContinuousSlideCard = memo(function ContinuousSlideCard({
       }`}
       aria-label={`${isCommandant ? "Commandant" : isVisit ? "Visit" : "Staff"} card for ${safeName}`}
     >
+      {/* Top tricolor strip - always tricolor for all cards */}
+      <div className="pointer-events-none absolute top-0 inset-x-0 h-[7px] flex z-20">
+        <div className="flex-1 bg-[#002060]" />
+        <div className="flex-1 bg-[#FF0000]" />
+        <div className="flex-1 bg-[#00B0F0]" />
+      </div>
+
+      {/* Bottom strip - tricolor or single service color */}
       {serviceColor === "tri-color" ? (
-        <>
-          <div className="pointer-events-none absolute top-0 inset-x-0 h-[7px] flex z-20">
-            <div className="flex-1 bg-[#002060]" />
-            <div className="flex-1 bg-[#FF0000]" />
-            <div className="flex-1 bg-[#00B0F0]" />
-          </div>
-          <div className="pointer-events-none absolute bottom-0 inset-x-0 h-[6px] flex z-20">
-            <div className="flex-1 bg-[#002060]" />
-            <div className="flex-1 bg-[#FF0000]" />
-            <div className="flex-1 bg-[#00B0F0]" />
-          </div>
-        </>
+        <div className="pointer-events-none absolute bottom-0 inset-x-0 h-[6px] flex z-20">
+          <div className="flex-1 bg-[#002060]" />
+          <div className="flex-1 bg-[#FF0000]" />
+          <div className="flex-1 bg-[#00B0F0]" />
+        </div>
       ) : (
-        <>
-          <div
-            className="pointer-events-none absolute top-0 inset-x-0 h-[7px] z-20"
-            style={{ backgroundColor: serviceColor }}
-          />
-          <div
-            className="pointer-events-none absolute bottom-0 inset-x-0 h-[6px] z-20"
-            style={{ backgroundColor: serviceColor }}
-          />
-        </>
+        <div
+          className="pointer-events-none absolute bottom-0 inset-x-0 h-[6px] z-20"
+          style={{ backgroundColor: serviceColor }}
+        />
       )}
 
       <div className="pointer-events-none absolute inset-0 z-0 opacity-40">
@@ -320,61 +315,35 @@ const ContinuousSlideCard = memo(function ContinuousSlideCard({
       </div>
 
       <div className="relative z-10 mt-1.5 sm:mt-2.5 mb-1 sm:mb-1.5 flex flex-col flex-1 min-h-0 w-full">
-        {/* Tri-colour outer frame */}
-        <div className="relative flex flex-col flex-1 min-h-0 w-full rounded-sm overflow-hidden shadow-xl">
-          {/* Tri-colour border layers */}
-          <div className="absolute inset-0 z-0 pointer-events-none">
-            {/* Left border - Red */}
-            <div className="absolute top-0 left-0 bottom-0 w-[6px] bg-[#C0392B]" />
-            {/* Right border - Light Blue */}
-            <div className="absolute top-0 right-0 bottom-0 w-[6px] bg-[#00B0F0]" />
-            {/* Top border - tri-colour */}
-            <div className="absolute top-0 inset-x-0 h-[6px] flex">
-              <div className="flex-1 bg-[#C0392B]" />
-              <div className="flex-1 bg-[#002060]" />
-              <div className="flex-1 bg-[#00B0F0]" />
-            </div>
-            {/* Bottom border - tri-colour */}
-            <div className="absolute bottom-0 inset-x-0 h-[6px] flex">
-              <div className="flex-1 bg-[#C0392B]" />
-              <div className="flex-1 bg-[#002060]" />
-              <div className="flex-1 bg-[#00B0F0]" />
-            </div>
-          </div>
-          {/* Black inner border */}
-          <div className="absolute inset-[6px] z-[1] border-[3px] border-black/90 pointer-events-none" />
-          {/* White mat inside */}
-          <div className="relative z-[2] flex flex-col flex-1 min-h-0 m-[6px] p-[3px] bg-black/90">
-            <div className="flex flex-col flex-1 min-h-0 bg-white p-[4px]">
-              <div
-                className={`auto-scroll-image-frame relative flex-1 min-h-0 overflow-hidden w-full ${
-                  isCommandant ? "commandant-portrait-frame commandant-portrait-reel" : isVisit ? "" : "staff-portrait-frame"
-                } ${isLightMode ? "bg-slate-100" : "bg-slate-900"}`}
-              >
-                {isCommandant && (
-                  <>
-                    <div className="pointer-events-none absolute inset-0 z-[1] commandant-portrait-vignette" />
-                    <div className="pointer-events-none absolute inset-0 z-[2] commandant-portrait-glass" />
-                  </>
-                )}
-                {imageUrl ? (
-                  <>
-                    <img
-                      src={imageUrl}
-                      alt={`${imageAltTitle} ${safeName}`}
-                      className="absolute inset-0 h-full w-full object-contain object-center transition-transform duration-500 group-hover:scale-[1.03]"
-                      loading={imageLoading}
-                      decoding="async"
-                      draggable={false}
-                    />
-                  </>
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-primary/45">
-                    <Shield className="h-10 w-10" />
-                  </div>
-                )}
+        {/* Simplified Photo Frame */}
+        <div className={`relative flex flex-col flex-1 min-h-0 w-full rounded-lg overflow-hidden shadow-xl border ${
+          isLightMode ? "border-slate-200 bg-slate-50" : "border-slate-800 bg-slate-900"
+        }`}>
+          <div
+            className={`auto-scroll-image-frame relative flex-1 min-h-0 overflow-hidden w-full ${
+              isCommandant ? "commandant-portrait-frame commandant-portrait-reel" : isVisit ? "" : "staff-portrait-frame"
+            }`}
+          >
+            {isCommandant && (
+              <>
+                <div className="pointer-events-none absolute inset-0 z-[1] commandant-portrait-vignette" />
+                <div className="pointer-events-none absolute inset-0 z-[2] commandant-portrait-glass" />
+              </>
+            )}
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={`${imageAltTitle} ${safeName}`}
+                className="absolute inset-0 h-full w-full object-contain object-center transition-transform duration-500 group-hover:scale-[1.03]"
+                loading={imageLoading}
+                decoding="async"
+                draggable={false}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-primary/45">
+                <Shield className="h-10 w-10" />
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -1352,9 +1321,9 @@ export function AutoRotationDisplay({
   const getSectionSubtitle = () => {
     if (activeView === "visits") return "Distinguished Visits and Honours";
     if (activeCategory === "FDC")
-      return "Distinguished Fellows of the Defence College (FDC)";
+      return "Distinguished Fellows of Defence College (FDC)";
     if (activeCategory === "FWC")
-      return "Distinguished Fellows of the War College (FWC)";
+      return "Distinguished Fellows of War College (FWC)";
     if (activeCategory === "Directing Staff")
       return "Chronicles of Directing Staff (Directing Staff)";
     if (activeCategory === "Allied")
