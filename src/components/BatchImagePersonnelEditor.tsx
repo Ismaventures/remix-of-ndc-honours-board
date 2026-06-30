@@ -295,15 +295,32 @@ export function BatchImagePersonnelEditor({
                               <option key={cat} value={cat}>{cat}</option>
                             ))}
                           </select>
-                          <select
-                            value={recordChanges.service ?? pair.personnel.service}
-                            onChange={(e) => updatePersonnelField(pair.personnel.id, 'service', e.target.value)}
+                           <select
+                            value={VALID_SERVICES.includes((recordChanges.service ?? pair.personnel.service) as any) ? (recordChanges.service ?? pair.personnel.service) : 'custom'}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === 'custom') {
+                                updatePersonnelField(pair.personnel.id, 'service', '');
+                              } else {
+                                updatePersonnelField(pair.personnel.id, 'service', val);
+                              }
+                            }}
                             className="px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm"
                           >
                             {VALID_SERVICES.map(svc => (
                               <option key={svc} value={svc}>{svc}</option>
                             ))}
+                            <option value="custom">Other / Custom...</option>
                           </select>
+                          {!VALID_SERVICES.includes((recordChanges.service ?? pair.personnel.service) as any) && (
+                            <input
+                              type="text"
+                              placeholder="Custom Service"
+                              value={recordChanges.service ?? pair.personnel.service}
+                              onChange={(e) => updatePersonnelField(pair.personnel.id, 'service', e.target.value)}
+                              className="px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm col-span-2"
+                            />
+                          )}
                           <input
                             type="number"
                             value={recordChanges.periodStart ?? pair.personnel.periodStart ?? ''}

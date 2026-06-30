@@ -2981,9 +2981,30 @@ function PersonnelForm({ initial, onSave, onCancel, personnel = [] }: {
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Service Branch</label>
-              <select value={form.service} onChange={e => update('service', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30">
+              <select
+                value={SERVICES.includes(form.service) ? form.service : 'custom'}
+                onChange={e => {
+                  const val = e.target.value;
+                  if (val === 'custom') {
+                    update('service', '');
+                  } else {
+                    update('service', val);
+                  }
+                }}
+                className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30"
+              >
                 {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
+                <option value="custom">Other / Custom Branch...</option>
               </select>
+              {!SERVICES.includes(form.service) && (
+                <input
+                  type="text"
+                  placeholder="Enter Custom Service Branch"
+                  value={form.service}
+                  onChange={e => update('service', e.target.value)}
+                  className="mt-2 w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30"
+                />
+              )}
             </div>
           </div>
         </div>

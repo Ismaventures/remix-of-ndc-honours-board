@@ -12,14 +12,7 @@ export type MuseumLinkedView =
   | 'allied'
   | 'visits';
 
-export type Service =
-  | 'Nigerian Army'
-  | 'Nigerian Navy'
-  | 'Nigerian Air Force'
-  | 'Civilian'
-  | 'Foreign'
-  | 'Foreign Service'
-  | 'Academic';
+export type Service = string;
 
 // Export valid values for dropdowns and validation
 export const VALID_CATEGORIES: Category[] = ['FWC', 'FDC', 'Directing Staff', 'Allied'];

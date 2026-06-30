@@ -599,8 +599,15 @@ function PersonnelForm({
             Service Branch
           </label>
           <select
-            value={form.service}
-            onChange={e => update('service', e.target.value)}
+            value={SERVICES.includes(form.service) ? form.service : 'custom'}
+            onChange={e => {
+              const val = e.target.value;
+              if (val === 'custom') {
+                update('service', '');
+              } else {
+                update('service', val);
+              }
+            }}
             className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
             {SERVICES.map(s => (
@@ -608,7 +615,17 @@ function PersonnelForm({
                 {s}
               </option>
             ))}
+            <option value="custom">Other / Custom Branch...</option>
           </select>
+          {!SERVICES.includes(form.service) && (
+            <input
+              type="text"
+              placeholder="Enter Custom Service Branch"
+              value={form.service}
+              onChange={e => update('service', e.target.value)}
+              className="mt-2 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            />
+          )}
         </div>
         <div>
           <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
@@ -1104,8 +1121,15 @@ function PersonnelEditForm({
               Service Branch
             </label>
             <select
-              value={form.service}
-              onChange={e => update('service', e.target.value)}
+              value={SERVICES.includes(form.service) ? form.service : 'custom'}
+              onChange={e => {
+                const val = e.target.value;
+                if (val === 'custom') {
+                  update('service', '');
+                } else {
+                  update('service', val);
+                }
+              }}
               className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               {SERVICES.map(s => (
@@ -1113,7 +1137,17 @@ function PersonnelEditForm({
                   {s}
                 </option>
               ))}
+              <option value="custom">Other / Custom Branch...</option>
             </select>
+            {!SERVICES.includes(form.service) && (
+              <input
+                type="text"
+                placeholder="Enter Custom Service Branch"
+                value={form.service}
+                onChange={e => update('service', e.target.value)}
+                className="mt-2 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+            )}
           </div>
         </div>
       </div>
