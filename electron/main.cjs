@@ -17,27 +17,28 @@ function logToFile(msg) {
 
 process.on('uncaughtException', (err) => {
   try {
+    console.error('UNCAUGHT EXCEPTION:', err);
     logToFile('UNCAUGHT EXCEPTION: ' + err.stack);
   } catch (_) {}
 });
 process.on('unhandledRejection', (reason) => {
   try {
+    console.error('UNHANDLED REJECTION:', reason);
     logToFile('UNHANDLED REJECTION: ' + String(reason));
   } catch (_) {}
 });
 
 // Now import native and sync modules
 const Database = require('better-sqlite3');
-const driveSync = require('./driveSync.cjs');
+const driveSync = require('./dropboxSync.cjs');
 
 const APP_PATH = app.getAppPath();
 const UNPACKED_PATH = isDev ? APP_PATH : APP_PATH.replace('app.asar', 'app.asar.unpacked');
 
-// In Option C: database.sqlite and local_media live in the User's Home folder in production.
-// This ensures they are 100% writable on Mac/Windows and easy to backup in Finder/Explorer.
+// In production, database.sqlite and local_media live in the application's Resources folder.
 const LOCAL_DATA_ROOT = isDev
   ? process.cwd()
-  : path.join(app.getPath('home'), 'NDCHonoursBoard');
+  : process.resourcesPath;
 
 const LOCAL_MEDIA_DIR = path.join(LOCAL_DATA_ROOT, 'local_media');
 const DB_PATH = path.join(LOCAL_DATA_ROOT, 'database.sqlite');
@@ -600,78 +601,9 @@ app.whenReady().then(() => {
     }
   }
 
-  // Migration to Option C path: If the new Home folder doesn't have the database,
-  // but the old Resources or userData folder does, copy it over!
-  if (!isDev) {
-    const homeDbPath = DB_PATH;
-    const homeMediaDir = LOCAL_MEDIA_DIR;
-    
-    if (!fs.existsSync(homeDbPath)) {
-      const oldResourcesDb = path.join(process.resourcesPath, 'database.sqlite');
-      const oldUserDataDb = path.join(app.getPath('userData'), 'database.sqlite');
-      
-      let migrated = false;
-      fs.mkdirSync(path.dirname(homeDbPath), { recursive: true });
-
-      if (fs.existsSync(oldResourcesDb)) {
-        try {
-          fs.copyFileSync(oldResourcesDb, homeDbPath);
-          logToFile('Migrated existing database from Resources to Home folder.');
-          migrated = true;
-        } catch (e) {
-          logToFile('Failed to migrate database from Resources: ' + e.message);
-        }
-      } else if (fs.existsSync(oldUserDataDb)) {
-        try {
-          fs.copyFileSync(oldUserDataDb, homeDbPath);
-          logToFile('Migrated existing database from userData to Home folder.');
-          migrated = true;
-        } catch (e) {
-          logToFile('Failed to migrate database from userData: ' + e.message);
-        }
-      }
-
-      // Also migrate local_media folder if it exists in old paths
-      if (migrated) {
-        const oldResourcesMedia = path.join(process.resourcesPath, 'local_media');
-        const oldUserDataMedia = path.join(app.getPath('userData'), 'local_media');
-        
-        if (fs.existsSync(oldResourcesMedia)) {
-          try {
-            copyDirRecursive(oldResourcesMedia, homeMediaDir);
-            logToFile('Migrated existing media from Resources to Home folder.');
-          } catch (e) {
-            logToFile('Failed to migrate media from Resources: ' + e.message);
-          }
-        } else if (fs.existsSync(oldUserDataMedia)) {
-          try {
-            copyDirRecursive(oldUserDataMedia, homeMediaDir);
-            logToFile('Migrated existing media from userData to Home folder.');
-          } catch (e) {
-            logToFile('Failed to migrate media from userData: ' + e.message);
-          }
-        }
-      }
-    }
-  }
-
   // Ensure local media directory exists (in case extraResources didn't include it)
   if (!fs.existsSync(LOCAL_MEDIA_DIR)) {
     fs.mkdirSync(LOCAL_MEDIA_DIR, { recursive: true });
-  }
-
-  // If we packaged local_media in extraResources, copy any missing files to the user's Home folder
-  if (!isDev) {
-    const bundledMediaDir = path.join(process.resourcesPath, 'local_media');
-    if (fs.existsSync(bundledMediaDir)) {
-      try {
-        logToFile('Syncing bundled local_media folder to: ' + LOCAL_MEDIA_DIR);
-        copyDirRecursive(bundledMediaDir, LOCAL_MEDIA_DIR, false); // false = do not overwrite existing files
-        logToFile('Successfully synced bundled local_media to Home folder.');
-      } catch (e) {
-        logToFile('Failed to sync bundled local_media to Home: ' + e.message);
-      }
-    }
   }
 
   logToFile('Calling initializeDatabase()...');
@@ -679,6 +611,7 @@ app.whenReady().then(() => {
     initializeDatabase();
     logToFile('initializeDatabase() completed.');
   } catch (err) {
+    console.error('FATAL: initializeDatabase() failed:', err);
     logToFile('FATAL: initializeDatabase() failed: ' + err.stack);
     app.quit();
     return;
@@ -842,40 +775,40 @@ app.whenReady().then(() => {
     });
   }, 1000);
 
-  // Background Google Drive sync — pull any newer files from Drive on startup
+  // Background Dropbox sync — pull any newer files from Dropbox on startup
   setTimeout(async () => {
     try {
       const status = await driveSync.getAuthStatus();
       if (status.authenticated) {
-        logToFile('Drive authenticated — starting background pull...');
+        logToFile('Dropbox authenticated — starting background pull...');
         
         // Close SQLite database before download to avoid locking
         if (db) {
-          logToFile('Closing database for background Drive pull...');
+          logToFile('Closing database for background Dropbox pull...');
           db.close();
           db = null;
         }
 
         try {
           const result = await driveSync.pullFromCloud(LOCAL_MEDIA_DIR, DB_PATH, null);
-          logToFile('Drive pull complete: downloaded=' + (result.downloaded || 0) + ' skipped=' + (result.skipped || 0));
+          logToFile('Dropbox pull complete: downloaded=' + (result.downloaded || 0) + ' skipped=' + (result.skipped || 0));
           
           if (result && result.downloaded > 0) {
             logToFile('Reloading renderer window after background startup sync pull...');
             const windows = BrowserWindow.getAllWindows();
             if (windows.length > 0 && !windows[0].isDestroyed()) {
-              windows[0].webContents.send('drive-sync-reload');
+              windows[0].webContents.send('dropbox-sync-reload');
             }
           }
         } finally {
-          logToFile('Re-initializing database after background Drive pull...');
+          logToFile('Re-initializing database after background Dropbox pull...');
           initializeDatabase();
         }
       } else {
-        logToFile('Drive not authenticated — skipping background sync.');
+        logToFile('Dropbox not authenticated — skipping background sync.');
       }
     } catch (err) {
-      logToFile('Background Drive pull failed: ' + err.message);
+      logToFile('Background Dropbox pull failed: ' + err.message);
     }
   }, 3000);
 
@@ -1100,7 +1033,7 @@ ipcMain.handle('save-media', async (event, { bucketName, filePath, fileArray, fi
     
     const publicUrl = `local-media://${bucketName}/${filePath}`;
 
-    // Auto-push the new file and updated database to Google Drive in the background
+    // Auto-push the new file and updated database to Dropbox in the background
     setTimeout(async () => {
       try {
         const relativePath = `local_media/${bucketName}/${filePath}`;
@@ -1110,7 +1043,7 @@ ipcMain.handle('save-media', async (event, { bucketName, filePath, fileArray, fi
           await driveSync.pushSingleFile(DB_PATH, 'database.sqlite');
         }
       } catch (err) {
-        console.error('[DriveSync] Auto-push after save-media failed:', err.message);
+        console.error('[DropboxSync] Auto-push after save-media failed:', err.message);
       }
     }, 500);
 
@@ -1121,54 +1054,54 @@ ipcMain.handle('save-media', async (event, { bucketName, filePath, fileArray, fi
   }
 });
 
-// ── Google Drive Sync IPC Handlers ──────────────────────────────────
+// ── Dropbox Sync IPC Handlers ───────────────────────────────────────
 
-ipcMain.handle('drive-auth', async () => {
+ipcMain.handle('dropbox-auth', async () => {
   try {
     const result = await driveSync.authorize();
     return result;
   } catch (err) {
-    console.error('[DriveSync] Auth failed:', err.message);
+    console.error('[DropboxSync] Auth failed:', err.message);
     return { authenticated: false, error: err.message };
   }
 });
 
-ipcMain.handle('drive-sign-out', async () => {
+ipcMain.handle('dropbox-sign-out', async () => {
   return driveSync.signOut();
 });
 
-ipcMain.handle('drive-auth-status', async () => {
+ipcMain.handle('dropbox-auth-status', async () => {
   return driveSync.getAuthStatus();
 });
 
-ipcMain.handle('drive-push', async (event) => {
+ipcMain.handle('dropbox-push', async (event) => {
   try {
     const win = BrowserWindow.fromWebContents(event.sender);
     const progressCallback = (data) => {
       if (win && !win.isDestroyed()) {
-        win.webContents.send('drive-sync-progress', data);
+        win.webContents.send('dropbox-sync-progress', data);
       }
     };
     const result = await driveSync.pushToCloud(LOCAL_MEDIA_DIR, DB_PATH, progressCallback);
     return result;
   } catch (err) {
-    console.error('[DriveSync] Push failed:', err.message);
+    console.error('[DropboxSync] Push failed:', err.message);
     return { success: false, error: err.message };
   }
 });
 
-ipcMain.handle('drive-pull', async (event) => {
+ipcMain.handle('dropbox-pull', async (event) => {
   try {
     const win = BrowserWindow.fromWebContents(event.sender);
     const progressCallback = (data) => {
       if (win && !win.isDestroyed()) {
-        win.webContents.send('drive-sync-progress', data);
+        win.webContents.send('dropbox-sync-progress', data);
       }
     };
 
     // Close SQLite database before downloading to avoid file locking errors
     if (db) {
-      logToFile('Closing database for Drive pull...');
+      logToFile('Closing database for Dropbox pull...');
       db.close();
       db = null;
     }
@@ -1178,7 +1111,7 @@ ipcMain.handle('drive-pull', async (event) => {
       result = await driveSync.pullFromCloud(LOCAL_MEDIA_DIR, DB_PATH, progressCallback);
     } finally {
       // Always re-initialize the database connection
-      logToFile('Re-initializing database after Drive pull...');
+      logToFile('Re-initializing database after Dropbox pull...');
       initializeDatabase();
     }
 
@@ -1186,18 +1119,18 @@ ipcMain.handle('drive-pull', async (event) => {
       logToFile('Reloading renderer window after manual sync pull...');
       const win = BrowserWindow.fromWebContents(event.sender);
       if (win && !win.isDestroyed()) {
-        win.webContents.send('drive-sync-reload');
+        win.webContents.send('dropbox-sync-reload');
       }
     }
 
     return result;
   } catch (err) {
-    console.error('[DriveSync] Pull failed:', err.message);
+    console.error('[DropboxSync] Pull failed:', err.message);
     return { success: false, error: err.message };
   }
 });
 
-ipcMain.handle('drive-sync-status', async () => {
+ipcMain.handle('dropbox-sync-status', async () => {
   return driveSync.getSyncStatus();
 });
 

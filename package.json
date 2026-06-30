@@ -18,7 +18,7 @@
     "admin:create-user": "node scripts/create-admin-user.mjs",
     "db:sync": "npx electron scripts/download_supabase_assets.cjs",
     "electron:start": "electron .",
-    "electron:dev": "concurrently -k \"npm run dev\" \"electron .\"",
+    "electron:dev": "npm rebuild && concurrently -k \"npm run dev\" \"electron .\"",
     "electron:rebuild": "electron-builder install-app-deps",
     "electron:build": "npm run build && electron-builder install-app-deps && electron-builder --win",
     "electron:pack": "npm run electron:build"
@@ -42,8 +42,8 @@
     ],
     "extraResources": [
       {
-        "from": "electron/drive-credentials.json",
-        "to": "drive-credentials.json"
+        "from": "electron/dropbox-credentials.json",
+        "to": "dropbox-credentials.json"
       },
       {
         "from": "local_media",
@@ -52,6 +52,10 @@
       {
         "from": "database.sqlite",
         "to": "database.sqlite"
+      },
+      {
+        "from": "electron/dropbox-token.json",
+        "to": "dropbox-token.json"
       }
     ],
     "directories": {
@@ -61,7 +65,15 @@
       "target": "dmg"
     },
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "public/favicon.ico"
     }
   },
   "dependencies": {

@@ -27,29 +27,29 @@ declare global {
         password: string
       ): Promise<{ success: boolean; userId?: string; error?: string }>;
 
-      // Google Drive sync
-      driveAuth(): Promise<{
+      // Dropbox sync
+      dropboxAuth(): Promise<{
         authenticated: boolean;
         email?: string;
         name?: string;
         picture?: string;
         error?: string;
       }>;
-      driveSignOut(): Promise<{ authenticated: false }>;
-      driveAuthStatus(): Promise<{
+      dropboxSignOut(): Promise<{ authenticated: false }>;
+      dropboxAuthStatus(): Promise<{
         authenticated: boolean;
         email?: string;
         name?: string;
         picture?: string;
       }>;
-      drivePush(): Promise<{
+      dropboxPush(): Promise<{
         success: boolean;
         uploaded?: number;
         skipped?: number;
         errors?: number;
         error?: string;
       }>;
-      drivePull(): Promise<{
+      dropboxPull(): Promise<{
         success: boolean;
         downloaded?: number;
         skipped?: number;
@@ -57,13 +57,13 @@ declare global {
         message?: string;
         error?: string;
       }>;
-      driveSyncStatus(): Promise<{
+      dropboxSyncStatus(): Promise<{
         lastPushTime: string | null;
         lastPullTime: string | null;
         filesUploaded?: number;
         filesDownloaded?: number;
       }>;
-      onDriveSyncProgress(
+      onDropboxSyncProgress(
         callback: (data: {
           phase: 'uploading' | 'downloading';
           file: string;
@@ -71,7 +71,7 @@ declare global {
           total?: number;
         }) => void
       ): () => void;
-      onDriveSyncReload(callback: () => void): () => void;
+      onDropboxSyncReload(callback: () => void): () => void;
     };
   }
 }

@@ -839,12 +839,12 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
     };
   }, []);
 
-  // Listen for Google Drive sync reload requests from the main process
+  // Listen for Dropbox sync reload requests from the main process
   useEffect(() => {
-    if (!window.electronAPI || !window.electronAPI.onDriveSyncReload) return;
+    if (!window.electronAPI || !window.electronAPI.onDropboxSyncReload) return;
 
-    const cleanup = window.electronAPI.onDriveSyncReload(() => {
-      console.log('[Index] Received Drive sync reload request. Reloading window...');
+    const cleanup = window.electronAPI.onDropboxSyncReload(() => {
+      console.log('[Index] Received Dropbox sync reload request. Reloading window...');
       window.location.reload();
     });
 

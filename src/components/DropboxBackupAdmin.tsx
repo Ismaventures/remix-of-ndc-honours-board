@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Cloud, CloudOff, RefreshCw, Loader2, CheckCircle2, AlertCircle, LogOut, FileDown, FileUp, User } from 'lucide-react';
 
-const DRIVE_FOLDER_NAME = 'NDC-Honours-Board-Backup';
+const DROPBOX_FOLDER_NAME = 'Apps/NDC-Honours-Board-Backup';
 
-interface DriveAuthStatus {
+interface DropboxAuthStatus {
   authenticated: boolean;
   email?: string;
   name?: string;
@@ -17,8 +17,8 @@ interface SyncProgress {
   total?: number;
 }
 
-export function DriveBackupAdmin() {
-  const [authStatus, setAuthStatus] = useState<DriveAuthStatus>({ authenticated: false });
+export function DropboxBackupAdmin() {
+  const [authStatus, setAuthStatus] = useState<DropboxAuthStatus>({ authenticated: false });
   const [syncStatus, setSyncStatus] = useState<{ lastPushTime: string | null; lastPullTime: string | null }>({
     lastPushTime: null,
     lastPullTime: null,
@@ -40,13 +40,13 @@ export function DriveBackupAdmin() {
       return;
     }
     try {
-      const auth = await window.electronAPI.driveAuthStatus();
+      const auth = await window.electronAPI.dropboxAuthStatus();
       setAuthStatus(auth);
 
-      const sync = await window.electronAPI.driveSyncStatus();
+      const sync = await window.electronAPI.dropboxSyncStatus();
       setSyncStatus(sync);
     } catch (err: any) {
-      console.error('Error fetching Drive status:', err);
+      console.error('Error fetching Dropbox status:', err);
     } finally {
       setIsCheckingAuth(false);
     }
@@ -56,7 +56,7 @@ export function DriveBackupAdmin() {
   useEffect(() => {
     if (!window.electronAPI) return;
 
-    const cleanup = window.electronAPI.onDriveSyncProgress((data) => {
+    const cleanup = window.electronAPI.onDropboxSyncProgress((data) => {
       setProgress(data);
     });
 
@@ -70,12 +70,12 @@ export function DriveBackupAdmin() {
     setSyncError(null);
     setSyncSuccess(null);
     try {
-      const res = await window.electronAPI.driveAuth();
+      const res = await window.electronAPI.dropboxAuth();
       if (res.authenticated) {
         setAuthStatus(res);
-        setSyncSuccess('Successfully connected to Google Drive!');
+        setSyncSuccess('Successfully connected to Dropbox!');
         // Refresh sync times
-        const sync = await window.electronAPI.driveSyncStatus();
+        const sync = await window.electronAPI.dropboxSyncStatus();
         setSyncStatus(sync);
       } else if (res.error) {
         setSyncError(res.error);
@@ -88,9 +88,9 @@ export function DriveBackupAdmin() {
   const handleSignOut = async () => {
     if (!window.electronAPI) return;
     try {
-      await window.electronAPI.driveSignOut();
+      await window.electronAPI.dropboxSignOut();
       setAuthStatus({ authenticated: false });
-      setSyncSuccess('Disconnected Google Drive account.');
+      setSyncSuccess('Disconnected Dropbox account.');
       setProgress(null);
     } catch (err: any) {
       setSyncError('Failed to sign out.');
@@ -104,10 +104,10 @@ export function DriveBackupAdmin() {
     setSyncSuccess(null);
     setProgress(null);
     try {
-      const res = await window.electronAPI.drivePush();
+      const res = await window.electronAPI.dropboxPush();
       if (res.success) {
-        setSyncSuccess(`Upload complete! Successfully backed up ${res.uploaded} file(s) to Google Drive.`);
-        const sync = await window.electronAPI.driveSyncStatus();
+        setSyncSuccess(`Upload complete! Successfully backed up ${res.uploaded} file(s) to Dropbox.`);
+        const sync = await window.electronAPI.dropboxSyncStatus();
         setSyncStatus(sync);
       } else {
         setSyncError(res.error || 'Failed to complete cloud backup upload.');
@@ -127,14 +127,14 @@ export function DriveBackupAdmin() {
     setSyncSuccess(null);
     setProgress(null);
     try {
-      const res = await window.electronAPI.drivePull();
+      const res = await window.electronAPI.dropboxPull();
       if (res.success) {
         if (res.downloaded === 0) {
-          setSyncSuccess('Download sync complete! Local files are already up-to-date with Google Drive.');
+          setSyncSuccess('Download sync complete! Local files are already up-to-date with Dropbox.');
         } else {
-          setSyncSuccess(`Sync download complete! Updated ${res.downloaded} file(s) from Google Drive.`);
+          setSyncSuccess(`Sync download complete! Updated ${res.downloaded} file(s) from Dropbox.`);
         }
-        const sync = await window.electronAPI.driveSyncStatus();
+        const sync = await window.electronAPI.dropboxSyncStatus();
         setSyncStatus(sync);
       } else {
         setSyncError(res.error || 'Failed to sync download from cloud backup.');
@@ -153,7 +153,7 @@ export function DriveBackupAdmin() {
         <CloudOff className="mx-auto w-12 h-12 mb-3 text-slate-400" />
         <h3 className="font-semibold text-lg">Desktop Integration Only</h3>
         <p className="text-sm mt-1 max-w-md mx-auto">
-          Google Drive backup is only available when running the packaged application on your system. It cannot be accessed in raw browser mode.
+          Dropbox backup is only available when running the packaged application on your system. It cannot be accessed in raw browser mode.
         </p>
       </div>
     );
@@ -163,7 +163,7 @@ export function DriveBackupAdmin() {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <Loader2 className="w-10 h-10 animate-spin text-[#002060]" />
-        <p className="text-sm text-slate-500 mt-3">Verifying Google Drive Connection...</p>
+        <p className="text-sm text-slate-500 mt-3">Verifying Dropbox Connection...</p>
       </div>
     );
   }
@@ -176,10 +176,10 @@ export function DriveBackupAdmin() {
           <div>
             <h4 className="text-xl font-bold text-[#002060] flex items-center gap-2">
               <Cloud className="w-6 h-6 text-blue-600" />
-              Cloud Backup & Data Sync
+              Dropbox Cloud Backup & Sync
             </h4>
             <p className="text-xs text-slate-500 mt-1">
-              Backup your local database and course images to Google Drive. Sync across multiple systems running this app.
+              Backup your local database and course images to Dropbox. Sync across multiple systems running this app.
             </p>
           </div>
           
@@ -189,7 +189,7 @@ export function DriveBackupAdmin() {
               className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 text-xs font-medium transition-all"
             >
               <LogOut className="w-3.5 h-3.5" />
-              Disconnect Google Drive
+              Disconnect Dropbox
             </button>
           )}
         </div>
@@ -201,14 +201,14 @@ export function DriveBackupAdmin() {
             <div>
               <p className="font-semibold text-blue-950 mb-1">Connecting for the first time?</p>
               <p>
-                To secure your backups, this application connects to your Google Drive account. It creates a private, dedicated folder named <strong className="text-blue-950">NDC-Honours-Board-Backup</strong> where it stores:
+                To secure your backups, this application connects to your Dropbox account. It stores files in your app folder under <strong className="text-blue-950">{DROPBOX_FOLDER_NAME}</strong>:
               </p>
               <ul className="list-disc pl-4 mt-1.5 space-y-0.5">
                 <li>Your personnel database file (SQLite)</li>
                 <li>Your local media files (surnames matching, portraits, audio tracks)</li>
               </ul>
               <p className="mt-2 text-blue-700 font-medium">
-                Make sure you have placed a valid Google OAuth Client Credentials JSON file named `drive-credentials.json` in the application Resources folder.
+                Make sure you have placed a valid Dropbox credentials JSON file named `dropbox-credentials.json` in the application Resources folder.
               </p>
             </div>
           </div>
@@ -223,7 +223,7 @@ export function DriveBackupAdmin() {
                   <User className="w-6 h-6" />
                 </div>
                 <div>
-                  <h5 className="font-semibold text-sm text-slate-800">{authStatus.name || 'Google Account Connected'}</h5>
+                  <h5 className="font-semibold text-sm text-slate-800">{authStatus.name || 'Dropbox Connected'}</h5>
                   <p className="text-xs text-slate-500 mt-0.5">{authStatus.email}</p>
                   <span className="inline-flex items-center gap-1 text-[10px] text-green-700 font-semibold px-2 py-0.5 bg-green-50 border border-green-150 rounded-full mt-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse"></span>
@@ -235,9 +235,9 @@ export function DriveBackupAdmin() {
               <div className="text-center py-4 space-y-3">
                 <CloudOff className="mx-auto w-10 h-10 text-slate-400" />
                 <div>
-                  <h5 className="font-semibold text-sm text-slate-800">Google Account Not Connected</h5>
+                  <h5 className="font-semibold text-sm text-slate-800">Dropbox Not Connected</h5>
                   <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                    Sign in to connect Google Drive and authorize backups for this device.
+                    Sign in to connect Dropbox and authorize backups for this device.
                   </p>
                 </div>
                 <button
@@ -245,7 +245,7 @@ export function DriveBackupAdmin() {
                   className="px-5 py-2 bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white font-medium text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-2"
                 >
                   <Cloud className="w-4 h-4" />
-                  Connect Google Drive
+                  Connect Dropbox
                 </button>
               </div>
             )}
@@ -269,9 +269,9 @@ export function DriveBackupAdmin() {
               </div>
             </div>
             <div className="mt-4 pt-3 border-t border-slate-100/80 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Drive Folder:</span>
-              <code className="bg-slate-150 px-1.5 py-0.5 rounded text-slate-600 text-[10px]">
-                {DRIVE_FOLDER_NAME}
+              <span>App Folder:</span>
+              <code className="bg-slate-150 px-1.5 py-0.5 rounded text-slate-600 text-[10px] overflow-hidden text-ellipsis max-w-[150px]">
+                {DROPBOX_FOLDER_NAME}
               </code>
             </div>
           </div>
@@ -311,7 +311,7 @@ export function DriveBackupAdmin() {
                     Upload Local Data to Cloud
                   </h6>
                   <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                    Saves your local database (`database.sqlite`) and all directories under `local_media/` up to Google Drive. Existing files are updated if modified. Use this when you have added photos or personnel entries locally and want to make sure they are safely stored in the cloud.
+                    Saves your local database (`database.sqlite`) and all directories under `local_media/` up to Dropbox. Existing files are updated if modified. Use this when you have added photos or personnel entries locally and want to make sure they are safely stored in the cloud.
                   </p>
                 </div>
                 <button
@@ -327,7 +327,7 @@ export function DriveBackupAdmin() {
                   ) : (
                     <>
                       <FileUp className="w-3.5 h-3.5" />
-                      Upload to Drive
+                      Upload to Dropbox
                     </>
                   )}
                 </button>
@@ -341,7 +341,7 @@ export function DriveBackupAdmin() {
                     Download Cloud Data to Local
                   </h6>
                   <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                    Downloads any newer database or media files present in your Google Drive backup folder. It is safe: it only downloads files that are missing locally or have been updated on Drive. Use this to pull database records and photos added on other systems.
+                    Downloads any newer database or media files present in your Dropbox app folder. It is safe: it only downloads files that are missing locally or have been updated on Dropbox. Use this to pull database records and photos added on other systems.
                   </p>
                 </div>
                 <button
@@ -357,7 +357,7 @@ export function DriveBackupAdmin() {
                   ) : (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin-hover" />
-                      Download from Drive
+                      Download from Dropbox
                     </>
                   )}
                 </button>
@@ -372,7 +372,7 @@ export function DriveBackupAdmin() {
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-blue-900 flex items-center gap-1.5">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-700" />
-                {progress.phase === 'uploading' ? 'Uploading to Drive...' : 'Downloading from Drive...'}
+                {progress.phase === 'uploading' ? 'Uploading to Dropbox...' : 'Downloading from Dropbox...'}
               </span>
               {progress.current && progress.total ? (
                 <span className="font-mono text-blue-700">
