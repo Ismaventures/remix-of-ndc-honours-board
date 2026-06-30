@@ -54,7 +54,7 @@ const CARDS: {
   {
     key: "allied",
     label: "ALLIED OFFICERS",
-    subtitle: "International Partnerships",
+    subtitle: "INTERNATIONAL PARTNERSHIPS",
     icon: Globe,
     color: "text-cyan-600",
     cardGradient: "from-[#112f4f] via-[#19406b] to-[#205285]",
@@ -160,14 +160,16 @@ export function CategoryCards({ onSelect }: CategoryCardsProps) {
                         >
                           {card.label}
                         </h3>
-                        <p
-                          className={`text-[10px] sm:text-xs tracking-[0.15em] text-center ${
-                            isLightMode ? "text-slate-400" : "text-white/60"
-                          }`}
-                          style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, textTransform: 'uppercase' as const }}
-                        >
-                          {card.subtitle}
-                        </p>
+                        {card.subtitle && (
+                          <p
+                            className={`text-[10px] sm:text-xs tracking-[0.15em] text-center ${
+                              isLightMode ? "text-slate-400" : "text-white/60"
+                            }`}
+                            style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 600, textTransform: 'uppercase' as const }}
+                          >
+                            {card.subtitle}
+                          </p>
+                        )}
                       </div>
 
                       {/* Hover reveal accent line */}
