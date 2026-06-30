@@ -459,6 +459,10 @@ export function AutoRotationDisplay({
   const transitionStepRef = useRef(0);
   const transitionDirectionRef = useRef<1 | -1>(1);
   const lastTransitionCueAtRef = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollRafRef = useRef<number | null>(null);
+  const nextPauseTargetRef = useRef<number | null>(null);
+  const pauseUntilRef = useRef<number>(0);
   const { isPaused, registerInteraction, setHovering } = useSliderControl({
     resumeAfterMs: 4200,
   });
@@ -578,7 +582,16 @@ export function AutoRotationDisplay({
     sequence,
   ]);
 
-  const isContinuousMode = false;
+  const isContinuousMode = slides.length > 0 && slides[0]?.type === "page";
+
+  const loopedSlides = useMemo(() => {
+    if (slides.length === 0) return [];
+    return [
+      ...slides,
+      ...slides,
+      ...slides,
+    ];
+  }, [slides]);
 
   const slide = slides[currentIndex] ?? slides[0];
   const isPortraitSlide =
@@ -698,6 +711,15 @@ export function AutoRotationDisplay({
       const nextTransition =
         sequence[transitionStepRef.current % sequence.length] ?? "fade-zoom";
 
+      // Bypass overlays for page slideshow transitions
+      if (slides[nextIndex]?.type === "page" && slides[currentIndex]?.type === "page") {
+        setTransitionType(nextTransition);
+        setCurrentIndex(nextIndex);
+        transitionStepRef.current += 1;
+        isTransitioningRef.current = false;
+        return;
+      }
+
       const cue =
         effectiveSettings.transitionCueByType?.[nextTransition] ?? "none";
       const now = Date.now();
@@ -796,26 +818,153 @@ export function AutoRotationDisplay({
     transitionTo((currentIndex - 1 + slides.length) % slides.length);
   }, [currentIndex, slides.length, transitionTo]);
 
+  // Helper for snapping loop scroll bounds
+  const normalizePosition = useCallback((container: HTMLDivElement) => {
+    const W = container.clientWidth;
+    if (W <= 0 || slides.length === 0) return;
+    const segmentWidth = slides.length * W;
+    if (container.scrollLeft >= segmentWidth * 2) {
+      container.scrollLeft -= segmentWidth;
+    } else if (container.scrollLeft <= 0) {
+      container.scrollLeft += segmentWidth;
+    }
+  }, [slides.length]);
+
+  // Helper to trigger manual transition animations
+  const animateTo = useCallback((targetScrollLeft: number, duration: number) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    if (scrollRafRef.current) {
+      cancelAnimationFrame(scrollRafRef.current);
+    }
+
+    const start = container.scrollLeft;
+    const change = targetScrollLeft - start;
+    const startTime = performance.now();
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const eased = easeOutCubic(progress);
+
+      container.scrollLeft = start + change * eased;
+      normalizePosition(container);
+
+      if (progress < 1) {
+        scrollRafRef.current = requestAnimationFrame(step);
+      } else {
+        scrollRafRef.current = null;
+      }
+    };
+    scrollRafRef.current = requestAnimationFrame(step);
+  }, [normalizePosition]);
+
+  // Align to center on initial mount/load of continuous view
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || slide?.type !== "page" || slides.length === 0) return;
+
+    const W = container.clientWidth;
+    if (W <= 0) return;
+
+    const segmentWidth = slides.length * W;
+    if (container.scrollLeft < 10) {
+      container.scrollLeft = segmentWidth;
+    }
+  }, [slides.length, slide?.type]);
+
+  // Keep scroll position aligned on resize
+  useEffect(() => {
+    if (slide?.type !== "page") return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleResize = () => {
+      const W = container.clientWidth;
+      if (W <= 0) return;
+      container.scrollLeft = currentIndex * W + (slides.length * W);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [currentIndex, slides.length, slide?.type]);
+
+  // Continuous smooth scroll loop
+  useEffect(() => {
+    if (slide?.type !== "page" || isPaused || !isActive || slides.length === 0) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    let rafId = 0;
+    let lastTime = performance.now();
+
+    const loop = (now: number) => {
+      const elapsed = now - lastTime;
+      lastTime = now;
+
+      const W = container.clientWidth;
+      if (W <= 0) {
+        rafId = requestAnimationFrame(loop);
+        return;
+      }
+
+      // If a manual animation is running, yield to it
+      if (scrollRafRef.current) {
+        rafId = requestAnimationFrame(loop);
+        return;
+      }
+
+      // continuous smooth scroll speed (e.g. 0.035px per millisecond)
+      const speed = 0.035; 
+      container.scrollLeft += elapsed * speed;
+
+      // Update progress indicators/currentIndex based on current scroll position
+      const pageIndex = Math.round(container.scrollLeft / W) % slides.length;
+      if (pageIndex !== currentIndex) {
+        setCurrentIndex(pageIndex);
+      }
+
+      normalizePosition(container);
+      rafId = requestAnimationFrame(loop);
+    };
+
+    rafId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafId);
+  }, [slide?.type, isPaused, isActive, slides.length, currentIndex, normalizePosition]);
+
   const handleManualAdvance = useCallback(() => {
     revealControls();
-    transitionTo((currentIndex + 1) % slides.length, true);
-  }, [
-    currentIndex,
-    revealControls,
-    slides.length,
-    transitionTo,
-  ]);
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const W = container.clientWidth;
+    if (W <= 0 || slides.length === 0) return;
+
+    const currentLeft = container.scrollLeft;
+    const nextPage = Math.floor(currentLeft / W) + 1;
+    const target = nextPage * W;
+
+    animateTo(target, 650);
+    setCurrentIndex(nextPage % slides.length);
+  }, [revealControls, slides.length, animateTo]);
 
   const handleManualRetreat = useCallback(() => {
     revealControls();
-    transitionTo((currentIndex - 1 + slides.length) % slides.length, true);
-  }, [
-    currentIndex,
-    revealControls,
-    slides.length,
-    transitionTo,
-  ]);
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const W = container.clientWidth;
+    if (W <= 0 || slides.length === 0) return;
 
+    const currentLeft = container.scrollLeft;
+    const prevPage = Math.ceil(currentLeft / W) - 1;
+    const target = prevPage * W;
+
+    animateTo(target, 650);
+    setCurrentIndex((prevPage + slides.length) % slides.length);
+  }, [revealControls, slides.length, animateTo]);
+
+  // Standard slide timer
   useEffect(() => {
     if (!isActive || isPaused || isContinuousMode) return;
     const duration = slide?.type === "commandant" ? 8000 : 5000;
@@ -1564,7 +1713,44 @@ export function AutoRotationDisplay({
           style={{ transitionDuration: `${currentTransitionDuration}ms`, transitionProperty: 'opacity, transform' }}
         >
 
-          {transitionType === "pro-slider" ? (
+          {isContinuousMode ? (
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden w-full h-full relative [mask-image:linear-gradient(to_right,transparent_0%,black_10%,black_90%,transparent_100%)]">
+              {/* Horizontal Scroll Track */}
+              <div
+                ref={scrollContainerRef}
+                className="w-full h-full flex flex-row overflow-x-hidden select-none"
+              >
+                {loopedSlides.map((pSlide, pIdx) => (
+                  <div
+                    key={pIdx}
+                    className="w-full h-full flex shrink-0 justify-center items-center gap-4 sm:gap-6 pb-3 px-3 sm:px-6"
+                  >
+                    {pSlide.type === "page" && pSlide.items.map((item) => {
+                      const isPersonnel = "category" in item;
+                      const isCommandant = "isCurrent" in item;
+                      const itemType = isCommandant
+                        ? "commandant"
+                        : isPersonnel
+                          ? "personnel"
+                          : "visit";
+                      return (
+                        <div key={item.id} className="flex justify-center items-center h-full max-w-[420px] flex-1">
+                          <ContinuousSlideCard
+                            item={item as any}
+                            type={itemType}
+                            isLightMode={isLightMode}
+                            imageLoading="eager"
+                            onSelect={handleContinuousSelect}
+                            onHover={setHovering}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : transitionType === "pro-slider" ? (
             <AnimatedPresence mode="wait" initial={false}>
               <div
                 key={`${slide.type}-${currentIndex}`}
@@ -1574,7 +1760,7 @@ export function AutoRotationDisplay({
                 {renderSlideContent()}
               </div>
             </AnimatedPresence>
-          ) : slide.type === "commandant" || slide.type === "page" ? (
+          ) : slide.type === "commandant" ? (
             <div className="flex min-h-0 flex-1 flex-col">
               {renderSlideContent()}
             </div>
