@@ -60,6 +60,7 @@ const SECTION_TITLES: Record<string, string> = {
   fdc: "Distinguished Fellows of Defence College (FDC)",
   participants: "Participants",
   allied: "International Allied Officers (Allied)",
+  combined: "Global Auto Display",
 };
 
 const SECTION_CATEGORIES: Record<string, Category | Category[]> = {
@@ -67,6 +68,7 @@ const SECTION_CATEGORIES: Record<string, Category | Category[]> = {
   fdc: "FDC",
   participants: "Directing Staff",
   allied: "Allied",
+  combined: ["FWC", "FDC", "Allied"],
 };
 
 const AUTO_DISPLAY_PLAY_ALL_SEQUENCE: AutoDisplayContextKey[] = [
@@ -231,6 +233,18 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
 
   const handleGlobalBack = () => {
     setBackTriggerNonce((prev) => prev + 1);
+  };
+
+  const handleNavigate = (nextView: ViewKey) => {
+    setView(nextView);
+    if (nextView === "combined") {
+      setForcedAutoDisplay((prev) => ({
+        enabled: true,
+        nonce: prev.nonce + 1,
+      }));
+    } else {
+      setForcedAutoDisplay({ enabled: false, nonce: 0 });
+    }
   };
 
   const lastProcessedBackNonce = useRef(backTriggerNonce);
@@ -403,6 +417,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
     if (view === "fdc") return "FDC";
     if (view === "participants") return "Directing Staff";
     if (view === "allied") return "Allied";
+    if (view === "combined") return "FWC"; // Combined timings fallback
     return null;
   }, [view]);
 
@@ -490,6 +505,10 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
     const nextContext = autoDisplaySettings.nextContextByContext?.[context] ?? null;
     if (!nextContext || nextContext === context) {
       setAutoDisplayActive(false);
+      setForcedAutoDisplay({ enabled: false, nonce: 0 });
+      if (view === "combined") {
+        setView("home");
+      }
       return;
     }
 
@@ -512,6 +531,9 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
     } else {
       setPlayAllAutoDisplayActive(false);
       setForcedAutoDisplay({ enabled: false, nonce: 0 });
+      if (view === "combined") {
+        setView("home");
+      }
     }
   };
 
@@ -1381,6 +1403,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
 
     const category = SECTION_CATEGORIES[view];
     if (category) {
+      if (view === "combined") return null;
       return (
         <OrganogramView
           key={view}
@@ -1647,7 +1670,7 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
 
         <BottomDock
           currentView={view}
-          onNavigate={setView}
+          onNavigate={handleNavigate}
           hidden={autoDisplayActive}
           onBack={handleGlobalBack}
         />

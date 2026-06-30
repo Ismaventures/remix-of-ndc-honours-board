@@ -188,12 +188,12 @@ export const DEFAULT_AUTO_DISPLAY_SETTINGS: AutoDisplaySettings = {
     ],
   },
   nextContextByContext: {
-    commandants: null,
+    commandants: 'FWC',
     visits: null,
-    FWC: null,
-    FDC: null,
+    FWC: 'FDC',
+    FDC: 'Allied',
     'Directing Staff': null,
-    Allied: null,
+    Allied: 'commandants',
   },
   appliedTransitionByContext: {
     commandants: null,

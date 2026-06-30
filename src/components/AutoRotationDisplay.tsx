@@ -57,7 +57,7 @@ interface AutoRotationDisplayProps {
   personnel: Personnel[];
   visits: DistinguishedVisit[];
   commandants: Commandant[];
-  activeCategory?: Category | null;
+  activeCategory?: Category | Category[] | null;
   activeView?: "home" | "visits" | "admin" | "category";
   settings?: AutoDisplaySettings;
   forcedControl?: { enabled: boolean; nonce: number };
@@ -120,10 +120,11 @@ const isCourseMarker = (item: ContinuousItem): item is CourseMarker =>
   "markerType" in item && item.markerType === "course";
 
 const resolveDisplayContext = (
-  activeCategory: Category | null,
+  activeCategory: Category | Category[] | null,
   activeView: "home" | "visits" | "admin" | "category",
 ): AutoDisplayContextKey => {
   if (activeView === "visits") return "visits";
+  if (Array.isArray(activeCategory)) return "FWC"; // Combined timing fallback
   if (activeCategory === "FWC") return "FWC";
   if (activeCategory === "FDC") return "FDC";
   if (activeCategory === "Directing Staff") return "Directing Staff";
@@ -520,10 +521,25 @@ export function AutoRotationDisplay({
   const slides: Slide[] = useMemo(() => {
     let rawItems: (Personnel | DistinguishedVisit | Commandant)[] = [];
     if (activeCategory) {
+      const isCombined = Array.isArray(activeCategory);
       rawItems = personnel
-        .filter((p) => p.category === activeCategory)
+        .filter((p) => isCombined ? activeCategory.includes(p.category) : p.category === activeCategory)
         .sort((a, b) => {
-          if (activeCategory === "FWC" || activeCategory === "FDC") {
+          if (isCombined && a.category !== b.category) {
+            const priority: Record<string, number> = {
+              FWC: 1,
+              FDC: 2,
+              Allied: 3,
+            };
+            const pA = priority[a.category] ?? 4;
+            const pB = priority[b.category] ?? 4;
+            return pA - pB;
+          }
+          const isFwcOrFdcOrAllied =
+            a.category === "FWC" ||
+            a.category === "FDC" ||
+            a.category === "Allied";
+          if (isFwcOrFdcOrAllied) {
             const courseCompare = getCourseDesignation(a).localeCompare(
               getCourseDesignation(b),
               undefined,
@@ -1296,7 +1312,7 @@ export function AutoRotationDisplay({
 
   if (!isActive) {
     const buttonLabel = activeCategory
-      ? `${activeCategory} Auto Display`
+      ? (Array.isArray(activeCategory) ? "Global Auto Display" : `${activeCategory} Auto Display`)
       : activeView === "visits"
         ? "Visits Auto Display"
         : "Commandants Auto Display";
@@ -1461,14 +1477,30 @@ export function AutoRotationDisplay({
   };
 
   const getSectionTitle = () => {
-    if (activeView !== "visits" && !activeCategory) return "Chronicles of Commandants";
-    if (activeCategory === "FWC" && activeCourseLabel) return activeCourseLabel;
-    if (activeCategory === "FDC" && activeCourseLabel) return activeCourseLabel;
+    if (activeView === "visits") return "";
+    if (!activeCategory) return "Chronicles of Commandants";
+    if (activeCourseLabel) return activeCourseLabel;
     return "";
   };
 
   const getSectionSubtitle = () => {
     if (activeView === "visits") return "Distinguished Visits and Honours";
+    if (Array.isArray(activeCategory)) {
+      if (slide && slide.type === "page" && slide.items && slide.items.length > 0) {
+        const categories = slide.items
+          .filter((item): item is Personnel => "category" in item)
+          .map((item) => item.category);
+        const uniqueCategories = [...new Set(categories)];
+        if (uniqueCategories.length === 1) {
+          const cat = uniqueCategories[0];
+          if (cat === "FWC") return "DISTINGUISHED FELLOWS OF WAR COLLEGE (FWC)";
+          if (cat === "FDC") return "DISTINGUISHED FELLOWS OF DEFENCE COLLEGE (FDC)";
+          if (cat === "Allied") return "INTERNATIONAL ALLIED OFFICERS";
+        }
+        return "COMBINED FELLOWS & ALLIED OFFICERS";
+      }
+      return "GLOBAL AUTO DISPLAY";
+    }
     if (activeCategory === "FDC")
       return "Distinguished Fellows of Defence College (FDC)";
     if (activeCategory === "FWC")
