@@ -190,7 +190,6 @@ export function FellowsByCourse({
     }
 
     return Object.values(courseMap)
-      .filter(data => data.fellows.length > 0)
       .map((data) => ({
         year: data.year,
         courseNumber: data.courseNumber,
@@ -207,7 +206,7 @@ export function FellowsByCourse({
         }),
         groupId: `${data.year}-${data.courseNumber}`,
       }))
-      .sort((a, b) => b.courseNumber - a.courseNumber);
+      .sort((a, b) => a.courseNumber - b.courseNumber);
   }, [personnel, category]);
 
   const activeGroup = useMemo(
