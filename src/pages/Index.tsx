@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { SlidersHorizontal, ChevronLeft, ChevronRight, Play, Pause, X, Shield, ArrowLeft } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { AppFooter } from "@/components/AppFooter";
@@ -38,6 +38,7 @@ import { useAutoDisplaySettings } from "@/hooks/useAutoDisplaySettings";
 import { AUTO_DISPLAY_CONTEXTS } from "@/hooks/useAutoDisplaySettings";
 import type { AutoDisplayContextKey } from "@/hooks/useAutoDisplaySettings";
 import { useIdleStageSettings } from "@/hooks/useIdleStageSettings";
+import { useToast } from "@/hooks/use-toast";
 import {
   DeviceControlCommandType,
   DeviceControlView,
@@ -301,6 +302,80 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
     deleteCommandant,
   } =
     useCommandantsStore();
+
+  const { toast } = useToast();
+
+  const handleAddPersonnel = useCallback((p: any) => {
+    addPersonnel(p);
+    toast({
+      title: "Success",
+      description: `Personnel "${p.name}" has been added successfully.`,
+    });
+  }, [addPersonnel, toast]);
+
+  const handleUpdatePersonnel = useCallback((id: string, p: any) => {
+    updatePersonnel(id, p);
+    toast({
+      title: "Success",
+      description: "Personnel profile has been updated successfully.",
+    });
+  }, [updatePersonnel, toast]);
+
+  const handleDeletePersonnel = useCallback((id: string) => {
+    deletePersonnel(id);
+    toast({
+      title: "Success",
+      description: "Personnel profile has been deleted.",
+    });
+  }, [deletePersonnel, toast]);
+
+  const handleAddVisit = useCallback((v: any) => {
+    addVisit(v);
+    toast({
+      title: "Success",
+      description: `Visit from "${v.name}" has been added successfully.`,
+    });
+  }, [addVisit, toast]);
+
+  const handleUpdateVisit = useCallback((id: string, v: any) => {
+    updateVisit(id, v);
+    toast({
+      title: "Success",
+      description: "Visit details have been updated successfully.",
+    });
+  }, [updateVisit, toast]);
+
+  const handleDeleteVisit = useCallback((id: string) => {
+    deleteVisit(id);
+    toast({
+      title: "Success",
+      description: "Visit has been deleted.",
+    });
+  }, [deleteVisit, toast]);
+
+  const handleAddCommandant = useCallback((c: any) => {
+    addCommandant(c);
+    toast({
+      title: "Success",
+      description: `Commandant "${c.name}" has been added successfully.`,
+    });
+  }, [addCommandant, toast]);
+
+  const handleUpdateCommandant = useCallback((id: string, c: any) => {
+    updateCommandant(id, c);
+    toast({
+      title: "Success",
+      description: "Commandant details have been updated successfully.",
+    });
+  }, [updateCommandant, toast]);
+
+  const handleDeleteCommandant = useCallback((id: string) => {
+    deleteCommandant(id);
+    toast({
+      title: "Success",
+      description: "Commandant record has been deleted.",
+    });
+  }, [deleteCommandant, toast]);
   const audioTracks = useAudioStore((state) => state.tracks);
   const audioAssignments = useAudioStore((state) => state.assignments);
   const currentCommandant =
@@ -1113,15 +1188,15 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           personnel={personnel}
           visits={visits}
           commandants={commandants}
-          onAddPersonnel={addPersonnel}
-          onUpdatePersonnel={updatePersonnel}
-          onDeletePersonnel={deletePersonnel}
-          onAddVisit={addVisit}
-          onUpdateVisit={updateVisit}
-          onDeleteVisit={deleteVisit}
-          onAddCommandant={addCommandant}
-          onUpdateCommandant={updateCommandant}
-          onDeleteCommandant={deleteCommandant}
+          onAddPersonnel={handleAddPersonnel}
+          onUpdatePersonnel={handleUpdatePersonnel}
+          onDeletePersonnel={handleDeletePersonnel}
+          onAddVisit={handleAddVisit}
+          onUpdateVisit={handleUpdateVisit}
+          onDeleteVisit={handleDeleteVisit}
+          onAddCommandant={handleAddCommandant}
+          onUpdateCommandant={handleUpdateCommandant}
+          onDeleteCommandant={handleDeleteCommandant}
           themeMode={themeMode}
           onThemeModeChange={setThemeMode}
           onResetThemeMode={resetThemeMode}
