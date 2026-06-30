@@ -6,22 +6,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
   signIn: (email, password) => ipcRenderer.invoke('sign-in', { email, password }),
   signUp: (email, password) => ipcRenderer.invoke('sign-up', { email, password }),
 
-  // Google Drive sync
-  driveAuth: () => ipcRenderer.invoke('drive-auth'),
-  driveSignOut: () => ipcRenderer.invoke('drive-sign-out'),
-  driveAuthStatus: () => ipcRenderer.invoke('drive-auth-status'),
-  drivePush: () => ipcRenderer.invoke('drive-push'),
-  drivePull: () => ipcRenderer.invoke('drive-pull'),
-  driveSyncStatus: () => ipcRenderer.invoke('drive-sync-status'),
-  onDriveSyncProgress: (callback) => {
+  // Dropbox sync
+  dropboxAuth: () => ipcRenderer.invoke('dropbox-auth'),
+  dropboxSignOut: () => ipcRenderer.invoke('dropbox-sign-out'),
+  dropboxAuthStatus: () => ipcRenderer.invoke('dropbox-auth-status'),
+  dropboxPush: () => ipcRenderer.invoke('dropbox-push'),
+  dropboxPull: () => ipcRenderer.invoke('dropbox-pull'),
+  dropboxSyncStatus: () => ipcRenderer.invoke('dropbox-sync-status'),
+  onDropboxSyncProgress: (callback) => {
     const handler = (_event, data) => callback(data);
-    ipcRenderer.on('drive-sync-progress', handler);
-    // Return a cleanup function
-    return () => ipcRenderer.removeListener('drive-sync-progress', handler);
+    ipcRenderer.on('dropbox-sync-progress', handler);
+    return () => ipcRenderer.removeListener('dropbox-sync-progress', handler);
   },
-  onDriveSyncReload: (callback) => {
+  onDropboxSyncReload: (callback) => {
     const handler = () => callback();
-    ipcRenderer.on('drive-sync-reload', handler);
-    return () => ipcRenderer.removeListener('drive-sync-reload', handler);
+    ipcRenderer.on('dropbox-sync-reload', handler);
+    return () => ipcRenderer.removeListener('dropbox-sync-reload', handler);
   },
 });

@@ -12,7 +12,7 @@ import { BatchUploadAdmin } from './BatchUploadAdmin';
 import { BatchImageUploadEnhanced } from './BatchImageUploadEnhanced';
 import { UnifiedPersonnelManagement } from './UnifiedPersonnelManagement';
 import { UnifiedPersonnelEditor } from './UnifiedPersonnelEditor';
-import { DriveBackupAdmin } from './DriveBackupAdmin';
+import { DropboxBackupAdmin } from './DropboxBackupAdmin';
 import { saveMediaFile } from '@/lib/persistentMedia';
 import { ThemeMode } from '@/hooks/useThemeMode';
 import { BootSequenceSettings } from '@/hooks/useBootSequenceSettings';
@@ -1841,7 +1841,7 @@ export function AdminPanel({
 
         {tab === 'backup' && (
           <div className="view-enter">
-            <DriveBackupAdmin />
+            <DropboxBackupAdmin />
           </div>
         )}
 
