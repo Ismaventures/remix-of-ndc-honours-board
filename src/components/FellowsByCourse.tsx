@@ -133,7 +133,7 @@ export function FellowsByCourse({
       courseMap[c] = {
         year: startYear,
         courseNumber: c,
-        academicYear: `${startYear}\u2013${endYear}`,
+        academicYear: `${startYear}–${endYear}`,
         fellows: []
       };
     }
@@ -143,9 +143,17 @@ export function FellowsByCourse({
 
     fellows.forEach(person => {
       let courseNum = null;
+      let endYear = null;
 
       if (person.course) {
         courseNum = person.course;
+      }
+
+      if (person.academicYear) {
+        const parts = person.academicYear.split(/[-–]/);
+        endYear = parseInt(parts.length > 1 ? parts[1].trim() : parts[0].trim(), 10);
+      } else if (person.periodEnd) {
+        endYear = parseInt(person.periodEnd, 10);
       }
 
       if (!courseNum && person.decoration) {
@@ -159,6 +167,20 @@ export function FellowsByCourse({
         let match = person.decoration.match(/NWC\s+Course\s+(\d+)/i);
         if (match) {
           courseNum = parseInt(match[1], 10);
+        }
+      }
+      
+      if (!courseNum && person.decoration) {
+        let match = person.decoration.match(/Course\s+(\d+)/i);
+        if (match) {
+          courseNum = parseInt(match[1], 10);
+        }
+      }
+      
+      if (!endYear && person.decoration) {
+        let match = person.decoration.match(/\/\s*(\d{4})/);
+        if (match) {
+          endYear = parseInt(match[1], 10);
         }
       }
 
@@ -175,19 +197,19 @@ export function FellowsByCourse({
         courseMap[courseNum].fellows.push(person);
       } else {
         const startYear = 1991 + courseNum;
-        const endYear = 1992 + courseNum;
+        const derivedEndYear = endYear || (1992 + courseNum);
         courseMap[courseNum] = {
           year: startYear,
-          endYear: endYear,
+          endYear: derivedEndYear,
           courseNumber: courseNum,
-          academicYear: `${startYear}\u2013${endYear}`,
+          academicYear: `${startYear}–${derivedEndYear}`,
           fellows: [person]
         };
       }
     });
 
     if (noCourseData.length > 0) {
-      console.warn(`\u26A0\uFE0F ${category} without course data: ${noCourseData.join(', ')}`);
+      console.warn(`⚠️ ${category} without course data: ${noCourseData.join(', ')}`);
     }
 
     return Object.values(courseMap)
@@ -195,7 +217,7 @@ export function FellowsByCourse({
         year: data.year,
         courseNumber: data.courseNumber,
         academicYear: data.academicYear,
-        designation: `Course ${data.courseNumber}/${data.endYear || (1992 + data.courseNumber)}`,
+        designation: `Course ${data.courseNumber}/${data.endYear}`,
         fellows: data.fellows.sort((a, b) => {
           if (a.seniorityOrder !== b.seniorityOrder) {
             return a.seniorityOrder - b.seniorityOrder;

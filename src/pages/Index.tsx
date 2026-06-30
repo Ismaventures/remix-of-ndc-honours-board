@@ -502,6 +502,22 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
       return;
     }
 
+    // Custom loop for fellows/officers: FWC -> FDC -> Allied -> FWC...
+    if (context === "FWC" || context === "FDC" || context === "Allied") {
+      const loopSequence: AutoDisplayContextKey[] = ["FWC", "FDC", "Allied"];
+      const currentIndex = loopSequence.indexOf(context);
+      const nextIndex = (currentIndex + 1) % loopSequence.length;
+      const nextContext = loopSequence[nextIndex];
+      
+      const nextView = contextToView(nextContext);
+      setView(nextView);
+      setForcedAutoDisplay((prev) => ({
+        enabled: true,
+        nonce: prev.nonce + 1,
+      }));
+      return;
+    }
+
     const nextContext = autoDisplaySettings.nextContextByContext?.[context] ?? null;
     if (!nextContext || nextContext === context) {
       setAutoDisplayActive(false);
