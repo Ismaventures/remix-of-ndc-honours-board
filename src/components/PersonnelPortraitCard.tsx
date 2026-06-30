@@ -222,7 +222,7 @@ export function PersonnelPortraitGrid({
       <div className="relative z-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5 md:gap-6">
         {personnel.map((person, index) => (
           <PersonnelPortraitCard
-            key={person.id}
+            key={`${person.id}-${index}`}
             person={person}
             isLightMode={isLightMode}
             onSelect={() => onSelectPerson(person)}

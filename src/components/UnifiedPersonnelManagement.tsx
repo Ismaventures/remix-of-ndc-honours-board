@@ -659,27 +659,62 @@ function PersonnelForm({
 
       <div>
         <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-          Image URL
+          Image Preview & URL
         </label>
-        <input
-          placeholder="Image URL (optional)"
-          value={form.imageUrl}
-          onChange={e => update('imageUrl', e.target.value)}
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-2"
-        />
-        <div className="flex items-center gap-2">
-          <label className="px-3 py-1.5 text-xs rounded border border-slate-300 bg-white hover:bg-slate-50 cursor-pointer transition-colors text-slate-700 font-medium">
-            Upload Image / GIF
-            <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
-          </label>
-          {form.imageUrl && (
-            <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
-              Clear
-            </button>
-          )}
+        <div className="flex flex-col sm:flex-row gap-4 items-start bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-slate-100 border border-slate-300 flex-shrink-0 flex items-center justify-center shadow-inner">
+            {form.imageUrl ? (
+              <img
+                src={form.imageUrl}
+                alt="Personnel Preview"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    const fallback = parent.querySelector('.image-fallback');
+                    if (fallback) fallback.classList.remove('hidden');
+                  }
+                }}
+              />
+            ) : null}
+            <div className={`image-fallback flex flex-col items-center justify-center text-slate-400 p-2 text-center ${form.imageUrl ? 'hidden' : ''}`}>
+              <ImageIcon className="h-8 w-8 mb-1" />
+              <span className="text-[10px]">No Image</span>
+            </div>
+          </div>
+          <div className="flex-1 w-full space-y-2">
+            <input
+              placeholder="Image URL (optional)"
+              value={form.imageUrl}
+              onChange={e => {
+                update('imageUrl', e.target.value);
+                if (pendingImageFile) setPendingImageFile(null);
+              }}
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            />
+            <div className="flex items-center gap-2">
+              <label className="px-3 py-1.5 text-xs rounded border border-slate-300 bg-white hover:bg-slate-50 cursor-pointer transition-colors text-slate-700 font-medium">
+                Upload Image / GIF
+                <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
+              </label>
+              {form.imageUrl && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    update('imageUrl', '');
+                    setPendingImageFile(null);
+                  }}
+                  className="px-3 py-1.5 text-xs rounded border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
+            <p className="text-xs text-slate-500 mt-1">Select an image file to upload or enter a URL directly.</p>
+          </div>
         </div>
-        {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
-        <p className="text-xs text-slate-600 mt-1">Select an image file to upload or enter a URL directly.</p>
       </div>
 
       {/* Course Selection Section */}
@@ -1273,27 +1308,62 @@ function PersonnelEditForm({
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-              Image URL
+              Image Preview & URL
             </label>
-            <input
-              placeholder="Image URL (optional)"
-              value={form.imageUrl}
-              onChange={e => update('imageUrl', e.target.value)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-2"
-            />
-            <div className="flex items-center gap-2">
-              <label className="px-3 py-1.5 text-xs rounded border border-slate-300 bg-white hover:bg-slate-50 cursor-pointer transition-colors text-slate-700 font-medium">
-                Upload Image / GIF
-                <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
-              </label>
-              {form.imageUrl && (
-                <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
-                  Clear
-                </button>
-              )}
+            <div className="flex flex-col sm:flex-row gap-4 items-start bg-slate-50 p-3 rounded-lg border border-slate-200">
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-slate-100 border border-slate-300 flex-shrink-0 flex items-center justify-center shadow-inner">
+                {form.imageUrl ? (
+                  <img
+                    src={form.imageUrl}
+                    alt="Personnel Preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const parent = e.currentTarget.parentElement;
+                      if (parent) {
+                        const fallback = parent.querySelector('.image-fallback');
+                        if (fallback) fallback.classList.remove('hidden');
+                      }
+                    }}
+                  />
+                ) : null}
+                <div className={`image-fallback flex flex-col items-center justify-center text-slate-400 p-2 text-center ${form.imageUrl ? 'hidden' : ''}`}>
+                  <ImageIcon className="h-8 w-8 mb-1" />
+                  <span className="text-[10px]">No Image</span>
+                </div>
+              </div>
+              <div className="flex-1 w-full space-y-2">
+                <input
+                  placeholder="Image URL (optional)"
+                  value={form.imageUrl}
+                  onChange={e => {
+                    update('imageUrl', e.target.value);
+                    if (pendingImageFile) setPendingImageFile(null);
+                  }}
+                  className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                />
+                <div className="flex items-center gap-2">
+                  <label className="px-3 py-1.5 text-xs rounded border border-slate-300 bg-white hover:bg-slate-50 cursor-pointer transition-colors text-slate-700 font-medium">
+                    Upload Image / GIF
+                    <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
+                  </label>
+                  {form.imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        update('imageUrl', '');
+                        setPendingImageFile(null);
+                      }}
+                      className="px-3 py-1.5 text-xs rounded border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
+                <p className="text-xs text-slate-500 mt-1">Select an image file to upload or enter a URL directly.</p>
+              </div>
             </div>
-            {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
-            <p className="text-xs text-slate-500 mt-1">Select an image file to upload or enter a URL directly.</p>
           </div>
         </div>
       </div>

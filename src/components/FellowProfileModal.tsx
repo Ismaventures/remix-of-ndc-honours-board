@@ -24,7 +24,15 @@ export function FellowProfileModal({
   const slideDir = useRef<'left' | 'right' | null>(null);
   usePersonnelProfileAudio(category);
 
-  const currentIndex = fellows.findIndex((f) => f.id === person.id);
+  const currentIndex = fellows.findIndex((f) => {
+    if (f.id !== person.id) return false;
+    const fCourse = (f as any).courseNumber;
+    const pCourse = (person as any).courseNumber;
+    if (fCourse !== undefined && pCourse !== undefined) {
+      return fCourse === pCourse;
+    }
+    return true;
+  });
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex >= 0 && currentIndex < fellows.length - 1;
 

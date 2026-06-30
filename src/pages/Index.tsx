@@ -1403,7 +1403,17 @@ const Index = ({ defaultView = "home" }: IndexProps) => {
           personnel={personnel}
           category={category}
           onBack={() => setView("home")}
-          title={SECTION_TITLES[view]}
+          title={
+            category === "FWC" ? (
+              <>
+                DISTINGUISHED FELLOWS OF WAR COLLEGE <span className="normal-case">(fwc+)</span>
+              </>
+            ) : (
+              <>
+                DISTINGUISHED FELLOWS OF DEFENCE COLLEGE <span className="normal-case">(fdc+)</span>
+              </>
+            )
+          }
           description={view === "fwc" 
             ? "Distinguished Fellows of War College, categorized by CSE course year."
             : "Distinguished Fellows of Defence College, categorized by CSE course year."

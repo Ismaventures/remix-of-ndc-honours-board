@@ -13,20 +13,52 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const url = require('url');
+const crypto = require('crypto');
 
 const TOKEN_FILENAME = 'dropbox-token.json';
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 const LOG_FILE = isDev ? null : path.join(app.getPath('userData'), 'crash.log');
+const DEBUG_LOG_FILE = path.join(app.getPath('userData'), 'sync-debug.log');
 
 function logToFile(msg) {
   const line = `[${new Date().toISOString()}] [DropboxSync] ${msg}\n`;
+  console.log(`[DropboxSync] ${msg}`);
   if (LOG_FILE) {
     try {
       fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
       fs.appendFileSync(LOG_FILE, line);
     } catch (_) {}
   }
+  try {
+    fs.mkdirSync(path.dirname(DEBUG_LOG_FILE), { recursive: true });
+    fs.appendFileSync(DEBUG_LOG_FILE, line);
+  } catch (_) {}
+}
+
+function computeDropboxHash(filePath) {
+  const BLOCK_SIZE = 4 * 1024 * 1024; // 4MB
+  const fd = fs.openSync(filePath, 'r');
+  const buffer = Buffer.alloc(BLOCK_SIZE);
+  const blockHashes = [];
+  
+  let bytesRead = 0;
+  while (true) {
+    bytesRead = fs.readSync(fd, buffer, 0, BLOCK_SIZE, null);
+    if (bytesRead === 0) break;
+    
+    const block = bytesRead === BLOCK_SIZE ? buffer : buffer.subarray(0, bytesRead);
+    const hash = crypto.createHash('sha256').update(block).digest();
+    blockHashes.push(hash);
+  }
+  fs.closeSync(fd);
+  
+  if (blockHashes.length === 0) {
+    return crypto.createHash('sha256').update(Buffer.alloc(0)).digest('hex');
+  }
+  
+  const combined = Buffer.concat(blockHashes);
+  return crypto.createHash('sha256').update(combined).digest('hex');
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -160,8 +192,8 @@ async function getAccessToken() {
       saveToken(token);
       logToFile('Access token refreshed successfully.');
     } catch (err) {
-      logToFile('Failed to refresh access token: ' + err.message);
-      console.error('[DropboxSync] Refresh failed:', err.message);
+      logToFile('Failed to refresh access token: ' + err.stack);
+      console.error('[DropboxSync] Refresh failed:', err);
       return null;
     }
   }
@@ -315,18 +347,23 @@ function signOut() {
 /**
  * Upload a file to Dropbox. Autocreates parent directories.
  */
-async function uploadFile(accessToken, localPath, dropboxPath) {
+async function uploadFile(accessToken, localPath, dropboxPath, clientModifiedDate) {
   const content = fs.readFileSync(localPath);
+  const apiArgs = {
+    path: dropboxPath,
+    mode: 'overwrite',
+    autorename: false,
+    mute: true
+  };
+  if (clientModifiedDate) {
+    apiArgs.client_modified = clientModifiedDate.toISOString().split('.')[0] + 'Z';
+  }
+
   const resp = await fetch('https://content.dropboxapi.com/2/files/upload', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
-      'Dropbox-API-Arg': JSON.stringify({
-        path: dropboxPath,
-        mode: 'overwrite',
-        autorename: false,
-        mute: true
-      }),
+      'Dropbox-API-Arg': JSON.stringify(apiArgs),
       'Content-Type': 'application/octet-stream'
     },
     body: content
@@ -423,9 +460,9 @@ function countLocalFiles(dir) {
   return count;
 }
 
-async function uploadDirectoryRecursive(accessToken, localDir, progressCallback, totalFiles, currentProgress, basePath = '/local_media') {
-  if (!fs.existsSync(localDir)) return { uploaded: 0, errors: 0 };
-  let stats = { uploaded: 0, errors: 0 };
+async function uploadDirectoryRecursive(accessToken, localDir, progressCallback, totalFiles, currentProgress, basePath = '/local_media', remoteFilesMap = new Map()) {
+  if (!fs.existsSync(localDir)) return { uploaded: 0, skipped: 0, errors: 0 };
+  let stats = { uploaded: 0, skipped: 0, errors: 0 };
   const entries = fs.readdirSync(localDir, { withFileTypes: true });
 
   for (const entry of entries) {
@@ -434,21 +471,69 @@ async function uploadDirectoryRecursive(accessToken, localDir, progressCallback,
     const dropboxPath = `${basePath}/${entry.name}`;
 
     if (entry.isDirectory()) {
-      const subStats = await uploadDirectoryRecursive(accessToken, localPath, progressCallback, totalFiles, currentProgress, dropboxPath);
+      const subStats = await uploadDirectoryRecursive(accessToken, localPath, progressCallback, totalFiles, currentProgress, dropboxPath, remoteFilesMap);
       stats.uploaded += subStats.uploaded;
+      stats.skipped += subStats.skipped;
       stats.errors += subStats.errors;
     } else {
       currentProgress.value++;
-      if (progressCallback) {
-        progressCallback({
-          phase: 'uploading',
-          file: dropboxPath,
-          current: currentProgress.value,
-          total: totalFiles
-        });
+      const localStat = fs.statSync(localPath);
+      const remoteFile = remoteFilesMap.get(dropboxPath.toLowerCase());
+      
+      let shouldUpload = !remoteFile;
+      let reason = 'not found on Dropbox';
+      if (remoteFile) {
+        if (localStat.size !== remoteFile.size) {
+          shouldUpload = true;
+          reason = `size is different (local: ${localStat.size}, remote: ${remoteFile.size})`;
+        } else {
+          try {
+            const localHash = computeDropboxHash(localPath);
+            if (localHash !== remoteFile.content_hash) {
+              shouldUpload = true;
+              reason = `content hash is different (local: ${localHash}, remote: ${remoteFile.content_hash})`;
+            } else {
+              shouldUpload = false;
+              reason = `identical size and content hash (local/remote size: ${localStat.size})`;
+            }
+          } catch (hashErr) {
+            logToFile(`Hash calculation failed for ${dropboxPath}: ${hashErr.message}. Falling back to mtime.`);
+            const remoteTime = new Date(remoteFile.client_modified || remoteFile.server_modified);
+            const timeDiff = Math.floor(localStat.mtime.getTime() / 1000) - Math.floor(remoteTime.getTime() / 1000);
+            shouldUpload = timeDiff > 0;
+            reason = `hash failed; localMtime: ${localStat.mtime.toISOString()}, remoteTime: ${remoteTime.toISOString()}, timeDiffSec: ${timeDiff}`;
+          }
+        }
       }
-      await uploadFile(accessToken, localPath, dropboxPath);
-      stats.uploaded++;
+      logToFile(`File [${dropboxPath}]: shouldUpload=${shouldUpload} (Reason: ${reason})`);
+
+      if (shouldUpload) {
+        if (progressCallback) {
+          progressCallback({
+            phase: 'uploading',
+            file: dropboxPath,
+            current: currentProgress.value,
+            total: totalFiles
+          });
+        }
+        try {
+          await uploadFile(accessToken, localPath, dropboxPath, localStat.mtime);
+          stats.uploaded++;
+        } catch (err) {
+          logToFile(`Failed to upload ${dropboxPath}: ` + err.message);
+          stats.errors++;
+        }
+      } else {
+        stats.skipped++;
+        if (progressCallback) {
+          progressCallback({
+            phase: 'uploading',
+            file: `${dropboxPath} (skipped)`,
+            current: currentProgress.value,
+            total: totalFiles
+          });
+        }
+      }
     }
   }
 
@@ -462,41 +547,113 @@ async function pushToCloud(localMediaDir, dbPath, progressCallback) {
   if (!accessToken) throw new Error('Not authenticated with Dropbox');
 
   logToFile('Push to Dropbox started...');
+
+  // Get remote file catalog
+  let remoteFiles = [];
+  try {
+    remoteFiles = await listFolder(accessToken, "");
+  } catch (err) {
+    if (err.message.includes('path/not_found')) {
+      logToFile('No files found on Dropbox.');
+    } else {
+      throw err;
+    }
+  }
+  const remoteFilesMap = new Map(remoteFiles.map(f => [f.path_lower, f]));
+  logToFile(`Fetched ${remoteFiles.length} remote files from Dropbox catalog.`);
+  if (remoteFiles.length > 0) {
+    logToFile(`Sample remote files: ${remoteFiles.slice(0, 5).map(f => `${f.path_lower} (${f.size} bytes)`).join(', ')}`);
+  }
+
   const totalFiles = countLocalFiles(localMediaDir) + (fs.existsSync(dbPath) ? 1 : 0);
   const currentProgress = { value: 0 };
 
-  // 1. Upload database
+  // 1. Upload database if modified or size is different
   let dbUploaded = 0;
+  let dbSkipped = 0;
   if (fs.existsSync(dbPath)) {
-    try {
-      currentProgress.value++;
+    const localStat = fs.statSync(dbPath);
+    const remoteFile = remoteFilesMap.get('/database.sqlite');
+    let shouldUpload = !remoteFile;
+    let reason = 'not found on Dropbox';
+    if (remoteFile) {
+      if (localStat.size !== remoteFile.size) {
+        shouldUpload = true;
+        reason = `size is different (local: ${localStat.size}, remote: ${remoteFile.size})`;
+      } else {
+        try {
+          const localHash = computeDropboxHash(dbPath);
+          if (localHash !== remoteFile.content_hash) {
+            shouldUpload = true;
+            reason = `content hash is different (local: ${localHash}, remote: ${remoteFile.content_hash})`;
+          } else {
+            shouldUpload = false;
+            reason = `identical size and content hash (local/remote size: ${localStat.size})`;
+          }
+        } catch (hashErr) {
+          logToFile(`Hash calculation failed for database.sqlite: ${hashErr.message}. Falling back to mtime.`);
+          const remoteTime = new Date(remoteFile.client_modified || remoteFile.server_modified);
+          const timeDiff = Math.floor(localStat.mtime.getTime() / 1000) - Math.floor(remoteTime.getTime() / 1000);
+          shouldUpload = timeDiff > 0;
+          reason = `hash failed; localMtime: ${localStat.mtime.toISOString()}, remoteTime: ${remoteTime.toISOString()}, timeDiffSec: ${timeDiff}`;
+        }
+      }
+    }
+    logToFile(`Database [/database.sqlite]: shouldUpload=${shouldUpload} (Reason: ${reason})`);
+
+    currentProgress.value++;
+    if (shouldUpload) {
+      try {
+        if (progressCallback) {
+          progressCallback({
+            phase: 'uploading',
+            file: '/database.sqlite',
+            current: currentProgress.value,
+            total: totalFiles
+          });
+        }
+        await uploadFile(accessToken, dbPath, '/database.sqlite', localStat.mtime);
+        dbUploaded = 1;
+      } catch (err) {
+        logToFile('Failed to upload database.sqlite: ' + err.message);
+        throw new Error(`Database backup failed: ${err.message}`);
+      }
+    } else {
+      dbSkipped = 1;
       if (progressCallback) {
         progressCallback({
           phase: 'uploading',
-          file: '/database.sqlite',
+          file: '/database.sqlite (skipped)',
           current: currentProgress.value,
           total: totalFiles
         });
       }
-      await uploadFile(accessToken, dbPath, '/database.sqlite');
-      dbUploaded = 1;
-    } catch (err) {
-      logToFile('Failed to upload database.sqlite: ' + err.message);
-      throw new Error(`Database backup failed: ${err.message}`);
     }
   }
 
   // 2. Upload media folder
-  const mediaStats = await uploadDirectoryRecursive(accessToken, localMediaDir, progressCallback, totalFiles, currentProgress, '/local_media');
+  const mediaStats = await uploadDirectoryRecursive(
+    accessToken,
+    localMediaDir,
+    progressCallback,
+    totalFiles,
+    currentProgress,
+    '/local_media',
+    remoteFilesMap
+  );
 
-  if (mediaStats.errors > 0 && mediaStats.uploaded === 0 && totalFiles > 1) {
+  const totalUploaded = mediaStats.uploaded + dbUploaded;
+  const totalSkipped = mediaStats.skipped + dbSkipped;
+
+  if (mediaStats.errors > 0 && totalUploaded === 0 && totalFiles > 1) {
     throw new Error(`Media backup failed: All media file uploads failed.`);
   }
 
   // Save push sync statistics
   const syncInfo = {
     lastPushTime: new Date().toISOString(),
-    filesUploaded: mediaStats.uploaded + dbUploaded,
+    filesUploaded: totalUploaded,
+    filesSkipped: totalSkipped,
     errors: mediaStats.errors
   };
   fs.writeFileSync(
@@ -504,11 +661,11 @@ async function pushToCloud(localMediaDir, dbPath, progressCallback) {
     JSON.stringify(syncInfo, null, 2)
   );
 
-  logToFile(`Push complete. Uploaded: ${mediaStats.uploaded + dbUploaded}, Errors: ${mediaStats.errors}`);
+  logToFile(`Push complete. Uploaded: ${totalUploaded}, Skipped: ${totalSkipped}, Errors: ${mediaStats.errors}`);
   return {
     success: mediaStats.errors === 0,
-    uploaded: mediaStats.uploaded + dbUploaded,
-    skipped: 0,
+    uploaded: totalUploaded,
+    skipped: totalSkipped,
     errors: mediaStats.errors
   };
 }
@@ -547,8 +704,9 @@ async function pullFromCloud(localMediaDir, dbPath, progressCallback) {
     let shouldDownload = !fs.existsSync(dbPath);
     if (!shouldDownload && fs.existsSync(dbPath)) {
       const localStat = fs.statSync(dbPath);
-      const remoteTime = new Date(dbFile.server_modified);
-      shouldDownload = remoteTime > localStat.mtime;
+      const remoteTime = new Date(dbFile.client_modified || dbFile.server_modified);
+      // Use 2-second threshold to handle filesystem timestamp rounding differences
+      shouldDownload = (remoteTime.getTime() - localStat.mtime.getTime()) > 2000;
     }
 
     if (shouldDownload) {
@@ -557,6 +715,12 @@ async function pullFromCloud(localMediaDir, dbPath, progressCallback) {
           progressCallback({ phase: 'downloading', file: '/database.sqlite', current, total: totalFiles });
         }
         await downloadFile(accessToken, '/database.sqlite', dbPath);
+        const remoteTime = new Date(dbFile.client_modified || dbFile.server_modified);
+        try {
+          fs.utimesSync(dbPath, remoteTime, remoteTime);
+        } catch (utimeErr) {
+          logToFile(`Warning: Failed to set modification time for database: ${utimeErr.message}`);
+        }
         downloaded++;
       } catch (err) {
         logToFile('Failed to download database: ' + err.message);
@@ -577,8 +741,9 @@ async function pullFromCloud(localMediaDir, dbPath, progressCallback) {
     let shouldDownload = !fs.existsSync(destLocalPath);
     if (!shouldDownload && fs.existsSync(destLocalPath)) {
       const localStat = fs.statSync(destLocalPath);
-      const remoteTime = new Date(file.server_modified);
-      shouldDownload = remoteTime > localStat.mtime;
+      const remoteTime = new Date(file.client_modified || file.server_modified);
+      // Use 2-second threshold to handle filesystem timestamp rounding differences
+      shouldDownload = (remoteTime.getTime() - localStat.mtime.getTime()) > 2000;
     }
 
     if (shouldDownload) {
@@ -587,6 +752,12 @@ async function pullFromCloud(localMediaDir, dbPath, progressCallback) {
           progressCallback({ phase: 'downloading', file: file.path_display, current, total: totalFiles });
         }
         await downloadFile(accessToken, file.path_display, destLocalPath);
+        const remoteTime = new Date(file.client_modified || file.server_modified);
+        try {
+          fs.utimesSync(destLocalPath, remoteTime, remoteTime);
+        } catch (utimeErr) {
+          logToFile(`Warning: Failed to set modification time for ${destLocalPath}: ${utimeErr.message}`);
+        }
         downloaded++;
       } catch (err) {
         logToFile(`Failed to download ${file.path_display}: ` + err.message);
@@ -625,7 +796,11 @@ async function pushSingleFile(localPath, relativePath) {
 
   const dropboxPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
   try {
-    await uploadFile(accessToken, localPath, dropboxPath);
+    let clientModifiedDate = null;
+    if (fs.existsSync(localPath)) {
+      clientModifiedDate = fs.statSync(localPath).mtime;
+    }
+    await uploadFile(accessToken, localPath, dropboxPath, clientModifiedDate);
     logToFile(`Auto-pushed single file successfully: ${dropboxPath}`);
   } catch (err) {
     logToFile(`Failed to auto-push single file ${dropboxPath}: ` + err.message);

@@ -106,7 +106,11 @@ export function DropboxBackupAdmin() {
     try {
       const res = await window.electronAPI.dropboxPush();
       if (res.success) {
-        setSyncSuccess(`Upload complete! Successfully backed up ${res.uploaded} file(s) to Dropbox.`);
+        if (res.uploaded === 0) {
+          setSyncSuccess('Upload complete! Local files are already up-to-date with Dropbox.');
+        } else {
+          setSyncSuccess(`Upload complete! Successfully backed up ${res.uploaded} file(s) to Dropbox.`);
+        }
         const sync = await window.electronAPI.dropboxSyncStatus();
         setSyncStatus(sync);
       } else {

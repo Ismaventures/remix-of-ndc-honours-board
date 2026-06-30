@@ -539,7 +539,10 @@ export function AutoRotationDisplay({
     if (activeCategory) {
       const isCombined = Array.isArray(activeCategory);
       rawItems = personnel
-        .filter((p) => isCombined ? activeCategory.includes(p.category) : p.category === activeCategory)
+        .filter((p) => {
+          const categoryMatches = isCombined ? activeCategory.includes(p.category) : p.category === activeCategory;
+          return categoryMatches && p.imageUrl && p.imageUrl.trim() !== "";
+        })
         .sort((a, b) => {
           if (isCombined && a.category !== b.category) {
             const priority: Record<string, number> = {
@@ -556,20 +559,20 @@ export function AutoRotationDisplay({
             a.category === "FDC" ||
             a.category === "Allied";
           if (isFwcOrFdcOrAllied) {
-            const courseCompare = getCourseDesignation(a).localeCompare(
-              getCourseDesignation(b),
+            const courseCompare = getCourseDesignation(b).localeCompare(
+              getCourseDesignation(a),
               undefined,
               { numeric: true },
             );
             if (courseCompare !== 0) return courseCompare;
           }
-          return a.seniorityOrder - b.seniorityOrder;
+          return b.seniorityOrder - a.seniorityOrder;
         });
     } else if (activeView === "visits") {
-      rawItems = visits.slice(0, 12);
+      rawItems = visits.filter(v => v.imageUrl && v.imageUrl.trim() !== "").slice(0, 12);
     } else {
       rawItems = commandants
-        .slice()
+        .filter(c => c.imageUrl && c.imageUrl.trim() !== "")
         .sort((a, b) => {
           if (a.isCurrent && !b.isCurrent) return -1;
           if (!a.isCurrent && b.isCurrent) return 1;
@@ -1519,7 +1522,6 @@ export function AutoRotationDisplay({
   const getSectionTitle = () => {
     if (activeView === "visits") return "";
     if (!activeCategory) return "Chronicles of Commandants";
-    if (activeCourseLabel) return activeCourseLabel;
     return "";
   };
 

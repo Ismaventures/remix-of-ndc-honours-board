@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { Plus, Pencil, Trash2, X, ArrowLeft, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, ArrowLeft, Upload, Image as ImageIcon } from 'lucide-react';
 import { Personnel, DistinguishedVisit, Commandant, Category, Service } from '@/types/domain';
 import { AdvancedAudioAdmin } from './AdvancedAudioAdmin';
 import { DeviceControlPanel } from './DeviceControlPanel';
@@ -3135,21 +3135,61 @@ function PersonnelForm({ initial, onSave, onCancel, personnel = [] }: {
           </h5>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Image URL</label>
-              <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
-              <div className="flex items-center gap-2">
-                <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-slate-600 hover:text-foreground">
-                  Upload Image / GIF
-                  <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
-                </label>
-                {form.imageUrl && (
-                  <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-slate-600 hover:text-foreground hover:bg-muted/40 transition-colors">
-                    Clear
-                  </button>
-                )}
+              <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Image Preview & URL</label>
+              <div className="flex flex-col sm:flex-row gap-4 items-start bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-slate-100 border border-slate-300 flex-shrink-0 flex items-center justify-center shadow-inner">
+                  {form.imageUrl ? (
+                    <img
+                      src={form.imageUrl}
+                      alt="Personnel Preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const parent = e.currentTarget.parentElement;
+                        if (parent) {
+                          const fallback = parent.querySelector('.image-fallback');
+                          if (fallback) fallback.classList.remove('hidden');
+                        }
+                      }}
+                    />
+                  ) : null}
+                  <div className={`image-fallback flex flex-col items-center justify-center text-slate-400 p-2 text-center ${form.imageUrl ? 'hidden' : ''}`}>
+                    <ImageIcon className="h-8 w-8 mb-1" />
+                    <span className="text-[10px]">No Image</span>
+                  </div>
+                </div>
+                <div className="flex-1 w-full space-y-2">
+                  <input
+                    placeholder="Image URL (optional)"
+                    value={form.imageUrl}
+                    onChange={e => {
+                      update('imageUrl', e.target.value);
+                      if (pendingImageFile) setPendingImageFile(null);
+                    }}
+                    className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30"
+                  />
+                  <div className="flex items-center gap-2">
+                    <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-slate-600 hover:text-foreground font-medium">
+                      Upload Image / GIF
+                      <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
+                    </label>
+                    {form.imageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          update('imageUrl', '');
+                          setPendingImageFile(null);
+                        }}
+                        className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-slate-600 hover:text-foreground hover:bg-muted/40 transition-colors font-medium"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
+                  <p className="text-[10px] text-slate-500">Stored locally with public fallback when cloud storage is configured.</p>
+                </div>
               </div>
-              {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
-              <p className="text-[10px] text-slate-600">Stored locally with public fallback when cloud storage is configured.</p>
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Citation / Bio</label>
@@ -3245,21 +3285,55 @@ function VisitForm({ initial, onSave, onCancel }: {
           <input type="date" value={form.date} onChange={e => update('date', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
-          <div className="flex items-center gap-2">
-            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-slate-600 hover:text-foreground">
-              Upload Image / GIF
-              <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
-            </label>
-            {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-slate-600 hover:text-foreground hover:bg-muted/40 transition-colors">
-                Clear
-              </button>
-            )}
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Image Preview & URL</label>
+          <div className="flex flex-col sm:flex-row gap-4 items-start bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-slate-100 border border-slate-300 flex-shrink-0 flex items-center justify-center shadow-inner">
+              {form.imageUrl ? (
+                <img
+                  src={form.imageUrl}
+                  alt="Visit Preview"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      const fallback = parent.querySelector('.image-fallback');
+                      if (fallback) fallback.classList.remove('hidden');
+                    }
+                  }}
+                />
+              ) : null}
+              <div className={`image-fallback flex flex-col items-center justify-center text-slate-400 p-2 text-center ${form.imageUrl ? 'hidden' : ''}`}>
+                <ImageIcon className="h-8 w-8 mb-1" />
+                <span className="text-[10px]">No Image</span>
+              </div>
+            </div>
+            <div className="flex-1 w-full space-y-2">
+              <input
+                placeholder="Image URL (optional)"
+                value={form.imageUrl}
+                onChange={e => update('imageUrl', e.target.value)}
+                className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30"
+              />
+              <div className="flex items-center gap-2">
+                <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-slate-600 hover:text-foreground font-medium">
+                  Upload Image / GIF
+                  <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
+                </label>
+                {form.imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => update('imageUrl', '')}
+                    className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-slate-600 hover:text-foreground hover:bg-muted/40 transition-colors font-medium"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
+              <p className="text-[10px] text-slate-500">Stored locally with public fallback when cloud storage is configured.</p>
+            </div>
           </div>
-          {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
-          <p className="text-[10px] text-slate-600">Stored locally with public fallback when cloud storage is configured.</p>
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Visit Description / Context</label>
@@ -3391,21 +3465,55 @@ function CommandantForm({ initial, onSave, onCancel }: {
           <input type="number" disabled={form.isCurrent} placeholder={form.isCurrent ? 'Present' : 'Tenure End'} value={form.isCurrent ? '' : form.tenureEnd} onChange={e => update('tenureEnd', e.target.value ? parseInt(e.target.value) : '')} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30 disabled:opacity-50 disabled:cursor-not-allowed" />
         </div>
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Image URL</label>
-          <input placeholder="Image URL (optional)" value={form.imageUrl} onChange={e => update('imageUrl', e.target.value)} className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30" />
-          <div className="flex items-center gap-2">
-            <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-slate-600 hover:text-foreground">
-              Upload Image / GIF
-              <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
-            </label>
-            {form.imageUrl && (
-              <button type="button" onClick={() => update('imageUrl', '')} className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-slate-600 hover:text-foreground hover:bg-muted/40 transition-colors">
-                Clear
-              </button>
-            )}
+          <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Image Preview & URL</label>
+          <div className="flex flex-col sm:flex-row gap-4 items-start bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-slate-100 border border-slate-300 flex-shrink-0 flex items-center justify-center shadow-inner">
+              {form.imageUrl ? (
+                <img
+                  src={form.imageUrl}
+                  alt="Commandant Preview"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      const fallback = parent.querySelector('.image-fallback');
+                      if (fallback) fallback.classList.remove('hidden');
+                    }
+                  }}
+                />
+              ) : null}
+              <div className={`image-fallback flex flex-col items-center justify-center text-slate-400 p-2 text-center ${form.imageUrl ? 'hidden' : ''}`}>
+                <ImageIcon className="h-8 w-8 mb-1" />
+                <span className="text-[10px]">No Image</span>
+              </div>
+            </div>
+            <div className="flex-1 w-full space-y-2">
+              <input
+                placeholder="Image URL (optional)"
+                value={form.imageUrl}
+                onChange={e => update('imageUrl', e.target.value)}
+                className="w-full bg-background border border-[#002060]/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:border-slate-300/50 focus:ring-1 focus:ring-primary/50 transition-all hover:border-slate-300/30"
+              />
+              <div className="flex items-center gap-2">
+                <label className="px-3 py-1.5 text-xs rounded border border-slate-300/25 bg-white hover:bg-muted/40 cursor-pointer transition-colors text-slate-600 hover:text-foreground font-medium">
+                  Upload Image / GIF
+                  <input type="file" accept="image/*,.gif,.webp" className="hidden" onChange={e => onUploadImage(e.target.files?.[0] ?? null)} />
+                </label>
+                {form.imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => update('imageUrl', '')}
+                    className="px-3 py-1.5 text-xs rounded border border-[#002060]/20 text-slate-600 hover:text-foreground hover:bg-muted/40 transition-colors font-medium"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
+              <p className="text-[10px] text-slate-500">Stored locally with public fallback when cloud storage is configured.</p>
+            </div>
           </div>
-          {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
-          <p className="text-[10px] text-slate-600">Stored locally with public fallback when cloud storage is configured.</p>
         </div>
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold">Biography / Description</label>

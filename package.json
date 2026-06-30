@@ -18,7 +18,7 @@
     "admin:create-user": "node scripts/create-admin-user.mjs",
     "db:sync": "npx electron scripts/download_supabase_assets.cjs",
     "electron:start": "electron .",
-    "electron:dev": "concurrently -k \"npm run dev\" \"electron .\"",
+    "electron:dev": "npm run electron:rebuild && concurrently -k \"npm run dev\" \"electron .\"",
     "electron:rebuild": "electron-builder install-app-deps",
     "electron:build": "npm run build && electron-builder install-app-deps && electron-builder --win",
     "electron:pack": "npm run electron:build"

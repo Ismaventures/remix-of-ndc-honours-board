@@ -1085,8 +1085,8 @@ ipcMain.handle('dropbox-push', async (event) => {
     const result = await driveSync.pushToCloud(LOCAL_MEDIA_DIR, DB_PATH, progressCallback);
     return result;
   } catch (err) {
-    console.error('[DropboxSync] Push failed:', err.message);
-    return { success: false, error: err.message };
+    console.error('[DropboxSync] Push failed:', err);
+    return { success: false, error: err.message || String(err) };
   }
 });
 
@@ -1125,8 +1125,8 @@ ipcMain.handle('dropbox-pull', async (event) => {
 
     return result;
   } catch (err) {
-    console.error('[DropboxSync] Pull failed:', err.message);
-    return { success: false, error: err.message };
+    console.error('[DropboxSync] Pull failed:', err);
+    return { success: false, error: err.message || String(err) };
   }
 });
 

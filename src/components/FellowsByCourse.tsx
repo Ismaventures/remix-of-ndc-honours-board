@@ -98,7 +98,7 @@ interface FellowsByCourseProps {
   personnel: Personnel[];
   category: Category;
   onBack?: () => void;
-  title?: string;
+  title?: React.ReactNode;
   description?: string;
   onCourseSelect?: (courseNumber: number | null) => void;
   backTriggerNonce?: number;
@@ -108,7 +108,7 @@ export function FellowsByCourse({
   personnel,
   category,
   onBack,
-  title = 'Fellows by Course',
+  title = 'FELLOWS BY COURSE',
   description,
   onCourseSelect,
   backTriggerNonce = 0
@@ -124,7 +124,7 @@ export function FellowsByCourse({
   const [viewMode, setViewMode] = useState<'all' | 'courses'>('all');
 
   const courseGroups = useMemo(() => {
-    const courseMap: Record<number, { year: number; courseNumber: number; academicYear: string; fellows: Personnel[] }> = {};
+    const courseMap: Record<number, { year: number; endYear: number; courseNumber: number; academicYear: string; fellows: Personnel[] }> = {};
     const startCourse = category === 'FWC' ? 1 : 16;
     const endCourse = category === 'FWC' ? 15 : 34;
     for (let c = startCourse; c <= endCourse; c++) {
@@ -132,6 +132,7 @@ export function FellowsByCourse({
       const endYear = 1992 + c;
       courseMap[c] = {
         year: startYear,
+        endYear: endYear,
         courseNumber: c,
         academicYear: `${startYear}–${endYear}`,
         fellows: []
@@ -142,70 +143,67 @@ export function FellowsByCourse({
     const noCourseData: string[] = [];
 
     fellows.forEach(person => {
-      let courseNum = null;
-      let endYear = null;
+      const assignedCourses = new Set<number>();
 
       if (person.course) {
-        courseNum = person.course;
+        assignedCourses.add(person.course);
       }
 
-      if (person.academicYear) {
-        const parts = person.academicYear.split(/[-–]/);
-        endYear = parseInt(parts.length > 1 ? parts[1].trim() : parts[0].trim(), 10);
-      } else if (person.periodEnd) {
-        endYear = parseInt(person.periodEnd, 10);
-      }
-
-      if (!courseNum && person.decoration) {
-        let match = person.decoration.match(/CSE\s*(\d+)/i);
+      if (!person.course && person.decoration) {
+        const match = person.decoration.match(/CSE\s*(\d+)/i) ||
+                      person.decoration.match(/NWC\s+Course\s+(\d+)/i) ||
+                      person.decoration.match(/Course\s+(\d+)/i);
         if (match) {
-          courseNum = parseInt(match[1], 10);
+          assignedCourses.add(parseInt(match[1], 10));
         }
       }
 
-      if (!courseNum && person.decoration) {
-        let match = person.decoration.match(/NWC\s+Course\s+(\d+)/i);
-        if (match) {
-          courseNum = parseInt(match[1], 10);
-        }
-      }
-      
-      if (!courseNum && person.decoration) {
-        let match = person.decoration.match(/Course\s+(\d+)/i);
-        if (match) {
-          courseNum = parseInt(match[1], 10);
-        }
-      }
-      
-      if (!endYear && person.decoration) {
-        let match = person.decoration.match(/\/\s*(\d{4})/);
-        if (match) {
-          endYear = parseInt(match[1], 10);
+      if (person.periodStart) {
+        const startY = person.periodStart;
+        const endY = Math.max(startY, person.periodEnd || startY);
+        for (let y = startY; y <= endY; y++) {
+          const derivedCourse = y - 1992;
+          if (derivedCourse >= 1) {
+            assignedCourses.add(derivedCourse);
+          }
         }
       }
 
-      if (!courseNum && person.periodStart) {
-        courseNum = person.periodStart - 1991;
+      if (assignedCourses.size === 0 && person.periodStart) {
+        const derivedCourse = person.periodStart - 1991;
+        if (derivedCourse >= 1) {
+          assignedCourses.add(derivedCourse);
+        }
       }
 
-      if (!courseNum || isNaN(courseNum)) {
+      const categoryFilteredCourses: number[] = [];
+      assignedCourses.forEach(cNum => {
+        if (category === 'FWC' && (cNum < 1 || cNum > 15)) return;
+        if (category === 'FDC' && cNum < 16) return;
+        categoryFilteredCourses.push(cNum);
+      });
+
+      if (categoryFilteredCourses.length === 0) {
         noCourseData.push(`${person.name} (${person.periodStart})`);
-        courseNum = 1;
+        const fallbackCourse = category === 'FWC' ? 1 : 16;
+        categoryFilteredCourses.push(fallbackCourse);
       }
 
-      if (courseMap[courseNum]) {
-        courseMap[courseNum].fellows.push(person);
-      } else {
-        const startYear = 1991 + courseNum;
-        const derivedEndYear = endYear || (1992 + courseNum);
-        courseMap[courseNum] = {
-          year: startYear,
-          endYear: derivedEndYear,
-          courseNumber: courseNum,
-          academicYear: `${startYear}–${derivedEndYear}`,
-          fellows: [person]
-        };
-      }
+      categoryFilteredCourses.forEach(cNum => {
+        if (courseMap[cNum]) {
+          courseMap[cNum].fellows.push(person);
+        } else {
+          const startYear = 1991 + cNum;
+          const derivedEndYear = (person.periodEnd && person.periodEnd > startYear) ? person.periodEnd : (1992 + cNum);
+          courseMap[cNum] = {
+            year: startYear,
+            endYear: derivedEndYear,
+            courseNumber: cNum,
+            academicYear: `${startYear}–${derivedEndYear}`,
+            fellows: [person]
+          };
+        }
+      });
     });
 
     if (noCourseData.length > 0) {
@@ -220,7 +218,7 @@ export function FellowsByCourse({
         designation: `Course ${data.courseNumber}/${data.endYear}`,
         fellows: data.fellows.sort((a, b) => {
           if (a.seniorityOrder !== b.seniorityOrder) {
-            return a.seniorityOrder - b.seniorityOrder;
+            return b.seniorityOrder - a.seniorityOrder;
           }
           if (a.periodStart !== b.periodStart) {
             return a.periodStart - b.periodStart;
@@ -229,7 +227,7 @@ export function FellowsByCourse({
         }),
         groupId: `${data.year}-${data.courseNumber}`,
       }))
-      .sort((a, b) => a.courseNumber - b.courseNumber);
+      .sort((a, b) => b.courseNumber - a.courseNumber);
   }, [personnel, category]);
 
   const activeGroup = useMemo(
@@ -277,10 +275,18 @@ export function FellowsByCourse({
     );
   }, [courseGroups]);
 
+  const allCourseFellowsWithImages = useMemo(() => {
+    return allCourseFellows.filter(f => f.imageUrl && f.imageUrl.trim() !== "");
+  }, [allCourseFellows]);
+
+  const activeFellowsWithImages = useMemo(() => {
+    return activeFellows.filter(f => f.imageUrl && f.imageUrl.trim() !== "");
+  }, [activeFellows]);
+
   useEffect(() => {
     if (!autoDisplayActive || !isAutoPlaying) return;
 
-    const fellowsToDisplay = autoDisplayMode === 'all-courses' ? allCourseFellows : activeFellows;
+    const fellowsToDisplay = autoDisplayMode === 'all-courses' ? allCourseFellowsWithImages : activeFellowsWithImages;
     if (fellowsToDisplay.length === 0) return;
 
     const interval = setInterval(() => {
@@ -288,7 +294,7 @@ export function FellowsByCourse({
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [autoDisplayActive, activeFellows.length, allCourseFellows.length, isAutoPlaying, autoDisplayMode]);
+  }, [autoDisplayActive, activeFellowsWithImages, allCourseFellowsWithImages, isAutoPlaying, autoDisplayMode]);
 
   useEffect(() => {
     if (autoDisplayActive) {
@@ -297,12 +303,18 @@ export function FellowsByCourse({
   }, [autoDisplayMode, autoDisplayActive]);
 
   const currentAutoDisplayPerson: FellowWithCourse | null = autoDisplayActive && autoDisplayMode === 'all-courses'
-    ? (allCourseFellows[autoDisplayIndex] ?? null)
-    : (autoDisplayActive && activeFellows[autoDisplayIndex] ? activeFellows[autoDisplayIndex] : null);
+    ? (allCourseFellowsWithImages[autoDisplayIndex] ?? null)
+    : (autoDisplayActive && activeFellowsWithImages[autoDisplayIndex] ? activeFellowsWithImages[autoDisplayIndex] : null);
 
-  const pageTitle = category === 'FWC'
-    ? 'DISTINGUISHED FELLOWS OF WAR COLLEGE (FWC)'
-    : 'DISTINGUISHED FELLOWS OF DEFENCE COLLEGE (FDC)';
+  const pageTitle: React.ReactNode = category === 'FWC' ? (
+    <>
+      DISTINGUISHED FELLOWS OF WAR COLLEGE <span className="normal-case">(fwc+)</span>
+    </>
+  ) : (
+    <>
+      DISTINGUISHED FELLOWS OF DEFENCE COLLEGE <span className="normal-case">(fdc+)</span>
+    </>
+  );
   const pageDescription = category === 'FWC'
     ? `Distinguished Fellows of War College, categorized by CSE course year.`
     : `Distinguished Fellows of Defence College, categorized by CSE course year.`;
@@ -590,7 +602,7 @@ export function FellowsByCourse({
                     : activeGroup ? `${activeGroup.designation} (${activeGroup.academicYear})` : ''}
                 </p>
                 <p className="text-white/55 text-xs mt-0.5">
-                  {autoDisplayIndex + 1} of {autoDisplayMode === 'all-courses' ? allCourseFellows.length : activeFellows.length}
+                  {autoDisplayIndex + 1} of {autoDisplayMode === 'all-courses' ? allCourseFellowsWithImages.length : activeFellowsWithImages.length}
                 </p>
               </div>
             </div>
@@ -616,13 +628,13 @@ export function FellowsByCourse({
           </div>
 
           <div className="absolute bottom-6 left-0 right-0 z-20 flex items-center justify-center gap-4">
-            <button onClick={() => { const maxIndex = autoDisplayMode === 'all-courses' ? allCourseFellows.length : activeFellows.length; setAutoDisplayIndex((prev) => (prev - 1 + maxIndex) % maxIndex); }} className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all border border-white/10" title="Previous">
+            <button onClick={() => { const maxIndex = autoDisplayMode === 'all-courses' ? allCourseFellowsWithImages.length : activeFellowsWithImages.length; setAutoDisplayIndex((prev) => (prev - 1 + maxIndex) % maxIndex); }} className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all border border-white/10" title="Previous">
               <ChevronLeft className="h-6 w-6" />
             </button>
             <div className="px-4 py-1.5 rounded-full bg-white/10 border border-white/10 text-white text-sm font-semibold tabular-nums">
-              {autoDisplayIndex + 1} / {autoDisplayMode === 'all-courses' ? allCourseFellows.length : activeFellows.length}
+              {autoDisplayIndex + 1} / {autoDisplayMode === 'all-courses' ? allCourseFellowsWithImages.length : activeFellowsWithImages.length}
             </div>
-            <button onClick={() => { const maxIndex = autoDisplayMode === 'all-courses' ? allCourseFellows.length : activeFellows.length; setAutoDisplayIndex((prev) => (prev + 1) % maxIndex); }} className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all border border-white/10" title="Next">
+            <button onClick={() => { const maxIndex = autoDisplayMode === 'all-courses' ? allCourseFellowsWithImages.length : activeFellowsWithImages.length; setAutoDisplayIndex((prev) => (prev + 1) % maxIndex); }} className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all border border-white/10" title="Next">
               <ChevronRight className="h-6 w-6" />
             </button>
           </div>
