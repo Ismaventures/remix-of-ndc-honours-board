@@ -8,7 +8,7 @@
  * stores refresh token in userData/dropbox-token.json for persistence.
  */
 
-const { app, shell } = require('electron');
+const { app, shell, BrowserWindow } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -401,6 +401,27 @@ async function downloadFile(accessToken, dropboxPath, destLocalPath) {
 }
 
 /**
+ * Delete a file or folder from Dropbox.
+ */
+async function deleteDropboxFile(accessToken, dropboxPath) {
+  const resp = await fetch('https://api.dropboxapi.com/2/files/delete_v2', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ path: dropboxPath })
+  });
+
+  if (!resp.ok) {
+    const errorText = await resp.text();
+    throw new Error(`Failed to delete ${dropboxPath}: ${resp.statusText} (${errorText})`);
+  }
+
+  return await resp.json();
+}
+
+/**
  * Recursively list all files in a Dropbox directory.
  */
 async function listFolder(accessToken, folderPath = "") {
@@ -542,11 +563,56 @@ async function uploadDirectoryRecursive(accessToken, localDir, progressCallback,
 
 // ── Exported Sync APIs ──────────────────────────────────────────────
 
-async function pushToCloud(localMediaDir, dbPath, progressCallback) {
+function getLocalFilesRecursive(dir, baseDir = dir) {
+  let results = [];
+  if (!fs.existsSync(dir)) return results;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.name === '.DS_Store' || entry.name.startsWith('.')) continue;
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...getLocalFilesRecursive(fullPath, baseDir));
+    } else {
+      results.push({
+        fullPath,
+        relativePath: path.relative(baseDir, fullPath)
+      });
+    }
+  }
+  return results;
+}
+
+/**
+ * Read a version from database-metadata.json.
+ * Supports both the old `cmsLastModified` (timestamp) and new `schemaVersion` (monotonic integer).
+ * Returns the higher of the two if both are present, for backward compatibility.
+ */
+function readMetadataVersion(filePath) {
+  if (!fs.existsSync(filePath)) return 0;
+  try {
+    const meta = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    const ts = meta.cmsLastModified || 0;
+    const sv = meta.schemaVersion || 0;
+    return Math.max(ts, sv);
+  } catch (err) {
+    logToFile(`[TwoWaySync] Failed to read metadata: ${err.message}`);
+    return 0;
+  }
+}
+
+function writeMetadataVersion(filePath, version) {
+  const data = {
+    cmsLastModified: version,
+    schemaVersion: version,
+  };
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+}
+
+async function syncTwoWay(localMediaDir, dbPath, progressCallback, onBeforeDbDownload, onAfterDbDownload, direction = 'auto') {
   const accessToken = await getAccessToken();
   if (!accessToken) throw new Error('Not authenticated with Dropbox');
 
-  logToFile('Push to Dropbox started...');
+  logToFile('[TwoWaySync] Starting sync...');
 
   // Get remote file catalog
   let remoteFiles = [];
@@ -554,240 +620,334 @@ async function pushToCloud(localMediaDir, dbPath, progressCallback) {
     remoteFiles = await listFolder(accessToken, "");
   } catch (err) {
     if (err.message.includes('path/not_found')) {
-      logToFile('No files found on Dropbox.');
+      logToFile('[TwoWaySync] No files found on Dropbox.');
     } else {
       throw err;
     }
   }
   const remoteFilesMap = new Map(remoteFiles.map(f => [f.path_lower, f]));
-  logToFile(`Fetched ${remoteFiles.length} remote files from Dropbox catalog.`);
-  if (remoteFiles.length > 0) {
-    logToFile(`Sample remote files: ${remoteFiles.slice(0, 5).map(f => `${f.path_lower} (${f.size} bytes)`).join(', ')}`);
+  logToFile(`[TwoWaySync] Fetched ${remoteFiles.length} remote files.`);
+
+  let uploaded = 0;
+  let downloaded = 0;
+  let skipped = 0;
+  let deleted = 0;
+  let errors = 0;
+  let dbDownloaded = 0;
+
+  // --- 1. Load logical CMS metadata versions ---
+  const metadataPath = path.join(path.dirname(dbPath), 'database-metadata.json');
+  const localVersion = readMetadataVersion(metadataPath);
+
+  let remoteVersion = 0;
+  const remoteMetaFile = remoteFilesMap.get('/database-metadata.json');
+  if (remoteMetaFile) {
+    const tempMetaPath = path.join(app.getPath('temp'), 'remote-metadata.json');
+    try {
+      await downloadFile(accessToken, '/database-metadata.json', tempMetaPath);
+      remoteVersion = readMetadataVersion(tempMetaPath);
+      fs.unlinkSync(tempMetaPath);
+    } catch (err) {
+      logToFile(`[TwoWaySync] Failed to read remote metadata: ${err.message}`);
+    }
   }
 
-  const totalFiles = countLocalFiles(localMediaDir) + (fs.existsSync(dbPath) ? 1 : 0);
-  const currentProgress = { value: 0 };
+  logToFile(`[TwoWaySync] DB versions: Local: ${localVersion}, Remote: ${remoteVersion}`);
 
-  // 1. Upload database if modified or size is different
-  let dbUploaded = 0;
-  let dbSkipped = 0;
+  // --- 2. Database Sync ---
   if (fs.existsSync(dbPath)) {
     const localStat = fs.statSync(dbPath);
-    const remoteFile = remoteFilesMap.get('/database.sqlite');
-    let shouldUpload = !remoteFile;
-    let reason = 'not found on Dropbox';
-    if (remoteFile) {
-      if (localStat.size !== remoteFile.size) {
-        shouldUpload = true;
-        reason = `size is different (local: ${localStat.size}, remote: ${remoteFile.size})`;
-      } else {
-        try {
-          const localHash = computeDropboxHash(dbPath);
-          if (localHash !== remoteFile.content_hash) {
-            shouldUpload = true;
-            reason = `content hash is different (local: ${localHash}, remote: ${remoteFile.content_hash})`;
-          } else {
-            shouldUpload = false;
-            reason = `identical size and content hash (local/remote size: ${localStat.size})`;
-          }
-        } catch (hashErr) {
-          logToFile(`Hash calculation failed for database.sqlite: ${hashErr.message}. Falling back to mtime.`);
-          const remoteTime = new Date(remoteFile.client_modified || remoteFile.server_modified);
-          const timeDiff = Math.floor(localStat.mtime.getTime() / 1000) - Math.floor(remoteTime.getTime() / 1000);
-          shouldUpload = timeDiff > 0;
-          reason = `hash failed; localMtime: ${localStat.mtime.toISOString()}, remoteTime: ${remoteTime.toISOString()}, timeDiffSec: ${timeDiff}`;
-        }
-      }
-    }
-    logToFile(`Database [/database.sqlite]: shouldUpload=${shouldUpload} (Reason: ${reason})`);
+    const remoteDbFile = remoteFilesMap.get('/database.sqlite');
 
-    currentProgress.value++;
-    if (shouldUpload) {
+    if (direction === 'upload') {
+      logToFile(`[TwoWaySync] [Upload mode] Pushing local database to Dropbox...`);
       try {
-        if (progressCallback) {
-          progressCallback({
-            phase: 'uploading',
-            file: '/database.sqlite',
-            current: currentProgress.value,
-            total: totalFiles
-          });
-        }
         await uploadFile(accessToken, dbPath, '/database.sqlite', localStat.mtime);
-        dbUploaded = 1;
+        const uploadVersion = localVersion || 1;
+        writeMetadataVersion(metadataPath, uploadVersion);
+        await uploadFile(accessToken, metadataPath, '/database-metadata.json', fs.statSync(metadataPath).mtime);
+        uploaded++;
       } catch (err) {
-        logToFile('Failed to upload database.sqlite: ' + err.message);
-        throw new Error(`Database backup failed: ${err.message}`);
+        logToFile(`[TwoWaySync] Failed to upload database: ${err.message}`);
+        errors++;
+      }
+    } else if (direction === 'download') {
+      if (!remoteDbFile) {
+        logToFile('[TwoWaySync] [Download mode] No remote database found. Skipping.');
+        skipped++;
+      } else {
+        logToFile(`[TwoWaySync] [Download mode] Pulling remote database from Dropbox...`);
+        if (onBeforeDbDownload) onBeforeDbDownload();
+        try {
+          await downloadFile(accessToken, '/database.sqlite', dbPath);
+
+          let metaDataDownloaded = false;
+          if (remoteMetaFile) {
+            try {
+              await downloadFile(accessToken, '/database-metadata.json', metadataPath);
+              metaDataDownloaded = true;
+            } catch (err) {
+              logToFile(`[TwoWaySync] Failed to download remote metadata: ${err.message}`);
+            }
+          }
+
+          if (!metaDataDownloaded) {
+            writeMetadataVersion(metadataPath, remoteVersion || 1);
+          }
+
+          const remoteFileTime = new Date(remoteDbFile.client_modified || remoteDbFile.server_modified).getTime();
+          const remoteDate = new Date(remoteFileTime);
+          fs.utimesSync(dbPath, remoteDate, remoteDate);
+
+          downloaded++;
+          dbDownloaded = 1;
+        } catch (err) {
+          logToFile(`[TwoWaySync] Failed to download database: ${err.message}`);
+          errors++;
+        } finally {
+          if (onAfterDbDownload) onAfterDbDownload();
+        }
       }
     } else {
-      dbSkipped = 1;
-      if (progressCallback) {
-        progressCallback({
-          phase: 'uploading',
-          file: '/database.sqlite (skipped)',
-          current: currentProgress.value,
-          total: totalFiles
-        });
+      // Auto mode — version-based comparison
+      if (!remoteDbFile) {
+        logToFile('[TwoWaySync] Database not found on Dropbox. Uploading local database...');
+        try {
+          await uploadFile(accessToken, dbPath, '/database.sqlite', localStat.mtime);
+          const initVersion = localVersion || 1;
+          writeMetadataVersion(metadataPath, initVersion);
+          await uploadFile(accessToken, metadataPath, '/database-metadata.json', fs.statSync(metadataPath).mtime);
+          uploaded++;
+        } catch (err) {
+          logToFile(`[TwoWaySync] Failed to upload database: ${err.message}`);
+          errors++;
+        }
+      } else {
+        let dbShouldUpload = false;
+        let dbShouldDownload = false;
+        const localFileTime = localStat.mtime.getTime();
+        const remoteFileTime = new Date(remoteDbFile.client_modified || remoteDbFile.server_modified).getTime();
+
+        if (localVersion === 0 && remoteVersion === 0) {
+          logToFile('[TwoWaySync] Both CMS versions are 0. Falling back to physical file modification time...');
+          if (localFileTime - remoteFileTime > 2000) {
+            dbShouldUpload = true;
+          } else if (remoteFileTime - localFileTime > 2000) {
+            dbShouldDownload = true;
+          } else {
+            logToFile('[TwoWaySync] Files are physically in sync. Bootstrapping version to 1...');
+            writeMetadataVersion(metadataPath, 1);
+            try {
+              await uploadFile(accessToken, metadataPath, '/database-metadata.json', fs.statSync(metadataPath).mtime);
+            } catch (err) {
+              logToFile(`[TwoWaySync] Failed to bootstrap remote metadata: ${err.message}`);
+            }
+          }
+        } else {
+          if (localVersion > remoteVersion) {
+            dbShouldUpload = true;
+          } else if (remoteVersion > localVersion) {
+            dbShouldDownload = true;
+          }
+        }
+
+        if (dbShouldUpload) {
+          logToFile(`[TwoWaySync] Local database is newer (Local: ${localVersion}, Remote: ${remoteVersion}). Uploading...`);
+          try {
+            const remoteMeta = await uploadFile(accessToken, dbPath, '/database.sqlite', localStat.mtime);
+            if (remoteMeta && remoteMeta.client_modified) {
+              const actualRemoteTime = new Date(remoteMeta.client_modified);
+              fs.utimesSync(dbPath, actualRemoteTime, actualRemoteTime);
+            }
+            const uploadVersion = localVersion || 1;
+            writeMetadataVersion(metadataPath, uploadVersion);
+            await uploadFile(accessToken, metadataPath, '/database-metadata.json', fs.statSync(metadataPath).mtime);
+            uploaded++;
+          } catch (err) {
+            logToFile(`[TwoWaySync] Failed to upload database: ${err.message}`);
+            errors++;
+          }
+        } else if (dbShouldDownload) {
+          logToFile(`[TwoWaySync] Dropbox database is newer (Remote: ${remoteVersion}, Local: ${localVersion}). Downloading...`);
+          if (onBeforeDbDownload) onBeforeDbDownload();
+          try {
+            await downloadFile(accessToken, '/database.sqlite', dbPath);
+            let metaDataDownloaded = false;
+            if (remoteMetaFile) {
+              try {
+                await downloadFile(accessToken, '/database-metadata.json', metadataPath);
+                metaDataDownloaded = true;
+              } catch (err) {
+                logToFile(`[TwoWaySync] Failed to download remote metadata: ${err.message}`);
+              }
+            }
+            if (!metaDataDownloaded) {
+              writeMetadataVersion(metadataPath, remoteVersion || 1);
+            }
+            const remoteDate = new Date(remoteFileTime);
+            fs.utimesSync(dbPath, remoteDate, remoteDate);
+            downloaded++;
+            dbDownloaded = 1;
+          } catch (err) {
+            logToFile(`[TwoWaySync] Failed to download database: ${err.message}`);
+            errors++;
+          } finally {
+            if (onAfterDbDownload) onAfterDbDownload();
+          }
+        } else {
+          logToFile('[TwoWaySync] Database is already in sync.');
+          skipped++;
+        }
       }
     }
   }
 
-  // 2. Upload media folder
-  const mediaStats = await uploadDirectoryRecursive(
-    accessToken,
-    localMediaDir,
-    progressCallback,
-    totalFiles,
-    currentProgress,
-    '/local_media',
-    remoteFilesMap
-  );
+  // --- 3. Media Files Sync ---
+  // Media changes always accompany DB changes, so we use the sync direction
+  // rather than file mtimes (which cause false "newer" detections).
+  const localFiles = getLocalFilesRecursive(localMediaDir);
+  const totalFiles = localFiles.length + 1;
+  let currentProgress = 0;
 
-  const totalUploaded = mediaStats.uploaded + dbUploaded;
-  const totalSkipped = mediaStats.skipped + dbSkipped;
+  const shouldUploadMedia = direction === 'upload' || (direction === 'auto' && localVersion > remoteVersion);
+  const shouldDownloadMedia = direction === 'download' || (direction === 'auto' && remoteVersion > localVersion);
 
-  if (mediaStats.errors > 0 && totalUploaded === 0 && totalFiles > 1) {
-    throw new Error(`Media backup failed: All media file uploads failed.`);
+  if (shouldUploadMedia) {
+    logToFile(`[TwoWaySync] Uploading local media unmatched on Dropbox...`);
+    for (const localFile of localFiles) {
+      currentProgress++;
+      const dropboxPath = `/local_media/${localFile.relativePath.replace(/\\/g, '/')}`;
+      const remoteFile = remoteFilesMap.get(dropboxPath.toLowerCase());
+      const localStat = fs.statSync(localFile.fullPath);
+
+      if (!remoteFile || localStat.size !== remoteFile.size) {
+        if (progressCallback) {
+          progressCallback({ phase: 'uploading', file: dropboxPath, current: currentProgress, total: totalFiles });
+        }
+        try {
+          const remoteMeta = await uploadFile(accessToken, localFile.fullPath, dropboxPath, localStat.mtime);
+          if (remoteMeta && remoteMeta.client_modified) {
+            const actualRemoteTime = new Date(remoteMeta.client_modified);
+            fs.utimesSync(localFile.fullPath, actualRemoteTime, actualRemoteTime);
+          }
+          uploaded++;
+        } catch (err) {
+          logToFile(`[TwoWaySync] Failed to upload ${dropboxPath}: ${err.message}`);
+          errors++;
+        }
+      } else {
+        skipped++;
+      }
+    }
+  } else if (shouldDownloadMedia) {
+    logToFile(`[TwoWaySync] Downloading remote media not found locally...`);
+    for (const localFile of localFiles) {
+      currentProgress++;
+      const dropboxPath = `/local_media/${localFile.relativePath.replace(/\\/g, '/')}`;
+      const remoteFile = remoteFilesMap.get(dropboxPath.toLowerCase());
+      const localStat = fs.statSync(localFile.fullPath);
+
+      if (remoteFile && localStat.size !== remoteFile.size) {
+        if (progressCallback) {
+          progressCallback({ phase: 'downloading', file: dropboxPath, current: currentProgress, total: totalFiles });
+        }
+        try {
+          await downloadFile(accessToken, remoteFile.path_display, localFile.fullPath);
+          const remoteDate = new Date(remoteFile.client_modified || remoteFile.server_modified);
+          fs.utimesSync(localFile.fullPath, remoteDate, remoteDate);
+          downloaded++;
+        } catch (err) {
+          logToFile(`[TwoWaySync] Failed to download ${dropboxPath}: ${err.message}`);
+          errors++;
+        }
+      } else {
+        skipped++;
+      }
+    }
+  } else if (direction === 'auto') {
+    logToFile(`[TwoWaySync] DB versions match (${localVersion}). Skipping media sync (no content changes expected).`);
+    skipped += localFiles.length;
+  }
+
+  // Check remote files not present locally
+  logToFile('[TwoWaySync] Scanning remote files not present locally...');
+  for (const remoteFile of remoteFiles) {
+    if (remoteFile.path_display.startsWith('/local_media/') && remoteFile['.tag'] === 'file') {
+      const relativePath = remoteFile.path_display.slice('/local_media/'.length);
+      const destLocalPath = path.join(localMediaDir, relativePath);
+
+      if (!fs.existsSync(destLocalPath)) {
+        const shouldDownloadMissing = direction === 'download' || (direction === 'auto' && remoteVersion > localVersion);
+
+        if (shouldDownloadMissing) {
+          logToFile(`[TwoWaySync] Remote file [${remoteFile.path_display}] was added remotely. Downloading...`);
+          if (progressCallback) {
+            progressCallback({ phase: 'downloading', file: remoteFile.path_display, current: currentProgress, total: totalFiles });
+          }
+          try {
+            await downloadFile(accessToken, remoteFile.path_display, destLocalPath);
+            const remoteTime = new Date(remoteFile.client_modified || remoteFile.server_modified);
+            fs.utimesSync(destLocalPath, remoteTime, remoteTime);
+            downloaded++;
+          } catch (err) {
+            logToFile(`[TwoWaySync] Failed to download remote file ${remoteFile.path_display}: ${err.message}`);
+            errors++;
+          }
+        } else {
+          logToFile(`[TwoWaySync] Remote file [${remoteFile.path_display}] was deleted locally. Deleting from Dropbox...`);
+          try {
+            await deleteDropboxFile(accessToken, remoteFile.path_display);
+            deleted++;
+          } catch (err) {
+            logToFile(`[TwoWaySync] Failed to delete remote file ${remoteFile.path_display}: ${err.message}`);
+            errors++;
+          }
+        }
+      }
+    }
   }
 
   // Save push sync statistics
   const syncInfo = {
     lastPushTime: new Date().toISOString(),
-    filesUploaded: totalUploaded,
-    filesSkipped: totalSkipped,
-    errors: mediaStats.errors
+    filesUploaded: uploaded,
+    filesDownloaded: downloaded,
+    filesSkipped: skipped,
+    filesDeleted: deleted,
+    errors
   };
-  fs.writeFileSync(
-    path.join(app.getPath('userData'), 'drive-sync-info.json'),
-    JSON.stringify(syncInfo, null, 2)
-  );
+  try {
+    const syncInfoPath = path.join(app.getPath('userData'), 'drive-sync-info.json');
+    let existing = {};
+    if (fs.existsSync(syncInfoPath)) {
+      try { existing = JSON.parse(fs.readFileSync(syncInfoPath, 'utf8')); } catch {}
+    }
+    fs.writeFileSync(syncInfoPath, JSON.stringify({ ...existing, ...syncInfo }, null, 2));
+  } catch {}
 
-  logToFile(`Push complete. Uploaded: ${totalUploaded}, Skipped: ${totalSkipped}, Errors: ${mediaStats.errors}`);
+  logToFile(`[TwoWaySync] Sync complete. Uploaded: ${uploaded}, Downloaded: ${downloaded}, Skipped: ${skipped}, Deleted: ${deleted}, Errors: ${errors}`);
+
   return {
-    success: mediaStats.errors === 0,
-    uploaded: totalUploaded,
-    skipped: totalSkipped,
-    errors: mediaStats.errors
+    success: errors === 0,
+    uploaded,
+    downloaded,
+    skipped,
+    deleted,
+    errors,
+    dbDownloaded: dbDownloaded === 1
   };
 }
 
-async function pullFromCloud(localMediaDir, dbPath, progressCallback) {
-  const accessToken = await getAccessToken();
-  if (!accessToken) throw new Error('Not authenticated with Dropbox');
+async function pushToCloud(localMediaDir, dbPath, progressCallback, onBeforeDbDownload, onAfterDbDownload) {
+  return await syncTwoWay(localMediaDir, dbPath, progressCallback, onBeforeDbDownload, onAfterDbDownload, 'upload');
+}
 
-  logToFile('Pull from Dropbox started...');
+async function pullFromCloud(localMediaDir, dbPath, progressCallback, onBeforeDbDownload, onAfterDbDownload) {
+  return await syncTwoWay(localMediaDir, dbPath, progressCallback, onBeforeDbDownload, onAfterDbDownload, 'download');
+}
 
-  // Get remote file catalog
-  let remoteFiles = [];
-  try {
-    remoteFiles = await listFolder(accessToken, "");
-  } catch (err) {
-    if (err.message.includes('path/not_found')) {
-      logToFile('No files found on Dropbox.');
-      return { success: true, downloaded: 0, skipped: 0, errors: 0 };
-    }
-    throw err;
-  }
-
-  // Separate database and media files
-  const dbFile = remoteFiles.find(e => e.path_display === '/database.sqlite' && e['.tag'] === 'file');
-  const mediaFiles = remoteFiles.filter(e => e.path_display.startsWith('/local_media/') && e['.tag'] === 'file');
-
-  const totalFiles = (dbFile ? 1 : 0) + mediaFiles.length;
-  let current = 0;
-  let downloaded = 0;
-  let skipped = 0;
-  let errors = 0;
-
-  // 1. Download database.sqlite if newer
-  if (dbFile) {
-    current++;
-    let shouldDownload = !fs.existsSync(dbPath);
-    if (!shouldDownload && fs.existsSync(dbPath)) {
-      const localStat = fs.statSync(dbPath);
-      const remoteTime = new Date(dbFile.client_modified || dbFile.server_modified);
-      // Use 2-second threshold to handle filesystem timestamp rounding differences
-      shouldDownload = (remoteTime.getTime() - localStat.mtime.getTime()) > 2000;
-    }
-
-    if (shouldDownload) {
-      try {
-        if (progressCallback) {
-          progressCallback({ phase: 'downloading', file: '/database.sqlite', current, total: totalFiles });
-        }
-        await downloadFile(accessToken, '/database.sqlite', dbPath);
-        const remoteTime = new Date(dbFile.client_modified || dbFile.server_modified);
-        try {
-          fs.utimesSync(dbPath, remoteTime, remoteTime);
-        } catch (utimeErr) {
-          logToFile(`Warning: Failed to set modification time for database: ${utimeErr.message}`);
-        }
-        downloaded++;
-      } catch (err) {
-        logToFile('Failed to download database: ' + err.message);
-        throw new Error(`Database sync download failed: ${err.message}`);
-      }
-    } else {
-      skipped++;
-    }
-  }
-
-  // 2. Download media files incrementally
-  for (const file of mediaFiles) {
-    current++;
-    // Convert dropbox path like '/local_media/courses/pic.png' to local path
-    const relativePath = file.path_display.slice('/local_media/'.length);
-    const destLocalPath = path.join(localMediaDir, relativePath);
-
-    let shouldDownload = !fs.existsSync(destLocalPath);
-    if (!shouldDownload && fs.existsSync(destLocalPath)) {
-      const localStat = fs.statSync(destLocalPath);
-      const remoteTime = new Date(file.client_modified || file.server_modified);
-      // Use 2-second threshold to handle filesystem timestamp rounding differences
-      shouldDownload = (remoteTime.getTime() - localStat.mtime.getTime()) > 2000;
-    }
-
-    if (shouldDownload) {
-      try {
-        if (progressCallback) {
-          progressCallback({ phase: 'downloading', file: file.path_display, current, total: totalFiles });
-        }
-        await downloadFile(accessToken, file.path_display, destLocalPath);
-        const remoteTime = new Date(file.client_modified || file.server_modified);
-        try {
-          fs.utimesSync(destLocalPath, remoteTime, remoteTime);
-        } catch (utimeErr) {
-          logToFile(`Warning: Failed to set modification time for ${destLocalPath}: ${utimeErr.message}`);
-        }
-        downloaded++;
-      } catch (err) {
-        logToFile(`Failed to download ${file.path_display}: ` + err.message);
-        throw new Error(`Media file sync download failed: ${err.message}`);
-      }
-    } else {
-      skipped++;
-    }
-  }
-
-  // Save sync info
-  const syncInfo = {
-    lastPullTime: new Date().toISOString(),
-    filesDownloaded: downloaded,
-    errors
-  };
-  const syncInfoPath = path.join(app.getPath('userData'), 'drive-sync-info.json');
-  let existing = {};
-  if (fs.existsSync(syncInfoPath)) {
-    try { existing = JSON.parse(fs.readFileSync(syncInfoPath, 'utf8')); } catch {}
-  }
-  fs.writeFileSync(syncInfoPath, JSON.stringify({ ...existing, ...syncInfo }, null, 2));
-
-  logToFile(`Pull complete. Downloaded: ${downloaded}, Skipped: ${skipped}, Errors: ${errors}`);
-  return {
-    success: true,
-    downloaded,
-    skipped,
-    errors
-  };
+async function syncAuto(localMediaDir, dbPath, progressCallback, onBeforeDbDownload, onAfterDbDownload) {
+  return await syncTwoWay(localMediaDir, dbPath, progressCallback, onBeforeDbDownload, onAfterDbDownload, 'auto');
 }
 
 async function pushSingleFile(localPath, relativePath) {
@@ -825,6 +985,7 @@ module.exports = {
   getAuthStatus,
   pushToCloud,
   pullFromCloud,
+  syncAuto,
   pushSingleFile,
   getSyncStatus
 };

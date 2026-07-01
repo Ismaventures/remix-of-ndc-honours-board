@@ -88,8 +88,8 @@ const mapPersonnelToRow = (p: Personnel): PersonnelRow => ({
 
 const mapRowToPersonnel = (row: PersonnelRow): Personnel => ({
   id: row.id,
-  name: row.name,
-  rank: row.rank,
+  name: row.name ? row.name.toUpperCase() : '',
+  rank: row.rank ? row.rank.toUpperCase() : '',
   category: normalizeCategory(row.category),
   service: normalizeService(row.service),
   course: (row as any).course ?? row.course ?? undefined,
@@ -136,8 +136,8 @@ const mapCommandantToRow = (c: Commandant): CommandantRow => ({
 
 const mapRowToCommandant = (row: CommandantRow): Commandant => ({
   id: row.id,
-  name: row.name,
-  rank: row.rank ?? undefined,
+  name: row.name ? row.name.toUpperCase() : '',
+  rank: row.rank ? row.rank.toUpperCase() : undefined,
   title: row.title,
   postNominals: row.post_nominals ?? undefined,
   tenureStart: row.tenure_start,
@@ -170,7 +170,7 @@ const mapVisitToRow = (v: DistinguishedVisit): VisitRow => ({
 
 const mapRowToVisit = (row: VisitRow): DistinguishedVisit => ({
   id: row.id,
-  name: row.name,
+  name: row.name ? row.name.toUpperCase() : '',
   title: row.title,
   country: row.country,
   date: row.date,
@@ -307,13 +307,7 @@ function applyRemoteRowsOrFallback<T>(
 }
 
 export function usePersonnelStore() {
-  const [personnel, setPersonnel] = useState<Personnel[]>(() => {
-    ensureCollectionCacheSchema();
-    const cachedRows = readCollectionCache<PersonnelRow>(PERSONNEL_CACHE_KEY);
-    return cachedRows ? cachedRows.map(mapRowToPersonnel) : [];
-  });
-
-  const personnelHasDataRef = useRef(personnel.length > 0);
+  const [personnel, setPersonnel] = useState<Personnel[]>([]);
 
   useEffect(() => {
     let disposed = false;
@@ -338,21 +332,13 @@ export function usePersonnelStore() {
         }, 3);
 
         if (!disposed) {
-          setPersonnel((prev) => {
-            const mergedRows = applyRemoteRowsOrFallback(result, prev.map(mapPersonnelToRow));
-            personnelHasDataRef.current = mergedRows.length > 0;
-            writeCollectionCache(PERSONNEL_CACHE_KEY, mergedRows);
-            return mergedRows.map(mapRowToPersonnel);
-          });
+          setPersonnel(result.map(mapRowToPersonnel));
         }
       } catch (error) {
-        console.error('Failed to load personnel from Supabase:', error);
-        if (!personnelHasDataRef.current && !disposed) {
-          setPersonnel([]);
-        }
+        console.error('Failed to load personnel from SQLite:', error);
+      } finally {
+        inFlight = false;
       }
-
-      inFlight = false;
     };
 
     void loadPersonnel();
@@ -368,12 +354,13 @@ export function usePersonnelStore() {
   }, []);
 
   const addPersonnel = useCallback((p: Omit<Personnel, 'id'>) => {
-    const newPersonnel: Personnel = { ...p, id: `p-${Date.now()}` };
-    setPersonnel(prev => {
-      const next = [...prev, newPersonnel];
-      writeCollectionCache(PERSONNEL_CACHE_KEY, next.map(mapPersonnelToRow));
-      return next;
-    });
+    const newPersonnel: Personnel = {
+      ...p,
+      name: p.name ? p.name.toUpperCase() : '',
+      rank: p.rank ? p.rank.toUpperCase() : '',
+      id: `p-${Date.now()}`
+    };
+    setPersonnel(prev => [...prev, newPersonnel]);
 
     void supabase
       .from('personnel')
@@ -386,11 +373,14 @@ export function usePersonnelStore() {
   }, []);
 
   const updatePersonnel = useCallback((id: string, data: Partial<Personnel>) => {
-    setPersonnel(prev => {
-      const next = prev.map(p => (p.id === id ? { ...p, ...data } : p));
-      writeCollectionCache(PERSONNEL_CACHE_KEY, next.map(mapPersonnelToRow));
-      return next;
-    });
+    let updatedData = { ...data };
+    if (data.name !== undefined) {
+      updatedData.name = data.name ? data.name.toUpperCase() : '';
+    }
+    if (data.rank !== undefined) {
+      updatedData.rank = data.rank ? data.rank.toUpperCase() : '';
+    }
+    setPersonnel(prev => prev.map(p => (p.id === id ? { ...p, ...updatedData } : p)));
 
     const payload: Partial<PersonnelRow> = {};
     if (data.name !== undefined) payload.name = data.name;
@@ -416,11 +406,7 @@ export function usePersonnelStore() {
   }, []);
 
   const deletePersonnel = useCallback((id: string) => {
-    setPersonnel(prev => {
-      const next = prev.filter(p => p.id !== id);
-      writeCollectionCache(PERSONNEL_CACHE_KEY, next.map(mapPersonnelToRow));
-      return next;
-    });
+    setPersonnel(prev => prev.filter(p => p.id !== id));
 
     void supabase
       .from('personnel')
@@ -437,22 +423,14 @@ export function usePersonnelStore() {
 }
 
 export function useCommandantsStore() {
-  const [commandants, setCommandants] = useState<Commandant[]>(() => {
-    ensureCollectionCacheSchema();
-    const cachedRows = readCollectionCache<CommandantRow>(COMMANDANTS_CACHE_KEY);
-    return cachedRows ? cachedRows.map(mapRowToCommandant) : [];
-  });
-  const [isCommandantsLoading, setIsCommandantsLoading] = useState(commandants.length === 0);
-
-  const commandantsHasDataRef = useRef(commandants.length > 0);
+  const [commandants, setCommandants] = useState<Commandant[]>([]);
+  const [isCommandantsLoading, setIsCommandantsLoading] = useState(true);
 
   useEffect(() => {
     let disposed = false;
     let inFlight = false;
 
     const fetchCommandants = async (): Promise<CommandantRow[]> => {
-      // Fetch lightweight fields first so commandant records remain available
-      // even if heavy columns (large image payloads) trigger DB timeouts.
       return withRequestQueue(async () => {
         const rows: CommandantRow[] = [];
 
@@ -501,9 +479,6 @@ export function useCommandantsStore() {
     const loadCommandants = async () => {
       if (inFlight || disposed) return;
       inFlight = true;
-      if (!commandantsHasDataRef.current) {
-        setIsCommandantsLoading(true);
-      }
 
       const retryDelays = [0, 250, 900];
 
@@ -534,9 +509,7 @@ export function useCommandantsStore() {
                     const previous = prevRows.find((entry) => entry.id === row.id);
                     return {
                       ...row,
-                      // Lightweight fallback does not fetch image_url; preserve existing value.
                       image_url: row.image_url ?? previous?.image_url ?? null,
-                      // Preserve description if fallback row is empty but existing has content.
                       description:
                         row.description && row.description.trim().length > 0
                           ? row.description
@@ -545,27 +518,20 @@ export function useCommandantsStore() {
                   })
                 : rows;
 
-              const mergedRows = applyRemoteRowsOrFallback(rowsWithFallbackPreservation, prevRows);
-              commandantsHasDataRef.current = mergedRows.length > 0;
-              writeCollectionCache(COMMANDANTS_CACHE_KEY, mergedRows);
-              return mergedRows.map(mapRowToCommandant);
+              return rowsWithFallbackPreservation.map(mapRowToCommandant);
             });
             setIsCommandantsLoading(false);
           }
           inFlight = false;
           return;
         } catch (error) {
-          console.error('Failed to load commandants from Supabase:', formatSupabaseError(error));
+          console.error('Failed to load commandants from SQLite:', formatSupabaseError(error));
         }
       }
 
-      if (!commandantsHasDataRef.current && !disposed) {
-        setCommandants([]);
-      }
       if (!disposed) {
         setIsCommandantsLoading(false);
       }
-
       inFlight = false;
     };
 
@@ -575,35 +541,20 @@ export function useCommandantsStore() {
       void loadCommandants();
     }, COMMANDANTS_BACKGROUND_REFRESH_MS);
 
-    const commandantsChannel = ENABLE_COMMANDANTS_REALTIME
-      ? supabase
-          .channel('ndc-commandants-changes')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'commandants' },
-            () => {
-              void loadCommandants();
-            },
-          )
-          .subscribe()
-      : null;
-
     return () => {
       disposed = true;
       clearInterval(interval);
-      if (commandantsChannel) {
-        void supabase.removeChannel(commandantsChannel);
-      }
     };
   }, []);
 
   const addCommandant = useCallback((c: Omit<Commandant, 'id'>) => {
-    const newCommandant: Commandant = { ...c, id: `c-${Date.now()}` };
-    setCommandants(prev => {
-      const next = [...prev, newCommandant];
-      writeCollectionCache(COMMANDANTS_CACHE_KEY, next.map(mapCommandantToRow));
-      return next;
-    });
+    const newCommandant: Commandant = {
+      ...c,
+      name: c.name ? c.name.toUpperCase() : '',
+      rank: c.rank ? c.rank.toUpperCase() : undefined,
+      id: `c-${Date.now()}`
+    };
+    setCommandants(prev => [...prev, newCommandant]);
 
     void supabase
       .from('commandants')
@@ -616,11 +567,14 @@ export function useCommandantsStore() {
   }, []);
 
   const updateCommandant = useCallback((id: string, data: Partial<Commandant>) => {
-    setCommandants(prev => {
-      const next = prev.map(c => (c.id === id ? { ...c, ...data } : c));
-      writeCollectionCache(COMMANDANTS_CACHE_KEY, next.map(mapCommandantToRow));
-      return next;
-    });
+    let updatedData = { ...data };
+    if (data.name !== undefined) {
+      updatedData.name = data.name ? data.name.toUpperCase() : '';
+    }
+    if (data.rank !== undefined) {
+      updatedData.rank = data.rank ? data.rank.toUpperCase() : undefined;
+    }
+    setCommandants(prev => prev.map(c => (c.id === id ? { ...c, ...updatedData } : c)));
 
     const payload: Partial<CommandantRow> = {};
     if (data.name !== undefined) payload.name = data.name;
@@ -655,11 +609,7 @@ export function useCommandantsStore() {
   }, []);
 
   const deleteCommandant = useCallback((id: string) => {
-    setCommandants(prev => {
-      const next = prev.filter(c => c.id !== id);
-      writeCollectionCache(COMMANDANTS_CACHE_KEY, next.map(mapCommandantToRow));
-      return next;
-    });
+    setCommandants(prev => prev.filter(c => c.id !== id));
 
     void supabase
       .from('commandants')
@@ -682,13 +632,7 @@ export function useCommandantsStore() {
 }
 
 export function useVisitsStore() {
-  const [visits, setVisits] = useState<DistinguishedVisit[]>(() => {
-    ensureCollectionCacheSchema();
-    const cachedRows = readCollectionCache<VisitRow>(VISITS_CACHE_KEY);
-    return cachedRows ? cachedRows.map(mapRowToVisit) : [];
-  });
-
-  const visitsHasDataRef = useRef(visits.length > 0);
+  const [visits, setVisits] = useState<DistinguishedVisit[]>([]);
 
   useEffect(() => {
     let disposed = false;
@@ -713,21 +657,13 @@ export function useVisitsStore() {
         }, 3);
 
         if (!disposed) {
-          setVisits((prev) => {
-            const mergedRows = applyRemoteRowsOrFallback(result, prev.map(mapRowToVisit));
-            visitsHasDataRef.current = mergedRows.length > 0;
-            writeCollectionCache(VISITS_CACHE_KEY, mergedRows);
-            return mergedRows.map(mapRowToVisit);
-          });
+          setVisits(result.map(mapRowToVisit));
         }
       } catch (error) {
-        console.error('Failed to load visits from Supabase:', error);
-        if (!visitsHasDataRef.current && !disposed) {
-          setVisits([]);
-        }
+        console.error('Failed to load visits from SQLite:', error);
+      } finally {
+        inFlight = false;
       }
-
-      inFlight = false;
     };
 
     void loadVisits();
@@ -743,12 +679,8 @@ export function useVisitsStore() {
   }, []);
 
   const addVisit = useCallback((v: Omit<DistinguishedVisit, 'id'>) => {
-    const newVisit: DistinguishedVisit = { ...v, id: `v-${Date.now()}` };
-    setVisits(prev => {
-      const next = [...prev, newVisit];
-      writeCollectionCache(VISITS_CACHE_KEY, next.map(mapVisitToRow));
-      return next;
-    });
+    const newVisit: DistinguishedVisit = { ...v, name: v.name ? v.name.toUpperCase() : '', id: `v-${Date.now()}` };
+    setVisits(prev => [...prev, newVisit]);
 
     void supabase
       .from('visits')
@@ -761,11 +693,8 @@ export function useVisitsStore() {
   }, []);
 
   const updateVisit = useCallback((id: string, data: Partial<DistinguishedVisit>) => {
-    setVisits(prev => {
-      const next = prev.map(v => (v.id === id ? { ...v, ...data } : v));
-      writeCollectionCache(VISITS_CACHE_KEY, next.map(mapVisitToRow));
-      return next;
-    });
+    const updatedData = data.name !== undefined ? { ...data, name: data.name ? data.name.toUpperCase() : '' } : data;
+    setVisits(prev => prev.map(v => (v.id === id ? { ...v, ...updatedData } : v)));
 
     const payload: Partial<VisitRow> = {};
     if (data.name !== undefined) payload.name = data.name;
@@ -788,11 +717,7 @@ export function useVisitsStore() {
   }, []);
 
   const deleteVisit = useCallback((id: string) => {
-    setVisits(prev => {
-      const next = prev.filter(v => v.id !== id);
-      writeCollectionCache(VISITS_CACHE_KEY, next.map(mapVisitToRow));
-      return next;
-    });
+    setVisits(prev => prev.filter(v => v.id !== id));
 
     void supabase
       .from('visits')

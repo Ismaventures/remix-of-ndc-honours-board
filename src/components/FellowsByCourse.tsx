@@ -142,19 +142,48 @@ export function FellowsByCourse({
     const fellows = personnel.filter(p => p.category === category);
     const noCourseData: string[] = [];
 
+    /**
+     * Extract course info from a decoration string.
+     * Returns { courseNumber, year } or null.
+     * Supports: "CSE X/YYYY", "CSE X", "NWC Course X", "Course X"
+     */
+    function parseCourseFromDecoration(decoration, periodStart) {
+      // Try CSE with year: "CSE 32/2024" or "CSE 32 / 2024"
+      let match = decoration.match(/CSE\s*(\d+)\s*\/\s*(\d{4})/i);
+      if (match) {
+        return { courseNumber: parseInt(match[1], 10), year: parseInt(match[2], 10) };
+      }
+      // Try CSE without year: "CSE 32"
+      match = decoration.match(/CSE\s*(\d+)/i);
+      if (match) {
+        return { courseNumber: parseInt(match[1], 10), year: null };
+      }
+      // Try NWC: "NWC Course 5"
+      match = decoration.match(/NWC\s+Course\s+(\d+)/i);
+      if (match) {
+        return { courseNumber: parseInt(match[1], 10), year: periodStart || null };
+      }
+      // Try generic: "Course 7"
+      match = decoration.match(/Course\s+(\d+)/i);
+      if (match) {
+        return { courseNumber: parseInt(match[1], 10), year: null };
+      }
+      return null;
+    }
+
     fellows.forEach(person => {
       const assignedCourses = new Set<number>();
+      let personCourseYear = null;
 
       if (person.course) {
         assignedCourses.add(person.course);
       }
 
       if (!person.course && person.decoration) {
-        const match = person.decoration.match(/CSE\s*(\d+)/i) ||
-                      person.decoration.match(/NWC\s+Course\s+(\d+)/i) ||
-                      person.decoration.match(/Course\s+(\d+)/i);
-        if (match) {
-          assignedCourses.add(parseInt(match[1], 10));
+        const parsed = parseCourseFromDecoration(person.decoration, person.periodStart);
+        if (parsed) {
+          assignedCourses.add(parsed.courseNumber);
+          if (parsed.year) personCourseYear = parsed.year;
         }
       }
 
@@ -190,16 +219,24 @@ export function FellowsByCourse({
       }
 
       categoryFilteredCourses.forEach(cNum => {
+        // Use the year from decoration if available, otherwise derive it
+        const yearOverride = personCourseYear;
+        const startYear = yearOverride || (1991 + cNum);
+        const endYear = yearOverride ? (yearOverride + 1) : (1992 + cNum);
         if (courseMap[cNum]) {
+          // Update year if we have a better value from decoration
+          if (yearOverride) {
+            courseMap[cNum].year = yearOverride;
+            courseMap[cNum].endYear = yearOverride + 1;
+            courseMap[cNum].academicYear = `${yearOverride}–${yearOverride + 1}`;
+          }
           courseMap[cNum].fellows.push(person);
         } else {
-          const startYear = 1991 + cNum;
-          const derivedEndYear = (person.periodEnd && person.periodEnd > startYear) ? person.periodEnd : (1992 + cNum);
           courseMap[cNum] = {
             year: startYear,
-            endYear: derivedEndYear,
+            endYear: endYear,
             courseNumber: cNum,
-            academicYear: `${startYear}–${derivedEndYear}`,
+            academicYear: `${startYear}–${endYear}`,
             fellows: [person]
           };
         }
@@ -207,7 +244,7 @@ export function FellowsByCourse({
     });
 
     if (noCourseData.length > 0) {
-      console.warn(`⚠️ ${category} without course data: ${noCourseData.join(', ')}`);
+      console.warn(`[FellowsByCourse] ${category} without course data: ${noCourseData.join(', ')}`);
     }
 
     return Object.values(courseMap)
@@ -264,15 +301,29 @@ export function FellowsByCourse({
   }, [backTriggerNonce]);
 
   const allCourseFellows = useMemo(() => {
-    return courseGroups.flatMap(group =>
-      group.fellows.map(fellow => ({
-        ...fellow,
-        courseDesignation: group.designation,
-        courseNumber: group.courseNumber,
-        courseYear: group.year,
-        courseAcademicYear: group.academicYear,
-      }))
-    );
+    const seen = new Set<string>();
+    const unique: Array<Personnel & {
+      courseDesignation?: string;
+      courseNumber?: number;
+      courseYear?: number;
+      courseAcademicYear?: string;
+    }> = [];
+
+    courseGroups.forEach(group => {
+      group.fellows.forEach(fellow => {
+        if (!seen.has(fellow.id)) {
+          seen.add(fellow.id);
+          unique.push({
+            ...fellow,
+            courseDesignation: group.designation,
+            courseNumber: group.courseNumber,
+            courseYear: group.year,
+            courseAcademicYear: group.academicYear,
+          });
+        }
+      });
+    });
+    return unique;
   }, [courseGroups]);
 
   const allCourseFellowsWithImages = useMemo(() => {

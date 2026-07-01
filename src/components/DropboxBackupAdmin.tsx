@@ -23,7 +23,9 @@ export function DropboxBackupAdmin() {
     lastPushTime: null,
     lastPullTime: null,
   });
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const isSyncing = isUploading || isDownloading;
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
   const [progress, setProgress] = useState<SyncProgress | null>(null);
@@ -99,7 +101,7 @@ export function DropboxBackupAdmin() {
 
   const handlePush = async () => {
     if (!window.electronAPI) return;
-    setIsSyncing(true);
+    setIsUploading(true);
     setSyncError(null);
     setSyncSuccess(null);
     setProgress(null);
@@ -119,14 +121,14 @@ export function DropboxBackupAdmin() {
     } catch (err: any) {
       setSyncError(err.message || 'Error occurred during backup upload.');
     } finally {
-      setIsSyncing(false);
+      setIsUploading(false);
       setProgress(null);
     }
   };
 
   const handlePull = async () => {
     if (!window.electronAPI) return;
-    setIsSyncing(true);
+    setIsDownloading(true);
     setSyncError(null);
     setSyncSuccess(null);
     setProgress(null);
@@ -146,7 +148,7 @@ export function DropboxBackupAdmin() {
     } catch (err: any) {
       setSyncError(err.message || 'Error occurred during download sync.');
     } finally {
-      setIsSyncing(false);
+      setIsDownloading(false);
       setProgress(null);
     }
   };
@@ -323,10 +325,10 @@ export function DropboxBackupAdmin() {
                   disabled={isSyncing}
                   className="w-full mt-4 py-2 border border-[#002060] hover:bg-blue-50 text-[#002060] font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  {isSyncing ? (
+                  {isUploading ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      Syncing...
+                      Uploading...
                     </>
                   ) : (
                     <>
@@ -353,10 +355,10 @@ export function DropboxBackupAdmin() {
                   disabled={isSyncing}
                   className="w-full mt-4 py-2 border border-[#FF0000] hover:bg-red-50 text-[#FF0000] font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  {isSyncing ? (
+                  {isDownloading ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      Syncing...
+                      Downloading...
                     </>
                   ) : (
                     <>

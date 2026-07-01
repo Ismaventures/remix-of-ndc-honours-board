@@ -151,7 +151,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
 
       // Try to parse NWC format: "NWC Course X" and use period_start as year
       if (!hasCSEData && person.decoration && person.decoration.includes('NWC Course')) {
-        let match = person.decoration.match(/NWC\s+Course\s+(\d+)/i);
+        const match = person.decoration.match(/NWC\s+Course\s+(\d+)/i);
         if (match) {
           courseNum = parseInt(match[1], 10);
           year = person.periodStart || year;
@@ -173,7 +173,7 @@ export function DirectingStaffByCourseYear({ personnel, onBack, title = 'Directi
     });
 
     if (noCSEData.length > 0) {
-      console.warn(`⚠️ Directing Staff without course data (grouped by year): ${noCSEData.join(', ')}`);
+      console.warn(`[DirectingStaff] Without course data (grouped by year): ${noCSEData.join(', ')}`);
     }
 
     console.log('✅ DirectingStaff Grouping Complete:', { 

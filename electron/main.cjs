@@ -239,6 +239,7 @@ function initializeDatabase() {
 
 function healDatabase(db) {
   console.log('Running database healing and deduplication...');
+  let madeChanges = false;
   try {
     db.transaction(() => {
       // 1. Delete duplicate records where name is similar and one has no image
@@ -266,6 +267,7 @@ function healDatabase(db) {
             for (const item of list) {
               if (item.id !== withImage.id) {
                 db.prepare("DELETE FROM personnel WHERE id = ?").run(item.id);
+                madeChanges = true;
                 console.log(`[Heal] Deleted duplicate/broken personnel record: ${item.name} (${item.id}) category: ${item.category}`);
               }
             }
@@ -274,6 +276,7 @@ function healDatabase(db) {
             const keep = list[0];
             for (let i = 1; i < list.length; i++) {
               db.prepare("DELETE FROM personnel WHERE id = ?").run(list[i].id);
+              madeChanges = true;
               console.log(`[Heal] Deleted duplicate/empty personnel record: ${list[i].name} (${list[i].id}) category: ${list[i].category}`);
             }
           }
@@ -298,6 +301,7 @@ function healDatabase(db) {
           const correctCategory = courseNum <= 15 ? 'FWC' : 'FDC';
           if (p.category !== correctCategory && p.category !== 'Allied' && p.category !== 'Directing Staff') {
             db.prepare("UPDATE personnel SET category = ? WHERE id = ?").run(correctCategory, p.id);
+            madeChanges = true;
             console.log(`[Heal] Corrected category for ${p.name} (${p.id}) from ${p.category} to ${correctCategory}`);
           }
         }
@@ -307,6 +311,7 @@ function healDatabase(db) {
   } catch (err) {
     console.error('Failed to heal database:', err);
   }
+  return madeChanges;
 }
 
 // Columns that contain serialized JSON or Array values
@@ -401,7 +406,17 @@ function createWindow() {
   });
 
   if (isDev) {
-    win.loadURL('http://localhost:8080');
+    win.loadURL('http://127.0.0.1:8080');
+    win.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+      // errorCode -102 is ERR_CONNECTION_REFUSED
+      if (validatedURL.startsWith('http://127.0.0.1:8080')) {
+        setTimeout(() => {
+          if (!win.isDestroyed()) {
+            win.loadURL('http://127.0.0.1:8080');
+          }
+        }, 1000);
+      }
+    });
   } else {
     win.loadFile(path.join(APP_PATH, 'dist', 'index.html'));
   }
@@ -764,51 +779,72 @@ app.whenReady().then(() => {
     });
   }
 
+  // Ensure the CMS version metadata file exists with at least version 1
+  // so that version-based Dropbox sync comparison works from the start.
+  if (readLocalSchemaVersion() === 0) {
+    updateLocalCmsTimestamp();
+  }
+
   logToFile('Protocol handlers registered. Creating window...');
   createWindow();
   logToFile('createWindow() called.');
 
-  // Trigger background remote assets download and local migration
-  setTimeout(() => {
-    downloadRemoteAssets().catch(err => {
-      console.error('Background assets download check failed:', err);
-    });
-  }, 1000);
-
-  // Background Dropbox sync — pull any newer files from Dropbox on startup
+  // Background Dropbox sync — pull any newer files from Dropbox on startup.
+  // This MUST run before downloadRemoteAssets so that the database is up-to-date
+  // before we start resolving image references to local files.
   setTimeout(async () => {
     try {
       const status = await driveSync.getAuthStatus();
       if (status.authenticated) {
         logToFile('Dropbox authenticated — starting background pull...');
-        
-        // Close SQLite database before download to avoid locking
-        if (db) {
-          logToFile('Closing database for background Dropbox pull...');
-          db.close();
-          db = null;
-        }
+
+        const onBeforeDbDownload = () => {
+          if (db) {
+            logToFile('Closing database for background Dropbox pull (db download)...');
+            db.close();
+            db = null;
+          }
+        };
+
+        const onAfterDbDownload = () => {
+          logToFile('Re-initializing database after background Dropbox pull (db download)...');
+          initializeDatabase();
+        };
 
         try {
-          const result = await driveSync.pullFromCloud(LOCAL_MEDIA_DIR, DB_PATH, null);
+          const result = await driveSync.pullFromCloud(LOCAL_MEDIA_DIR, DB_PATH, null, onBeforeDbDownload, onAfterDbDownload);
           logToFile('Dropbox pull complete: downloaded=' + (result.downloaded || 0) + ' skipped=' + (result.skipped || 0));
           
-          if (result && result.downloaded > 0) {
+          if (result && result.dbDownloaded) {
             logToFile('Reloading renderer window after background startup sync pull...');
             const windows = BrowserWindow.getAllWindows();
-            if (windows.length > 0 && !windows[0].isDestroyed()) {
-              windows[0].webContents.send('dropbox-sync-reload');
+            for (const win of windows) {
+              if (!win.isDestroyed()) {
+                win.webContents.executeJavaScript(`
+                  location.reload();
+                `);
+              }
             }
           }
-        } finally {
-          logToFile('Re-initializing database after background Dropbox pull...');
-          initializeDatabase();
+        } catch (err) {
+          logToFile('Error during background startup sync pull: ' + err.message);
         }
       } else {
         logToFile('Dropbox not authenticated — skipping background sync.');
       }
     } catch (err) {
-      logToFile('Background Dropbox pull failed: ' + err.message);
+      logToFile('Background Dropbox pull check failed: ' + err.message);
+    }
+
+    // Trigger background remote assets download and local migration AFTER Dropbox sync.
+    // This ensures image URL rewrites to local-media:// happen after the DB is current,
+    // and the version bump prevents the next sync from undoing these changes.
+    try {
+      await downloadRemoteAssets();
+      updateLocalCmsTimestamp();
+      logToFile('Background remote assets download and version bump complete.');
+    } catch (err) {
+      console.error('Background assets download check failed:', err);
     }
   }, 3000);
 
@@ -848,6 +884,92 @@ function filterRecordToTableColumns(tableName, record) {
     }
   }
   return filtered;
+}
+
+function readLocalSchemaVersion() {
+  const metadataPath = path.join(LOCAL_DATA_ROOT, 'database-metadata.json');
+  if (!fs.existsSync(metadataPath)) return 0;
+  try {
+    const meta = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+    return Math.max(meta.schemaVersion || 0, meta.cmsLastModified || 0);
+  } catch {
+    return 0;
+  }
+}
+
+function updateLocalCmsTimestamp() {
+  const metadataPath = path.join(LOCAL_DATA_ROOT, 'database-metadata.json');
+  const currentVersion = readLocalSchemaVersion();
+  const newVersion = currentVersion + 1;
+  const data = { cmsLastModified: Date.now(), schemaVersion: newVersion };
+  fs.mkdirSync(path.dirname(metadataPath), { recursive: true });
+  fs.writeFileSync(metadataPath, JSON.stringify(data, null, 2));
+  logToFile(`[AutoSync] Updated CMS version from ${currentVersion} to ${newVersion}`);
+}
+
+function handleDbMutationTrigger(table) {
+  const SYNCABLE_TABLES = ['personnel', 'commandants', 'visits'];
+  if (SYNCABLE_TABLES.includes(table)) {
+    updateLocalCmsTimestamp();
+    triggerAutoSync();
+  }
+}
+
+let autoSyncTimeout = null;
+let isAutoSyncRunning = false;
+function triggerAutoSync() {
+  if (autoSyncTimeout) {
+    clearTimeout(autoSyncTimeout);
+  }
+  autoSyncTimeout = setTimeout(async () => {
+    if (isAutoSyncRunning) {
+      logToFile('[AutoSync] Sync already in progress, rescheduling...');
+      triggerAutoSync();
+      return;
+    }
+    try {
+      isAutoSyncRunning = true;
+      const status = await driveSync.getAuthStatus();
+      if (!status || !status.authenticated) {
+        logToFile('[AutoSync] Skipping sync push: Dropbox not authenticated. Data was saved locally but will not be synced to cloud.');
+        return;
+      }
+      logToFile('[AutoSync] Starting auto-sync push to Dropbox...');
+
+      const onBeforeDbDownload = () => {
+        if (db) {
+          logToFile('[AutoSync] Closing database before download...');
+          db.close();
+          db = null;
+        }
+      };
+
+      const onAfterDbDownload = () => {
+        logToFile('[AutoSync] Re-initializing database after download...');
+        initializeDatabase();
+      };
+
+      const result = await driveSync.syncAuto(LOCAL_MEDIA_DIR, DB_PATH, null, onBeforeDbDownload, onAfterDbDownload);
+
+      logToFile(`[AutoSync] Auto-sync complete. Uploaded: ${result.uploaded}, Downloaded: ${result.downloaded}, Skipped: ${result.skipped}, Deleted: ${result.deleted}`);
+
+      if (result && result.dbDownloaded) {
+        logToFile('[AutoSync] Database was updated from remote during auto-sync. Reloading windows...');
+        const wins = BrowserWindow.getAllWindows();
+        for (const w of wins) {
+          if (!w.isDestroyed()) {
+            w.webContents.executeJavaScript(`
+              location.reload();
+            `);
+          }
+        }
+      }
+    } catch (err) {
+      logToFile('[AutoSync] Auto-sync push failed: ' + err.message);
+    } finally {
+      isAutoSyncRunning = false;
+    }
+  }, 2000); // 2 seconds debounce
 }
 
 // IPC handler for SQLite queries
@@ -954,6 +1076,7 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
         }
       })();
 
+      handleDbMutationTrigger(table);
       return { data: Array.isArray(payload) ? inserted : inserted[0], error: null };
     }
 
@@ -974,6 +1097,7 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
       const stmt = db.prepare(sql);
       const info = stmt.run(...params);
 
+      handleDbMutationTrigger(table);
       return { data: info.changes > 0 ? [payload] : [], error: null };
     }
 
@@ -989,6 +1113,7 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
       const stmt = db.prepare(sql);
       const info = stmt.run(...params);
 
+      handleDbMutationTrigger(table);
       return { data: info.changes > 0 ? [{ id: 'deleted' }] : [], error: null };
     }
 
@@ -1047,6 +1172,7 @@ ipcMain.handle('query-sqlite', async (event, queryDesc) => {
         }
       })();
 
+      handleDbMutationTrigger(table);
       return { data: Array.isArray(payload) ? upserted : upserted[0], error: null };
     }
   } catch (err) {
@@ -1115,7 +1241,34 @@ ipcMain.handle('dropbox-push', async (event) => {
         win.webContents.send('dropbox-sync-progress', data);
       }
     };
-    const result = await driveSync.pushToCloud(LOCAL_MEDIA_DIR, DB_PATH, progressCallback);
+
+    const onBeforeDbDownload = () => {
+      if (db) {
+        logToFile('Closing database for Dropbox push (db download)...');
+        db.close();
+        db = null;
+      }
+    };
+
+    const onAfterDbDownload = () => {
+      logToFile('Re-initializing database after Dropbox push (db download)...');
+      initializeDatabase();
+    };
+
+    const result = await driveSync.pushToCloud(LOCAL_MEDIA_DIR, DB_PATH, progressCallback, onBeforeDbDownload, onAfterDbDownload);
+
+    if (result && result.dbDownloaded) {
+      logToFile('Reloading renderer window after database update during push...');
+      const wins = BrowserWindow.getAllWindows();
+      for (const w of wins) {
+        if (!w.isDestroyed()) {
+          w.webContents.executeJavaScript(`
+            location.reload();
+          `);
+        }
+      }
+    }
+
     return result;
   } catch (err) {
     console.error('[DropboxSync] Push failed:', err);
@@ -1132,27 +1285,30 @@ ipcMain.handle('dropbox-pull', async (event) => {
       }
     };
 
-    // Close SQLite database before downloading to avoid file locking errors
-    if (db) {
-      logToFile('Closing database for Dropbox pull...');
-      db.close();
-      db = null;
-    }
+    const onBeforeDbDownload = () => {
+      if (db) {
+        logToFile('Closing database for Dropbox pull (db download)...');
+        db.close();
+        db = null;
+      }
+    };
 
-    let result;
-    try {
-      result = await driveSync.pullFromCloud(LOCAL_MEDIA_DIR, DB_PATH, progressCallback);
-    } finally {
-      // Always re-initialize the database connection
-      logToFile('Re-initializing database after Dropbox pull...');
+    const onAfterDbDownload = () => {
+      logToFile('Re-initializing database after Dropbox pull (db download)...');
       initializeDatabase();
-    }
+    };
 
-    if (result && result.downloaded > 0) {
-      logToFile('Reloading renderer window after manual sync pull...');
-      const win = BrowserWindow.fromWebContents(event.sender);
-      if (win && !win.isDestroyed()) {
-        win.webContents.send('dropbox-sync-reload');
+    const result = await driveSync.pullFromCloud(LOCAL_MEDIA_DIR, DB_PATH, progressCallback, onBeforeDbDownload, onAfterDbDownload);
+
+    if (result && result.dbDownloaded) {
+      logToFile('Reloading renderer window after database update during pull...');
+      const wins = BrowserWindow.getAllWindows();
+      for (const w of wins) {
+        if (!w.isDestroyed()) {
+          w.webContents.executeJavaScript(`
+            location.reload();
+          `);
+        }
       }
     }
 

@@ -91,7 +91,7 @@ function inferCollectionKey(row: MuseumArtifactRow): CollectionKey | null {
 function mapRowToCollectionItem(row: MuseumArtifactRow): CollectionItem {
   return {
     id: row.id,
-    name: row.name,
+    name: row.name ? row.name.toUpperCase() : "",
     imageUrl: row.media_urls?.[0] ?? "",
     mediaUrls: row.media_urls ?? [],
     description: row.description ?? "Museum artifact narrative pending.",
@@ -127,13 +127,14 @@ function buildCollectionItemsById(
       const directMatch = possibleMatches.find((entry) => unusedRemoteIds.has(entry.item.id));
 
       if (!directMatch) {
-        return fallbackItem;
+        return { ...fallbackItem, name: fallbackItem.name ? fallbackItem.name.toUpperCase() : "" };
       }
 
       unusedRemoteIds.delete(directMatch.item.id);
 
       return {
         ...fallbackItem,
+        name: fallbackItem.name ? fallbackItem.name.toUpperCase() : "",
         imageUrl: directMatch.item.imageUrl || fallbackItem.imageUrl,
         mediaUrls: directMatch.item.mediaUrls && directMatch.item.mediaUrls.length > 0 ? directMatch.item.mediaUrls : fallbackItem.mediaUrls,
         description: directMatch.item.description || fallbackItem.description,

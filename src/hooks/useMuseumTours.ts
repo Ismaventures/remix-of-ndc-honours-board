@@ -105,7 +105,7 @@ function writeMuseumTourCache(tours: MuseumTour[]): void {
 function mapArtifactRowToArtifact(row: MuseumArtifactRow): MuseumArtifact {
   return {
     id: row.id,
-    name: row.name,
+    name: row.name ? row.name.toUpperCase() : "",
     description: row.description ?? "",
     era: row.era ?? "Museum Narrative",
     origin: row.origin_label ?? "NDC Museum",
