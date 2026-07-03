@@ -421,12 +421,19 @@ export function AdminPanel({
   const [bootDraft, setBootDraft] = useState<BootSequenceSettings>(bootSequenceSettings);
   const [autoDisplayDraft, setAutoDisplayDraft] = useState<AutoDisplaySettings>(autoDisplaySettings);
   const [idleStageDraft, setIdleStageDraft] = useState<IdleStageSettings>(idleStageSettings);
+  const [pauseOnTouchDraft, setPauseOnTouchDraft] = useState(() => {
+    try {
+      return localStorage.getItem("ndc-autoscroll-pause-on-touch") === "true";
+    } catch {
+      return false;
+    }
+  });
   const [previewTransition, setPreviewTransition] = useState<AutoDisplayTransitionType>('fade-zoom');
   const [previewNonce, setPreviewNonce] = useState(0);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewContextLabel, setPreviewContextLabel] = useState('Global');
   const [showAdvancedTransitionPanels, setShowAdvancedTransitionPanels] = useState(false);
-  const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'idle' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'soundPairing' | 'guide' | 'cinematic' | 'actions' | 'commandantLayout'>('boot');
+  const [activeTransitionPanel, setActiveTransitionPanel] = useState<'boot' | 'idle' | 'globalTiming' | 'categoryTiming' | 'library' | 'sequence' | 'categorySequence' | 'categoryApplied' | 'durations' | 'soundPairing' | 'guide' | 'cinematic' | 'actions' | 'commandantLayout' | 'autoscrollInteraction'>('boot');
   const [activeDurationGroup, setActiveDurationGroup] = useState<string | null>(null);
   const [guideFlowActive, setGuideFlowActive] = useState(false);
   const [guideNextSectionId, setGuideNextSectionId] = useState<string | null>(null);
@@ -446,6 +453,11 @@ export function AdminPanel({
 
   useEffect(() => {
     setAutoDisplayDraft(autoDisplaySettings);
+    try {
+      setPauseOnTouchDraft(localStorage.getItem("ndc-autoscroll-pause-on-touch") === "true");
+    } catch {
+      // ignore
+    }
   }, [autoDisplaySettings]);
 
   useEffect(() => {
@@ -654,6 +666,7 @@ export function AdminPanel({
     bootDraft.archiveTransitionMs !== bootSequenceSettings.archiveTransitionMs;
   const isAutoDisplayDirty = JSON.stringify(autoDisplayDraft) !== JSON.stringify(autoDisplaySettings);
   const isIdleStageDirty = JSON.stringify(idleStageDraft) !== JSON.stringify(idleStageSettings);
+  const isPauseOnTouchDirty = pauseOnTouchDraft !== (typeof window !== "undefined" && localStorage.getItem("ndc-autoscroll-pause-on-touch") === "true");
 
   const toggleTransitionInSequence = (transition: AutoDisplayTransitionType, enabled: boolean) => {
     const current = autoDisplayDraft.transitionSequence;
@@ -923,6 +936,11 @@ export function AdminPanel({
     onBootSequenceSettingsChange(bootDraft);
     onImportAutoDisplaySettings(autoDisplayDraft);
     onIdleStageSettingsChange(idleStageDraft);
+    try {
+      localStorage.setItem("ndc-autoscroll-pause-on-touch", String(pauseOnTouchDraft));
+    } catch (err) {
+      console.error("Failed to save pauseOnTouch to localStorage:", err);
+    }
   };
 
   const applyCinematicPreset = () => {
@@ -2628,6 +2646,32 @@ export function AdminPanel({
                   </div>
                 )}
 
+                <button onClick={() => setActiveTransitionPanel('autoscrollInteraction')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
+                  <span className="text-sm font-semibold text-foreground">Autoscroll Interaction Behavior</span>
+                </button>
+                {activeTransitionPanel === 'autoscrollInteraction' && (
+                  <div className="rounded-lg border border-slate-300/15 bg-white/60 p-4 space-y-4">
+                    <p className="text-xs text-slate-600">Configure whether touching the screen or interacting with a slide pauses the autoscroll display.</p>
+                    <div className="rounded border border-slate-300/10 p-3 bg-background/40 flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">Pause on Touch</p>
+                          <p className="text-xs text-slate-600 mt-1">If enabled, touching the screen or interacting with a slide will temporarily pause the autoscrolling timer/movement.</p>
+                        </div>
+                        <label className="inline-flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={pauseOnTouchDraft}
+                            onChange={e => setPauseOnTouchDraft(e.target.checked)}
+                            className="rounded border-[#002060]/20 text-[#002060] focus:ring-[#002060]/30 h-4 w-4"
+                          />
+                          <span>Enabled</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <button onClick={() => setActiveTransitionPanel('actions')} className="w-full text-left px-4 py-3 rounded-lg border border-[#002060]/20 bg-white/60 hover:bg-muted/40">
                   <span className="text-sm font-semibold text-foreground">Save / Import / Export</span>
                 </button>
@@ -2657,6 +2701,7 @@ export function AdminPanel({
                           setBootDraft({ totalDurationMs: 11000, archiveTransitionMs: 600 });
                           setAutoDisplayDraft(DEFAULT_AUTO_DISPLAY_SETTINGS);
                           setIdleStageDraft(DEFAULT_IDLE_STAGE_SETTINGS);
+                          setPauseOnTouchDraft(false);
                         }}
                         className="px-4 py-2 rounded-md text-sm font-medium border border-slate-300/25 text-foreground bg-white hover:bg-muted/40 transition-colors"
                       >
@@ -2664,7 +2709,7 @@ export function AdminPanel({
                       </button>
                       <button
                         onClick={applyBootAndTransitionsSettings}
-                        disabled={!isBootDirty && !isAutoDisplayDirty && !isIdleStageDirty}
+                        disabled={!isBootDirty && !isAutoDisplayDirty && !isIdleStageDirty && !isPauseOnTouchDirty}
                         className="px-4 py-2 rounded-md text-sm font-medium border border-slate-300/40 text-[#002060] bg-[#002060]/10 hover:bg-[#002060] text-[#0a0d14]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Apply & Save Transitions

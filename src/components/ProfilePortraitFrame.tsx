@@ -6,6 +6,7 @@ interface ProfilePortraitFrameProps {
   imageUrl?: string;
   alt: string;
   placeholder?: ReactNode;
+  serviceColor?: string;
 }
 
 /** Full-bleed official portrait panel with red/blue border frame (commandant / fellow full view). */
@@ -24,7 +25,7 @@ export function ProfilePortraitFrame({ imageUrl, alt, placeholder, serviceColor 
           <img
             src={imageUrl}
             alt={alt}
-            className="h-full w-full object-cover object-center"
+            className="h-full w-full object-cover object-top"
             loading="eager"
           />
         ) : (

@@ -50,7 +50,7 @@ export function CommandantSplitHero({ commandant, isAutoDisplay = false }: Comma
       <div className="relative flex flex-1 min-h-0 z-10">
         
         {/* Left Side: Scrollable Biography Content */}
-        <div className="flex-1 overflow-y-auto pr-6 pl-8 py-8 flex flex-col items-center scrollbar-hide">
+        <div className="flex-1 overflow-y-auto pr-6 pl-8 py-8 flex flex-col items-center">
           {/* Identity Plate Style Header */}
           <div className="flex items-center gap-4 mb-4 w-full justify-center">
             <div className="h-[1px] w-20 bg-slate-300" />

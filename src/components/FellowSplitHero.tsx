@@ -41,7 +41,7 @@ export function FellowSplitHero({ person, category, courseDesignation }: FellowS
 
       <div className="relative flex flex-1 min-h-0 z-10">
         {/* Left: biography */}
-        <div className="flex-1 overflow-y-auto pr-6 pl-8 py-8 flex flex-col items-center scrollbar-hide border-r-[3px] border-[#002060]/30">
+        <div className="flex-1 overflow-y-auto pr-6 pl-8 py-8 flex flex-col items-center border-r-[3px] border-[#002060]/30">
           {/* Category label with decorative lines */}
           <div className="flex items-center gap-4 mb-4 w-full justify-center">
             <div className="h-[1px] w-20 bg-slate-300" />

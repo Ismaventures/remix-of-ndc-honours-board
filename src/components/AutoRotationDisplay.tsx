@@ -480,7 +480,7 @@ export function AutoRotationDisplay({
   const scrollRafRef = useRef<number | null>(null);
   const nextPauseTargetRef = useRef<number | null>(null);
   const pauseUntilRef = useRef<number>(0);
-  const { isPaused, registerInteraction, setHovering } = useSliderControl({
+  const { isPaused: isSliderControlPaused, registerInteraction, setHovering } = useSliderControl({
     resumeAfterMs: 4200,
   });
 
@@ -493,6 +493,10 @@ export function AutoRotationDisplay({
   );
 
   const effectiveSettings = settings ?? DEFAULT_AUTO_DISPLAY_SETTINGS;
+  const isProfileOpen = !!selectedPerson || !!selectedVisit || !!selectedCommandant;
+  const pauseOnTouch = typeof window !== "undefined" && localStorage.getItem("ndc-autoscroll-pause-on-touch") === "true";
+  const isPaused = isProfileOpen || (pauseOnTouch ? isSliderControlPaused : false);
+  console.log("[AutoRotationDisplay] pauseOnTouch (localStorage):", pauseOnTouch, "isPaused:", isPaused, "isSliderControlPaused:", isSliderControlPaused);
   const displayContext = resolveDisplayContext(activeCategory, activeView);
   const contextTiming =
     effectiveSettings.byContext[displayContext] ?? effectiveSettings.global;

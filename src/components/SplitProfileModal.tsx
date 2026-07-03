@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ArrowLeft } from 'lucide-react';
 import { useProfileViewerChrome } from '@/hooks/useProfileViewerChrome';
 import { cn } from '@/lib/utils';
 
@@ -95,13 +95,6 @@ export function SplitProfileModal({
       {...containerProps}
     >
       <div className="relative flex-1 min-h-0 flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <button
-          onClick={onClose}
-          className="absolute right-6 top-6 z-50 inline-flex items-center justify-center p-2 rounded-full bg-white/80 hover:bg-white text-slate-800 transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-slate-300"
-          aria-label="Close profile"
-        >
-          <X className="h-5 w-5" />
-        </button>
 
         {hasPrev && (
           <button
@@ -137,30 +130,23 @@ export function SplitProfileModal({
         {currentIndex >= 0 && totalCount > 1 && (
           <div
             className={cn(
-              'absolute left-[30%] -translate-x-1/2 bottom-6 z-50 flex justify-center gap-1.5',
-              'bg-slate-900/5 px-4 py-2 rounded-full backdrop-blur-sm border border-slate-200/60',
+              'absolute left-[32.5%] -translate-x-1/2 bottom-6 z-50 flex justify-center',
+              'bg-[#002060] text-[#FFD700] px-4 py-1.5 rounded-full shadow-md border border-[#FFD700]/30 text-xs font-extrabold tracking-wider',
               'transition-opacity duration-500',
               navVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
             )}
           >
-            {Array.from({ length: totalCount }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  revealNav();
-                  onSelectIndex(i);
-                }}
-                className={cn(
-                  'h-1.5 rounded-full transition-all duration-300',
-                  i === currentIndex
-                    ? 'w-8 bg-[#002060]'
-                    : 'w-1.5 bg-slate-400/50 hover:bg-slate-400'
-                )}
-                aria-label={getItemLabel?.(i) ?? `Profile ${i + 1}`}
-              />
-            ))}
+            {currentIndex + 1} / {totalCount}
           </div>
         )}
+
+        <button
+          onClick={onClose}
+          className="absolute right-6 bottom-6 z-50 inline-flex items-center justify-center p-3 rounded-full bg-white/90 hover:bg-white text-slate-800 transition-all shadow-lg border border-slate-200/80 focus:outline-none focus:ring-2 focus:ring-slate-300 active:scale-95"
+          aria-label="Close profile"
+        >
+          <X className="h-6 w-6" />
+        </button>
       </div>
     </div>,
     document.body,
